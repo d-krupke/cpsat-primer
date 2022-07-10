@@ -748,7 +748,9 @@ We can propagate the domains of the variables onto each other, especially if we 
 e.g., $D(x)={0, 1, \ldots, 100} \rightarrow D(x)=\{5\}$.
 
 $$ x \geq \min(D(y))+\min(D(z)) \quad x \leq \max(D(y))+\max(D(z)) $$
+
 $$ y \geq \min(D(x))-\max(D(z)) \quad y \leq \max(D(x))-\min(D(z)) $$
+
 $$ z \geq \min(D(x))-\max(D(y)) \quad z \leq \max(D(x))-\min(D(y)) $$
 
 In this context, the technique of [SMT Solver](https://en.wikipedia.org/wiki/Satisfiability_modulo_theories) can also be
@@ -775,13 +777,16 @@ constraints.
 The arrows pointing towards a node can be seen as conjunctive implication clauses ($x\wedge y \Rightarrow z$).
 
 $$x_1,x_2,x_3,x_4,x_5 \in \{0,1,2,3,4,5\}$$
+
 $$\mathtt{AllDifferent}(x_1,x_2,x_3,x_4)$$
+
 $$x_2\leq x_5$$
+
 $$x_1+x_2+x_3+x_4\leq 9$$
 
 ![LCG examples](./images/lcg.png)
 
-Note that the 1UIP is pretty great: independent of the $[[x\leq 5]]$ decision, the new clause will directly trigger
+Note that the 1UIP is pretty great: independent of the $[[x_5\leq 2]]$ decision, the new clause will directly trigger
 and set $\neg [[x_2=2]]$ (in addition to $\neg [[x_5\leq 2]]$ by search).
 
 ### What happens in CP-SAT on solve?
