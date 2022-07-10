@@ -5,7 +5,7 @@
 **This tutorial is under [CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/). Smaller parts can be copied without
 any acknowledgements for non-commerical, educational purposes. Feel free to contribute.**
 
-> **This text is an early draft with lots of mistakes**
+> **WARNING: You are reading a draft! Expect lots of mistakes (and please report them either as issue or pull request :) )**
 
 This tutorial shall help you use and understand the LCG-based Constraint Programming
 Solver [CP-SAT of Google's ortools suite](https://github.com/google/or-tools/).
@@ -48,14 +48,15 @@ that you could solve it by hand, but know that CP-SAT would (probably) be fine w
 ten or hundred-thousand) variables and constraints more.
 The basic idea of using CP-SAT is, analogous to MIPs, to define an optimization problem in terms of variables,
 constraints, and objective function, and then let the solver find a solution for it.
-For people not familiar with this deklarative approach, you can compare it SQL where you also just state what data you
-want, not how to get it.
+For people not familiar with this deklarative approach, you can compare it to SQL, where you also just state what data
+you want, not how to get it.
 However, it is not purely deklarativ, because it can still make a huge(!) difference how you model the problem and
 getting that right takes some experience and understanding of the internals.
-You can still get lucky for smaller problems (lets say few hundreds to thousands variables) and obtain optimal solutions
-without having an idea of what is going on.
+You can still get lucky for smaller problems (let us say few hundreds to thousands variables) and obtain optimal
+solutions without having an idea of what is going on.
 
-Our first problem has no deeper meaning but just shows some basics to get you started:
+Our first problem has no deeper meaning, except of showing the basic workflow of creating the variables, adding the
+constraints on them, setting the objective function, and obtaining a solution:
 
 ```python
 from ortools.sat.python import cp_model
@@ -102,7 +103,14 @@ print(solver.ResponseStats())
     deterministic_time: 8e-08
     gap_integral: 5.11888e-07
 
-Pretty easy, right?
+Pretty easy, right? For solving a generic problem, not just one specific instance, you would of course create a
+dictionary or list of variables and use something like `model.Add(sum(vars)<=n)`, because you don't want to create
+the model by hand for larger instances.
+
+> **Definition:** A *model* refers to a concrete problem and instance description within the framework, consisting of
+> variables, constraints, and optionally an objective function. *Modelling* refers to transforming a problem (instance)
+> into the corresponding framework. Be aware that the SAT-community uses the term *model* to refer to a (feasible) 
+> variable assignment, i.e., solution of a SAT-formula.
 
 Here are some further examples, if you are not yet satisfied:
 
@@ -133,15 +141,16 @@ not directly assume the same perfomance.
 
 I cannot teach you how to properly model a problem at hand, here. This is rather an overview of what is possible, but
 you need to get your hands dirty and just try out.
-
-You can get a complete overview by looking into
-the [official documentation](http://google.github.io/or-tools/python/ortools/sat/python/cp_model.html). Best simply go
-to CpModel and check out the `AddXXX` and `NewXXX` methods.
-
-If you want more about modelling, I recommend the
-book [Model Building in Mathematical Programming by H. Paul Williams](https://www.wiley.com/en-us/Model+Building+in+Mathematical+Programming%2C+5th+Edition-p-9781118443330)
+If you want to learn more about modelling, I recommend the book 
+[Model Building in Mathematical Programming by H. Paul Williams](https://www.wiley.com/en-us/Model+Building+in+Mathematical+Programming%2C+5th+Edition-p-9781118443330)
 which covers much more than you probably need, including some actual applications. This book is of course not for
-CP-SAT, but the general technics and idea cary over.
+CP-SAT, but the general technics and ideas cary over.
+
+You can get a complete overview by looking into the 
+[official documentation](http://google.github.io/or-tools/python/ortools/sat/python/cp_model.html).
+Simply go to `CpModel` and check out the `AddXXX` and `NewXXX` methods.
+
+
 
 ### Variables
 
@@ -470,7 +479,7 @@ the threads. The basic idea is to use different techniques and may the best fitt
 7. All further threads perform a Large Neighborhood Search (LNS) for obtaining good solutions.
 
 Note that this information may no longer be completely accurate (if it ever was).
-To set the numnber of used cores/workers, simply do:
+To set the number of used cores/workers, simply do:
 
 ```python
 solver.parameters.num_search_workers = 8  # use 8 cores
@@ -484,9 +493,12 @@ solver.parameters.subsolvers = ["default_lp", "fixed", "less_encoding", "no_lp",
  ```
 
 This can be interesting, e.g., if you are using CP-SAT especially because the linear relaxation is not useful. There are
-even more option, but for this you can simply look into
-the [documentation](https://github.com/google/or-tools/blob/49b6301e1e1e231d654d79b6032e79809868a70e/ortools/sat/sat_parameters.proto#L513)
-.
+even more options, but for these you can simply look into the
+[documentation](https://github.com/google/or-tools/blob/49b6301e1e1e231d654d79b6032e79809868a70e/ortools/sat/sat_parameters.proto#L513).
+Be aware that fine-tuning such a solver is not a simple task and often you do more harm than good by tinkering around.
+However, I for example noticed that decreasing the number of search workers can actually improve the runtime for some problems.
+This indicates that at least selecting the right subsolvers that are best fitted for your problem can be worth a shot
+(for example `max_lp` is probably a waste of resources if you know that your model has a terrible linear relaxation).
 
 ### Assumptions
 
@@ -659,9 +671,10 @@ Let me quickly recap the most important parts for CP-SAT:
   solved. It limits you to linear constraints, but you can actually convert most of the other constraints to linear
   constraints.
 * A mixed integer linear program is still hard to solve, but if we allow all integral values to become fractional it
-  suddenly becomes a problem that we can solve efficiently. This is called a linear relaxation, potentially further
+  suddenly becomes a problem that we can solve efficiently. This is called a **linear relaxation**, potentially further
   improved by cutting planes. The linear relaxation provides us often with very good bounds (which is why Branch and Cut
-  works so well for many problems).
+  works so well for many problems). Also take a look on how close the linear relaxation of the TSP example below is
+  already on the root node.
 * Thanks to duality theory, we can even get bounds without solving the linear relaxation completely (for example if we
   just want to quickly estimate the influence of a potential branching decision).
 * We can warm-start this process and slight modifications to an already solved model will only take a small extra amount
@@ -683,6 +696,7 @@ Note that for this instance with 30 points, there exists over $10^{30}$ solution
 Still we managed to compute the optimal solution in just a few steps.
 
 ![tsp bnb example](./images/tsp_bnb.png)
+
 This example has been generated with [this tool by Bill Cook](http://www.math.uwaterloo.ca/tsp/D3/bootQ.html#).
 Let me again recommend the
 book [In Pursuit of the Traveling Salesman by Bill Cook](https://press.princeton.edu/books/paperback/9780691163529/in-pursuit-of-the-traveling-salesman)
@@ -858,3 +872,9 @@ Let me close this primer with some further references, that may come useful:
   information, once you know where to look. Especially a look into
   the [parameters](https://github.com/google/or-tools/blob/stable/ortools/sat/sat_parameters.proto) can be very
   enlightening.
+* [Model Building in Mathematical Programming by H. Paul Williams](https://www.wiley.com/en-us/Model+Building+in+Mathematical+Programming%2C+5th+Edition-p-9781118443330)
+    * A book about modelling practical problems. Quite comprehensive with lots of tricks I didn't know about earlier.
+  Be aware that too clever models are often hard to solve, so maybe it is not always a good thing to know too many
+  tricks. A nice thing about this book is that the second half gives you a lot of real world examples and solutions.
+    * Be aware that this book is about modelling, not solving. The latest edition is from 2013, the earliest from 1978.
+  The math hasn't changed, but the capabilities and technics of the solvers quite a lot.
