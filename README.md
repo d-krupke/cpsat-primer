@@ -753,8 +753,8 @@ $$ y \geq \min(D(x))-\max(D(z)) \quad y \leq \max(D(x))-\min(D(z)) $$
 
 $$ z \geq \min(D(x))-\max(D(y)) \quad z \leq \max(D(x))-\min(D(y)) $$
 
-In this context, the technique of [SMT Solver](https://en.wikipedia.org/wiki/Satisfiability_modulo_theories) can also be
-interesting.
+In this context, the technique of [SMT solvers](https://en.wikipedia.org/wiki/Satisfiability_modulo_theories) can also
+be interesting.
 
 #### Branching/Searching
 
@@ -776,7 +776,7 @@ The columns with the blue headlines show the application of propagators (i.e., c
 constraints.
 The arrows pointing towards a node can be seen as conjunctive implication clauses ($x\wedge y \Rightarrow z$).
 
-$$x_1,x_2,x_3,x_4,x_5 \in \{0,1,2,3,4,5\}$$
+$$x_1,x_2,x_3,x_4,x_5 \in \{1,2,3,4,5\}$$
 
 $$\mathtt{AllDifferent}(x_1,x_2,x_3,x_4)$$
 
@@ -797,12 +797,17 @@ So, what actually happens when you execute `solver.Solve(model)`?
 1. The model is read.
 2. The model is verified.
 3. Preprocessing (multiple iterations):
+
    a. Presolve (domain reduction)
+
    b. Expanding higher-level constraints to lower-level constraints. See also the
    analogous [FlatZinc and Flattening](https://www.minizinc.org/doc-2.5.5/en/flattening.html).
+
    c. Detection of equivalent variables
    and [affine relations](https://personal.math.ubc.ca/~cass/courses/m309-03a/a1/olafson/affine_fuctions.htm).
-   d. Substitute these by canoncial representations
+
+   d. Substitute these by canonical representations
+
    e. Probe some variables to detect if they are actually fixed or detect further equivalences.
 4. Load the preprocessed model into the underlying SAT-solver and create the linear relaxation.
 5. **Search for an optimal solution using the SAT-model (LCG) and the linear relaxation.**
