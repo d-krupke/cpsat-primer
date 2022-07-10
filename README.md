@@ -591,8 +591,8 @@ The advent of performant SAT-solvers only came around 2000 and the improvements 
 You can get a good overview of the history and developments of SAT-solvers in [this video](https://youtu.be/DU44Y9Pt504)
 by Armin Biere.
 Remember that SAT-formulas are usually stated in [CNF](https://en.wikipedia.org/wiki/Conjunctive_normal_form), i.e., a
-conjunction of disjunctions of literals, e.g., $(x_1 \vee x_2 \vee x_3) \wedge (\overline{x_1} \vee \overline{x_2})
-\wedge (x_1 \vee \overline{x_3})$.
+conjunction of disjunctions of literals, e.g., 
+$(x_1 \vee x_2 \vee x_3) \wedge (\overline{x_1} \vee \overline{x_2})\wedge (x_1 \vee \overline{x_3})$.
 Any SAT-formula can be efficiently converted to such a representation.
 
 If you want to actually dig deep into SAT-solvers, luckily there is literatur for you, e.g., *Donald Knuth - The Art of
@@ -628,11 +628,11 @@ Just remember that modern SAT-solver learn from failures which allows them to cu
 earlier instead of running into the same conflicts (with just some unimportant variables changed) again and again.
 
 Let us look on an overly simplified example:
-Consider the formula $(x_0\vee x_1) \wedge (x_2 \vee x_3) \wedge (\overline{x_0} \vee \overline{x_2}) \wedge (
-\overline{x_1} \vee x_2 \vee \overline{x_3})$.
+Consider the formula
+$(x_0\vee x_1)\wedge (x_2 \vee x_3)\wedge (\overline{x_0}\vee\overline{x_2})\wedge (\overline{x_1}\vee x_2\vee\overline{x_3})$.
 Let us assign $x_0=0$, which results in $x_1=1$ by unit propagation.
-If we now assign $x_2 = 0$, we have to assign $x_3=1$ by unit propagation, but this creates a conflict in $(
-\overline{x_1} \vee x_2 \vee \overline{x_3})$.
+If we now assign $x_2 = 0$, we have to assign $x_3=1$ by unit propagation, but this creates a conflict in 
+$(\overline{x_1} \vee x_2 \vee \overline{x_3})$.
 The core of this conflict was setting $x_0=x_2=0$, and therefore we can add the clause $(x_0 \vee x_2)$.
 Actually, this specific clause is not very helpful.
 In CDCL we usually extract a clause (1UIP) that will easily be triggered by the unit propagation in the next step.
@@ -786,8 +786,9 @@ $$x_1+x_2+x_3+x_4\leq 9$$
 
 ![LCG examples](./images/lcg.png)
 
-Note that the 1UIP is pretty great: independent of the $[[x_5\leq 2]]$ decision, the new clause will directly trigger
-and set $\neg [[x_2=2]]$ (in addition to $\neg [[x_5\leq 2]]$ by search).
+Note that the 1UIP is pretty great: independent of the $[[x_5\leq 2]]$ decision,
+the new clause will directly trigger and set $\neg [[x_2=2]]$
+(in addition to $\neg [[x_5\leq 2]]$ by search).
 
 ### What happens in CP-SAT on solve?
 
