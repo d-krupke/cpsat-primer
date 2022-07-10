@@ -28,7 +28,7 @@ In some cases I have to do (un-)educated guesses, which I cannot always mark app
    important part.
 3. [Parameters](#parameters): How to specify CP-SATs behavior, if needed. Timelimits, hints, assumptions,
    parallelization, ...
-4. [How does it work?](): After we know what we can do with CP-SAT, we look into how CP-SAT will do all
+4. [How does it work?](#how-does-it-work): After we know what we can do with CP-SAT, we look into how CP-SAT will do all
    these things.
 
 > This is just an unofficial primer, not a full documentation. I will provide links to more material whenever
@@ -250,7 +250,7 @@ model.AddAllDifferent(x, y, z)
 
 ### Absolute Values and Max/Min
 
-Two often occuring and important operators are absolute values as well as minimum and maximum values.
+Two often occurring and important operators are absolute values as well as minimum and maximum values.
 You cannot use operators directly in the constraints, but you can use them via an auxiliary variable and a dedicated
 constraint.
 These constraints are reasonably efficient in my experience.
@@ -321,8 +321,8 @@ You can even go completely bonkers and work with arrays in your model.
 The element at a variable index can be accessed via an `AddElement` constraint.
 
 The second constraint is actually more of a stable matching in array form.
-For two arrays of variables $v,w, |v|=|w|$, it requires $v[i]=j \Leftrightarrow w[j]=i \quad \forall i,j \in
-0,\ldots,|v|-1$.
+For two arrays of variables $v,w, |v|=|w|$, it requires 
+$v[i]=j \Leftrightarrow w[j]=i \quad \forall i,j \in 0,\ldots,|v|-1$.
 Note that this restricts the values of the variables in the arrays to $0,\ldots, |v|-1$.
 
 ```python
@@ -362,7 +362,7 @@ return us the best solution so far.
 If you are now asking yourself, why you should use a tool that may run forever: There are simply no provably faster
 algorithms and considering the combinatorial complexity, it is incredible that it works so well.
 Those not familiar with the concepts of NP-hardness and combinatorial complexty, I recommend to read the book 'In
-Pursuit of the Travaling Salesman' by William Cook.
+Pursuit of the Traveling Salesman' by William Cook.
 Actually, I recommend this book to anyone into optimization: It is a beautiful and light weekend-read.
 
 To set a timelimit (in seconds), we can simply set the following value before we run the solver:
@@ -700,7 +700,7 @@ solved to optimality, with LP 244, and with portfolio parallelization even 327.*
 The basic idea in lazy clause generation constraint programming is to convert the problem into a (lazy) SAT-formula, and
 have an additional set of propagators that dynamically add clauses to satisfy the complex constraints.
 
-> **WARNING:** This part may be overly simplified. I have only superficial knowledge of LCG (i.e., I read documentation,
+> **WARNING:** This part may be overly simplified. I have only superficial knowledge of LCG (i.e., I read documentations,
 > papers, and watched some talks).
 
 #### Encoding
@@ -839,8 +839,8 @@ Let me close this primer with some further references, that may come useful:
     * This may be a little overwhelming if you are not familiar enough with SAT-solving.
 * There is also [a talk of the developers of CP-SAT](https://youtu.be/lmy1ddn4cyw), which however is highly technical.
     * Gives more details on further tricks done by CP-SAT, on top of lazy clause generation.
-    * The second part especially goes into details on the usage of LPs in CP-SAT. So if you are comming from that
-      community, this talk will be highly interesting for you.
+    * The second part especially goes into details on the usage of LPs in CP-SAT. So if you are coming from that
+      community, this talk will be fascinating for you.
 * The slides for the course 'Solving Hard Problems in Practice' by Jediah Katz are pretty great to understand the
   technics without any prior knowledge, however, they are currently no longer available online.
 * [This blog](https://www.msoos.org/) gives some pretty nice insights into developing state of the art SAT-solvers.
@@ -848,7 +848,7 @@ Let me close this primer with some further references, that may come useful:
   somehow missing important information and it also seems like it is actually just updated from the previous, not so
   powerful, CP-solver.
 * [Documentation](https://google.github.io/or-tools/python/ortools/sat/python/cp_model.html): The documentations give a
-  good overview of the available functions but are often not extensively documented.
+  good overview of the available functions but are often not extensively explained.
 * [Sources](https://github.com/google/or-tools/tree/stable/ortools/sat): The sources actually contain a lot of
   information, once you know where to look. Especially a look into
   the [parameters](https://github.com/google/or-tools/blob/stable/ortools/sat/sat_parameters.proto) can be very
