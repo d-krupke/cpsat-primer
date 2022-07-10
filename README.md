@@ -255,7 +255,13 @@ permutation) [[source](https://youtu.be/lmy1ddn4cyw?t=624)]
 
 ```python
 model.AddAllDifferent(x, y, z)
+
+# You can also add a constant to the variables.
+vars = [model.NewIntVar(0, 10) for i in range(10)]
+model.AddAllDifferent(x+i for i, x in enumerate(vars))
 ```
+
+The [N-queens](https://developers.google.com/optimization/cp/queens) example of the official tutorial makes use of this constraint.
 
 ### Absolute Values and Max/Min
 
