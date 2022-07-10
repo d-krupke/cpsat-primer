@@ -7,7 +7,7 @@ any acknowledgements for non-commerical, educational purposes. Feel free to cont
 
 > **WARNING: You are reading a draft! Expect lots of mistakes (and please report them either as issue or pull request :) )**
 
-This tutorial shall help you use and understand the LCG-based Constraint Programming
+This unofficial primer shall help you use and understand the LCG-based Constraint Programming
 Solver [CP-SAT of Google's ortools suite](https://github.com/google/or-tools/).
 CP-SAT is a new generation of constraint programming solvers that can actually compete for some optimization problems
 against classical [Branch and Bound](https://en.wikipedia.org/wiki/Branch_and_bound)
@@ -17,8 +17,6 @@ material is somehow lacking (it is not bad, but maybe not sufficient for such a 
 This tutorial shall help you, especially if you are coming from
 the [MIP](https://en.wikipedia.org/wiki/Integer_programming)-community, to use and understand this tool as
 it may proof useful in cases where Branch and Bound performs poorly.
-Note that I myself am coming from the [MIP](https://en.wikipedia.org/wiki/Integer_programming)-community and am not
-related to the ortools-project.
 In some cases I have to do (un-)educated guesses, which I cannot always mark appropriately in favour of the readability.
 
 **Content:**
@@ -32,7 +30,7 @@ In some cases I have to do (un-)educated guesses, which I cannot always mark app
    these things.
 
 > This is just an unofficial primer, not a full documentation. I will provide links to more material whenever
-> possible.
+> possible. Additionally, I also add some personal experiences whenever I consider it helpful.
 
 **Target audience:** People with some background
 in [integer programming](https://en.wikipedia.org/wiki/Integer_programming)
@@ -45,7 +43,7 @@ in [combinatorial optimization](https://en.wikipedia.org/wiki/Combinatorial_opti
 
 Before we dive into any internals, let us take a quick look on a simple application of CP-SAT. This example is so simple
 that you could solve it by hand, but know that CP-SAT would (probably) be fine with you adding a thousand (maybe even
-ten or hundred-thousand) variables and constraints more.
+ten- or hundred-thousand) variables and constraints more.
 The basic idea of using CP-SAT is, analogous to MIPs, to define an optimization problem in terms of variables,
 constraints, and objective function, and then let the solver find a solution for it.
 For people not familiar with this deklarative approach, you can compare it to SQL, where you also just state what data
@@ -119,16 +117,15 @@ Here are some further examples, if you are not yet satisfied:
   been modified from the previous generation, which is also explained at the end.)
 * [Employee Scheduling](https://developers.google.com/optimization/scheduling/employee_scheduling)
 * [Job Shop Problem](https://developers.google.com/optimization/scheduling/job_shop)
-* Much more examples can be found
+* More examples can be found
   in [the official repository](https://github.com/google/or-tools/tree/stable/ortools/sat/samples) for multiple
-  languages (yes, CP-SAT does support more than just Python). As the Python-Examples are named in snake-case, they are
+  languages (yes, CP-SAT does support more than just Python). As the Python-examples are named in snake-case, they are
   at the end of the list.
 
 Ok. Now that you have seen a minimal model, let us look on what options we have to model a problem. Note that an
 experienced optimizer may be able to model most problems with just the elements shown above, but showing your intentions
 may help CP-SAT optimize your problem better. Contrary to Mixed Integer Programming, you also do not need to finetune
-any Big-Ms (a reason to model higher-level constraints yourself, because the computer is usually not as good in that as
-you).
+any Big-Ms (a reason to model higher-level constraints in MIPs yourself, because the computer is not very good at that).
 
 
 
@@ -136,17 +133,27 @@ you).
 
 ## Modelling
 
-We have much more constraints available than classical MIP-solver. As CP-SAT uses a different technique, we should also
-not directly assume the same perfomance.
+CP-SAT provides us with much more modelling options than the classical MIP-solver.
+Additionally, to the classical linear constraints, we have various advanced constraints
+such as `AllDifferent` or `AddMultiplicationEquality`. This spares you the burden
+of modelling the logic only with linear constraints, but also makes the interface
+more extensive. Additionally, you have to be aware that not all constraints are
+equally efficient. The most efficient constraints are linear or boolean constraints,
+constraints such as `AddMultiplicationEquality` can be significantly more expensive.
+However, you should not directly assume a bad performance just because similar
+constraints perform badly in MIP-solvers. For example a model I had that required multiple
+absolute values performed significantly better in CP-SAT than in Gurobi (despite a manual
+implementation with relatively tight big-M values).
 
-I cannot teach you how to properly model a problem at hand, here. This is rather an overview of what is possible, but
-you need to get your hands dirty and just try out.
-If you want to learn more about modelling, I recommend the book 
+This primer does not have the space to teach about building good models.
+In the following, we will primarily look onto a selection of useful constraints.
+If you want to learn how to build models, you could take a look into the book
 [Model Building in Mathematical Programming by H. Paul Williams](https://www.wiley.com/en-us/Model+Building+in+Mathematical+Programming%2C+5th+Edition-p-9781118443330)
-which covers much more than you probably need, including some actual applications. This book is of course not for
-CP-SAT, but the general technics and ideas cary over.
+which covers much more than you probably need, including some actual applications. 
+This book is of course not for CP-SAT, but the general techniques and ideas cary over.
+However, it can also suffice to simply look on some other models and try some things out.
 
-You can get a complete overview by looking into the 
+The following part does not cover all options. You can get a complete overview by looking into the 
 [official documentation](http://google.github.io/or-tools/python/ortools/sat/python/cp_model.html).
 Simply go to `CpModel` and check out the `AddXXX` and `NewXXX` methods.
 
@@ -158,12 +165,12 @@ There are two important types of variables: Integers and Booleans.
 Actually, there are more (
 e.g., [interval variables](http://google.github.io/or-tools/python/ortools/sat/python/cp_model.html#IntervalVar)), but
 these are the two important ones, I use all the time.
-There are not continuous/floating point variables (or even constants): If you need floating point numbers, you have to
+There are no continuous/floating point variables (or even constants): If you need floating point numbers, you have to
 round by some resolution. This necessity could probably be hidden from you, but for now you have to do it yourself.
-You also have to specify a lower and an upper bound for integer variables (this would be much harder to do automatically
-and can actually have a significant performance impact).
-This may sound like a serious limitation, but actually I have successfully handled complex problems with lots of angles
-and stuff with CP-SAT. You just have to get used to transforming all values.
+You also have to specify a lower and an upper bound for integer variables.
+Getting the bounds on the variables tight by running some optimization heuristics beforehand
+can pay off in my experience: Already a few percent can make a visible impact.
+
 
 ```python
 z = model.NewIntVar(-100, 100, 'z')
@@ -171,14 +178,19 @@ b = model.NewBoolVar('b')
 not_b = b.Not()
 ```
 
-> Most problems I know, actually have much more boolean variables than integer variables. Having a SAT-solver as base,
-> thus, is not such a bad idea.
+
+The lack of continuous variables may sound like a serious limitation, but actually I
+have successfully handled complex problems with lots of angles
+and stuff with CP-SAT. You just have to get used to transforming all values.
+Most problems I know, actually have much more boolean variables than integer variables.
+Having a SAT-solver as base, thus, is not such a bad idea.
+
 
 ### Objectives
 
 Not every problem actually has an objective, sometimes you only need to find a feasible solution.
 CP-SAT is pretty good at doing that (MIP-solvers are not).
-However, CP-SAT can also optimize pretty well (older constraint programming solver not, at least in my experience). You
+However, CP-SAT can also optimize pretty well (older constraint programming solver cannot, at least in my experience). You
 can minimize or maximize a linear expression (use constraints to model more complicated expressions). To do a
 lexicographic optimization, you can do multiple rounds and always fix the previous objective as constraint.
 
@@ -503,8 +515,10 @@ even more options, but for these you can simply look into the
 [documentation](https://github.com/google/or-tools/blob/49b6301e1e1e231d654d79b6032e79809868a70e/ortools/sat/sat_parameters.proto#L513).
 Be aware that fine-tuning such a solver is not a simple task and often you do more harm than good by tinkering around.
 However, I for example noticed that decreasing the number of search workers can actually improve the runtime for some problems.
-This indicates that at least selecting the right subsolvers that are best fitted for your problem can be worth a shot
-(for example `max_lp` is probably a waste of resources if you know that your model has a terrible linear relaxation).
+This indicates that at least selecting the right subsolvers that are best fitted for your problem can be worth a shot.
+For example `max_lp` is probably a waste of resources if you know that your model has a terrible linear relaxation.
+In this context I want to recommend to have a look on some relaxed solutions when dealing difficult problems to get a
+better understanding of which parts a solver may struggle with.
 
 ### Assumptions
 
@@ -867,7 +881,7 @@ Let me close this primer with some further references, that may come useful:
     * The second part especially goes into details on the usage of LPs in CP-SAT. So if you are coming from that
       community, this talk will be fascinating for you.
 * The slides for the course 'Solving Hard Problems in Practice' by Jediah Katz are pretty great to understand the
-  technics without any prior knowledge, however, they are currently no longer available online.
+  techniques without any prior knowledge, however, they are currently no longer available online.
 * [This blog](https://www.msoos.org/) gives some pretty nice insights into developing state of the art SAT-solvers.
 * [Official Tutorial](https://developers.google.com/optimization/cp): The official tutorial is reasonably good, but
   somehow missing important information and it also seems like it is actually just updated from the previous, not so
@@ -883,4 +897,4 @@ Let me close this primer with some further references, that may come useful:
   Be aware that too clever models are often hard to solve, so maybe it is not always a good thing to know too many
   tricks. A nice thing about this book is that the second half gives you a lot of real world examples and solutions.
     * Be aware that this book is about modelling, not solving. The latest edition is from 2013, the earliest from 1978.
-  The math hasn't changed, but the capabilities and technics of the solvers quite a lot.
+  The math hasn't changed, but the capabilities and techniques of the solvers quite a lot.
