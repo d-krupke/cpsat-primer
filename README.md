@@ -382,7 +382,7 @@ I will give you the most important right below.
 
 ### Timelimit and Status
 
-If we have a huge model, CP-SAT may not be able to solve it to optimality (if the constraints are not to difficult,
+If we have a huge model, CP-SAT may not be able to solve it to optimality (if the constraints are not too difficult,
 there is a good chance we still get a good solution).
 Of course, we don't want CP-SAT to run endlessly for hours (years, decades,...) but simply abort after a fixed time and
 return us the best solution so far.
@@ -591,6 +591,19 @@ model.AddDecisionStrategy([x], cp_model.CHOOSE_FIRST, cp_model.SELECT_MIN_VALUE)
 # your can force CP-SAT to follow this strategy exactly
 solver.parameters.search_branching = cp_model.FIXED_SEARCH
 ```
+
+For example for [coloring](https://en.wikipedia.org/wiki/Graph_coloring) (with integer representation of the color), we could order the
+variables by decreasing neighborhood size (`CHOOSE_FIRST`) and then always try to assign
+the lowest color (`SELECT_MIN_VALUE`). This strategy should perform an implicit
+kernalization, because if we need at least $k$ colors, the vertices with less than $k$
+neighbors are trivial (and they would not be relevant for any conflict).
+Thus, by putting them at the end of the list, CP-SAT will only consider them once
+the vertices with higher degree could be colored without any conflict (and then the
+vertices with lower degree will, too).
+Another strategy may be to use `CHOOSE_LOWEST_MIN` to always
+select the vertex that has the lowest color available.
+Whether this will actually help, has to be evaluated: CP-SAT will probably notice
+by itself, which vertices are the critical ones after some conflicts.
 
 ---
 
