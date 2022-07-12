@@ -606,6 +606,193 @@ select the vertex that has the lowest color available.
 Whether this will actually help, has to be evaluated: CP-SAT will probably notice
 by itself which vertices are the critical ones after some conflicts.
 
+### Logging
+
+Sometimes it is useful to activate logging to see what is going on.
+This can be achieved by setting the following two parameters.
+
+```python
+solver = cp_model.CpSolver()
+solver.parameters.log_search_progress = True
+solver.log_callback = print  # (str)->None
+```
+
+The output can look as follows:
+```
+
+Starting CP-SAT solver v9.3.10497
+Parameters: log_search_progress: true
+Setting number of workers to 16
+
+Initial optimization model '':
+#Variables: 290 (#ints:1 in objective)
+  - 290 in [0,17]
+#kAllDiff: 34
+#kLinMax: 1
+#kLinear2: 2312 (#complex_domain: 2312)
+
+Starting presolve at 0.00s
+[ExtractEncodingFromLinear] #potential_supersets=0 #potential_subsets=0 #at_most_one_encodings=0 #exactly_one_encodings=0 #unique_terms=0 #multiple_terms=0 #literals=0 time=9.558e-06s
+[Probing] deterministic_time: 0.053825 (limit: 1) wall_time: 0.0947566 (12427/12427)
+[Probing]  - new integer bounds: 1
+[Probing]  - new binary clause: 9282
+[DetectDuplicateConstraints] #duplicates=0 time=0.00993671s
+[DetectDominatedLinearConstraints] #relevant_constraints=2312 #work_done=14118 #num_inclusions=0 #num_redundant=0 time=0.0013379s
+[DetectOverlappingColumns] #processed_columns=0 #work_done=0 #nz_reduction=0 time=0.00176239s
+[ProcessSetPPC] #relevant_constraints=612 #num_inclusions=0 work=29376 time=0.0022503s
+[Probing] deterministic_time: 0.0444515 (limit: 1) wall_time: 0.0820382 (11849/11849)
+[Probing]  - new binary clause: 9282
+[DetectDuplicateConstraints] #duplicates=0 time=0.00786558s
+[DetectDominatedLinearConstraints] #relevant_constraints=2312 #work_done=14118 #num_inclusions=0 #num_redundant=0 time=0.000688681s
+[DetectOverlappingColumns] #processed_columns=0 #work_done=0 #nz_reduction=0 time=0.000992311s
+[ProcessSetPPC] #relevant_constraints=612 #num_inclusions=0 work=29376 time=0.00121334s
+
+Presolve summary:
+  - 0 affine relations were detected.
+  - rule 'all_diff: expanded' was applied 34 times.
+  - rule 'deductions: 10404 stored' was applied 1 time.
+  - rule 'linear: simplified rhs' was applied 7514 times.
+  - rule 'presolve: 0 unused variables removed.' was applied 1 time.
+  - rule 'presolve: iteration' was applied 2 times.
+  - rule 'variables: add encoding constraint' was applied 5202 times.
+
+Presolved optimization model '':
+#Variables: 5492 (#ints:1 in objective)
+  - 5202 in [0,1]
+  - 289 in [0,17]
+  - 1 in [1,17]
+#kAtMostOne: 612 (#literals: 9792)
+#kLinMax: 1
+#kLinear1: 10404 (#enforced: 10404)
+#kLinear2: 2312 (#complex_domain: 2312)
+
+Preloading model.
+#Bound   0.45s best:inf   next:[1,17]     initial_domain
+
+Starting Search at 0.47s with 16 workers.
+9 full subsolvers: [default_lp, no_lp, max_lp, reduced_costs, pseudo_costs, quick_restart, quick_restart_no_lp, lb_tree_search, probing]
+Interleaved subsolvers: [feasibility_pump, rnd_var_lns_default, rnd_cst_lns_default, graph_var_lns_default, graph_cst_lns_default, rins_lns_default, rens_lns_default]
+#1       0.71s best:17    next:[1,16]     quick_restart_no_lp fixed_bools:0/11849
+#2       0.72s best:16    next:[1,15]     quick_restart_no_lp fixed_bools:289/11849
+#3       0.74s best:15    next:[1,14]     no_lp fixed_bools:867/11849
+#Bound   1.30s best:15    next:[8,14]     max_lp initial_propagation
+#Done    3.40s max_lp
+#Done    3.40s probing
+
+Sub-solver search statistics:
+  'max_lp':
+     LP statistics:
+       final dimension: 2498 rows, 5781 columns, 106908 entries with magnitude in [6.155988e-02, 1.000000e+00]
+       total number of simplex iterations: 3401
+       num solves: 
+         - #OPTIMAL: 6
+         - #DUAL_UNBOUNDED: 1
+         - #DUAL_FEASIBLE: 1
+       managed constraints: 5882
+       merged constraints: 3510
+       coefficient strenghtenings: 19
+       num simplifications: 1
+       total cuts added: 3534 (out of 4444 calls)
+         - 'CG': 1134
+         - 'IB': 150
+         - 'MIR_1': 558
+         - 'MIR_2': 647
+         - 'MIR_3': 490
+         - 'MIR_4': 37
+         - 'MIR_5': 60
+         - 'MIR_6': 20
+         - 'ZERO_HALF': 438
+
+  'reduced_costs':
+     LP statistics:
+       final dimension: 979 rows, 5781 columns, 6456 entries with magnitude in [3.333333e-01, 1.000000e+00]
+       total number of simplex iterations: 1369
+       num solves: 
+         - #OPTIMAL: 15
+         - #DUAL_FEASIBLE: 51
+       managed constraints: 2962
+       merged constraints: 2819
+       shortened constraints: 1693
+       coefficient strenghtenings: 675
+       num simplifications: 1698
+       total cuts added: 614 (out of 833 calls)
+         - 'CG': 7
+         - 'IB': 439
+         - 'LinMax': 1
+         - 'MIR_1': 87
+         - 'MIR_2': 80
+
+  'pseudo_costs':
+     LP statistics:
+       final dimension: 929 rows, 5781 columns, 6580 entries with magnitude in [3.333333e-01, 1.000000e+00]
+       total number of simplex iterations: 1174
+       num solves: 
+         - #OPTIMAL: 14
+         - #DUAL_FEASIBLE: 33
+       managed constraints: 2923
+       merged constraints: 2810
+       shortened constraints: 1695
+       coefficient strenghtenings: 675
+       num simplifications: 1698
+       total cuts added: 575 (out of 785 calls)
+         - 'CG': 5
+         - 'IB': 400
+         - 'LinMax': 1
+         - 'MIR_1': 87
+         - 'MIR_2': 82
+
+  'lb_tree_search':
+     LP statistics:
+       final dimension: 929 rows, 5781 columns, 6650 entries with magnitude in [3.333333e-01, 1.000000e+00]
+       total number of simplex iterations: 1249
+       num solves: 
+         - #OPTIMAL: 16
+         - #DUAL_FEASIBLE: 14
+       managed constraints: 2924
+       merged constraints: 2809
+       shortened constraints: 1692
+       coefficient strenghtenings: 675
+       num simplifications: 1698
+       total cuts added: 576 (out of 785 calls)
+         - 'CG': 8
+         - 'IB': 400
+         - 'LinMax': 2
+         - 'MIR_1': 87
+         - 'MIR_2': 79
+
+
+Solutions found per subsolver:
+  'no_lp': 1
+  'quick_restart_no_lp': 2
+
+Objective bounds found per subsolver:
+  'initial_domain': 1
+  'max_lp': 1
+
+Improving variable bounds shared per subsolver:
+  'no_lp': 579
+  'quick_restart_no_lp': 1159
+
+CpSolverResponse summary:
+status: OPTIMAL
+objective: 15
+best_bound: 15
+booleans: 12138
+conflicts: 0
+branches: 23947
+propagations: 408058
+integer_propagations: 317340
+restarts: 23698
+lp_iterations: 1174
+walltime: 3.5908
+usertime: 3.5908
+deterministic_time: 6.71917
+gap_integral: 11.2892
+
+```
+
+> **TODO** Provide help to analyze it.
+
 ---
 
 ## How does it work?
