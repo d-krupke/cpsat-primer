@@ -435,11 +435,11 @@ To stop as soon as we are within 5% of the optimum, we could state (TODO: Check)
 solver.parameters.relative_gap_limit = 0.05
 ```
 
-.Now we may want to stop after we didn't make progress for some time or whatever.
+Now we may want to stop after we didn't make progress for some time or whatever.
 In this case, we can make use of the solution callbacks.
 
 *For those familiar with Gurobi: Unfortunately, we can only abort the solution progress and not add lazy constraints or
-similiar.
+similar.
 For those not familiar with Gurobi or MIPs: With Mixed Integer Programming we can adapt the model during the solution
 process via callbacks which allows us to solve problems with many(!) constraints by only adding them lazily.*
 
@@ -510,11 +510,12 @@ You can also specify how the different cores should be used by configuring/reord
 solver.parameters.subsolvers = ["default_lp", "fixed", "less_encoding", "no_lp", "max_lp", "pseudo_costs", "reduced_costs", "quick_restart", "quick_restart_no_lp", "lb_tree_search", "probing"]
  ```
 
-This can be interesting, e.g., if you are using CP-SAT especially because the linear relaxation is not useful. There are
+This can be interesting, e.g., if you are using CP-SAT especially because the linear
+relaxation is not useful (and the BnB-algorithm performing badly. There are
 even more options, but for these you can simply look into the
 [documentation](https://github.com/google/or-tools/blob/49b6301e1e1e231d654d79b6032e79809868a70e/ortools/sat/sat_parameters.proto#L513).
-Be aware that fine-tuning such a solver is not a simple task and often you do more harm than good by tinkering around.
-However, I for example noticed that decreasing the number of search workers can actually improve the runtime for some problems.
+Be aware that fine-tuning such a solver is not a simple task, and often you do more harm than good by tinkering around.
+However, I noticed that decreasing the number of search workers can actually improve the runtime for some problems.
 This indicates that at least selecting the right subsolvers that are best fitted for your problem can be worth a shot.
 For example `max_lp` is probably a waste of resources if you know that your model has a terrible linear relaxation.
 In this context I want to recommend to have a look on some relaxed solutions when dealing difficult problems to get a
@@ -572,7 +573,7 @@ We have the following options for variable selection:
 * `CHOOSE_LOWEST_MIN`: the variable that could (potentially) take the lowest value.
 * `CHOOSE_HIGHEST_MAX`: the variable that could (potentially) take the highest value.
 * `CHOOSE_MIN_DOMAIN_SIZE`: the variable that has the fewest feasible assignments.
-* `CHOOSE_MAX_DOMAIN_SIZE`: the variables the has the most feasible assignments.
+* `CHOOSE_MAX_DOMAIN_SIZE`: the variable the has the most feasible assignments.
 
 For the value/domain strategy, we have the options:
 
@@ -603,7 +604,7 @@ vertices with lower degree will, too).
 Another strategy may be to use `CHOOSE_LOWEST_MIN` to always
 select the vertex that has the lowest color available.
 Whether this will actually help, has to be evaluated: CP-SAT will probably notice
-by itself, which vertices are the critical ones after some conflicts.
+by itself which vertices are the critical ones after some conflicts.
 
 ---
 
@@ -614,7 +615,7 @@ You may have already learned that CP-SAT is transforming the problem into a SAT-
 This is of course not just an application of
 the [Cook-Levin Theorem](https://en.wikipedia.org/wiki/Cook%E2%80%93Levin_theorem) and also not just creating a boolean
 variable for every possible integer assignment combined with many, many constraints.
-No, it is actually kind of a simulation of branch and bound on a SAT-solver (gifting us clause learning and stuff) with
+No, it is actually kind of a simulation of Branch and Bound on a SAT-solver (gifting us clause learning and stuff) with
 a lot (!) of lazy variables and clauses (LCG).
 Additionally, tools from classical linear optimization (linear relaxations, RINS, ...) are applied when useful to guide
 the process (it is not like everything is done by the SAT-solver).
@@ -640,10 +641,10 @@ conjunction of disjunctions of literals, e.g.,
 $(x_1 \vee x_2 \vee x_3) \wedge (\overline{x_1} \vee \overline{x_2})\wedge (x_1 \vee \overline{x_3})$.
 Any SAT-formula can be efficiently converted to such a representation.
 
-If you want to actually dig deep into SAT-solvers, luckily there is literatur for you, e.g., *Donald Knuth - The Art of
-Computer Programming, Volume 4, Fascicle 6: Satisfiability*.
-The *Handbook of Satisfiability* may provide much more information, but is unfortunately pretty expensive.
-If you want some free material, I like the slides
+If you want to actually dig deep into SAT-solvers, luckily there is literatur for you, e.g.,
+* *Donald Knuth - The Art of Computer Programming, Volume 4, Fascicle 6: Satisfiability*.
+* The *Handbook of Satisfiability* may provide much more information, but is unfortunately pretty expensive.
+* If you want some free material, I liked the slides
 of [Carsten Sinz and Tomas Baylo - Practical SAT Solving](https://baldur.iti.kit.edu/sat/#about) quite a lot.
 
 ##### DPLL and Unit Propagation
@@ -658,7 +659,7 @@ that can notify us whenever this happens.
 This is actually a point I missed for quite some time, so I emphasize it especially for you so you don't have the same
 struggles as me: A lot of the further design decision are actually just to trigger unit propagation as often as
 possible.
-You may want to check out [these slides](https://baldur.iti.kit.edu/sat/files/2019/l05.pdf).
+You may want to check out [these slides](https://baldur.iti.kit.edu/sat/files/2019/l05.pdf) for more information.
 
 ##### Conflict-driven clause learning (CDCL)
 
@@ -666,11 +667,7 @@ One very important idea in SAT-solving
 is [learning new clauses](https://en.wikipedia.org/wiki/Conflict-driven_clause_learning), which allows us to identify
 infeasibility earlier in the search tree.
 We are not learning anything that is not available in the original formular, but we learn better representations of this
-information.
-For example, we may learn that if $x_1=1$, $x_9$ has to be 0 which is not directly visible from the clauses.
-Actually, the learned clauses will have more concrete properties that make them useful, but we don't go deeper here.
-Just remember that modern SAT-solver learn from failures which allows them to cut many infeasible future branches much
-earlier instead of running into the same conflicts (with just some unimportant variables changed) again and again.
+information, which will help us not to repeat the same mistakes again and again.
 
 Let us look on an overly simplified example:
 Consider the formula
@@ -685,8 +682,9 @@ In CDCL we usually extract a clause (1UIP) that will easily be triggered by the 
 For a better understanding, I recommend to take a look
 at [these slides](https://baldur.iti.kit.edu/sat/files/2019/l07.pdf).
 
-> For all the Branch and Bound-people: Clause learning can be considered as some kind of infeasibility pruning. Instead
-> of having bounds that tell you, you don't have to go deeper into this branch, you have get a number of conflict
+> For all the Branch and Bound-people: Clause learning can be considered as some kind of
+> infeasibility pruning. Instead of having bounds that tell you, you don't have to go 
+> deeper into this branch, you have get a number of conflict
 > clauses
 > that tell you, that nothing feasible can come out of branches that fit any of these clauses. There
 > is [some work](https://www.csc.kth.se/~jakobn/research/LearnToRelax_Constraints.pdf) in also integrating this into
@@ -747,7 +745,7 @@ solved to optimality, with LP 244, and with portfolio parallelization even 327.*
 The basic idea in lazy clause generation constraint programming is to convert the problem into a (lazy) SAT-formula, and
 have an additional set of propagators that dynamically add clauses to satisfy the complex constraints.
 
-> **WARNING:** This part may be overly simplified. I have only superficial knowledge of LCG (i.e., I read documentations,
+> **WARNING:** This part may be overly simplified. I have only superficial knowledge of LCG (i.e., I just read documentations,
 > papers, and watched some talks).
 
 #### Encoding
@@ -774,7 +772,7 @@ This is linear in the size of the domain for each variable, and thus still prohi
 However, we probably will only need a few values for each variables.
 If only the values x=1, 7 or 20 are interesting, we could simply just create variables for those and the constraints
 $[x\leq 1] \Rightarrow [x\leq 7], [x\leq 7 \Rightarrow x\leq 20], \ldots$.
-When it turns out, we need more, we simply extend the model lazily.
+When it turns out that we need more, we simply extend the model lazily.
 
 There are a few things to talk about:
 
@@ -787,7 +785,7 @@ There are a few things to talk about:
 
 #### Propagator
 
-So, we have consistent integral variables in a SAT-formula, but how do we add numerical constraints?
+So, we have consistent integral variables in a SAT-formula, but how do we add numerical constraints as boolean logic?
 
 Let us take a look on the simple constraint $x=y+z$.
 This constraint can also be expressed as $y=x-z$ and $z=x-y$.
@@ -800,13 +798,15 @@ $$ y \geq \min(D(x))-\max(D(z)) \quad y \leq \max(D(x))-\min(D(z)) $$
 
 $$ z \geq \min(D(x))-\max(D(y)) \quad z \leq \max(D(x))-\min(D(y)) $$
 
+Other constraints will be more complex, but you see the general idea.
+
 In this context, the technique of [SMT solvers](https://en.wikipedia.org/wiki/Satisfiability_modulo_theories) can also
 be interesting.
 
 #### Branching/Searching
 
-Whenever we can no longer apply any propagation, i.e., reached a fixpoint, we have to branch on some variable.
-Branching is actually just fixing a variable, e.g., $[x\leq 7]=1$.
+Whenever we can no longer propagate anything, i.e., reached a fixpoint, we have to branch on some variable.
+Branching can be interpreted fixing a variable, e.g., $[x\leq 7]=1$.
 This is actually just DPLL.
 
 For finding an optional solution, we just have to find a feasible solution with $[obj\leq T]=1$ is satisfiable and
@@ -821,7 +821,8 @@ search: they usually have only a single path of the tree in memory).
 The purple literals are triggered by the numeric consistency rules.
 The columns with the blue headlines show the application of propagators (i.e., clause generation) for the three
 constraints.
-The arrows pointing towards a node can be seen as conjunctive implication clauses ($x\wedge y \Rightarrow z$).
+The arrows pointing towards a node can be seen as conjunctive implication clauses ($x\wedge y \Rightarrow z$),
+that are added lazily by the propagators.
 
 $$x_1,x_2,x_3,x_4,x_5 \in \{1,2,3,4,5\}$$
 
