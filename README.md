@@ -619,7 +619,6 @@ solver.log_callback = print  # (str)->None
 
 The output can look as follows:
 ```
-
 Starting CP-SAT solver v9.3.10497
 Parameters: log_search_progress: true
 Setting number of workers to 16
@@ -788,10 +787,9 @@ walltime: 3.5908
 usertime: 3.5908
 deterministic_time: 6.71917
 gap_integral: 11.2892
-
 ```
 
-> **TODO** Provide help to analyze it.
+We take a more detailed look onto it [here](./understanding_the_log.md).
 
 ---
 
