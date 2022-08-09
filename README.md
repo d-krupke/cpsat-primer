@@ -837,8 +837,8 @@ of [Carsten Sinz and Tomas Baylo - Practical SAT Solving](https://baldur.iti.kit
 The first important technique in solving SAT-formulas is
 the [Davis–Putnam–Logemann–Loveland (DPLL) algorithm](https://en.wikipedia.org/wiki/DPLL_algorithm).
 Modern SAT-solver are actually just this backtracking-based algorithm with extras.
-The probably most important part to remember is the unit-propagation: If we have a clause $(x_1\vee x_2 \vee
-\overline{x_3})$ and we have already set $x_1=0$ and $x_3=1$, we know that $x_2=1$.
+The probably most important part to remember is the unit-propagation: If we have a clause 
+$(x_1\vee x_2 \vee \overline{x_3})$ and we have already set $x_1=0$ and $x_3=1$, we know that $x_2=1$.
 The important thing about unit propagation is that there are highly-efficient data structures (e.g., 2-watched literals)
 that can notify us whenever this happens.
 This is actually a point I missed for quite some time, so I emphasize it especially for you so you don't have the same
@@ -962,7 +962,7 @@ When it turns out that we need more, we simply extend the model lazily.
 There are a few things to talk about:
 
 1. Why do we need the order variables $[x\leq v]$? Because otherwise we would need a quadratic amount of consistency
-   constraints ($[x=v] \rightarrow [x\not=v'] \forall v\not=v' \in D(x)$).
+   constraints ( $[x=v] \rightarrow [x\not= v'] ~ \forall v\not=v' \in D(x)$ ).
 2. Why use a unary encoding instead of a logarithmic? Because it propagates much better with unit propagation. E.g., if
    $[x\leq v]$ is set, all $[x\leq v'], v'>v$ are automatically triggered. This is much harder, if not impossible, to
    achieve if each value consist of multiple variables. Thanks to the lazy variable generation, we often still need only
@@ -1006,7 +1006,7 @@ search: they usually have only a single path of the tree in memory).
 The purple literals are triggered by the numeric consistency rules.
 The columns with the blue headlines show the application of propagators (i.e., clause generation) for the three
 constraints.
-The arrows pointing towards a node can be seen as conjunctive implication clauses ($x\wedge y \Rightarrow z$),
+The arrows pointing towards a node can be seen as conjunctive implication clauses ( $x\wedge y \Rightarrow z$ ),
 that are added lazily by the propagators.
 
 $$x_1,x_2,x_3,x_4,x_5 \in \{1,2,3,4,5\}$$
