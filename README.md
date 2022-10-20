@@ -11,13 +11,12 @@ This unofficial primer shall help you use and understand the LCG-based Constrain
 Solver [CP-SAT of Google's ortools suite](https://github.com/google/or-tools/).
 CP-SAT is a new generation of constraint programming solvers that can actually compete for some optimization problems
 against classical [Branch and Bound](https://en.wikipedia.org/wiki/Branch_and_bound)
-& [Cut](https://en.wikipedia.org/wiki/Branch_and_cut)-approaches, e.g., [Gurobi](https://www.gurobi.com/).
-Unfortunately, the CP-SAT does not yet have the maturity of established tools such as Gurobi and thus, the educational
+& [Cut](https://en.wikipedia.org/wiki/Branch_and_cut) -approaches, e.g., [Gurobi](https://www.gurobi.com/).
+Unfortunately, CP-SAT does not yet have the maturity of established tools such as Gurobi and thus, the educational
 material is somehow lacking (it is not bad, but maybe not sufficient for such a powerful tool).
 This tutorial shall help you, especially if you are coming from
-the [MIP](https://en.wikipedia.org/wiki/Integer_programming)-community, to use and understand this tool as
+the [MIP](https://en.wikipedia.org/wiki/Integer_programming) -community, to use and understand this tool as
 it may proof useful in cases where Branch and Bound performs poorly.
-In some cases I have to do (un-)educated guesses, which I cannot always mark appropriately in favour of the readability.
 
 **Content:**
 
@@ -29,13 +28,16 @@ In some cases I have to do (un-)educated guesses, which I cannot always mark app
 4. [How does it work?](#how-does-it-work): After we know what we can do with CP-SAT, we look into how CP-SAT will do all
    these things.
 
-> This is just an unofficial primer, not a full documentation. I will provide links to more material whenever
+> :warning: This is just an unofficial primer, not a full documentation. I will provide links to more material whenever
 > possible. Additionally, I also add some personal experiences whenever I consider it helpful.
+> Note that I have to do some (un-)educated guesses at some parts, which I cannot always
+> label accordingly in favour of readability. Please do not take all details here for
+> granted - they may be wrong.
 
 **Target audience:** People with some background
 in [integer programming](https://en.wikipedia.org/wiki/Integer_programming)
 /[linear optimization](https://en.wikipedia.org/wiki/Linear_programming), who would like to know an actually viable
-alternative to [Branch and Cut](https://en.wikipedia.org/wiki/Branch_and_cut). However, I tried to make it
+alternative to [Branch and Cut](https://en.wikipedia.org/wiki/Branch_and_cut). However, I try to make it
 understandable for anyone interested
 in [combinatorial optimization](https://en.wikipedia.org/wiki/Combinatorial_optimization).
 
@@ -52,9 +54,10 @@ However, it is not purely deklarativ, because it can still make a huge(!) differ
 getting that right takes some experience and understanding of the internals.
 You can still get lucky for smaller problems (let us say few hundreds to thousands variables) and obtain optimal
 solutions without having an idea of what is going on.
+The solvers can handle more and more 'bad' problem models effectively with every year.
 
-Our first problem has no deeper meaning, except of showing the basic workflow of creating the variables, adding the
-constraints on them, setting the objective function, and obtaining a solution:
+Our first problem has no deeper meaning, except of showing the basic workflow of creating the variables (x and y), adding the
+constraint x+y<=30 on them, setting the objective function (maximize 30*x + 50*y), and obtaining a solution:
 
 ```python
 from ortools.sat.python import cp_model
@@ -134,7 +137,7 @@ any Big-Ms (a reason to model higher-level constraints in MIPs yourself, because
 ## Modelling
 
 CP-SAT provides us with much more modelling options than the classical MIP-solver.
-Additionally, to the classical linear constraints, we have various advanced constraints
+Additionally, to the classical linear constraints (<=, ==, >=), we have various advanced constraints
 such as `AllDifferent` or `AddMultiplicationEquality`. This spares you the burden
 of modelling the logic only with linear constraints, but also makes the interface
 more extensive. Additionally, you have to be aware that not all constraints are
@@ -157,7 +160,8 @@ The following part does not cover all options. You can get a complete overview b
 [official documentation](http://google.github.io/or-tools/python/ortools/sat/python/cp_model.html).
 Simply go to `CpModel` and check out the `AddXXX` and `NewXXX` methods.
 
-
+If you are completely new to this area, you may also want to check out modelling for the MIP-solver Gurobi in this [video course](https://www.youtube.com/playlist?list=PLHiHZENG6W8CezJLx_cw9mNqpmviq3lO9).
+Remember that many things are similar to CP-SAT, but not everything (as already mentioned, CP-SAT is especially interesting for the cases where a MIP-solver fails).
 
 ### Variables
 
@@ -182,14 +186,16 @@ not_b = b.Not()
 The lack of continuous variables may sound like a serious limitation, but actually I
 have successfully handled complex problems with lots of angles
 and stuff with CP-SAT. You just have to get used to transforming all values.
-Most problems I know, actually have much more boolean variables than integer variables.
-Having a SAT-solver as base, thus, is not such a bad idea.
+Even high resolutions (and thus large domains) did not seem harm the efficiency significantly in my use cases.
+Additionally, most problems I know, actually have much more boolean variables than integer variables.
+Many problems, such as the famous Traveling Salesman Problem, only consist of boolean variables.
+Having a SAT-solver as base, thus, is not such a bad idea (note that the SAT-solver is just one of many components of CP-SAT).
 
 
 ### Objectives
 
 Not every problem actually has an objective, sometimes you only need to find a feasible solution.
-CP-SAT is pretty good at doing that (MIP-solvers are not).
+CP-SAT is pretty good at doing that (MIP-solvers are often not).
 However, CP-SAT can also optimize pretty well (older constraint programming solver cannot, at least in my experience). You
 can minimize or maximize a linear expression (use constraints to model more complicated expressions). To do a
 lexicographic optimization, you can do multiple rounds and always fix the previous objective as constraint.
@@ -209,7 +215,7 @@ solver.Solve(model)
 These are the classical constraints also used in linear optimization.
 Remember that you are still not allowed to use floating point numbers within it.
 Same as for linear optimization: You are not allowed to multiply a variable with anything else than a constant and also
-not apply any further mathematical operations.
+not to apply any further mathematical operations.
 
 ```python
 model.Add(10 * x + 15 * y <= 10)
@@ -222,7 +228,7 @@ model.Add(x + y != z)
 model.Add(x <= z - 1)  # x < z
 ```
 
-> **Caveat:** If you use intersecting linear constraints, you may get problems because the intersection point needs to
+> :warning: If you use intersecting linear constraints, you may get problems because the intersection point needs to
 > be integral. There is no such thing as a feasibility tolerance as in Mixed Integer Programming-solvers.
 
 ### Logical Constaints
@@ -331,7 +337,7 @@ model.AddCircuit([(0, 1, b1), (1, 0, b1), (1, 2, b2), (2, 0, b3)])
 
 MIP-solver usually use something like
 the [Dantzig-Fulkerson-Johnson Formulation](https://en.wikipedia.org/wiki/Travelling_salesman_problem#Dantzig%E2%80%93Fulkerson%E2%80%93Johnson_formulation)
-that potentially require an exponential amount of constraints, but perform much better than the smaller models, due to
+that potentially requires an exponential amount of constraints, but performs much better than the smaller models, due to
 the fact that you can add constraints lazily when needed (you usually only need a fraction of them) and the smaller
 models usually rely on some kind of Big-M method. The Big-M-based models are difficult to solve with MIP-solvers due to
 their weak linear relaxations. The exponential model is no option for CP-SAT because it does not allow lazy constraints.
@@ -367,6 +373,7 @@ An important part we neglect to keep this tutorial reasonably short (and because
 important in some domains) are intervals.
 CP-SAT has extensive support for interval variables and corresponding constraints, even two-dimensional do-not-overlap
 constraints.
+These could be useful for, e.g., packing problems (packing as many objects into a container as possible) or scheduling problems (like assigning work shifts).
 Maybe I add something about those later.
 
 ---
@@ -379,6 +386,10 @@ the `parameters`-member.
 If you want to find out all options, you can check the reasonably well documented `proto`-file in
 the [official repository](https://github.com/google/or-tools/blob/stable/ortools/sat/sat_parameters.proto).
 I will give you the most important right below.
+
+> :warning: Only a few of the parameters (e.g., timelimit) are beginner friendly. Most other parameters (e.g., dicision strategies)
+> should not be touched as the defaults are well chosen and it is likely that you will interfere with some optimizations.
+> If you need a better performance, try to improve your model of the optimization problem.
 
 ### Timelimit and Status
 
@@ -438,10 +449,12 @@ solver.parameters.relative_gap_limit = 0.05
 Now we may want to stop after we didn't make progress for some time or whatever.
 In this case, we can make use of the solution callbacks.
 
-*For those familiar with Gurobi: Unfortunately, we can only abort the solution progress and not add lazy constraints or
-similar.
-For those not familiar with Gurobi or MIPs: With Mixed Integer Programming we can adapt the model during the solution
-process via callbacks which allows us to solve problems with many(!) constraints by only adding them lazily.*
+> For those familiar with Gurobi: Unfortunately, we can only abort the solution progress and not add lazy constraints or
+> similar.
+> For those not familiar with Gurobi or MIPs: With Mixed Integer Programming we can adapt the model during the solution
+> process via callbacks which allows us to solve problems with many(!) constraints by only adding them lazily. This is currently
+> the biggest shortcoming of CP-SAT for me. Sometimes you can still do dynamic model building with only little overhead 
+> by feeding information of previous itertions into the model.
 
 For adding a solution callback, we have to inherit from a base class.
 The documentation of the base class and the available operations can be found in
@@ -476,7 +489,8 @@ values mean will be discussed later.
 ### Parallelization
 
 CP-SAT has some basic parallelization. It can be considered a portfolio-strategy with some minimal data exchange between
-the threads. The basic idea is to use different techniques and may the best fitting one win.
+the threads. The basic idea is to use different techniques and may the best fitting one win (as an experienced
+optimizer, it can actually be very enlightening to see which technique contributed how much at which phase as visible in the logs).
 
 1. The first thread performs the default search: The optimization problem is converted into a Boolean satisfiability
    problem and solved with a Variable State Independent Decaying Sum (VSIDS) algorithm. A search heuristic introduces
@@ -518,8 +532,8 @@ Be aware that fine-tuning such a solver is not a simple task, and often you do m
 However, I noticed that decreasing the number of search workers can actually improve the runtime for some problems.
 This indicates that at least selecting the right subsolvers that are best fitted for your problem can be worth a shot.
 For example `max_lp` is probably a waste of resources if you know that your model has a terrible linear relaxation.
-In this context I want to recommend to have a look on some relaxed solutions when dealing difficult problems to get a
-better understanding of which parts a solver may struggle with.
+In this context I want to recommend to have a look on some relaxed solutions when dealing with difficult problems to get a
+better understanding of which parts a solver may struggle with (use a linear programming solver, like Gurobi, for this).
 
 ### Assumptions
 
@@ -549,8 +563,9 @@ model.ClearAssumptions()  # clear all assumptions
 Maybe we already have a good intuition on how the solution will look like (this could be, because we already solved a
 similar model, have a good heuristic, etc.).
 In this case it may be useful, to tell CP-SAT about it so it can incorporate this knowledge into its search.
-For Mixed Integer Programming Solver, this often yields a visible boost, even with mediocre heuristic solutions, for
-CP-SAT I actually also encountered downgrades of the performance if the hints weren't great.
+For Mixed Integer Programming Solver, this often yields a visible boost, even with mediocre heuristic solutions.
+For CP-SAT I actually also encountered downgrades of the performance if the hints weren't great (but this may
+depend on the problem).
 
 ```python
 model.AddHint(x, 1)  # Tell CP-SAT that x will probably be 1
@@ -561,50 +576,6 @@ You can also
 find [an official example](https://github.com/google/or-tools/blob/stable/ortools/sat/samples/solution_hinting_sample_sat.py)
 .
 
-### Decision Strategy
-
-We can tell CP-SAT, how to branch (or make a decision) whenever it can no longer deduce anything via propagation.
-For this, we need to provide a list of the variables (order may be important for some strategies), define which variable
-should be selected next (fixed variables are automatically skipped), and define which value should be probed.
-
-We have the following options for variable selection:
-
-* `CHOOSE_FIRST`: the first not-fixed variable in the list.
-* `CHOOSE_LOWEST_MIN`: the variable that could (potentially) take the lowest value.
-* `CHOOSE_HIGHEST_MAX`: the variable that could (potentially) take the highest value.
-* `CHOOSE_MIN_DOMAIN_SIZE`: the variable that has the fewest feasible assignments.
-* `CHOOSE_MAX_DOMAIN_SIZE`: the variable the has the most feasible assignments.
-
-For the value/domain strategy, we have the options:
-
-* `SELECT_MIN_VALUE`: try to assign the smallest value.
-* `SELECT_MAX_VALUE`: try to assign the largest value.
-* `SELECT_LOWER_HALF`: branch to the lower half.
-* `SELECT_UPPER_HALF`: branch to the upper half.
-* `SELECT_MEDIAN_VALUE`: try to assign the median value.
-
-> **CAVEAT:** In the documentation there is a warning about the completeness of the domain strategy. I am not sure, if
-> this is just for custom strategies or you have to be careful in general. So be warned.
-
-```python
-model.AddDecisionStrategy([x], cp_model.CHOOSE_FIRST, cp_model.SELECT_MIN_VALUE)
-
-# your can force CP-SAT to follow this strategy exactly
-solver.parameters.search_branching = cp_model.FIXED_SEARCH
-```
-
-For example for [coloring](https://en.wikipedia.org/wiki/Graph_coloring) (with integer representation of the color), we could order the
-variables by decreasing neighborhood size (`CHOOSE_FIRST`) and then always try to assign
-the lowest color (`SELECT_MIN_VALUE`). This strategy should perform an implicit
-kernalization, because if we need at least $k$ colors, the vertices with less than $k$
-neighbors are trivial (and they would not be relevant for any conflict).
-Thus, by putting them at the end of the list, CP-SAT will only consider them once
-the vertices with higher degree could be colored without any conflict (and then the
-vertices with lower degree will, too).
-Another strategy may be to use `CHOOSE_LOWEST_MIN` to always
-select the vertex that has the lowest color available.
-Whether this will actually help, has to be evaluated: CP-SAT will probably notice
-by itself which vertices are the critical ones after some conflicts.
 
 ### Logging
 
@@ -616,6 +587,7 @@ solver = cp_model.CpSolver()
 solver.parameters.log_search_progress = True
 solver.log_callback = print  # (str)->None
 ```
+If you get a doubled output, remove the last line.
 
 The output can look as follows:
 ```
@@ -789,7 +761,60 @@ deterministic_time: 6.71917
 gap_integral: 11.2892
 ```
 
-We take a more detailed look onto it [here](./understanding_the_log.md).
+The log is actually very intersting to understand CP-SAT, but also to learn about the optimzation problem at hand.
+It gives you a lot of details on, e.g., how many variables could be directly removed or which technqiues contributed to lower and upper bounds the most.
+We take a more detailed look onto the log [here](./understanding_the_log.md).
+
+### Decision Strategy
+
+In the end of this section, a more advanced parameter that looks interesting for advanced users as it gives some insights into the search algorithm, but is probably better left alone.
+
+We can tell CP-SAT, how to branch (or make a decision) whenever it can no longer deduce anything via propagation.
+For this, we need to provide a list of the variables (order may be important for some strategies), define which variable
+should be selected next (fixed variables are automatically skipped), and define which value should be probed.
+
+We have the following options for variable selection:
+
+* `CHOOSE_FIRST`: the first not-fixed variable in the list.
+* `CHOOSE_LOWEST_MIN`: the variable that could (potentially) take the lowest value.
+* `CHOOSE_HIGHEST_MAX`: the variable that could (potentially) take the highest value.
+* `CHOOSE_MIN_DOMAIN_SIZE`: the variable that has the fewest feasible assignments.
+* `CHOOSE_MAX_DOMAIN_SIZE`: the variable the has the most feasible assignments.
+
+For the value/domain strategy, we have the options:
+
+* `SELECT_MIN_VALUE`: try to assign the smallest value.
+* `SELECT_MAX_VALUE`: try to assign the largest value.
+* `SELECT_LOWER_HALF`: branch to the lower half.
+* `SELECT_UPPER_HALF`: branch to the upper half.
+* `SELECT_MEDIAN_VALUE`: try to assign the median value.
+
+> **CAVEAT:** In the documentation there is a warning about the completeness of the domain strategy. I am not sure, if
+> this is just for custom strategies or you have to be careful in general. So be warned.
+
+```python
+model.AddDecisionStrategy([x], cp_model.CHOOSE_FIRST, cp_model.SELECT_MIN_VALUE)
+
+# your can force CP-SAT to follow this strategy exactly
+solver.parameters.search_branching = cp_model.FIXED_SEARCH
+```
+
+For example for [coloring](https://en.wikipedia.org/wiki/Graph_coloring) (with integer representation of the color), we could order the
+variables by decreasing neighborhood size (`CHOOSE_FIRST`) and then always try to assign
+the lowest color (`SELECT_MIN_VALUE`). This strategy should perform an implicit
+kernalization, because if we need at least $k$ colors, the vertices with less than $k$
+neighbors are trivial (and they would not be relevant for any conflict).
+Thus, by putting them at the end of the list, CP-SAT will only consider them once
+the vertices with higher degree could be colored without any conflict (and then the
+vertices with lower degree will, too).
+Another strategy may be to use `CHOOSE_LOWEST_MIN` to always
+select the vertex that has the lowest color available.
+Whether this will actually help, has to be evaluated: CP-SAT will probably notice
+by itself which vertices are the critical ones after some conflicts.
+
+> :warning: I played around a little with selecting a manual search strategy. But even for the coloring, where this may even
+> seem smart, it only gave an advantage for a bad model and after improving the model by symmetry breaking, it performed worse.
+> Further, I assume that CP-SAT can learn the best strategy (Gurobi does such a thing, too) much better dynammically on its own.
 
 ---
 
@@ -930,7 +955,7 @@ solved to optimality, with LP 244, and with portfolio parallelization even 327.*
 The basic idea in lazy clause generation constraint programming is to convert the problem into a (lazy) SAT-formula, and
 have an additional set of propagators that dynamically add clauses to satisfy the complex constraints.
 
-> **WARNING:** This part may be overly simplified. I have only superficial knowledge of LCG (i.e., I just read documentations,
+> :warning: This part may be overly simplified. I have only superficial knowledge of LCG (i.e., I just read documentations,
 > papers, and watched some talks).
 
 #### Encoding
