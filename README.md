@@ -48,9 +48,9 @@ that you could solve it by hand, but know that CP-SAT would (probably) be fine w
 ten- or hundred-thousand) variables and constraints more.
 The basic idea of using CP-SAT is, analogous to MIPs, to define an optimization problem in terms of variables,
 constraints, and objective function, and then let the solver find a solution for it.
-For people not familiar with this deklarative approach, you can compare it to SQL, where you also just state what data
+For people not familiar with this declarative approach, you can compare it to SQL, where you also just state what data
 you want, not how to get it.
-However, it is not purely deklarativ, because it can still make a huge(!) difference how you model the problem and
+However, it is not purely declarative, because it can still make a huge(!) difference how you model the problem and
 getting that right takes some experience and understanding of the internals.
 You can still get lucky for smaller problems (let us say few hundreds to thousands variables) and obtain optimal
 solutions without having an idea of what is going on.
