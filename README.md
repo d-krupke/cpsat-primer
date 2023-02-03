@@ -20,6 +20,7 @@ it may proof useful in cases where Branch and Bound performs poorly.
 
 **Content:**
 
+1. [Installation](#installation): Quick installation guide.
 1. [Example](#example): A short example, showing the usage of CP-SAT.
 2. [Modelling](#modelling): An overview of variables, objectives, and constraints. The constraints make the most
    important part.
@@ -40,6 +41,21 @@ in [integer programming](https://en.wikipedia.org/wiki/Integer_programming)
 alternative to [Branch and Cut](https://en.wikipedia.org/wiki/Branch_and_cut). However, I try to make it
 understandable for anyone interested
 in [combinatorial optimization](https://en.wikipedia.org/wiki/Combinatorial_optimization).
+
+## Installation
+
+The installation of CP-SAT, which is part of the ortools package, is very easy and can
+be done via pip.
+
+```shell
+pip install -U ortools
+```
+
+This command will also update an existing installation of ortools.
+As this tool is in active development, it is recommendable to update it frequently.
+We actually encountered wrong behavior, i.e., bugs, in earlier versions that then have
+been fixed by updates (this was on some more advanced features, don't worry about
+correctness with basic usage).
 
 ## Example
 
