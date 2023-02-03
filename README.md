@@ -21,12 +21,12 @@ it may proof useful in cases where Branch and Bound performs poorly.
 **Content:**
 
 1. [Installation](#installation): Quick installation guide.
-1. [Example](#example): A short example, showing the usage of CP-SAT.
-2. [Modelling](#modelling): An overview of variables, objectives, and constraints. The constraints make the most
+2. [Example](#example): A short example, showing the usage of CP-SAT.
+3. [Modelling](#modelling): An overview of variables, objectives, and constraints. The constraints make the most
    important part.
-3. [Parameters](#parameters): How to specify CP-SATs behavior, if needed. Timelimits, hints, assumptions,
+4. [Parameters](#parameters): How to specify CP-SATs behavior, if needed. Timelimits, hints, assumptions,
    parallelization, ...
-4. [How does it work?](#how-does-it-work): After we know what we can do with CP-SAT, we look into how CP-SAT will do all
+5. [How does it work?](#how-does-it-work): After we know what we can do with CP-SAT, we look into how CP-SAT will do all
    these things.
 
 > :warning: This is just an unofficial primer, not a full documentation. I will provide links to more material whenever
