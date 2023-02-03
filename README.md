@@ -28,6 +28,8 @@ it may proof useful in cases where Branch and Bound performs poorly.
    parallelization, ...
 5. [How does it work?](#how-does-it-work): After we know what we can do with CP-SAT, we look into how CP-SAT will do all
    these things.
+6. [Large Neighborhood Search](#large-neighborhood-search): The use of CP-SAT to create more powerful heuristics.
+7. [Further Material](#further-material): Some more resources if you want to dig deeper.
 
 > :warning: This is just an unofficial primer, not a full documentation. I will provide links to more material whenever
 > possible. Additionally, I also add some personal experiences whenever I consider it helpful.
@@ -1105,6 +1107,39 @@ linear relaxation's objective and the reduced costs).
 
 The used Relaxation Induced Neighborhood Search RINS (LNS worker), a very successful heuristic, of course also uses
 linear programming.
+
+## Large Neighborhood Search
+
+### The use of CP-SAT to create more powerful heuristics
+
+CP-SAT can solve some small to medium-sized instances reasonably fast.
+However, for some problems you need to solve larger instances that are beyond any of the
+current solvers. You could now fall back to classical meta-heuristics such as genetic
+algorithms or any algorithm with a fancy name that will impress managers, but actually
+perform not much better than some greedy decisions (but because the algorithm is so
+fancy, you don't have the resources to compare it to something else and no one will ever
+know). Ok, you may have noticed the sarcasm and that I don't think very high of most
+meta-heuristics, especially if they have fancy names. In this section, I will show you
+a technique that won't win you much awe, but is easy to implement as we again let a
+solver, i.e., CP-SAT, do the hard work, and will probably perform much better than most
+heuristics.
+
+The problem with most meta-heuristics is, that they create for a given solution (pool) a
+number of explicit(!) neighbored solutions and selects from them the next solution (pool).
+As one has to explicitly construct these solutions, only a limited number can be
+considered. This number can be in the tens of thousands, but it has to be at a size where
+each of them can be looked at individually. Note that this is also true for sampling
+based approaches that create neighbored solutions from an arbitrarily large space, but
+the samples that are considered will still be a small number. The idea of Large 
+Neighborhood Search is to not have concrete solutions but to specify an auxiliary
+optimization problem, e.g., allowing changes on a fixed number of variables, and let
+a solver such as CP-SAT find the best next solution based on this auxiliary optimization
+problem. This allows us to actually scan an exponential number of neighbored solutions
+as we do not explicitly construct these solutions. You could also integrate this approach
+into a genetic algorithm, where you use a solver to find the best combination of
+solutions for the crossover or as a mutation.
+
+> TODO: Continue. Provide concrete example....
 
 ## Further Material
 
