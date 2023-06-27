@@ -5,7 +5,7 @@
 **This tutorial is under [CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/). Smaller parts can be copied without
 any acknowledgement for non-commercial, educational purposes. Contributions are very welcome, as I do not have the time to do everythin on my own.**
 
-> **WARNING: You are reading a draft! Expect lots of mistakes (and please report them either as an issue or pull request :) )**
+> :warning: **You are reading a draft! Expect lots of mistakes (and please report them either as an issue or pull request :) )**
 
 Many [combinatorially difficult](https://en.wikipedia.org/wiki/NP-hardness) optimization problems can, despite their proved theoretical hardness, be solved reasonably well in practice.
 The most successful approach is to use [Mixed Integer Linear Programming](https://en.wikipedia.org/wiki/Integer_programming) (MIP) to model the problem and then use a solver to find a solution.
@@ -30,7 +30,7 @@ It tells you a lot about the history and techniques to deal with combinatorial o
 The Traveling Salesman Problem seems to be intractable already for small instances, but it is actually possible to solve instances with thousands of cities in practice.
 It is a very light read and you can skip the more technical parts if you want to.
 As an alternative, you can also read this [free chapter, coauthored by the same author](https://www.math.uwaterloo.ca/~bico/papers/comp_chapter1.pdf) or 
-watch this [YouTube Video (1hour)](https://www.youtube.com/watch?v=5VjphFYQKj8).
+watch this very amusing [YouTube Video (1hour)](https://www.youtube.com/watch?v=5VjphFYQKj8).
 While CP-SAT follows a slightly different approach than the one described in the book/chapter/video, it is still important to see why it is possible to do the seemingly impossible and solve such problems in practice, despite their theoretical hardness.
 Additionally, you will have learned the basics of Mathematical Programming, and know that the term "Programming" has nothing to do with programming in the sense of writing code.
 
@@ -49,12 +49,6 @@ After that (or if you are already familiar with combinatorial optimization), the
 6. [Large Neighborhood Search](#large-neighborhood-search): The use of CP-SAT to create more powerful heuristics.
 7. [Further Material](#further-material): Some more resources if you want to dig deeper.
 
-> :warning: This is just an unofficial primer, not a full documentation. I will provide links to more material whenever
-> possible. Additionally, I also add some personal experiences whenever I consider them helpful.
-> Note that I have to make some (un-)educated guesses at some parts, which I cannot always
-> label accordingly in favor of readability. Please do not take all details here for
-> granted - they may be wrong.
-
 **Target audience:** People (especially my students at TU Braunschweig) with some background
 in [integer programming](https://en.wikipedia.org/wiki/Integer_programming)
 /[linear optimization](https://en.wikipedia.org/wiki/Linear_programming), who would like to know an actual viable
@@ -64,11 +58,17 @@ in [combinatorial optimization](https://en.wikipedia.org/wiki/Combinatorial_opti
 
 ## Installation
 
+We are using Python 3 in this primer and assume that you have a working Python 3 installation as well as the basic knowledge to use it.
+There are also interfaces for other languages, but Python 3 is in my opinion the most convenient one, as the mathematical
+expressions in Python are very close to the mathematical notation (allowing you to spot mathmetical errors much faster).
+Only for huge models, you may need to use a compiled language such as C++ due to performance issues.
+For smaller models, you will not notice any performance difference.
+
 The installation of CP-SAT, which is part of the ortools package, is very easy and can
-be done via pip.
+be done via Python's package manager [pip](https://pip.pypa.io/en/stable/).
 
 ```shell
-pip install -U ortools
+pip3 install -U ortools
 ```
 
 This command will also update an existing installation of ortools.
@@ -76,6 +76,8 @@ As this tool is in active development, it is recommendable to update it frequent
 We actually encountered wrong behavior, i.e., bugs, in earlier versions that then have
 been fixed by updates (this was on some more advanced features, don't worry about
 correctness with basic usage).
+
+I personally like to use [Jupyter Notebooks](https://jupyter.org/) for experimenting with CP-SAT.
 
 ## Example
 
