@@ -3,7 +3,7 @@
 *By Dominik Krupke, TU Braunschweig*
 
 **This tutorial is under [CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/). Smaller parts can be copied without
-any acknowledgements for non-commerical, educational purposes. Feel free to contribute.**
+any acknowledgements for non-commercial, educational purposes. Feel free to contribute.**
 
 > **WARNING: You are reading a draft! Expect lots of mistakes (and please report them either as issue or pull request :) )**
 
@@ -1125,7 +1125,7 @@ solver, i.e., CP-SAT, do the hard work, and will probably perform much better th
 heuristics.
 
 The problem with most meta-heuristics is, that they create for a given solution (pool) a
-number of explicit(!) neighbored solutions and selects from them the next solution (pool).
+number of explicit(!) neighbored solutions and select from them the next solution (pool).
 As one has to explicitly construct these solutions, only a limited number can be
 considered. This number can be in the tens of thousands, but it has to be at a size where
 each of them can be looked at individually. Note that this is also true for sampling
