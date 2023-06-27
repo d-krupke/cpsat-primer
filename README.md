@@ -164,9 +164,13 @@ The mathematical model of the code above would usually be written by experts som
 
 ```math
 \min 30x + 50y\\
+
 \text{s.t. } x+y \leq 30\\
+
 \quad 0\leq x \leq 100\\
+
 \quad 0\leq y \leq 100\\
+
 x,y \in \mathbb{Z}
 ```
 
