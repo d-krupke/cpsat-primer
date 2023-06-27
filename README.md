@@ -86,6 +86,7 @@ that you could solve it by hand, but know that CP-SAT would (probably) be fine w
 ten- or hundred-thousand) variables and constraints more.
 The basic idea of using CP-SAT is, analogous to MIPs, to define an optimization problem in terms of variables,
 constraints, and objective function, and then let the solver find a solution for it.
+We call such a formulation that can be understood by the corresponding solver a *model* for the problem.
 For people not familiar with this [declarative approach](https://programiz.pro/resources/imperative-vs-declarative-programming/), you can compare it to SQL, where you also just state what data
 you want, not how to get it.
 However, it is not purely declarative, because it can still make a huge(!) difference how you model the problem and
@@ -93,6 +94,14 @@ getting that right takes some experience and understanding of the internals.
 You can still get lucky for smaller problems (let us say a few hundred to thousands of variables) and obtain optimal
 solutions without having an idea of what is going on.
 The solvers can handle more and more 'bad' problem models effectively with every year.
+
+> **Definition:** A *model* in mathematical programming refers to a mathematical description of a problem, consisting of
+> variables, constraints, and optionally an objective function that can be understood by the corresponding solver class.
+> *Modelling* refers to transforming a problem (instance) into the corresponding framework, e.g.,
+> by making all constraints linear as required for Mixed Integer Linear Programming.
+> Be aware that the [SAT](https://en.wikipedia.org/wiki/SAT_solver)-community uses the term *model* to refer to a (feasible) 
+> variable assignment, i.e., solution of a SAT-formula. If you struggle with this terminology, maybe you want to read
+> this short guide on [Math Programming Modelling Bascis](https://www.gurobi.com/resources/math-programming-modeling-basics/).
 
 Our first problem has no deeper meaning, except of showing the basic workflow of creating the variables (x and y), adding the
 constraint x+y<=30 on them, setting the objective function (maximize 30*x + 50*y), and obtaining a solution:
@@ -146,10 +155,10 @@ Pretty easy, right? For solving a generic problem, not just one specific instanc
 dictionary or list of variables and use something like `model.Add(sum(vars)<=n)`, because you don't want to create
 the model by hand for larger instances.
 
-> **Definition:** A *model* refers to a concrete problem and instance description within the framework, consisting of
-> variables, constraints, and optionally an objective function. *Modelling* refers to transforming a problem (instance)
-> into the corresponding framework. Be aware that the SAT-community uses the term *model* to refer to a (feasible) 
-> variable assignment, i.e., solution of a SAT-formula.
+The output you get may differ from the one above, because CP-SAT actually uses a set of different strategies
+in parallel, and just returns the best one (which can differ slightly between multiple runs due to additional randomness).
+This is called a portfolio strategy and is a common technique in combinatorial optimization, if you cannot predict
+which strategy will perform best.
 
 Here are some further examples, if you are not yet satisfied:
 
