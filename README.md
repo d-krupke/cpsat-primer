@@ -163,14 +163,18 @@ which strategy will perform best.
 The mathematical model of the code above would usually be written by experts something like this:
 
 ```math
-\min 30x + 50y\\
-
-\text{s.t. } x+y \leq 30\\
-
-\quad 0\leq x \leq 100\\
-
-\quad 0\leq y \leq 100\\
-
+\min 30x + 50y
+```
+```math
+\text{s.t. } x+y \leq 30
+```
+```math
+\quad 0\leq x \leq 100
+```
+```math
+\quad 0\leq y \leq 100
+```
+```math
 x,y \in \mathbb{Z}
 ```
 
