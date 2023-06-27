@@ -16,7 +16,7 @@ However, even when investing in such a solver, the underlying technqiues ([Branc
 In this case, the [Constraint Programming](https://en.wikipedia.org/wiki/Constraint_programming) (CP) approach may be more successful.
 For Constraint Programming, there are many open source solvers, but they are often not as powerful as the commercial MIP-solvers.
 While MIP-solvers are frequently able to solve problems with hundreds of thousands of variables and constraints, the classical CP-solvers often struggle with problems with more than a few thousand variables and constraints.
-However, the relatively new [CP-SAT](https://developers.google.com/optimization/cp) of Google's [ortools](https://github.com/google/or-tools/)
+However, the relatively new [CP-SAT](https://developers.google.com/optimization/cp/cp_solver) of Google's [ortools](https://github.com/google/or-tools/)
 suite shows to overcome many of the weaknesses and provides a viable alternative to MIP-solvers, being competitive for many problems and sometimes even superior.
 
 Unfortunately, CP-SAT does IMHO not yet have the maturity of established tools such as Gurobi and thus, the educational
@@ -29,10 +29,11 @@ If you are relatively new to combinatorial optimization, I suggest you to read t
 It tells you a lot about the history and techniques to deal with combinatorial optimization problems, on the example of the famous [Traveling Salesman Problem](https://en.wikipedia.org/wiki/Travelling_salesman_problem).
 The Traveling Salesman Problem seems to be intractable already for small instances, but it is actually possible to solve instances with thousands of cities in practice.
 It is a very light read and you can skip the more technical parts if you want to.
-As an alternative, you can also read this [free chapter, coauthored by the same author](https://www.math.uwaterloo.ca/~bico/papers/comp_chapter1.pdf) or 
+As an alternative, you can also read this [free chapter, coauthored by the same author](https://www.math.uwaterloo.ca/~bico/papers/comp_chapter1.pdf) and 
 watch this very amusing [YouTube Video (1hour)](https://www.youtube.com/watch?v=5VjphFYQKj8).
+If you are short on time, at least watch the video, it is really worth it.
 While CP-SAT follows a slightly different approach than the one described in the book/chapter/video, it is still important to see why it is possible to do the seemingly impossible and solve such problems in practice, despite their theoretical hardness.
-Additionally, you will have learned the basics of Mathematical Programming, and know that the term "Programming" has nothing to do with programming in the sense of writing code.
+Additionally, you will have learned the concept of [Mathematical Programming](https://www.gurobi.com/resources/math-programming-modeling-basics/), and know that the term "Programming" has nothing to do with programming in the sense of writing code (otherwise, additionally read the just given reference).
 
 After that (or if you are already familiar with combinatorial optimization), the following content awaits you in this primer:
 
