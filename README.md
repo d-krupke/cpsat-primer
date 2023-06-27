@@ -160,6 +160,18 @@ in parallel, and just returns the best one (which can differ slightly between mu
 This is called a portfolio strategy and is a common technique in combinatorial optimization, if you cannot predict
 which strategy will perform best.
 
+The mathematical model of the code above would usually be written by experts something like this:
+
+```math
+\min 30x + 50y
+\text{s.t. } x+y \leq 30
+\quad 0\leq x \leq 100
+\quad 0\leq y \leq 100
+x,y \in \mathbb{Z}
+```
+
+The `s.t.` stands for `subject to`, sometimes also read as `such that`.
+
 Here are some further examples, if you are not yet satisfied:
 
 * [N-queens](https://developers.google.com/optimization/cp/queens) (this one also gives you a quick introduction to
