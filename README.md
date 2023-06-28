@@ -3,58 +3,106 @@
 *By Dominik Krupke, TU Braunschweig*
 
 **This tutorial is under [CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/). Smaller parts can be copied without
-any acknowledgements for non-commerical, educational purposes. Feel free to contribute.**
+any acknowledgement for non-commercial, educational purposes. Contributions are very welcome, as I do not have the time to do everythin on my own.**
 
-> **WARNING: You are reading a draft! Expect lots of mistakes (and please report them either as issue or pull request :) )**
+> :warning: **You are reading a draft! Expect lots of mistakes (and please report them either as an issue or pull request :) )**
 
-This unofficial primer shall help you use and understand the LCG-based Constraint Programming
-Solver [CP-SAT of Google's ortools suite](https://github.com/google/or-tools/).
-CP-SAT is a new generation of constraint programming solvers that can actually compete for some optimization problems
-against classical [Branch and Bound](https://en.wikipedia.org/wiki/Branch_and_bound)
-& [Cut](https://en.wikipedia.org/wiki/Branch_and_cut) -approaches, e.g., [Gurobi](https://www.gurobi.com/).
-Unfortunately, CP-SAT does not yet have the maturity of established tools such as Gurobi and thus, the educational
+Many [combinatorially difficult](https://en.wikipedia.org/wiki/NP-hardness) optimization problems can, despite their proved theoretical hardness, be solved reasonably well in practice.
+The most successful approach is to use [Mixed Integer Linear Programming](https://en.wikipedia.org/wiki/Integer_programming) (MIP) to model the problem and then use a solver to find a solution.
+The most successful solvers for MIPs are [Gurobi](https://www.gurobi.com/) and [CPLEX](https://www.ibm.com/analytics/cplex-optimizer), which are both commercial and expensive (though, free for academics).
+There are also some open source solvers, but they are often not as powerful as the commercial ones.
+However, even when investing in such a solver, the underlying technqiues ([Branch and Bound](https://en.wikipedia.org/wiki/Branch_and_bound)
+& [Cut](https://en.wikipedia.org/wiki/Branch_and_cut)) struggle with some optimization problems, especially if the problem contains a lot of logical constraints that a solution has to satisfy.
+In this case, the [Constraint Programming](https://en.wikipedia.org/wiki/Constraint_programming) (CP) approach may be more successful.
+For Constraint Programming, there are many open source solvers, but they are often not as powerful as the commercial MIP-solvers.
+While MIP-solvers are frequently able to solve problems with hundreds of thousands of variables and constraints, the classical CP-solvers often struggle with problems with more than a few thousand variables and constraints.
+However, the relatively new [CP-SAT](https://developers.google.com/optimization/cp/cp_solver) of Google's [ortools](https://github.com/google/or-tools/)
+suite shows to overcome many of the weaknesses and provides a viable alternative to MIP-solvers, being competitive for many problems and sometimes even superior.
+
+Unfortunately, CP-SAT does IMHO not yet have the maturity of established tools such as Gurobi and thus, the educational
 material is somehow lacking (it is not bad, but maybe not sufficient for such a powerful tool).
-This tutorial shall help you, especially if you are coming from
-the [MIP](https://en.wikipedia.org/wiki/Integer_programming) -community, to use and understand this tool as
+This unofficial primer shall help you use and understand this tool, especially if you are coming from
+the [Mixed Integer Linear Programming](https://en.wikipedia.org/wiki/Integer_programming) -community, to use and understand this tool as
 it may proof useful in cases where Branch and Bound performs poorly.
+
+If you are relatively new to combinatorial optimization, I suggest you to read the relatively short book [In Pursuit of the Traveling Salesman by Bill Cook](https://press.princeton.edu/books/paperback/9780691163529/in-pursuit-of-the-traveling-salesman) first.
+It tells you a lot about the history and techniques to deal with combinatorial optimization problems, on the example of the famous [Traveling Salesman Problem](https://en.wikipedia.org/wiki/Travelling_salesman_problem).
+The Traveling Salesman Problem seems to be intractable already for small instances, but it is actually possible to solve instances with thousands of cities in practice.
+It is a very light read and you can skip the more technical parts if you want to.
+As an alternative, you can also read this [free chapter, coauthored by the same author](https://www.math.uwaterloo.ca/~bico/papers/comp_chapter1.pdf) and 
+watch this very amusing [YouTube Video (1hour)](https://www.youtube.com/watch?v=5VjphFYQKj8).
+If you are short on time, at least watch the video, it is really worth it.
+While CP-SAT follows a slightly different approach than the one described in the book/chapter/video, it is still important to see why it is possible to do the seemingly impossible and solve such problems in practice, despite their theoretical hardness.
+Additionally, you will have learned the concept of [Mathematical Programming](https://www.gurobi.com/resources/math-programming-modeling-basics/), and know that the term "Programming" has nothing to do with programming in the sense of writing code (otherwise, additionally read the just given reference).
+
+After that (or if you are already familiar with combinatorial optimization), the following content awaits you in this primer:
 
 **Content:**
 
-1. [Example](#example): A short example, showing the usage of CP-SAT.
-2. [Modelling](#modelling): An overview of variables, objectives, and constraints. The constraints make the most
+1. [Installation](#installation): Quick installation guide.
+2. [Example](#example): A short example, showing the usage of CP-SAT.
+3. [Modelling](#modelling): An overview of variables, objectives, and constraints. The constraints make the most
    important part.
-3. [Parameters](#parameters): How to specify CP-SATs behavior, if needed. Timelimits, hints, assumptions,
+4. [Parameters](#parameters): How to specify CP-SATs behavior, if needed. Timelimits, hints, assumptions,
    parallelization, ...
-4. [How does it work?](#how-does-it-work): After we know what we can do with CP-SAT, we look into how CP-SAT will do all
+5. [How does it work?](#how-does-it-work): After we know what we can do with CP-SAT, we look into how CP-SAT will do all
    these things.
+6. [Large Neighborhood Search](#large-neighborhood-search): The use of CP-SAT to create more powerful heuristics.
+7. [Further Material](#further-material): Some more resources if you want to dig deeper.
 
-> :warning: This is just an unofficial primer, not a full documentation. I will provide links to more material whenever
-> possible. Additionally, I also add some personal experiences whenever I consider it helpful.
-> Note that I have to do some (un-)educated guesses at some parts, which I cannot always
-> label accordingly in favour of readability. Please do not take all details here for
-> granted - they may be wrong.
-
-**Target audience:** People with some background
+**Target audience:** People (especially my students at TU Braunschweig) with some background
 in [integer programming](https://en.wikipedia.org/wiki/Integer_programming)
-/[linear optimization](https://en.wikipedia.org/wiki/Linear_programming), who would like to know an actually viable
+/[linear optimization](https://en.wikipedia.org/wiki/Linear_programming), who would like to know an actual viable
 alternative to [Branch and Cut](https://en.wikipedia.org/wiki/Branch_and_cut). However, I try to make it
 understandable for anyone interested
 in [combinatorial optimization](https://en.wikipedia.org/wiki/Combinatorial_optimization).
 
+## Installation
+
+We are using Python 3 in this primer and assume that you have a working Python 3 installation as well as the basic knowledge to use it.
+There are also interfaces for other languages, but Python 3 is in my opinion the most convenient one, as the mathematical
+expressions in Python are very close to the mathematical notation (allowing you to spot mathmetical errors much faster).
+Only for huge models, you may need to use a compiled language such as C++ due to performance issues.
+For smaller models, you will not notice any performance difference.
+
+The installation of CP-SAT, which is part of the ortools package, is very easy and can
+be done via Python's package manager [pip](https://pip.pypa.io/en/stable/).
+
+```shell
+pip3 install -U ortools
+```
+
+This command will also update an existing installation of ortools.
+As this tool is in active development, it is recommendable to update it frequently.
+We actually encountered wrong behavior, i.e., bugs, in earlier versions that then have
+been fixed by updates (this was on some more advanced features, don't worry about
+correctness with basic usage).
+
+I personally like to use [Jupyter Notebooks](https://jupyter.org/) for experimenting with CP-SAT.
+
 ## Example
 
-Before we dive into any internals, let us take a quick look on a simple application of CP-SAT. This example is so simple
+Before we dive into any internals, let us take a quick look at a simple application of CP-SAT. This example is so simple
 that you could solve it by hand, but know that CP-SAT would (probably) be fine with you adding a thousand (maybe even
 ten- or hundred-thousand) variables and constraints more.
 The basic idea of using CP-SAT is, analogous to MIPs, to define an optimization problem in terms of variables,
 constraints, and objective function, and then let the solver find a solution for it.
-For people not familiar with this deklarative approach, you can compare it to SQL, where you also just state what data
+We call such a formulation that can be understood by the corresponding solver a *model* for the problem.
+For people not familiar with this [declarative approach](https://programiz.pro/resources/imperative-vs-declarative-programming/), you can compare it to SQL, where you also just state what data
 you want, not how to get it.
-However, it is not purely deklarativ, because it can still make a huge(!) difference how you model the problem and
+However, it is not purely declarative, because it can still make a huge(!) difference how you model the problem and
 getting that right takes some experience and understanding of the internals.
-You can still get lucky for smaller problems (let us say few hundreds to thousands variables) and obtain optimal
+You can still get lucky for smaller problems (let us say a few hundred to thousands of variables) and obtain optimal
 solutions without having an idea of what is going on.
 The solvers can handle more and more 'bad' problem models effectively with every year.
+
+> **Definition:** A *model* in mathematical programming refers to a mathematical description of a problem, consisting of
+> variables, constraints, and optionally an objective function that can be understood by the corresponding solver class.
+> *Modelling* refers to transforming a problem (instance) into the corresponding framework, e.g.,
+> by making all constraints linear as required for Mixed Integer Linear Programming.
+> Be aware that the [SAT](https://en.wikipedia.org/wiki/SAT_solver)-community uses the term *model* to refer to a (feasible) 
+> variable assignment, i.e., solution of a SAT-formula. If you struggle with this terminology, maybe you want to read
+> this short guide on [Math Programming Modelling Bascis](https://www.gurobi.com/resources/math-programming-modeling-basics/).
 
 Our first problem has no deeper meaning, except of showing the basic workflow of creating the variables (x and y), adding the
 constraint x+y<=30 on them, setting the objective function (maximize 30*x + 50*y), and obtaining a solution:
@@ -108,10 +156,30 @@ Pretty easy, right? For solving a generic problem, not just one specific instanc
 dictionary or list of variables and use something like `model.Add(sum(vars)<=n)`, because you don't want to create
 the model by hand for larger instances.
 
-> **Definition:** A *model* refers to a concrete problem and instance description within the framework, consisting of
-> variables, constraints, and optionally an objective function. *Modelling* refers to transforming a problem (instance)
-> into the corresponding framework. Be aware that the SAT-community uses the term *model* to refer to a (feasible) 
-> variable assignment, i.e., solution of a SAT-formula.
+The output you get may differ from the one above, because CP-SAT actually uses a set of different strategies
+in parallel, and just returns the best one (which can differ slightly between multiple runs due to additional randomness).
+This is called a portfolio strategy and is a common technique in combinatorial optimization, if you cannot predict
+which strategy will perform best.
+
+The mathematical model of the code above would usually be written by experts something like this:
+
+```math
+\min 30x + 50y
+```
+```math
+\text{s.t. } x+y \leq 30
+```
+```math
+\quad 0\leq x \leq 100
+```
+```math
+\quad 0\leq y \leq 100
+```
+```math
+x,y \in \mathbb{Z}
+```
+
+The `s.t.` stands for `subject to`, sometimes also read as `such that`.
 
 Here are some further examples, if you are not yet satisfied:
 
@@ -1089,6 +1157,39 @@ linear relaxation's objective and the reduced costs).
 
 The used Relaxation Induced Neighborhood Search RINS (LNS worker), a very successful heuristic, of course also uses
 linear programming.
+
+## Large Neighborhood Search
+
+### The use of CP-SAT to create more powerful heuristics
+
+CP-SAT can solve some small to medium-sized instances reasonably fast.
+However, for some problems you need to solve larger instances that are beyond any of the
+current solvers. You could now fall back to classical meta-heuristics such as genetic
+algorithms or any algorithm with a fancy name that will impress managers, but actually
+perform not much better than some greedy decisions (but because the algorithm is so
+fancy, you don't have the resources to compare it to something else and no one will ever
+know). Ok, you may have noticed the sarcasm and that I don't think very high of most
+meta-heuristics, especially if they have fancy names. In this section, I will show you
+a technique that won't win you much awe, but is easy to implement as we again let a
+solver, i.e., CP-SAT, do the hard work, and will probably perform much better than most
+heuristics.
+
+The problem with most meta-heuristics is, that they create for a given solution (pool) a
+number of explicit(!) neighbored solutions and select from them the next solution (pool).
+As one has to explicitly construct these solutions, only a limited number can be
+considered. This number can be in the tens of thousands, but it has to be at a size where
+each of them can be looked at individually. Note that this is also true for sampling
+based approaches that create neighbored solutions from an arbitrarily large space, but
+the samples that are considered will still be a small number. The idea of Large 
+Neighborhood Search is to not have concrete solutions but to specify an auxiliary
+optimization problem, e.g., allowing changes on a fixed number of variables, and let
+a solver such as CP-SAT find the best next solution based on this auxiliary optimization
+problem. This allows us to actually scan an exponential number of neighbored solutions
+as we do not explicitly construct these solutions. You could also integrate this approach
+into a genetic algorithm, where you use a solver to find the best combination of
+solutions for the crossover or as a mutation.
+
+> TODO: Continue. Provide concrete example....
 
 ## Further Material
 
