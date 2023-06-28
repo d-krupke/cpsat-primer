@@ -12,7 +12,7 @@ The most successful approach is to use [Mixed Integer Linear Programming](https:
 The most successful solvers for MIPs are [Gurobi](https://www.gurobi.com/) and [CPLEX](https://www.ibm.com/analytics/cplex-optimizer), which are both commercial and expensive (though, free for academics).
 There are also some open source solvers, but they are often not as powerful as the commercial ones.
 However, even when investing in such a solver, the underlying technqiues ([Branch and Bound](https://en.wikipedia.org/wiki/Branch_and_bound)
-& [Cut](https://en.wikipedia.org/wiki/Branch_and_cut)) struggle with some optimization problems, especially if the problem contains a lot of logical constraints that a solution has to satisfy.
+& [Cut](https://en.wikipedia.org/wiki/Branch_and_cut) on [Linear Relaxations](https://en.wikipedia.org/wiki/Linear_programming_relaxation)) struggle with some optimization problems, especially if the problem contains a lot of logical constraints that a solution has to satisfy.
 In this case, the [Constraint Programming](https://en.wikipedia.org/wiki/Constraint_programming) (CP) approach may be more successful.
 For Constraint Programming, there are many open source solvers, but they are often not as powerful as the commercial MIP-solvers.
 While MIP-solvers are frequently able to solve problems with hundreds of thousands of variables and constraints, the classical CP-solvers often struggle with problems with more than a few thousand variables and constraints.
