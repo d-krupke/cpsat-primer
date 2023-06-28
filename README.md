@@ -814,7 +814,7 @@ by itself which vertices are the critical ones after some conflicts.
 
 > :warning: I played around a little with selecting a manual search strategy. But even for the coloring, where this may even
 > seem smart, it only gave an advantage for a bad model and after improving the model by symmetry breaking, it performed worse.
-> Further, I assume that CP-SAT can learn the best strategy (Gurobi does such a thing, too) much better dynammically on its own.
+> Further, I assume that CP-SAT can learn the best strategy (Gurobi does such a thing, too) much better dynamically on its own.
 
 ---
 
@@ -828,7 +828,7 @@ variable for every possible integer assignment combined with many, many constrai
 No, it is actually kind of a simulation of Branch and Bound on a SAT-solver (gifting us clause learning and stuff) with
 a lot (!) of lazy variables and clauses (LCG).
 Additionally, tools from classical linear optimization (linear relaxations, RINS, ...) are applied when useful to guide
-the process (it is not like everything is done by the SAT-solver).
+the process (it is not like everything is done by the SAT-solver, but every thread uses a different strategy).
 
 Before we dig any deeper, let us first get some prerequisites, so we are on the same page.
 Remember, that this tutorial is written from the view of linear optimization.
@@ -837,7 +837,7 @@ Remember, that this tutorial is written from the view of linear optimization.
 
 CP-SAT actually builds upon quite a set of techniques. However, it is enough if you understand the basics of those.
 
-| **WARNING** This is still in a very drafty state. There are actually good examples to list here.
+| :warninng: This is still in a very drafty state. There are also still some useful examples  missing.
 
 #### SAT-Solvers
 
@@ -908,7 +908,7 @@ at [these slides](https://baldur.iti.kit.edu/sat/files/2019/l07.pdf).
 For this topic, there is actually a [nice primer by Gurobi](https://www.gurobi.com/resource/mip-basics/).
 Let me quickly recap the most important parts for CP-SAT:
 
-* A Mixed Integer Linear Program is a subset of CP-SAT, but one that is still very powerful and can be reasonably well
+* Mixed Integer Linear Programming is a subset of CP-SAT, but one that is still very powerful and can be reasonably well
   solved. It limits you to linear constraints, but you can actually convert most of the other constraints to linear
   constraints.
 * A mixed integer linear program is still hard to solve, but if we allow all integral values to become fractional it
