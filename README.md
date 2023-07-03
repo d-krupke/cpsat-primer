@@ -11,7 +11,7 @@ Many [combinatorially difficult](https://en.wikipedia.org/wiki/NP-hardness) opti
 The most successful approach is to use [Mixed Integer Linear Programming](https://en.wikipedia.org/wiki/Integer_programming) (MIP) to model the problem and then use a solver to find a solution.
 The most successful solvers for MIPs are [Gurobi](https://www.gurobi.com/) and [CPLEX](https://www.ibm.com/analytics/cplex-optimizer), which are both commercial and expensive (though, free for academics).
 There are also some open source solvers, but they are often not as powerful as the commercial ones.
-However, even when investing in such a solver, the underlying techniques ([Branch and Bound](https://en.wikipedia.org/wiki/Branch_and_bound)
+However, even when investing in such a solver, the underlying technqiues ([Branch and Bound](https://en.wikipedia.org/wiki/Branch_and_bound)
 & [Cut](https://en.wikipedia.org/wiki/Branch_and_cut) on [Linear Relaxations](https://en.wikipedia.org/wiki/Linear_programming_relaxation)) struggle with some optimization problems, especially if the problem contains a lot of logical constraints that a solution has to satisfy.
 In this case, the [Constraint Programming](https://en.wikipedia.org/wiki/Constraint_programming) (CP) approach may be more successful.
 For Constraint Programming, there are many open source solvers, but they are often not as powerful as the commercial MIP-solvers.
@@ -23,7 +23,7 @@ Unfortunately, CP-SAT does IMHO not yet have the maturity of established tools s
 material is somehow lacking (it is not bad, but maybe not sufficient for such a powerful tool).
 This unofficial primer shall help you use and understand this tool, especially if you are coming from
 the [Mixed Integer Linear Programming](https://en.wikipedia.org/wiki/Integer_programming) -community, to use and understand this tool as
-it may prove useful in cases where Branch and Bound performs poorly.
+it may proof useful in cases where Branch and Bound performs poorly.
 
 If you are relatively new to combinatorial optimization, I suggest you to read the relatively short book [In Pursuit of the Traveling Salesman by Bill Cook](https://press.princeton.edu/books/paperback/9780691163529/in-pursuit-of-the-traveling-salesman) first.
 It tells you a lot about the history and techniques to deal with combinatorial optimization problems, on the example of the famous [Traveling Salesman Problem](https://en.wikipedia.org/wiki/Travelling_salesman_problem).
@@ -60,7 +60,7 @@ in [combinatorial optimization](https://en.wikipedia.org/wiki/Combinatorial_opti
 ## Installation
 
 We are using Python 3 in this primer and assume that you have a working Python 3 installation as well as the basic knowledge to use it.
-There are also interfaces for other languages, but Python 3 is, in my opinion, the most convenient one, as the mathematical
+There are also interfaces for other languages, but Python 3 is in my opinion the most convenient one, as the mathematical
 expressions in Python are very close to the mathematical notation (allowing you to spot mathmetical errors much faster).
 Only for huge models, you may need to use a compiled language such as C++ due to performance issues.
 For smaller models, you will not notice any performance difference.
@@ -164,7 +164,7 @@ which strategy will perform best.
 The mathematical model of the code above would usually be written by experts something like this:
 
 ```math
-\max 30x + 50y
+\min 30x + 50y
 ```
 ```math
 \text{s.t. } x+y \leq 30
@@ -190,13 +190,13 @@ Here are some further examples, if you are not yet satisfied:
 * [Job Shop Problem](https://developers.google.com/optimization/scheduling/job_shop)
 * More examples can be found
   in [the official repository](https://github.com/google/or-tools/tree/stable/ortools/sat/samples) for multiple
-  languages (yes, CP-SAT does support more than just Python). As the Python-examples are named in [snake-case](https://en.wikipedia.org/wiki/Snake_case), they are
+  languages (yes, CP-SAT does support more than just Python). As the Python-examples are named in snake-case, they are
   at the end of the list.
 
 Ok. Now that you have seen a minimal model, let us look on what options we have to model a problem. Note that an
 experienced optimizer may be able to model most problems with just the elements shown above, but showing your intentions
 may help CP-SAT optimize your problem better. Contrary to Mixed Integer Programming, you also do not need to finetune
-any [Big-Ms](https://en.wikipedia.org/wiki/Big_M_method) (a reason to model higher-level constraints in MIPs yourself, because the computer is not very good at that).
+any Big-Ms (a reason to model higher-level constraints in MIPs yourself, because the computer is not very good at that).
 
 
 
