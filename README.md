@@ -184,7 +184,7 @@ The `s.t.` stands for `subject to`, sometimes also read as `such that`.
 Here are some further examples, if you are not yet satisfied:
 
 * [N-queens](https://developers.google.com/optimization/cp/queens) (this one also gives you a quick introduction to
-  constraint programming, but it may be misleading because CP-SAT is no classical FD-solver. This example probably has
+  constraint programming, but it may be misleading because CP-SAT is no classical FD(Finite Domain)-solver. This example probably has
   been modified from the previous generation, which is also explained at the end.)
 * [Employee Scheduling](https://developers.google.com/optimization/scheduling/employee_scheduling)
 * [Job Shop Problem](https://developers.google.com/optimization/scheduling/job_shop)
@@ -221,7 +221,7 @@ In the following, we will primarily look onto a selection of useful constraints.
 If you want to learn how to build models, you could take a look into the book
 [Model Building in Mathematical Programming by H. Paul Williams](https://www.wiley.com/en-us/Model+Building+in+Mathematical+Programming%2C+5th+Edition-p-9781118443330)
 which covers much more than you probably need, including some actual applications. 
-This book is of course not for CP-SAT, but the general techniques and ideas cary over.
+This book is of course not for CP-SAT, but the general techniques and ideas carry over.
 However, it can also suffice to simply look on some other models and try some things out.
 
 The following part does not cover all options. You can get a complete overview by looking into the 
@@ -230,6 +230,7 @@ Simply go to `CpModel` and check out the `AddXXX` and `NewXXX` methods.
 
 If you are completely new to this area, you may also want to check out modelling for the MIP-solver Gurobi in this [video course](https://www.youtube.com/playlist?list=PLHiHZENG6W8CezJLx_cw9mNqpmviq3lO9).
 Remember that many things are similar to CP-SAT, but not everything (as already mentioned, CP-SAT is especially interesting for the cases where a MIP-solver fails).
+
 
 ### Variables
 
@@ -242,6 +243,7 @@ round by some resolution. This necessity could probably be hidden from you, but 
 You also have to specify a lower and an upper bound for integer variables.
 Getting the bounds on the variables tight by running some optimization heuristics beforehand
 can pay off in my experience: Already a few percent can make a visible impact.
+> Explaination of the term *resolution*: Consider a floating-point number 2.35 that you want to round to the nearest integer using a resolution of 0.5. The resolution of 0.5 means that the number will be rounded to the nearest multiple of 0.5. In this case, 2.35 will be rounded to 2.5.
 
 
 ```python
@@ -258,6 +260,7 @@ Even high resolutions (and thus large domains) did not seem harm the efficiency 
 Additionally, most problems I know, actually have much more boolean variables than integer variables.
 Many problems, such as the famous Traveling Salesman Problem, only consist of boolean variables.
 Having a SAT-solver as base, thus, is not such a bad idea (note that the SAT-solver is just one of many components of CP-SAT).
+> Explaination: *high resolution* mean using a small step size and thus lead to larg domains.
 
 
 ### Objectives
@@ -266,7 +269,7 @@ Not every problem actually has an objective, sometimes you only need to find a f
 CP-SAT is pretty good at doing that (MIP-solvers are often not).
 However, CP-SAT can also optimize pretty well (older constraint programming solver cannot, at least in my experience). You
 can minimize or maximize a linear expression (use constraints to model more complicated expressions). To do a
-lexicographic optimization, you can do multiple rounds and always fix the previous objective as constraint.
+[lexicographic optimization](https://en.wikipedia.org/wiki/Lexicographic_optimization), you can do multiple rounds and always fix the previous objective as constraint.
 
 ```python
 model.Maximize(30 * x + 50 * y)
@@ -297,9 +300,9 @@ model.Add(x <= z - 1)  # x < z
 ```
 
 > :warning: If you use intersecting linear constraints, you may get problems because the intersection point needs to
-> be integral. There is no such thing as a feasibility tolerance as in Mixed Integer Programming-solvers.
+> be integral. There is no such thing as a feasibility tolerance as in Mixed Integer Programming-solvers, where  non-integral solutions are allowed within a certain range.
 
-### Logical Constaints
+### Logical Constraints
 
 You can actually model logical constraints also as linear constraints, but it may be advantageous to show your intent:
 
@@ -319,7 +322,7 @@ modelled as linear constraints.
 
 ### Conditional Constraints
 
-Linear constraints (Add), BoolOr, and BoolAnd support to be activated by a condition.
+Linear constraints (Add), BoolOr, and BoolAnd support being activated by a condition.
 This is not only a very helpful constraint for many applications, but it is also a constraint that is highly inefficient
 to model with linear optimization ([Big M Method](https://en.wikipedia.org/wiki/Big_M_method)).
 My current experience shows that CP-SAT can work much more efficient with this kind of constraint.
