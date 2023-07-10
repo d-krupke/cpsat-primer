@@ -11,7 +11,7 @@ Many [combinatorially difficult](https://en.wikipedia.org/wiki/NP-hardness) opti
 The most successful approach is to use [Mixed Integer Linear Programming](https://en.wikipedia.org/wiki/Integer_programming) (MIP) to model the problem and then use a solver to find a solution.
 The most successful solvers for MIPs are [Gurobi](https://www.gurobi.com/) and [CPLEX](https://www.ibm.com/analytics/cplex-optimizer), which are both commercial and expensive (though, free for academics).
 There are also some open source solvers, but they are often not as powerful as the commercial ones.
-However, even when investing in such a solver, the underlying technqiues ([Branch and Bound](https://en.wikipedia.org/wiki/Branch_and_bound)
+However, even when investing in such a solver, the underlying techniques ([Branch and Bound](https://en.wikipedia.org/wiki/Branch_and_bound)
 & [Cut](https://en.wikipedia.org/wiki/Branch_and_cut) on [Linear Relaxations](https://en.wikipedia.org/wiki/Linear_programming_relaxation)) struggle with some optimization problems, especially if the problem contains a lot of logical constraints that a solution has to satisfy.
 In this case, the [Constraint Programming](https://en.wikipedia.org/wiki/Constraint_programming) (CP) approach may be more successful.
 For Constraint Programming, there are many open source solvers, but they are often not as powerful as the commercial MIP-solvers.
@@ -23,7 +23,7 @@ Unfortunately, CP-SAT does IMHO not yet have the maturity of established tools s
 material is somehow lacking (it is not bad, but maybe not sufficient for such a powerful tool).
 This unofficial primer shall help you use and understand this tool, especially if you are coming from
 the [Mixed Integer Linear Programming](https://en.wikipedia.org/wiki/Integer_programming) -community, to use and understand this tool as
-it may proof useful in cases where Branch and Bound performs poorly.
+it may prove useful in cases where Branch and Bound performs poorly.
 
 If you are relatively new to combinatorial optimization, I suggest you to read the relatively short book [In Pursuit of the Traveling Salesman by Bill Cook](https://press.princeton.edu/books/paperback/9780691163529/in-pursuit-of-the-traveling-salesman) first.
 It tells you a lot about the history and techniques to deal with combinatorial optimization problems, on the example of the famous [Traveling Salesman Problem](https://en.wikipedia.org/wiki/Travelling_salesman_problem).
@@ -60,7 +60,7 @@ in [combinatorial optimization](https://en.wikipedia.org/wiki/Combinatorial_opti
 ## Installation
 
 We are using Python 3 in this primer and assume that you have a working Python 3 installation as well as the basic knowledge to use it.
-There are also interfaces for other languages, but Python 3 is in my opinion the most convenient one, as the mathematical
+There are also interfaces for other languages, but Python 3 is, in my opinion, the most convenient one, as the mathematical
 expressions in Python are very close to the mathematical notation (allowing you to spot mathmetical errors much faster).
 Only for huge models, you may need to use a compiled language such as C++ due to performance issues.
 For smaller models, you will not notice any performance difference.
@@ -164,7 +164,7 @@ which strategy will perform best.
 The mathematical model of the code above would usually be written by experts something like this:
 
 ```math
-\min 30x + 50y
+\max 30x + 50y
 ```
 ```math
 \text{s.t. } x+y \leq 30
@@ -184,19 +184,19 @@ The `s.t.` stands for `subject to`, sometimes also read as `such that`.
 Here are some further examples, if you are not yet satisfied:
 
 * [N-queens](https://developers.google.com/optimization/cp/queens) (this one also gives you a quick introduction to
-  constraint programming, but it may be misleading because CP-SAT is no classical FD-solver. This example probably has
+  constraint programming, but it may be misleading because CP-SAT is no classical FD(Finite Domain)-solver. This example probably has
   been modified from the previous generation, which is also explained at the end.)
 * [Employee Scheduling](https://developers.google.com/optimization/scheduling/employee_scheduling)
 * [Job Shop Problem](https://developers.google.com/optimization/scheduling/job_shop)
 * More examples can be found
   in [the official repository](https://github.com/google/or-tools/tree/stable/ortools/sat/samples) for multiple
-  languages (yes, CP-SAT does support more than just Python). As the Python-examples are named in snake-case, they are
+  languages (yes, CP-SAT does support more than just Python). As the Python-examples are named in [snake-case](https://en.wikipedia.org/wiki/Snake_case), they are
   at the end of the list.
 
 Ok. Now that you have seen a minimal model, let us look on what options we have to model a problem. Note that an
 experienced optimizer may be able to model most problems with just the elements shown above, but showing your intentions
-may help CP-SAT optimize your problem better. Contrary to Mixed Integer Programming, you also do not need to finetune
-any Big-Ms (a reason to model higher-level constraints in MIPs yourself, because the computer is not very good at that).
+may help CP-SAT optimize your problem better. Contrary to Mixed Integer Programming, you also do not need to fine-tune
+any [Big-Ms](https://en.wikipedia.org/wiki/Big_M_method) (a reason to model higher-level constraints in MIPs yourself, because the computer is not very good at that).
 
 
 
@@ -205,59 +205,88 @@ any Big-Ms (a reason to model higher-level constraints in MIPs yourself, because
 ## Modelling
 
 CP-SAT provides us with much more modelling options than the classical MIP-solver.
-Additionally, to the classical linear constraints (<=, ==, >=), we have various advanced constraints
+Instead of just the classical linear constraints (<=, ==, >=), we have various advanced constraints
 such as `AllDifferent` or `AddMultiplicationEquality`. This spares you the burden
 of modelling the logic only with linear constraints, but also makes the interface
 more extensive. Additionally, you have to be aware that not all constraints are
-equally efficient. The most efficient constraints are linear or boolean constraints,
-constraints such as `AddMultiplicationEquality` can be significantly more expensive.
-However, you should not directly assume a bad performance just because similar
-constraints perform badly in MIP-solvers. For example a model I had that required multiple
-absolute values performed significantly better in CP-SAT than in Gurobi (despite a manual
-implementation with relatively tight big-M values).
+equally efficient. The most efficient constraints are linear or boolean constraints.
+Constraints such as `AddMultiplicationEquality` can be significantly(!!!) more expensive.
+
+> __If you are coming from the MIP-world, you should not overgeneralize your experience__
+> to CP-SAT as the underlying techniques are different. It does not relay on the linear
+> relaxation as much as MIP-solvers do. Thus, you can often use modelling techniques that are
+> not efficient in MIP-solvers, but perform reasonably well in CP-SAT. For example,
+> I had a model that required multiple absolute values and performed significantly
+> better in CP-SAT than in Gurobi (despite a manual implementation with relatively
+> tight big-M values).
 
 This primer does not have the space to teach about building good models.
 In the following, we will primarily look onto a selection of useful constraints.
 If you want to learn how to build models, you could take a look into the book
 [Model Building in Mathematical Programming by H. Paul Williams](https://www.wiley.com/en-us/Model+Building+in+Mathematical+Programming%2C+5th+Edition-p-9781118443330)
 which covers much more than you probably need, including some actual applications. 
-This book is of course not for CP-SAT, but the general techniques and ideas cary over.
+This book is of course not for CP-SAT, but the general techniques and ideas carry over.
 However, it can also suffice to simply look on some other models and try some things out.
+If you are completely new to this area, you may want to check out modelling for the MIP-solver Gurobi in this [video course](https://www.youtube.com/playlist?list=PLHiHZENG6W8CezJLx_cw9mNqpmviq3lO9).
+Remember that many things are similar to CP-SAT, but not everything (as already mentioned, CP-SAT is especially interesting for the cases where a MIP-solver fails).
 
-The following part does not cover all options. You can get a complete overview by looking into the 
-[official documentation](http://google.github.io/or-tools/python/ortools/sat/python/cp_model.html).
+The following part does not cover all constraints. You can get a complete overview by looking into the 
+[official documentation](https://developers.google.com/optimization/reference/python/sat/python/cp_model#cp_model.CpModel).
 Simply go to `CpModel` and check out the `AddXXX` and `NewXXX` methods.
 
-If you are completely new to this area, you may also want to check out modelling for the MIP-solver Gurobi in this [video course](https://www.youtube.com/playlist?list=PLHiHZENG6W8CezJLx_cw9mNqpmviq3lO9).
-Remember that many things are similar to CP-SAT, but not everything (as already mentioned, CP-SAT is especially interesting for the cases where a MIP-solver fails).
+Resources on mathematical modelling (not CP-SAT specific):
+
+* [Math Programming Modeling Basics by Gurobi](https://www.gurobi.com/resources/math-programming-modeling-basics/): Get the absolute basics.
+* [Modeling with Gurobi Python](https://www.youtube.com/playlist?list=PLHiHZENG6W8CezJLx_cw9mNqpmviq3lO9): A video course on modelling with Gurobi. The concepts carry over to CP-SAT.
+* [Model Building in Mathematical Programming by H. Paul Williams](https://www.wiley.com/en-us/Model+Building+in+Mathematical+Programming%2C+5th+Edition-p-9781118443330): A complete book on mathematical modelling.
 
 ### Variables
 
-There are two important types of variables: Integers and Booleans.
-Actually, there are more (
-e.g., [interval variables](http://google.github.io/or-tools/python/ortools/sat/python/cp_model.html#IntervalVar)), but
-these are the two important ones, I use all the time.
-There are no continuous/floating point variables (or even constants): If you need floating point numbers, you have to
-round by some resolution. This necessity could probably be hidden from you, but for now you have to do it yourself.
-You also have to specify a lower and an upper bound for integer variables.
-Getting the bounds on the variables tight by running some optimization heuristics beforehand
-can pay off in my experience: Already a few percent can make a visible impact.
-
+There are two important types of variables in CP-SAT: Booleans and Integers (which are actually converted to Booleans, but more on this later).
+There are also, e.g., [interval variables](https://developers.google.com/optimization/reference/python/sat/python/cp_model#intervalvar),
+but they are not as important and can be modelled easily with integer variables.
+For the integer variables, you have to specify a lower and an upper bound.
 
 ```python
+# integer variable z with bounds -100 <= z <= 100
 z = model.NewIntVar(-100, 100, 'z')
+# boolean variable b
 b = model.NewBoolVar('b')
-not_b = b.Not()
+# implicitly available negation of b:
+not_b = b.Not()  # will be 1 if b is 0 and 0 if b is 1
 ```
 
+> Having tight bounds on the integer variables can make a huge impact on the performance.
+> It may be useful to run some optimization heuristics beforehand to get some bounds.
+> Reducing it by a few percent can already pay off for some problems.
 
-The lack of continuous variables may sound like a serious limitation, but actually I
-have successfully handled complex problems with lots of angles
-and stuff with CP-SAT. You just have to get used to transforming all values.
-Even high resolutions (and thus large domains) did not seem harm the efficiency significantly in my use cases.
-Additionally, most problems I know, actually have much more boolean variables than integer variables.
+There are no continuous/floating point variables (or even constants) in CP-SAT: If you need floating point numbers, you have to
+approximate them with integers by some resolution.
+For example, you could simply multiply all values by 100 for a step size of 0.01.
+A value of 2.35 would then be represented by 235.
+This *could* probably be implemented in CP-SAT directly, but doing it explicitly is not difficult, and it has
+numerical implications that you should be aware of.
+
+The lack of continuous variables may sound like a serious limitation,
+especially if you have a background in linear optimization (where continuous variables are the "easy part"),
+but as long as they are not a huge part of your problem, you can often work around it.
+I have had optimization problems that required bunch of continuous variables with a high resolution,
+and I noticed that increasing the resolution had only a small impact on the performance, such
+that even a step size of \(10^{-6}\) was fine.
+This was quite surprising to me, as a higher resolution usually means a larger domain and thus more
+combinatorial complexity, but CP-SAT has some tricks to deal with this.
+The performance was also much higher than with Gurobi, because of the difficult logical constraints in the problem.
+In this case, CP-SAT struggled less with the continuous variables (Gurobi's strength), than Gurobi with the logical constraints (CP-SAT's strength).
+If you have a problem with a lot of continuous variables, such as [network flow problems](https://en.wikipedia.org/wiki/Network_flow_problem), you are probably still better served with a MIP-solver.
+
+I mentioned that having tight bounds on the integer variables can be important, but increasing the resolution seems
+to only have a small impact. How does this fit together with the fact that a higher resolution means a larger lower and upper bounds?
+The answer to this is that only the absolute values of the bounds change, but not their tightness, i.e., the relative
+difference, as all values are scaled equally.
+
+In my experience, boolean variables are by far the most important variables in many combinatorial optimization problems.
 Many problems, such as the famous Traveling Salesman Problem, only consist of boolean variables.
-Having a SAT-solver as base, thus, is not such a bad idea (note that the SAT-solver is just one of many components of CP-SAT).
+Implementing a solver specialized on boolean variables by using a SAT-solver as a base, such as CP-SAT, thus, is quite sensible.
 
 
 ### Objectives
@@ -265,8 +294,26 @@ Having a SAT-solver as base, thus, is not such a bad idea (note that the SAT-sol
 Not every problem actually has an objective, sometimes you only need to find a feasible solution.
 CP-SAT is pretty good at doing that (MIP-solvers are often not).
 However, CP-SAT can also optimize pretty well (older constraint programming solver cannot, at least in my experience). You
-can minimize or maximize a linear expression (use constraints to model more complicated expressions). To do a
-lexicographic optimization, you can do multiple rounds and always fix the previous objective as constraint.
+can minimize or maximize a linear expression (use auxiliary variables and constraints to model more complicated expressions). 
+
+You can specify the objective function by calling `model.Minimize` or `model.Maximize` with a linear expression.
+```python
+model.Maximize(30 * x + 50 * y)
+```
+
+Let us look on how to model more complicated expressions, using boolean variables and generators.
+```python
+x_vars = [model.NewBoolVar(f'x{i}') for i in range(10)]
+model.Minimize(sum(i*x_vars[i] if i%2==0 else i*x_vars[i].Not() for i in range(10)))
+```
+This objective evaluates to
+```math
+\min \sum_{i=0}^{9} i\cdot x_i \text{ if } i \text{ is even else } i\cdot \neg x_i
+```
+
+To implement a
+[lexicographic optimization](https://en.wikipedia.org/wiki/Lexicographic_optimization), 
+you can do multiple rounds and always fix the previous objective as constraint.
 
 ```python
 model.Maximize(30 * x + 50 * y)
@@ -277,6 +324,18 @@ model.Add(30 * x + 50 * y == int(solver.ObjectiveValue()))  # fix previous objec
 model.Minimize(z)  # optimize for second objective
 solver.Solve(model)
 ```
+
+To implement non-linear objectives, you can use auxiliary variables and constraints.
+For example, you can create a variable that is the absolute value of another variable and then use this variable in the
+objective.
+
+```python
+abs_x = model.NewIntVar(0, 100, "|x|")
+model.AddAbsEquality(target=abs_x, expr=x)
+model.Minimize(abs_x)
+```
+
+The available constraints are discussed next.
 
 ### Linear Constraints
 
@@ -297,9 +356,11 @@ model.Add(x <= z - 1)  # x < z
 ```
 
 > :warning: If you use intersecting linear constraints, you may get problems because the intersection point needs to
-> be integral. There is no such thing as a feasibility tolerance as in Mixed Integer Programming-solvers.
+> be integral. There is no such thing as a feasibility tolerance as in Mixed Integer Programming-solvers, where small deviations
+> are allowed. The feasibility tolerance in MIP-solvers allows, e.g., 0.763445 == 0.763439 to still be considered equal to counter
+> numerical issues of floating point arithmetic. In CP-SAT, you have to make sure that values can match exactly.
 
-### Logical Constaints
+### Logical Constraints (Propositional Logic)
 
 You can actually model logical constraints also as linear constraints, but it may be advantageous to show your intent:
 
@@ -319,7 +380,7 @@ modelled as linear constraints.
 
 ### Conditional Constraints
 
-Linear constraints (Add), BoolOr, and BoolAnd support to be activated by a condition.
+Linear constraints (Add), BoolOr, and BoolAnd support being activated by a condition.
 This is not only a very helpful constraint for many applications, but it is also a constraint that is highly inefficient
 to model with linear optimization ([Big M Method](https://en.wikipedia.org/wiki/Big_M_method)).
 My current experience shows that CP-SAT can work much more efficient with this kind of constraint.
@@ -328,7 +389,7 @@ auxiliary variable.
 
 ```python
 model.Add(x + z == 2 * y).OnlyEnforceIf(b1)
-model.Add(x + z == 10).OnlyEnforceIf([b2, b3])  # only enforce if b2 AND b3
+model.Add(x + z == 10).OnlyEnforceIf([b2, b3.Not()])  # only enforce if b2 AND NOT b3
 ```
 
 ### AllDifferent
@@ -375,7 +436,8 @@ would no longer be linear, right...).
 Often we can linearize the model by some tricks and tools like Gurobi are also able to do some non-linear optimization (
 in the end, it is most often translated to a less efficient linear model again).
 CP-SAT can also work with multiplication and modulo of variables, again as constraint not as operation.
-I actually have no experience in how efficient this is (I try to avoid anything non-linear by experience).
+So far, I have not made good experience with these constraints, i.e., the models end up being slow to solve,
+and would recommend to only use them if you really need them and cannot find a way around them.
 
 ```python
 xyz = model.NewIntVar(-100 * 100 * 100, 100 ** 3, 'x*y*z')
@@ -383,7 +445,9 @@ model.AddMultiplicationEquality(xyz, [x, y, z])  # xyz = x*y*z
 model.AddModuloEquality(x, y, 3)  # x = y % 3
 ```
 
-> TODO: I don't know, if multiplication of more than two variables is actually allowed.
+> :warning: The documentation indicates that multiplication of more than two variables is supported, but I got
+> an error when trying it out. I have not investigated this further, as I would expect it to be slow anyway.
+
 
 ### Circuit/Tour-Constraints
 
@@ -396,8 +460,8 @@ If it is just a subproblem, you can add a simple constraint by encoding the allo
 index, target vertex index, and literal/variable.
 Note that this is using directed edges/arcs.
 
-**If the tour-problem is the fundamental part of your problem, you may be better served with using a Mixed Integer
-Programming solver. Don't expect to solve tours much larger than 250 vertices with CP-SAT.**
+> If the tour-problem is the fundamental part of your problem, you may be better served with using a Mixed Integer
+Programming solver. Don't expect to solve tours much larger than 250 vertices with CP-SAT.
 
 ```python
 model.AddCircuit([(0, 1, b1), (1, 0, b1), (1, 2, b2), (2, 0, b3)])
@@ -443,6 +507,7 @@ CP-SAT has extensive support for interval variables and corresponding constraint
 constraints.
 These could be useful for, e.g., packing problems (packing as many objects into a container as possible) or scheduling problems (like assigning work shifts).
 Maybe I add something about those later.
+For now, you can check out the [official documentation](https://developers.google.com/optimization/reference/python/sat/python/cp_model) for a full list of available constraints.
 
 ---
 
