@@ -184,7 +184,7 @@ The `s.t.` stands for `subject to`, sometimes also read as `such that`.
 Here are some further examples, if you are not yet satisfied:
 
 * [N-queens](https://developers.google.com/optimization/cp/queens) (this one also gives you a quick introduction to
-  constraint programming, but it may be misleading because CP-SAT is no classical FD(Finite Domain)-solver. This example probably has
+  constraint programming, but it may be misleading because CP-SAT is no classical [FD(Finite Domain)-solver](http://www.gameaipro.com/GameAIPro2/GameAIPro2_Chapter26_Rolling_Your_Own_Finite-Domain_Constraint_Solver.pdf). This example probably has
   been modified from the previous generation, which is also explained at the end.)
 * [Employee Scheduling](https://developers.google.com/optimization/scheduling/employee_scheduling)
 * [Job Shop Problem](https://developers.google.com/optimization/scheduling/job_shop)
@@ -196,7 +196,7 @@ Here are some further examples, if you are not yet satisfied:
 Ok. Now that you have seen a minimal model, let us look on what options we have to model a problem. Note that an
 experienced optimizer may be able to model most problems with just the elements shown above, but showing your intentions
 may help CP-SAT optimize your problem better. Contrary to Mixed Integer Programming, you also do not need to fine-tune
-any [Big-Ms](https://en.wikipedia.org/wiki/Big_M_method) (a reason to model higher-level constraints in MIPs yourself, because the computer is not very good at that).
+any [Big-Ms](https://en.wikipedia.org/wiki/Big_M_method) (a reason to model higher-level constraints, such as conditional constraints that are only enforced if some variable is set to true, in MIPs yourself, because the computer is not very good at that).
 
 
 
