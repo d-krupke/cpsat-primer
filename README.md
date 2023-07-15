@@ -3,7 +3,7 @@
 *By Dominik Krupke, TU Braunschweig*
 
 **This tutorial is under [CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/). Smaller parts can be copied without
-any acknowledgement for non-commercial, educational purposes. Contributions are very welcome, as I do not have the time to do everythin on my own.**
+any acknowledgement for non-commercial, educational purposes. Contributions are very welcome, as I do not have the time to do everything on my own.**
 
 > :warning: **You are reading a draft! Expect lots of mistakes (and please report them either as an issue or pull request :) )**
 
@@ -1088,8 +1088,10 @@ solved to optimality, with LP 244, and with portfolio parallelization even 327.*
 The basic idea in lazy clause generation constraint programming is to convert the problem into a (lazy) SAT-formula, and
 have an additional set of propagators that dynamically add clauses to satisfy the complex constraints.
 
-> :warning: This part may be overly simplified. I have only superficial knowledge of LCG (i.e., I just read documentations,
-> papers, and watched some talks).
+> We will quickly go through how we can encode an optimization problem into a SAT-formula here, but you may want to read an 
+> [explanation by Peter Stuckey](https://people.eng.unimelb.edu.au/pstuckey/papers/lazy.pdf) himself. At this point, you
+> should have covered the basics to actually understand it. My explanation can probably not compete with his, since he
+> is one of the leading researchers in this field, and I am primarily a user of this technique.
 
 #### Encoding
 
