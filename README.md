@@ -464,8 +464,60 @@ Note that this is using directed edges/arcs.
 Programming solver. Don't expect to solve tours much larger than 250 vertices with CP-SAT.
 
 ```python
-model.AddCircuit([(0, 1, b1), (1, 0, b1), (1, 2, b2), (2, 0, b3)])
+from ortools.sat.python import cp_model
+
+def solve_tsp_with_circuit_constraint():
+    model = cp_model.CpModel()
+
+    # Binary decision variables for the edges
+    b1 = model.NewBoolVar('b1')
+    b2 = model.NewBoolVar('b2')
+    b3 = model.NewBoolVar('b3')
+    b4 = model.NewBoolVar('b4')
+
+    # Circuit constraint
+    allowed_edges = [(0, 1, b1), (1, 0, b2), (1, 2, b3), (2, 0, b4)]
+    model.AddCircuit(allowed_edges)
+
+    # I don't know how to implement the constraint that no node is visited twice     
+    
+    # Objective: minimize the total distance (sum of used edges)
+    total_distance = distance(0, 1) * b1 + distance(1, 0) * b3 + distance(1, 2) * b3 + distance(2, 0) * b4
+    model.Minimize(total_distance)
+
+    solver = cp_model.CpSolver()
+    status = solver.Solve(model)
+
+    if status == cp_model.OPTIMAL:
+        tour = []
+        if solver.Value(b1):
+            tour.append((0, 1))
+        if solver.Value(b2):
+            tour.append((1, 0))
+        if solver.Value(b3):
+            tour.append((1, 2))
+        if solver.Value(b4):
+            tour.append((2, 0))
+        print("Optimal tour:", tour)
+        print(f"b1={solver.Value(b1)}, b2={solver.Value(b2)}, b3={solver.Value(b3)}, b4={solver.Value(b4)}")
+    else:
+        print("No solution found.")
+
+def distance(i, j):
+    # Define the distance between two cities based on the given data
+    distances = {
+        (0, 1): 10,
+        (1, 0): 10,
+        (1, 2): 15,
+        (2, 0): 17,
+    }
+    return distances.get((i, j), 0)
+
+solve_tsp_with_circuit_constraint()
 ```
+
+    Optimal tour: [(0, 1), (1, 2), (2, 0)]
+    b1=1, b2=0, b3=1, b4=1
 
 MIP-solver usually use something like
 the [Dantzig-Fulkerson-Johnson Formulation](https://en.wikipedia.org/wiki/Travelling_salesman_problem#Dantzig%E2%80%93Fulkerson%E2%80%93Johnson_formulation)
