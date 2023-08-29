@@ -465,59 +465,48 @@ Programming solver. Don't expect to solve tours much larger than 250 vertices wi
 
 ```python
 from ortools.sat.python import cp_model
+from itertools import permutations
 
 def solve_tsp_with_circuit_constraint():
     model = cp_model.CpModel()
 
+    # Set of directed edges from set of vertices {0,1,2}
+    edges = set(permutations(range(3),2))
     # Binary decision variables for the edges
-    b1 = model.NewBoolVar('b1')
-    b2 = model.NewBoolVar('b2')
-    b3 = model.NewBoolVar('b3')
-    b4 = model.NewBoolVar('b4')
-
-    # Circuit constraint
-    allowed_edges = [(0, 1, b1), (1, 0, b2), (1, 2, b3), (2, 0, b4)]
-    model.AddCircuit(allowed_edges)
-
-    # I don't know how to implement the constraint that no node is visited twice     
+    edge_vars = {(u,v): model.NewBoolVar(f"e_{u}_{v}") for (u,v) in edges}
     
-    # Objective: minimize the total distance (sum of used edges)
-    total_distance = distance(0, 1) * b1 + distance(1, 0) * b3 + distance(1, 2) * b3 + distance(2, 0) * b4
-    model.Minimize(total_distance)
+    # Add Circuit constraint
+    circuit = [(u, v, var) for (u,v), var in edge_vars.items()]
+    model.AddCircuit(circuit)
+    
+    # Objective: minimize the total cost of edges
+    total_cost = sum(cost(u,v)*edge_vars[(u,v)] for (u,v) in edges)
+    model.Minimize(total_cost)
 
     solver = cp_model.CpSolver()
     status = solver.Solve(model)
 
     if status == cp_model.OPTIMAL:
-        tour = []
-        if solver.Value(b1):
-            tour.append((0, 1))
-        if solver.Value(b2):
-            tour.append((1, 0))
-        if solver.Value(b3):
-            tour.append((1, 2))
-        if solver.Value(b4):
-            tour.append((2, 0))
-        print("Optimal tour:", tour)
-        print(f"b1={solver.Value(b1)}, b2={solver.Value(b2)}, b3={solver.Value(b3)}, b4={solver.Value(b4)}")
+        tour = [(u,v) for (u,v) in edges if solver.Value(edge_vars[(u,v)])]
+        print("Optimal tour is: ", tour)
     else:
         print("No solution found.")
 
-def distance(i, j):
-    # Define the distance between two cities based on the given data
-    distances = {
-        (0, 1): 10,
-        (1, 0): 10,
-        (1, 2): 15,
-        (2, 0): 17,
+# Define the cost of directed edges
+def cost(i, j):
+    costs = {
+        (0, 1): 13,
+        (1, 0): 17,
+        (1, 2): 16,
+        (2, 1): 19,
+        (0, 2): 22,
+        (2, 0): 14,
     }
-    return distances.get((i, j), 0)
+    return costs.get((i, j), 0)
 
-solve_tsp_with_circuit_constraint()
+solve_tsp_with_circuit_constraint() 
 ```
-
-    Optimal tour: [(0, 1), (1, 2), (2, 0)]
-    b1=1, b2=0, b3=1, b4=1
+    Optimal tour is: [(0, 1), (1, 2), (2, 0)]
 
 MIP-solver usually use something like
 the [Dantzig-Fulkerson-Johnson Formulation](https://en.wikipedia.org/wiki/Travelling_salesman_problem#Dantzig%E2%80%93Fulkerson%E2%80%93Johnson_formulation)
