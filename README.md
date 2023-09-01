@@ -465,48 +465,46 @@ Programming solver. Don't expect to solve tours much larger than 250 vertices wi
 
 ```python
 from ortools.sat.python import cp_model
-from itertools import permutations
+# Weighted, directed graph as instance
+# (source, destination) -> cost
+dgraph = {
+     (0, 1): 13,
+     (1, 0): 17,
+     (1, 2): 16,
+     (2, 1): 19,
+     (0, 2): 22,
+     (2, 0): 14,
+     (3, 0): 15,
+     (3, 1): 28,
+     (3, 2): 25,
+     (0, 3): 24,
+     (1, 3): 11,
+     (2, 3): 27
+ }
+ model = cp_model.CpModel()
+ # Variables: Binary decision variables for the edges
+ edge_vars = { 
+     (u,v): model.NewBoolVar(f"e_{u}_{v}") for (u,v) in dgraph.keys()
+ }
+ # Constraints: Add Circuit constraint
+ # We need to tell CP-SAT which variable corresponds to which edge.
+ # This is done by passing a list of tuples (u,v,var) to AddCircuit.
+ circuit = [(u, v, var)  # (source, destination, variable)
+             for (u,v), var in edge_vars.items()]
+ model.AddCircuit(circuit)
 
-def solve_tsp_with_circuit_constraint():
-    model = cp_model.CpModel()
+ # Objective: minimize the total cost of edges
+ obj = sum(dgraph[(u,v)]*x for (u,v),x  in edge_vars.items())
+ model.Minimize(obj)
 
-    # Set of directed edges from set of vertices {0,1,2}
-    edges = set(permutations(range(3),2))
-    # Binary decision variables for the edges
-    edge_vars = {(u,v): model.NewBoolVar(f"e_{u}_{v}") for (u,v) in edges}
-    
-    # Add Circuit constraint
-    circuit = [(u, v, var) for (u,v), var in edge_vars.items()]
-    model.AddCircuit(circuit)
-    
-    # Objective: minimize the total cost of edges
-    total_cost = sum(cost(u,v)*edge_vars[(u,v)] for (u,v) in edges)
-    model.Minimize(total_cost)
-
-    solver = cp_model.CpSolver()
-    status = solver.Solve(model)
-
-    if status == cp_model.OPTIMAL:
-        tour = [(u,v) for (u,v) in edges if solver.Value(edge_vars[(u,v)])]
-        print("Optimal tour is: ", tour)
-    else:
-        print("No solution found.")
-
-# Define the cost of directed edges
-def cost(i, j):
-    costs = {
-        (0, 1): 13,
-        (1, 0): 17,
-        (1, 2): 16,
-        (2, 1): 19,
-        (0, 2): 22,
-        (2, 0): 14,
-    }
-    return costs.get((i, j), 0)
-
-solve_tsp_with_circuit_constraint() 
+ # Solve
+ solver = cp_model.CpSolver()
+ status = solver.Solve(model)
+ assert status in (cp_model.OPTIMAL, cp_model.FEASIBLE)
+ tour = [(u,v) for (u,v),x in edge_vars.items() if solver.Value(x)]
+ print("Tour:", tour)
 ```
-    Optimal tour is: [(0, 1), (1, 2), (2, 0)]
+    Tour: [(0, 1), (2, 0), (3, 2), (1, 3)]
 
 MIP-solver usually use something like
 the [Dantzig-Fulkerson-Johnson Formulation](https://en.wikipedia.org/wiki/Travelling_salesman_problem#Dantzig%E2%80%93Fulkerson%E2%80%93Johnson_formulation)
