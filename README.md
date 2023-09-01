@@ -456,9 +456,10 @@ Problem are important and difficult problems that occur as subproblem in many co
 For solving the classical TSP, you should use the extremely powerful
 solver [Concorde](https://www.math.uwaterloo.ca/tsp/concorde.html). There is also a
 separate [part in ortools](https://developers.google.com/optimization/routing) dedicated to routing.
-If it is just a subproblem, you can add a simple constraint by encoding the allowed edges a triples of start vertex
+If it is just a subproblem, you can add a simple constraint by encoding the allowed edges as triples of start vertex
 index, target vertex index, and literal/variable.
 Note that this is using directed edges/arcs.
+By adding a triple (v,v,var), you can allow CP-SAT to skip the vertex v.
 
 > If the tour-problem is the fundamental part of your problem, you may be better served with using a Mixed Integer
 Programming solver. Don't expect to solve tours much larger than 250 vertices with CP-SAT.
@@ -505,6 +506,12 @@ dgraph = {
  print("Tour:", tour)
 ```
     Tour: [(0, 1), (2, 0), (3, 2), (1, 3)]
+
+You can use this constraint very flexible for many tour problems.
+We added three examples:
+* [./examples/add_circuit.py](./examples/add_circuit.py): The example above, slightly extended. Find out how large you can make the graph.
+* [./examples/add_circuit_budget.py](./examples/add_circuit_budget.py): Find the largest tour with a given budget. This will be a bit more difficult to solve.
+* [./examples/add_circuit_multi_tour.py](./examples/add_circuit_multi_tour.py): Allow $k$ tours, which in sum need to be minimal and cover all vertices.
 
 MIP-solver usually use something like
 the [Dantzig-Fulkerson-Johnson Formulation](https://en.wikipedia.org/wiki/Travelling_salesman_problem#Dantzig%E2%80%93Fulkerson%E2%80%93Johnson_formulation)
