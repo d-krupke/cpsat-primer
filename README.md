@@ -3,7 +3,7 @@
 *By Dominik Krupke, TU Braunschweig*
 
 **This tutorial is under [CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/). Smaller parts can be copied without
-any acknowledgement for non-commercial, educational purposes. Contributions are very welcome, as I do not have the time to do everything on my own.**
+any acknowledgement for non-commercial, educational purposes. Contributions are very welcome, even if it is just spell-checking.**
 
 > :warning: **You are reading a draft! Expect lots of mistakes (and please report them either as an issue or pull request :) )**
 
@@ -513,18 +513,35 @@ We added three examples:
 * [./examples/add_circuit_budget.py](./examples/add_circuit_budget.py): Find the largest tour with a given budget. This will be a bit more difficult to solve.
 * [./examples/add_circuit_multi_tour.py](./examples/add_circuit_multi_tour.py): Allow $k$ tours, which in sum need to be minimal and cover all vertices.
 
-MIP-solver usually use something like
-the [Dantzig-Fulkerson-Johnson Formulation](https://en.wikipedia.org/wiki/Travelling_salesman_problem#Dantzig%E2%80%93Fulkerson%E2%80%93Johnson_formulation)
-that potentially requires an exponential amount of constraints, but performs much better than the smaller models, due to
-the fact that you can add constraints lazily when needed (you usually only need a fraction of them) and the smaller
-models usually rely on some kind of Big-M method. The Big-M-based models are difficult to solve with MIP-solvers due to
-their weak linear relaxations. The exponential model is no option for CP-SAT because it does not allow lazy constraints.
-CP-SAT does not suffer from the weak relaxations (or at least not as much), so for example
-the [Miller-Tucker-Zemlin formulation](https://en.wikipedia.org/wiki/Travelling_salesman_problem#Miller%E2%80%93Tucker%E2%80%93Zemlin_formulation[21])
-would be an option (despite looking nice, it is bad in practice with MIP-solver). However, with the circuit-constraint
-at hand, we can also just use it and not worry about the various options of modelling tour constraints. Internally,
-CP-SAT will actually use the LP-technique for the linear relaxation (so using this constraint may really help, as
-otherwise CP-SAT will not know that your manual constraints are actually a tour with a nice linear relaxation).
+The most powerful TSP-solver *concorde* uses a linear programming based approach, but with a lot of additional
+techniques to improve the performance. The book *In Pursuit of the Traveling Salesman* by William Cook may have already given
+you some insights. For more details, you can also read the more advanced book *The Traveling Salesman Problem: A Computational Study* by Cook, Cunningham, Pulleyblank, and Schrijver.
+If you need to solve some variant, MIP-solvers (which could be called a generalization of that approach) are known to perform
+well using the [Dantzig-Fulkerson-Johnson Formulation](https://en.wikipedia.org/wiki/Travelling_salesman_problem#Dantzig%E2%80%93Fulkerson%E2%80%93Johnson_formulation).
+This model is theoretically exponential, but using lazy constraints (which are added when needed), it can be solved
+efficiently in practice. The [Miller-Tucker-Zemlin formulation](https://en.wikipedia.org/wiki/Travelling_salesman_problem#Miller%E2%80%93Tucker%E2%80%93Zemlin_formulation[21])
+allows a small formulation size, but is bad in practice with MIP-solvers due to its weak linear relaxations.
+Because CP-SAT does not allow lazy constraints, the Danzig-Fulkerson-Johnson formulation would require many iterations and a lot of wasted resources.
+As CP-SAT does not suffer as much from weak linear relaxations (replacing Big-M by logic constraints, such as `OnlyEnforceIf`), the Miller-Tucker-Zemlin formulation may be an option in some cases, though a simple experiment (see below) shows a similar performance as the iterative approach.
+When using `AddCircuit`, CP-SAT will actually use the LP-technique for the linear relaxation (so using this constraint may really help, as
+otherwise CP-SAT will not know that your manual constraints are actually a tour with a nice linear relaxation), and probably has the lazy constraints implemented internally.
+Using the `AddCircuit` constraint is thus highly recommendable for any circle or path constraints.
+
+In [./examples/add_circuit_comparison.ipynb](./examples/add_circuit_comparison.ipynb), we compare the performance of some models for the TSP, to
+estimate the performance of CP-SAT for the TSP.
+
+* **AddCircuit** can solve the eculidean TSP up to a size of around 110 vertices in 10 seconds to optimality.
+* **MTZ (Miller-Tucker-Zemlin)** can solve the eculidean TSP up to a size of around 50 vertices in 10 seconds to optimality.
+* **Dantzig-Fulkerson-Johnson via iterative solving** can solve the eculidean TSP up to a size of around 50 vertices in 10 seconds to optimality.
+* **Dantzig-Fulkerson-Johnson via lazy constraints in Gurobi** can solve the eculidean TSP up to a size of around 225 vertices in 10 seconds to optimality.
+
+This tells you to use a MIP-solver for problems dominated by the tour constraint, and if you have to use CP-SAt, you should definitely use the `AddCircuit` constraint.
+
+> These are all naive implementations, and the benchmark is not very rigorous. These values are only meant to give you
+> a rough idea of the performance. Additionally, this benchmark was regarding proving *optimality*. The performance in
+> just optimizing a tour could be different. The numbers could also look different for differently generated instances.
+
+> :warning: This section could need some more work, as it is relatively important. I just did some experiments, and hastily jotted down some notes here.
 
 ### Array operations
 
