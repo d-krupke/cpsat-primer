@@ -50,12 +50,19 @@ After that (or if you are already familiar with combinatorial optimization), the
 6. [Large Neighborhood Search](#large-neighborhood-search): The use of CP-SAT to create more powerful heuristics.
 7. [Further Material](#further-material): Some more resources if you want to dig deeper.
 
-**Target audience:** People (especially my students at TU Braunschweig) with some background
-in [integer programming](https://en.wikipedia.org/wiki/Integer_programming)
-/[linear optimization](https://en.wikipedia.org/wiki/Linear_programming), who would like to know an actual viable
-alternative to [Branch and Cut](https://en.wikipedia.org/wiki/Branch_and_cut). However, I try to make it
-understandable for anyone interested
-in [combinatorial optimization](https://en.wikipedia.org/wiki/Combinatorial_optimization).
+> **Target audience:** People (especially my students at TU Braunschweig) with some background
+> in [integer programming](https://en.wikipedia.org/wiki/Integer_programming)
+> /[linear optimization](https://en.wikipedia.org/wiki/Linear_programming), who would like to know an actual viable
+> alternative to [Branch and Cut](https://en.wikipedia.org/wiki/Branch_and_cut). However, I try to make it
+> understandable for anyone interested
+> in [combinatorial optimization](https://en.wikipedia.org/wiki/Combinatorial_optimization).
+
+> **About the (main) author:**
+> [Dr. Dominik Krupke](https://krupke.cc) is a postdoctoral researcher at the [Algorithms Group](https://www.ibr.cs.tu-bs.de/alg) at TU Braunschweig,
+>  where he researches and teaches on how to solve NP-hard problems in practice. He started writing this primer as course material for his students,
+>  but continued and extended it (mostly in his spare time) to make it available to a wider audience.
+
+
 
 ## Installation
 
