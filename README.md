@@ -515,7 +515,7 @@ We added three examples:
 
 The most powerful TSP-solver *concorde* uses a linear programming based approach, but with a lot of additional
 techniques to improve the performance. The book *In Pursuit of the Traveling Salesman* by William Cook may have already given
-you some insights. For more details, you can also read the more advanced book *The Traveling Salesman Problem: A Computational Study* by Cook, Cunningham, Pulleyblank, and Schrijver.
+you some insights. For more details, you can also read the more advanced book *The Traveling Salesman Problem: A Computational Study* by Applegate, Bixby, Chvatál, and Cook.
 If you need to solve some variant, MIP-solvers (which could be called a generalization of that approach) are known to perform
 well using the [Dantzig-Fulkerson-Johnson Formulation](https://en.wikipedia.org/wiki/Travelling_salesman_problem#Dantzig%E2%80%93Fulkerson%E2%80%93Johnson_formulation).
 This model is theoretically exponential, but using lazy constraints (which are added when needed), it can be solved
