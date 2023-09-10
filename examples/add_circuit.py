@@ -11,7 +11,7 @@ from ortools.sat.python import cp_model
 from typing import Dict, Tuple
 
 def generate_random_graph(n, seed=None):
-    """Generate a random graph with n nodes and n*(n-1) edges."""
+    """Generate a random weighted graph with n nodes and n*(n-1) edges."""
     import random
     random.seed(seed)
     graph = {}
@@ -35,11 +35,11 @@ if __name__ == '__main__':
     # We need to tell CP-SAT which variable corresponds to which edge.
     # This is done by passing a list of tuples (u,v,var) to AddCircuit.
     circuit = [(u, v, var)  # (source, destination, variable)
-                for (u,v), var in edge_vars.items()]
+                for (u,v),var in edge_vars.items()]
     model.AddCircuit(circuit)
 
     # Objective: minimize the total cost of edges
-    obj = sum(dgraph[(u,v)]*x for (u,v),x  in edge_vars.items())
+    obj = sum(dgraph[(u,v)]*var for (u,v),var  in edge_vars.items())
     model.Minimize(obj)
 
     # Solve
@@ -50,11 +50,11 @@ if __name__ == '__main__':
 
     # Print solution
     if status == cp_model.OPTIMAL:
-        tour = [(u,v) for (u,v),x in edge_vars.items() if solver.Value(x)]
+        tour = [(u,v) for (u,v),var in edge_vars.items() if solver.Value(var)]
         print("Optimal tour is: ", sorted(tour))
         print("The cost of the tour is: ", solver.ObjectiveValue())
     elif status == cp_model.FEASIBLE:
-        tour = [(u,v) for (u,v),x in edge_vars.items() if solver.Value(x)]
+        tour = [(u,v) for (u,v),var in edge_vars.items() if solver.Value(var)]
         print("Feasible tour is: ", sorted(tour))
         print("The cost of the tour is: ", solver.ObjectiveValue())
         print("The lower bound of the tour is: ", solver.BestObjectiveBound())

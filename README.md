@@ -498,18 +498,18 @@ dgraph = {
  # We need to tell CP-SAT which variable corresponds to which edge.
  # This is done by passing a list of tuples (u,v,var) to AddCircuit.
  circuit = [(u, v, var)  # (source, destination, variable)
-             for (u,v), var in edge_vars.items()]
+             for (u,v),var in edge_vars.items()]
  model.AddCircuit(circuit)
 
  # Objective: minimize the total cost of edges
- obj = sum(dgraph[(u,v)]*x for (u,v),x  in edge_vars.items())
+ obj = sum(dgraph[(u,v)]*var for (u,v),var  in edge_vars.items())
  model.Minimize(obj)
 
  # Solve
  solver = cp_model.CpSolver()
  status = solver.Solve(model)
  assert status in (cp_model.OPTIMAL, cp_model.FEASIBLE)
- tour = [(u,v) for (u,v),x in edge_vars.items() if solver.Value(x)]
+ tour = [(u,v) for (u,v),var in edge_vars.items() if solver.Value(var)]
  print("Tour:", tour)
 ```
     Tour: [(0, 1), (2, 0), (3, 2), (1, 3)]
