@@ -20,7 +20,7 @@ However, the relatively new [CP-SAT](https://developers.google.com/optimization/
 suite shows to overcome many of the weaknesses and provides a viable alternative to MIP-solvers, being competitive for many problems and sometimes even superior.
 
 This unofficial primer shall help you use and understand this powerful tool, especially if you are coming from
-the [Mixed Integer Linear Programming](https://en.wikipedia.org/wiki/Integer_programming) -community, to use and understand this tool as
+the [Mixed Integer Linear Programming](https://en.wikipedia.org/wiki/Integer_programming) -community, as
 it may prove useful in cases where Branch and Bound performs poorly.
 
 If you are relatively new to combinatorial optimization, I suggest you to read the relatively short book [In Pursuit of the Traveling Salesman by Bill Cook](https://press.princeton.edu/books/paperback/9780691163529/in-pursuit-of-the-traveling-salesman) first.
