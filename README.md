@@ -590,23 +590,23 @@ If you want to find out all options, you can check the reasonably well documente
 the [official repository](https://github.com/google/or-tools/blob/stable/ortools/sat/sat_parameters.proto).
 I will give you the most important right below.
 
-> :warning: Only a few of the parameters (e.g., timelimit) are beginner friendly. Most other parameters (e.g., dicision strategies)
-> should not be touched as the defaults are well chosen and it is likely that you will interfere with some optimizations.
+> :warning: Only a few of the parameters (e.g., timelimit) are beginner-friendly. Most other parameters (e.g., decision strategies)
+> should not be touched as the defaults are well-chosen, and it is likely that you will interfere with some optimizations.
 > If you need a better performance, try to improve your model of the optimization problem.
 
-### Timelimit and Status
+### Time limit and Status
 
 If we have a huge model, CP-SAT may not be able to solve it to optimality (if the constraints are not too difficult,
 there is a good chance we still get a good solution).
 Of course, we don't want CP-SAT to run endlessly for hours (years, decades,...) but simply abort after a fixed time and
 return us the best solution so far.
-If you are now asking yourself, why you should use a tool that may run forever: There are simply no provably faster
+If you are now asking yourself why you should use a tool that may run forever: There are simply no provably faster
 algorithms and considering the combinatorial complexity, it is incredible that it works so well.
-Those not familiar with the concepts of NP-hardness and combinatorial complexty, I recommend to read the book 'In
+Those not familiar with the concepts of NP-hardness and combinatorial complexity, I recommend reading the book 'In
 Pursuit of the Traveling Salesman' by William Cook.
 Actually, I recommend this book to anyone into optimization: It is a beautiful and light weekend-read.
 
-To set a timelimit (in seconds), we can simply set the following value before we run the solver:
+To set a time limit (in seconds), we can simply set the following value before we run the solver:
 
 ```python
 solver.parameters.max_time_in_seconds = 60  # 60s timelimit
@@ -636,10 +636,10 @@ The following status codes are possible:
 
 If you want to print the status, you can use `solver.StatusName(status)`.
 
-We can not only limit the runtime but also tell CP-SAT, we are satisfied with a solution within a specific, proveable
+We can not only limit the runtime but also tell CP-SAT, we are satisfied with a solution within a specific, provable
 quality range.
 For this, we can set the parameters `absolute_gap_limit` and `relative_gap_limit`.
-The absolut limit tells CP-SAT to stop as soon as the solution is at most a specific value apart to the bound, the
+The absolute limit tells CP-SAT to stop as soon as the solution is at most a specific value apart to the bound, the
 relative limit is relative to the bound.
 More specific, CP-SAT will stop as soon as the objective value (O) is within relative ratio
 $abs(O - B) / max(1, abs(O))$ of the bound (B).
@@ -728,14 +728,14 @@ solver.parameters.subsolvers = ["default_lp", "fixed", "less_encoding", "no_lp",
  ```
 
 This can be interesting, e.g., if you are using CP-SAT especially because the linear
-relaxation is not useful (and the BnB-algorithm performing badly. There are
+relaxation is not useful (and the BnB-algorithm performing badly). There are
 even more options, but for these you can simply look into the
 [documentation](https://github.com/google/or-tools/blob/49b6301e1e1e231d654d79b6032e79809868a70e/ortools/sat/sat_parameters.proto#L513).
 Be aware that fine-tuning such a solver is not a simple task, and often you do more harm than good by tinkering around.
 However, I noticed that decreasing the number of search workers can actually improve the runtime for some problems.
 This indicates that at least selecting the right subsolvers that are best fitted for your problem can be worth a shot.
 For example `max_lp` is probably a waste of resources if you know that your model has a terrible linear relaxation.
-In this context I want to recommend to have a look on some relaxed solutions when dealing with difficult problems to get a
+In this context I want to recommend having a look on some relaxed solutions when dealing with difficult problems to get a
 better understanding of which parts a solver may struggle with (use a linear programming solver, like Gurobi, for this).
 
 ### Assumptions
@@ -765,7 +765,7 @@ model.ClearAssumptions()  # clear all assumptions
 
 Maybe we already have a good intuition on how the solution will look like (this could be, because we already solved a
 similar model, have a good heuristic, etc.).
-In this case it may be useful, to tell CP-SAT about it so it can incorporate this knowledge into its search.
+In this case it may be useful, to tell CP-SAT about it, so it can incorporate this knowledge into its search.
 For Mixed Integer Programming Solver, this often yields a visible boost, even with mediocre heuristic solutions.
 For CP-SAT I actually also encountered downgrades of the performance if the hints weren't great (but this may
 depend on the problem).
@@ -776,9 +776,20 @@ model.AddHint(y, 2)  # and y probably be 2.
 ```
 
 You can also
-find [an official example](https://github.com/google/or-tools/blob/stable/ortools/sat/samples/solution_hinting_sample_sat.py)
-.
+find [an official example](https://github.com/google/or-tools/blob/stable/ortools/sat/samples/solution_hinting_sample_sat.py).
 
+To make sure, your hints are actually correct, you can use the following parameters to make CP-SAT throw an error if
+your hints are wrong.
+
+```python
+solver.parameters.debug_crash_on_bad_hint = True
+```
+
+If you have the feeling that your hints are not used, you may have made a logical error in your model or just have
+a bug in your code.
+This parameter will tell you about it.
+
+(TODO: Have not tested this, yet)
 
 ### Logging
 
@@ -1005,7 +1016,7 @@ solver.parameters.search_branching = cp_model.FIXED_SEARCH
 For example for [coloring](https://en.wikipedia.org/wiki/Graph_coloring) (with integer representation of the color), we could order the
 variables by decreasing neighborhood size (`CHOOSE_FIRST`) and then always try to assign
 the lowest color (`SELECT_MIN_VALUE`). This strategy should perform an implicit
-kernalization, because if we need at least $k$ colors, the vertices with less than $k$
+kernelization, because if we need at least $k$ colors, the vertices with less than $k$
 neighbors are trivial (and they would not be relevant for any conflict).
 Thus, by putting them at the end of the list, CP-SAT will only consider them once
 the vertices with higher degree could be colored without any conflict (and then the
@@ -1022,6 +1033,8 @@ by itself which vertices are the critical ones after some conflicts.
 ---
 
 ## How does it work?
+
+| :warning: This part is under construction and will be rewritten in large parts as soon as I have the time.
 
 Let us now take a look on what is actually happening under the hood.
 You may have already learned that CP-SAT is transforming the problem into a SAT-formula.
@@ -1040,7 +1053,7 @@ Remember, that this tutorial is written from the view of linear optimization.
 
 CP-SAT actually builds upon quite a set of techniques. However, it is enough if you understand the basics of those.
 
-| :warninng: This is still in a very drafty state. There are also still some useful examples  missing.
+| :warning: This is still in a very drafty state. There are also still some useful examples missing.
 
 #### SAT-Solvers
 
