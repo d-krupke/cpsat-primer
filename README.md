@@ -401,7 +401,7 @@ model.Add(x + z == 10).OnlyEnforceIf([b2, b3.Not()])  # only enforce if b2 AND N
 
 ### AllDifferent
 
-A constraint that is often see in Constraint Programming, but I myself was always able to deal without it.
+A constraint that is often seen in Constraint Programming, but I myself was always able to deal without it.
 Still, you may find it important. It forces all (integer) variables to have a different value.
 
 `AllDifferent` is actually the only constraint that may use a domain based propagator (if it is not a
@@ -416,6 +416,24 @@ model.AddAllDifferent(x+i for i, x in enumerate(vars))
 ```
 
 The [N-queens](https://developers.google.com/optimization/cp/queens) example of the official tutorial makes use of this constraint.
+
+`AllDifferent` on a list $X$ is actually just $x!=x' \forall x,x' \in X$, but usually more efficient.
+Thus, for every set of mutually different variables, it is better to use `AllDifferent` than to use the explicit
+`!=` constraints.
+Sometimes, the structure of the `AllDifferent` is directly given by the problem, e.g., in the N-queens problem, where
+each queen has to be in a different row and column.
+For other problems, such as the vertex coloring problem, you only directly see that no two adjacent vertices should
+have the same color, but, e.g., we this can be generalized for each triangle (or larger clique) to an `AllDifferent` constraint.
+Computing the minimal number of sets that have to be different is the NP-hard Edge Clique Cover problem.
+You can do some simple heuristic to approximate it, but if you do it only half-heartily, you may be better off with
+just using the explicit `!=` constraints.
+CP-SAT knows itself that an `AllDifferent` is better than many `!=`, so it will automatically try to replace sets of mutual `!=`
+by `AllDifferent`, but only if no `AllDifferent` is used by the user.
+As soon as you add an `AllDifferent` constraint, CP-SAT assumes that you did it properly and will deactivate this
+optimization [[source](https://github.com/google/or-tools/blob/1d696f9108a0ebfd99feb73b9211e2f5a6b0812b/ortools/sat/sat_parameters.proto#L542)].
+Thus, if you do optimizations with `AllDifferent`, do it properly or leave it to CP-SAT.
+
+TODO: Create a benchmark to evaluate this optimization.
 
 ### Absolute Values and Max/Min
 
