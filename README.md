@@ -975,13 +975,13 @@ deterministic_time: 6.71917
 gap_integral: 11.2892
 ```
 
-The log is actually very intersting to understand CP-SAT, but also to learn about the optimzation problem at hand.
-It gives you a lot of details on, e.g., how many variables could be directly removed or which technqiues contributed to lower and upper bounds the most.
+The log is actually very interesting to understand CP-SAT, but also to learn about the optimization problem at hand.
+It gives you a lot of details on, e.g., how many variables could be directly removed or which techniques contributed to lower and upper bounds the most.
 We take a more detailed look onto the log [here](./understanding_the_log.md).
 
 ### Decision Strategy
 
-In the end of this section, a more advanced parameter that looks interesting for advanced users as it gives some insights into the search algorithm, but is probably better left alone.
+In the end of this section, a more advanced parameter that looks interesting for advanced users as it gives some insights into the search algorithm, **but is probably better left alone**.
 
 We can tell CP-SAT, how to branch (or make a decision) whenever it can no longer deduce anything via propagation.
 For this, we need to provide a list of the variables (order may be important for some strategies), define which variable
