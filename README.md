@@ -423,7 +423,7 @@ Thus, for every set of mutually different variables, it is better to use `AllDif
 Sometimes, the structure of the `AllDifferent` is directly given by the problem, e.g., in the N-queens problem, where
 each queen has to be in a different row and column.
 For other problems, such as the vertex coloring problem, you only directly see that no two adjacent vertices should
-have the same color, but, e.g., we this can be generalized for each triangle (or larger clique) to an `AllDifferent` constraint.
+have the same color, but, e.g., this can be generalized for each triangle (or larger clique) to an `AllDifferent` constraint.
 Computing the minimal number of sets that have to be different is the NP-hard Edge Clique Cover problem.
 You can do some simple heuristic to approximate it, but if you do it only half-heartily, you may be better off with
 just using the explicit `!=` constraints.
