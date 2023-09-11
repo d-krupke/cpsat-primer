@@ -19,9 +19,7 @@ While MIP-solvers are frequently able to solve problems with hundreds of thousan
 However, the relatively new [CP-SAT](https://developers.google.com/optimization/cp/cp_solver) of Google's [ortools](https://github.com/google/or-tools/)
 suite shows to overcome many of the weaknesses and provides a viable alternative to MIP-solvers, being competitive for many problems and sometimes even superior.
 
-Unfortunately, CP-SAT does IMHO not yet have the maturity of established tools such as Gurobi and thus, the educational
-material is somehow lacking (it is not bad, but maybe not sufficient for such a powerful tool).
-This unofficial primer shall help you use and understand this tool, especially if you are coming from
+This unofficial primer shall help you use and understand this powerful tool, especially if you are coming from
 the [Mixed Integer Linear Programming](https://en.wikipedia.org/wiki/Integer_programming) -community, to use and understand this tool as
 it may prove useful in cases where Branch and Bound performs poorly.
 
