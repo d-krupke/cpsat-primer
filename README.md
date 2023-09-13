@@ -653,6 +653,8 @@ for i, box in enumerate(boxes):
 
 ```
 
+See [this notebook](./examples/add_no_overlap_2d.ipynb) for the full example.
+
 There is also the option for optional intervals, i.e., intervals that may be skipped.
 This would allow you to have multiple containers or do a knapsack-like packing.
 
