@@ -585,15 +585,82 @@ model.AddElement(index=i, variables=[x, y, z], target=ai)
 model.AddInverse([x, y, z], [z, y, x])
 ```
 
-### But wait, there is more: Intervals and stuff
+### Interval Variables and No-Overlap Constraints
 
-An important part we neglect to keep this tutorial reasonably short (and because I barely need them, but they are
-important in some domains) are intervals.
-CP-SAT has extensive support for interval variables and corresponding constraints, even two-dimensional do-not-overlap
-constraints.
-These could be useful for, e.g., packing problems (packing as many objects into a container as possible) or scheduling problems (like assigning work shifts).
-Maybe I add something about those later.
-For now, you can check out the [official documentation](https://developers.google.com/optimization/reference/python/sat/python/cp_model) for a full list of available constraints.
+CP-SAT also supports interval variables and corresponding constraints.
+These are important for scheduling and packing problems.
+There are simple no-overlap constraints for intervals for one-dimensional and two-dimensional intervals.
+In two-dimensional intervals, only one dimension is allowed to overlap, i.e., the other dimension has to be disjoint.
+This is essentially rectangle packing.
+Let us see how we can model a simple 2-dimensional packing problem.
+Note that `NewIntervalVariable` may indicate a new variable, but it is actually a constraint container in which you have to insert the classical integer variables.
+You need them to insert them into the no-overlap constraint.
+
+```python
+from ortools.sat.python import cp_model
+
+# Instance
+container = (40, 15)
+boxes = [
+    (11, 3),
+    (13, 3),
+    (9,  2),
+    (7,  2),
+    (9,  3),
+    (7,  3),
+    (11, 2),
+    (13, 2),
+    (11, 4),
+    (13, 4),
+    (3,  5),
+    (11, 2),
+    (2,  2),
+    (11, 3),
+    (2,  3),
+    (5,  4),
+    (6,  4),
+    (12, 2),
+    (1,  2),
+    (3,  5),
+    (13, 5),
+    (12, 4),
+    (1,  4),
+    (5,  2),
+    #(6,  2),  # add to make tight
+    # (6,3), # add to make infeasible
+]
+model = cp_model.CpModel()
+
+# We have to create the variable for the bottom left corner of the boxes.
+# We directly limit their range, such that the boxes are inside the container
+x_vars = [model.NewIntVar(0, container[0]-box[0], name = f'x1_{i}') for i, box in enumerate(boxes)]
+y_vars = [model.NewIntVar(0, container[1]-box[1], name = f'y1_{i}') for i, box in enumerate(boxes)]
+# Interval variables are actually more like constraint containers, that are then passed to the no overlap constraint
+# Note that we could also make size and end variables, but we don't need them here
+x_interval_vars = [model.NewIntervalVar(begin=x_vars[i], size=box[0], end=x_vars[i]+box[0], name = f'x_interval_{i}') for i, box in enumerate(boxes)]
+y_interval_vars = [model.NewIntervalVar(begin=y_vars[i], size=box[1], end=y_vars[i]+box[1], name = f'y_interval_{i}') for i, box in enumerate(boxes)]
+# Enforce that no two rectangles overlap
+model.AddNoOverlap2D(x_interval_vars, y_interval_vars)
+
+# Solve!
+solver = cp_model.CpSolver()
+solver.parameters.log_search_progress = True
+solver.log_callback = print
+status = solver.Solve(model)
+assert status == cp_model.OPTIMAL
+for i, box in enumerate(boxes):
+    print(f'box {i} is placed at ({solver.Value(x_vars[i])}, {solver.Value(y_vars[i])})')
+
+```
+
+There is also the option for optional intervals, i.e., intervals that may be skipped.
+This would allow you to have multiple containers or do a knapsack-like packing.
+
+### There is more
+
+CP-SAT has even more constraints, but I think I covered the most important ones.
+If you need more, you can check out the [official documentation](https://developers.google.com/optimization/reference/python/sat/python/cp_model#cp_model.CpModel).
+
 
 ---
 
