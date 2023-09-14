@@ -275,23 +275,22 @@ numerical implications that you should be aware of.
 The lack of continuous variables may sound like a serious limitation,
 especially if you have a background in linear optimization (where continuous variables are the "easy part"),
 but as long as they are not a huge part of your problem, you can often work around it.
-I have had optimization problems that required bunch of continuous variables with a high resolution,
-and I noticed that increasing the resolution had only a small impact on the performance, such
-that even a step size of \(10^{-6}\) was fine.
-This was quite surprising to me, as a higher resolution usually means a larger domain and thus more
-combinatorial complexity, but CP-SAT has some tricks to deal with this.
-The performance was also much higher than with Gurobi, because of the difficult logical constraints in the problem.
+I had problems with many continuous variables on which I had to apply absolute values and conditional linear constraints, and
+CP-SAT performed much better than Gurobi, which is known to be very good at continuous variables.
 In this case, CP-SAT struggled less with the continuous variables (Gurobi's strength), than Gurobi with the logical constraints (CP-SAT's strength).
-If you have a problem with a lot of continuous variables, such as [network flow problems](https://en.wikipedia.org/wiki/Network_flow_problem), you are probably still better served with a MIP-solver.
-
-I mentioned that having tight bounds on the integer variables can be important, but increasing the resolution seems
-to only have a small impact. How does this fit together with the fact that a higher resolution means a larger lower and upper bounds?
-The answer to this is that only the absolute values of the bounds change, but not their tightness, i.e., the relative
-difference, as all values are scaled equally.
+In a further analysis, I noted an only logarithmic increase of the runtime with the resolution.
+However, there are also problems for which a higher resolution can drastically increase the runtime.
+The packing problem, which is discussed further below, has the following runtime for different resolutions:
+1x: 0.02s, 10x: 0.7s, 100x: 7.6s, 1000x: 75s, 10_000x: >15min.
+The solution was always the same, just scaled, and there was no objective, i.e., only a feasible solution had to be found.
+Note that this is just an example, not a representative benchmark.
+See [./examples/add_no_overlap_2d_scaling.ipynb](./examples/add_no_overlap_2d_scaling.ipynb) for the code.
+If you have a problem with a lot of continuous variables, such as [network flow problems](https://en.wikipedia.org/wiki/Network_flow_problem), you are probably better served with a MIP-solver.
 
 In my experience, boolean variables are by far the most important variables in many combinatorial optimization problems.
 Many problems, such as the famous Traveling Salesman Problem, only consist of boolean variables.
 Implementing a solver specialized on boolean variables by using a SAT-solver as a base, such as CP-SAT, thus, is quite sensible.
+The resolution of coefficients (in combination with boolean variables) is less critical than for variables.
 
 
 ### Objectives
@@ -637,8 +636,8 @@ x_vars = [model.NewIntVar(0, container[0]-box[0], name = f'x1_{i}') for i, box i
 y_vars = [model.NewIntVar(0, container[1]-box[1], name = f'y1_{i}') for i, box in enumerate(boxes)]
 # Interval variables are actually more like constraint containers, that are then passed to the no overlap constraint
 # Note that we could also make size and end variables, but we don't need them here
-x_interval_vars = [model.NewIntervalVar(begin=x_vars[i], size=box[0], end=x_vars[i]+box[0], name = f'x_interval_{i}') for i, box in enumerate(boxes)]
-y_interval_vars = [model.NewIntervalVar(begin=y_vars[i], size=box[1], end=y_vars[i]+box[1], name = f'y_interval_{i}') for i, box in enumerate(boxes)]
+x_interval_vars = [model.NewIntervalVar(start=x_vars[i], size=box[0], end=x_vars[i]+box[0], name = f'x_interval_{i}') for i, box in enumerate(boxes)]
+y_interval_vars = [model.NewIntervalVar(start=y_vars[i], size=box[1], end=y_vars[i]+box[1], name = f'y_interval_{i}') for i, box in enumerate(boxes)]
 # Enforce that no two rectangles overlap
 model.AddNoOverlap2D(x_interval_vars, y_interval_vars)
 
@@ -652,6 +651,8 @@ for i, box in enumerate(boxes):
     print(f'box {i} is placed at ({solver.Value(x_vars[i])}, {solver.Value(y_vars[i])})')
 
 ```
+
+> The keywords `start` may be named `begin` in some versions of ortools.
 
 See [this notebook](./examples/add_no_overlap_2d.ipynb) for the full example.
 
