@@ -659,6 +659,19 @@ See [this notebook](./examples/add_no_overlap_2d.ipynb) for the full example.
 There is also the option for optional intervals, i.e., intervals that may be skipped.
 This would allow you to have multiple containers or do a knapsack-like packing.
 
+The resolution seems to be quite important for this problem, as mentioned before.
+The following table shows the runtime for different resolutions (the solution is always the same, just scaled).
+
+| Resolution | Runtime |
+|------------|---------|
+| 1x         | 0.02s   |
+| 10x        | 0.7s    |
+| 100x       | 7.6s    |
+| 1000x      | 75s     |
+| 10_000x    | >15min  |
+
+See [this notebook](./examples/add_no_overlap_2d_scaling.ipynb) for the full example.
+
 ### There is more
 
 CP-SAT has even more constraints, but I think I covered the most important ones.
