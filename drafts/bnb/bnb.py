@@ -1,6 +1,6 @@
 """
 A simple implementation of the branch and bound algorithm for the knapsack problem.
-It is primarily intended to illustrate the algorithm and not for efficiency.
+It is primarily intended to illustrate the algorithm and not optimized for efficiency.
 It is modular such that the performance difference between different strategies can be
 explored. All strategies will be exponential in the worst case, but some strategies
 will still result in significantly smaller branch and bound trees than others.
@@ -39,6 +39,11 @@ class FractionalSolution:
     """
 
     def __init__(self, instance: Instance, selection: typing.List[float]):
+        """
+        instance: knapsack problem instance
+        selection: list of predefined item selections, where 0 means not taken
+          and 1 means fully taken, and None means not fixed.
+        """
         if not len(selection) == len(instance.items):
             raise ValueError("Selection must have same length as items.")
         self.instance = instance
@@ -47,7 +52,7 @@ class FractionalSolution:
   
     def value(self) -> float:
         """
-        Total value of fractional solution.
+        Total value of packed items in fractional solution.
         """
         return sum(
             item.value * taken
@@ -56,7 +61,7 @@ class FractionalSolution:
     
     def weight(self) -> float:
         """
-        Total weight of fractional solution.
+        Total weight of items of fractional solution.
         """
         return sum(
             item.weight * taken
@@ -85,13 +90,14 @@ class FractionalSolution:
 
 class RelaxationSolver:
     """
-    Solve the fractional knapsack problem from the given instance and branching decisions.
+    Solve the fractional knapsack problem from the given instance and branching
+    decisions.
     """
     def _infer(
         self, instance: Instance, fixation: BranchingDecisions
     ) -> BranchingDecisions:
         """
-        Deduce further fixations from the given fixations and instance.
+        Optional: Deduce further fixations from the given fixations and instance.
         """
         fixation = fixation.copy()
         remaining_capacity = instance.capacity - sum(
@@ -109,7 +115,11 @@ class RelaxationSolver:
         self, instance: Instance, fixation: BranchingDecisions
     ) -> FractionalSolution:
         """
-        Solve the fractional knapsack problem from the given instance and deduced fixations.
+        Solve the fractional knapsack problem from the given instance and deduced
+          fixations.
+        instance: knapsack problem instance
+        fixation: list of predefined item selections, where 0 means not taken,
+            1 means fully taken, and None means not fixed
         """
         fixation = self._infer(instance, fixation)  # Deduce further fixations
         remaining_capacity = instance.capacity - sum(
@@ -232,7 +242,7 @@ class NodeFactory:
         self, parent: BnBNode, branching_decisions: BranchingDecisions
     ) -> BnBNode:
         """
-        Create a child node based on the parent node and branching decisions.
+        Create a child node for each decision branch of the given parent node.
         """
         child = BnBNode(
             self.relaxation.solve(self.instance, branching_decisions),
@@ -244,6 +254,9 @@ class NodeFactory:
         return child
 
     def num_nodes(self) -> int:
+        """
+        Number of nodes created so far.
+        """
         return self._node_id_counter
 
 
@@ -253,7 +266,7 @@ class BranchingStrategy:
     """
     def make_decisions(self, node: BnBNode) -> typing.Iterable[BranchingDecisions]:
         """
-        Branch on a non-integer variable.
+        Branch on the first (min index) non-integer variable.
         """
         frac_i = min(
             i for i, x in enumerate(node.relaxed_solution.selection) if x != int(x)
@@ -284,9 +297,16 @@ class SolutionSet:
             self._best_solution = solution
         
     def best_solution_value(self) -> float:
+        """
+        Get the value of the best solution in the solution set.
+        -inf if no solution is available.
+        """
         return self._best_solution.value() if self._best_solution else float("-inf")
 
     def best_solution(self) -> typing.Optional[FractionalSolution]:
+        """
+        Get the best solution in the solution set.
+        """
         return self._best_solution
 
 class Statistics:
@@ -324,10 +344,6 @@ class Statistics:
         Report the status of the given node.
         """
         self._last_node = (node, status)
-
-    # I don't know if this function is necessary because it may never be used ???
-    def report_new_solution(self, solution: FractionalSolution) -> None:
-        self.best_solution = solution
 
     def print_header(self):
         print("Nodes\tDepth\tStatus\t\tValue\tUB\tLB")
@@ -385,6 +401,14 @@ class BnBSearch:
         search_strategy: SearchStrategy,
         branching_strategy: BranchingStrategy,
     ) -> None:
+        """
+        instance: knapsack problem instance
+        relaxation: An efficient relaxation solver for the knapsack problem
+        search_strategy: A strategy for managing the unprocessed nodes of the search tree, especially
+            the order in which they are processed.
+        branching_strategy: A strategy for creating decision branches based on the fractional solution
+            of a node.
+        """
         self.instance = instance
         self.solutions = SolutionSet()
         self.relaxation = relaxation
@@ -394,12 +418,30 @@ class BnBSearch:
         self.statistics = Statistics(self.node_factory, self.search_strategy, self.solutions)
         self.heuristics = Heuristics()
 
+    def _process_node(self, node: BnBNode) -> str:
+        if not node.relaxed_solution.is_feasible():
+            return "infeasible" # infeasibility prune
+        if node.relaxed_solution.value() <= self.solutions.best_solution_value():
+            return "pruned   "  # suboptimality prune
+        if node.relaxed_solution.is_integral():
+            # update best solution
+            self.solutions.add(node.relaxed_solution)
+            return "integral "
+        # try to find solutions using heuristics
+        for heur_sol in self.heuristics.search(self.instance, node):
+            self.solutions.add(heur_sol)
+        # branch on a non-integer variable
+        for decisions in self.branching_strategy.make_decisions(node):
+            child = self.node_factory.create_child(node, decisions)
+            self.search_strategy.add(child)
+        return "branched "
+
+
     def search(self) -> typing.Optional[FractionalSolution]:
         """
         Perform a branch-and-bound search to find the optimal fractional solution
         for the knapsack problem instance.
         """
-
         # the branch-and-bound search start from the root node and
         # continue until the search strategy has no more nodes to explore.
         root = self.node_factory.create_root()
@@ -408,25 +450,8 @@ class BnBSearch:
         while self.search_strategy.has_next():
             self.statistics.print_progress()
             node = self.search_strategy.next()
-            if not node.relaxed_solution.is_feasible():
-                self.statistics.report_node(node, "infeasible")
-                continue  # infeasibility prune
-            if node.relaxed_solution.value() <= self.solutions.best_solution_value():
-                self.statistics.report_node(node, "pruned   ")
-                continue  # suboptimality prune
-            if node.relaxed_solution.is_integral():
-                self.statistics.report_node(node, "integral")
-                # update best solution
-                self.solutions.add(node.relaxed_solution)
-                continue
-            # try to find solutions using heuristics
-            for heur_sol in self.heuristics.search(self.instance, node):
-                self.solutions.add(heur_sol)
-            # branch on a non-integer variable
-            self.statistics.report_node(node, "branched")
-            for decisions in self.branching_strategy.make_decisions(node):
-                child = self.node_factory.create_child(node, decisions)
-                self.search_strategy.add(child)
+            status = self._process_node(node)
+            self.statistics.report_node(node, status)
         self.statistics.print_progress()
         return self.solutions.best_solution()
     
