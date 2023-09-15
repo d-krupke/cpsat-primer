@@ -359,6 +359,9 @@ model.Add(x + y != z)
 model.Add(x <= z - 1)  # x < z
 ```
 
+Note that `!=` can be expected slower than the other (`<=`, `>=`, `==`) constraints, because it is not a linear constraint.
+If you have a set of mutually `!=` variables, it is better to use `AllDifferent` (see below) than to use the explicit `!=` constraints.
+
 > :warning: If you use intersecting linear constraints, you may get problems because the intersection point needs to
 > be integral. There is no such thing as a feasibility tolerance as in Mixed Integer Programming-solvers, where small deviations
 > are allowed. The feasibility tolerance in MIP-solvers allows, e.g., 0.763445 == 0.763439 to still be considered equal to counter
@@ -414,23 +417,25 @@ model.AddAllDifferent(x+i for i, x in enumerate(vars))
 
 The [N-queens](https://developers.google.com/optimization/cp/queens) example of the official tutorial makes use of this constraint.
 
-`AllDifferent` on a list $X$ is actually just $x!=x' \forall x,x' \in X$, but usually more efficient.
-Thus, for every set of mutually different variables, it is better to use `AllDifferent` than to use the explicit
-`!=` constraints.
-Sometimes, the structure of the `AllDifferent` is directly given by the problem, e.g., in the N-queens problem, where
-each queen has to be in a different row and column.
-For other problems, such as the vertex coloring problem, you only directly see that no two adjacent vertices should
-have the same color, but, e.g., this can be generalized for each triangle (or larger clique) to an `AllDifferent` constraint.
-Computing the minimal number of sets that have to be different is the NP-hard Edge Clique Cover problem.
-You can do some simple heuristic to approximate it, but if you do it only half-heartily, you may be better off with
-just using the explicit `!=` constraints.
-CP-SAT knows itself that an `AllDifferent` is better than many `!=`, so it will automatically try to replace sets of mutual `!=`
-by `AllDifferent`, but only if no `AllDifferent` is used by the user.
-As soon as you add an `AllDifferent` constraint, CP-SAT assumes that you did it properly and will deactivate this
-optimization [[source](https://github.com/google/or-tools/blob/1d696f9108a0ebfd99feb73b9211e2f5a6b0812b/ortools/sat/sat_parameters.proto#L542)].
-Thus, if you do optimizations with `AllDifferent`, do it properly or leave it to CP-SAT.
+There is a big caveat with this constraint:
+CP-SAT now has a preprocessing step that automatically tries to infer large `AllDifferent` constraints from sets of mutual `!=` constraints.
+This inference equals the NP-hard Edge Clique Cover problem, thus, is not a trivial task.
+If you add an `AllDifferent` constraint yourself, CP-SAT will assume that you already took care of this inference and will skip this step.
+Thus, adding a single `AllDifferent` constraint can make your model significantly slower, if you also use `!=` constraints.
+If you do not use `!=` constraints, you can safely use `AllDifferent` without any performance penalty.
+You may also want to use `!=` instead of `AllDifferent` if you apply it to overlapping sets of variables without proper optimization, because then CP-SAT will do the inference for you.
 
-TODO: Create a benchmark to evaluate this optimization.
+In [./examples/add_all_different.ipynb](./examples/add_all_different.ipynb) you can find a quick experiment based on the graph coloring problem.
+In the graph coloring problem, the colors of two adjacent vertices have to be different.
+This can be easily modelled by `!=` or `AllDifferent` constraints on every edge.
+Using `!=`, we can solve the example graph in around 5 seconds.
+If we use `AllDifferent`, it takes more than 5 minutes.
+If we manually disable the `AllDifferent` inference, it also takes more than 5 minutes.
+Same if we add just a single `AllDifferent` constraint.
+Thus, if you use `AllDifferent` do it properly on large sets, or use `!=` constraints and let CP-SAT infer the `AllDifferent` constraints for you.
+
+Maybe CP-SAT will allow you to use `AllDifferent` without any performance penalty in the future, but for now, you have to be aware of this. See also [the optimization parameter documentation](https://github.com/google/or-tools/blob/1d696f9108a0ebfd99feb73b9211e2f5a6b0812b/ortools/sat/sat_parameters.proto#L542).
+
 
 ### Absolute Values and Max/Min
 
