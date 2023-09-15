@@ -19,10 +19,8 @@ While MIP-solvers are frequently able to solve problems with hundreds of thousan
 However, the relatively new [CP-SAT](https://developers.google.com/optimization/cp/cp_solver) of Google's [ortools](https://github.com/google/or-tools/)
 suite shows to overcome many of the weaknesses and provides a viable alternative to MIP-solvers, being competitive for many problems and sometimes even superior.
 
-Unfortunately, CP-SAT does IMHO not yet have the maturity of established tools such as Gurobi and thus, the educational
-material is somehow lacking (it is not bad, but maybe not sufficient for such a powerful tool).
-This unofficial primer shall help you use and understand this tool, especially if you are coming from
-the [Mixed Integer Linear Programming](https://en.wikipedia.org/wiki/Integer_programming) -community, to use and understand this tool as
+This unofficial primer shall help you use and understand this powerful tool, especially if you are coming from
+the [Mixed Integer Linear Programming](https://en.wikipedia.org/wiki/Integer_programming) -community, as
 it may prove useful in cases where Branch and Bound performs poorly.
 
 If you are relatively new to combinatorial optimization, I suggest you to read the relatively short book [In Pursuit of the Traveling Salesman by Bill Cook](https://press.princeton.edu/books/paperback/9780691163529/in-pursuit-of-the-traveling-salesman) first.
@@ -277,23 +275,22 @@ numerical implications that you should be aware of.
 The lack of continuous variables may sound like a serious limitation,
 especially if you have a background in linear optimization (where continuous variables are the "easy part"),
 but as long as they are not a huge part of your problem, you can often work around it.
-I have had optimization problems that required bunch of continuous variables with a high resolution,
-and I noticed that increasing the resolution had only a small impact on the performance, such
-that even a step size of \(10^{-6}\) was fine.
-This was quite surprising to me, as a higher resolution usually means a larger domain and thus more
-combinatorial complexity, but CP-SAT has some tricks to deal with this.
-The performance was also much higher than with Gurobi, because of the difficult logical constraints in the problem.
+I had problems with many continuous variables on which I had to apply absolute values and conditional linear constraints, and
+CP-SAT performed much better than Gurobi, which is known to be very good at continuous variables.
 In this case, CP-SAT struggled less with the continuous variables (Gurobi's strength), than Gurobi with the logical constraints (CP-SAT's strength).
-If you have a problem with a lot of continuous variables, such as [network flow problems](https://en.wikipedia.org/wiki/Network_flow_problem), you are probably still better served with a MIP-solver.
-
-I mentioned that having tight bounds on the integer variables can be important, but increasing the resolution seems
-to only have a small impact. How does this fit together with the fact that a higher resolution means a larger lower and upper bounds?
-The answer to this is that only the absolute values of the bounds change, but not their tightness, i.e., the relative
-difference, as all values are scaled equally.
+In a further analysis, I noted an only logarithmic increase of the runtime with the resolution.
+However, there are also problems for which a higher resolution can drastically increase the runtime.
+The packing problem, which is discussed further below, has the following runtime for different resolutions:
+1x: 0.02s, 10x: 0.7s, 100x: 7.6s, 1000x: 75s, 10_000x: >15min.
+The solution was always the same, just scaled, and there was no objective, i.e., only a feasible solution had to be found.
+Note that this is just an example, not a representative benchmark.
+See [./examples/add_no_overlap_2d_scaling.ipynb](./examples/add_no_overlap_2d_scaling.ipynb) for the code.
+If you have a problem with a lot of continuous variables, such as [network flow problems](https://en.wikipedia.org/wiki/Network_flow_problem), you are probably better served with a MIP-solver.
 
 In my experience, boolean variables are by far the most important variables in many combinatorial optimization problems.
 Many problems, such as the famous Traveling Salesman Problem, only consist of boolean variables.
 Implementing a solver specialized on boolean variables by using a SAT-solver as a base, such as CP-SAT, thus, is quite sensible.
+The resolution of coefficients (in combination with boolean variables) is less critical than for variables.
 
 
 ### Objectives
@@ -362,6 +359,9 @@ model.Add(x + y != z)
 model.Add(x <= z - 1)  # x < z
 ```
 
+Note that `!=` can be expected slower than the other (`<=`, `>=`, `==`) constraints, because it is not a linear constraint.
+If you have a set of mutually `!=` variables, it is better to use `AllDifferent` (see below) than to use the explicit `!=` constraints.
+
 > :warning: If you use intersecting linear constraints, you may get problems because the intersection point needs to
 > be integral. There is no such thing as a feasibility tolerance as in Mixed Integer Programming-solvers, where small deviations
 > are allowed. The feasibility tolerance in MIP-solvers allows, e.g., 0.763445 == 0.763439 to still be considered equal to counter
@@ -401,7 +401,7 @@ model.Add(x + z == 10).OnlyEnforceIf([b2, b3.Not()])  # only enforce if b2 AND N
 
 ### AllDifferent
 
-A constraint that is often see in Constraint Programming, but I myself was always able to deal without it.
+A constraint that is often seen in Constraint Programming, but I myself was always able to deal without it.
 Still, you may find it important. It forces all (integer) variables to have a different value.
 
 `AllDifferent` is actually the only constraint that may use a domain based propagator (if it is not a
@@ -416,6 +416,26 @@ model.AddAllDifferent(x+i for i, x in enumerate(vars))
 ```
 
 The [N-queens](https://developers.google.com/optimization/cp/queens) example of the official tutorial makes use of this constraint.
+
+There is a big caveat with this constraint:
+CP-SAT now has a preprocessing step that automatically tries to infer large `AllDifferent` constraints from sets of mutual `!=` constraints.
+This inference equals the NP-hard Edge Clique Cover problem, thus, is not a trivial task.
+If you add an `AllDifferent` constraint yourself, CP-SAT will assume that you already took care of this inference and will skip this step.
+Thus, adding a single `AllDifferent` constraint can make your model significantly slower, if you also use `!=` constraints.
+If you do not use `!=` constraints, you can safely use `AllDifferent` without any performance penalty.
+You may also want to use `!=` instead of `AllDifferent` if you apply it to overlapping sets of variables without proper optimization, because then CP-SAT will do the inference for you.
+
+In [./examples/add_all_different.ipynb](./examples/add_all_different.ipynb) you can find a quick experiment based on the graph coloring problem.
+In the graph coloring problem, the colors of two adjacent vertices have to be different.
+This can be easily modelled by `!=` or `AllDifferent` constraints on every edge.
+Using `!=`, we can solve the example graph in around 5 seconds.
+If we use `AllDifferent`, it takes more than 5 minutes.
+If we manually disable the `AllDifferent` inference, it also takes more than 5 minutes.
+Same if we add just a single `AllDifferent` constraint.
+Thus, if you use `AllDifferent` do it properly on large sets, or use `!=` constraints and let CP-SAT infer the `AllDifferent` constraints for you.
+
+Maybe CP-SAT will allow you to use `AllDifferent` without any performance penalty in the future, but for now, you have to be aware of this. See also [the optimization parameter documentation](https://github.com/google/or-tools/blob/1d696f9108a0ebfd99feb73b9211e2f5a6b0812b/ortools/sat/sat_parameters.proto#L542).
+
 
 ### Absolute Values and Max/Min
 
@@ -569,15 +589,99 @@ model.AddElement(index=i, variables=[x, y, z], target=ai)
 model.AddInverse([x, y, z], [z, y, x])
 ```
 
-### But wait, there is more: Intervals and stuff
+### Interval Variables and No-Overlap Constraints
 
-An important part we neglect to keep this tutorial reasonably short (and because I barely need them, but they are
-important in some domains) are intervals.
-CP-SAT has extensive support for interval variables and corresponding constraints, even two-dimensional do-not-overlap
-constraints.
-These could be useful for, e.g., packing problems (packing as many objects into a container as possible) or scheduling problems (like assigning work shifts).
-Maybe I add something about those later.
-For now, you can check out the [official documentation](https://developers.google.com/optimization/reference/python/sat/python/cp_model) for a full list of available constraints.
+CP-SAT also supports interval variables and corresponding constraints.
+These are important for scheduling and packing problems.
+There are simple no-overlap constraints for intervals for one-dimensional and two-dimensional intervals.
+In two-dimensional intervals, only one dimension is allowed to overlap, i.e., the other dimension has to be disjoint.
+This is essentially rectangle packing.
+Let us see how we can model a simple 2-dimensional packing problem.
+Note that `NewIntervalVariable` may indicate a new variable, but it is actually a constraint container in which you have to insert the classical integer variables.
+You need them to insert them into the no-overlap constraint.
+
+```python
+from ortools.sat.python import cp_model
+
+# Instance
+container = (40, 15)
+boxes = [
+    (11, 3),
+    (13, 3),
+    (9,  2),
+    (7,  2),
+    (9,  3),
+    (7,  3),
+    (11, 2),
+    (13, 2),
+    (11, 4),
+    (13, 4),
+    (3,  5),
+    (11, 2),
+    (2,  2),
+    (11, 3),
+    (2,  3),
+    (5,  4),
+    (6,  4),
+    (12, 2),
+    (1,  2),
+    (3,  5),
+    (13, 5),
+    (12, 4),
+    (1,  4),
+    (5,  2),
+    #(6,  2),  # add to make tight
+    # (6,3), # add to make infeasible
+]
+model = cp_model.CpModel()
+
+# We have to create the variable for the bottom left corner of the boxes.
+# We directly limit their range, such that the boxes are inside the container
+x_vars = [model.NewIntVar(0, container[0]-box[0], name = f'x1_{i}') for i, box in enumerate(boxes)]
+y_vars = [model.NewIntVar(0, container[1]-box[1], name = f'y1_{i}') for i, box in enumerate(boxes)]
+# Interval variables are actually more like constraint containers, that are then passed to the no overlap constraint
+# Note that we could also make size and end variables, but we don't need them here
+x_interval_vars = [model.NewIntervalVar(start=x_vars[i], size=box[0], end=x_vars[i]+box[0], name = f'x_interval_{i}') for i, box in enumerate(boxes)]
+y_interval_vars = [model.NewIntervalVar(start=y_vars[i], size=box[1], end=y_vars[i]+box[1], name = f'y_interval_{i}') for i, box in enumerate(boxes)]
+# Enforce that no two rectangles overlap
+model.AddNoOverlap2D(x_interval_vars, y_interval_vars)
+
+# Solve!
+solver = cp_model.CpSolver()
+solver.parameters.log_search_progress = True
+solver.log_callback = print
+status = solver.Solve(model)
+assert status == cp_model.OPTIMAL
+for i, box in enumerate(boxes):
+    print(f'box {i} is placed at ({solver.Value(x_vars[i])}, {solver.Value(y_vars[i])})')
+
+```
+
+> The keywords `start` may be named `begin` in some versions of ortools.
+
+See [this notebook](./examples/add_no_overlap_2d.ipynb) for the full example.
+
+There is also the option for optional intervals, i.e., intervals that may be skipped.
+This would allow you to have multiple containers or do a knapsack-like packing.
+
+The resolution seems to be quite important for this problem, as mentioned before.
+The following table shows the runtime for different resolutions (the solution is always the same, just scaled).
+
+| Resolution | Runtime |
+|------------|---------|
+| 1x         | 0.02s   |
+| 10x        | 0.7s    |
+| 100x       | 7.6s    |
+| 1000x      | 75s     |
+| 10_000x    | >15min  |
+
+See [this notebook](./examples/add_no_overlap_2d_scaling.ipynb) for the full example.
+
+### There is more
+
+CP-SAT has even more constraints, but I think I covered the most important ones.
+If you need more, you can check out the [official documentation](https://developers.google.com/optimization/reference/python/sat/python/cp_model#cp_model.CpModel).
+
 
 ---
 
@@ -590,23 +694,23 @@ If you want to find out all options, you can check the reasonably well documente
 the [official repository](https://github.com/google/or-tools/blob/stable/ortools/sat/sat_parameters.proto).
 I will give you the most important right below.
 
-> :warning: Only a few of the parameters (e.g., timelimit) are beginner friendly. Most other parameters (e.g., dicision strategies)
-> should not be touched as the defaults are well chosen and it is likely that you will interfere with some optimizations.
+> :warning: Only a few of the parameters (e.g., timelimit) are beginner-friendly. Most other parameters (e.g., decision strategies)
+> should not be touched as the defaults are well-chosen, and it is likely that you will interfere with some optimizations.
 > If you need a better performance, try to improve your model of the optimization problem.
 
-### Timelimit and Status
+### Time limit and Status
 
 If we have a huge model, CP-SAT may not be able to solve it to optimality (if the constraints are not too difficult,
 there is a good chance we still get a good solution).
 Of course, we don't want CP-SAT to run endlessly for hours (years, decades,...) but simply abort after a fixed time and
 return us the best solution so far.
-If you are now asking yourself, why you should use a tool that may run forever: There are simply no provably faster
+If you are now asking yourself why you should use a tool that may run forever: There are simply no provably faster
 algorithms and considering the combinatorial complexity, it is incredible that it works so well.
-Those not familiar with the concepts of NP-hardness and combinatorial complexty, I recommend to read the book 'In
+Those not familiar with the concepts of NP-hardness and combinatorial complexity, I recommend reading the book 'In
 Pursuit of the Traveling Salesman' by William Cook.
 Actually, I recommend this book to anyone into optimization: It is a beautiful and light weekend-read.
 
-To set a timelimit (in seconds), we can simply set the following value before we run the solver:
+To set a time limit (in seconds), we can simply set the following value before we run the solver:
 
 ```python
 solver.parameters.max_time_in_seconds = 60  # 60s timelimit
@@ -636,10 +740,10 @@ The following status codes are possible:
 
 If you want to print the status, you can use `solver.StatusName(status)`.
 
-We can not only limit the runtime but also tell CP-SAT, we are satisfied with a solution within a specific, proveable
+We can not only limit the runtime but also tell CP-SAT, we are satisfied with a solution within a specific, provable
 quality range.
 For this, we can set the parameters `absolute_gap_limit` and `relative_gap_limit`.
-The absolut limit tells CP-SAT to stop as soon as the solution is at most a specific value apart to the bound, the
+The absolute limit tells CP-SAT to stop as soon as the solution is at most a specific value apart to the bound, the
 relative limit is relative to the bound.
 More specific, CP-SAT will stop as soon as the objective value (O) is within relative ratio
 $abs(O - B) / max(1, abs(O))$ of the bound (B).
@@ -728,14 +832,14 @@ solver.parameters.subsolvers = ["default_lp", "fixed", "less_encoding", "no_lp",
  ```
 
 This can be interesting, e.g., if you are using CP-SAT especially because the linear
-relaxation is not useful (and the BnB-algorithm performing badly. There are
+relaxation is not useful (and the BnB-algorithm performing badly). There are
 even more options, but for these you can simply look into the
 [documentation](https://github.com/google/or-tools/blob/49b6301e1e1e231d654d79b6032e79809868a70e/ortools/sat/sat_parameters.proto#L513).
 Be aware that fine-tuning such a solver is not a simple task, and often you do more harm than good by tinkering around.
 However, I noticed that decreasing the number of search workers can actually improve the runtime for some problems.
 This indicates that at least selecting the right subsolvers that are best fitted for your problem can be worth a shot.
 For example `max_lp` is probably a waste of resources if you know that your model has a terrible linear relaxation.
-In this context I want to recommend to have a look on some relaxed solutions when dealing with difficult problems to get a
+In this context I want to recommend having a look on some relaxed solutions when dealing with difficult problems to get a
 better understanding of which parts a solver may struggle with (use a linear programming solver, like Gurobi, for this).
 
 ### Assumptions
@@ -765,7 +869,7 @@ model.ClearAssumptions()  # clear all assumptions
 
 Maybe we already have a good intuition on how the solution will look like (this could be, because we already solved a
 similar model, have a good heuristic, etc.).
-In this case it may be useful, to tell CP-SAT about it so it can incorporate this knowledge into its search.
+In this case it may be useful, to tell CP-SAT about it, so it can incorporate this knowledge into its search.
 For Mixed Integer Programming Solver, this often yields a visible boost, even with mediocre heuristic solutions.
 For CP-SAT I actually also encountered downgrades of the performance if the hints weren't great (but this may
 depend on the problem).
@@ -776,9 +880,20 @@ model.AddHint(y, 2)  # and y probably be 2.
 ```
 
 You can also
-find [an official example](https://github.com/google/or-tools/blob/stable/ortools/sat/samples/solution_hinting_sample_sat.py)
-.
+find [an official example](https://github.com/google/or-tools/blob/stable/ortools/sat/samples/solution_hinting_sample_sat.py).
 
+To make sure, your hints are actually correct, you can use the following parameters to make CP-SAT throw an error if
+your hints are wrong.
+
+```python
+solver.parameters.debug_crash_on_bad_hint = True
+```
+
+If you have the feeling that your hints are not used, you may have made a logical error in your model or just have
+a bug in your code.
+This parameter will tell you about it.
+
+(TODO: Have not tested this, yet)
 
 ### Logging
 
@@ -964,13 +1079,13 @@ deterministic_time: 6.71917
 gap_integral: 11.2892
 ```
 
-The log is actually very intersting to understand CP-SAT, but also to learn about the optimzation problem at hand.
-It gives you a lot of details on, e.g., how many variables could be directly removed or which technqiues contributed to lower and upper bounds the most.
+The log is actually very interesting to understand CP-SAT, but also to learn about the optimization problem at hand.
+It gives you a lot of details on, e.g., how many variables could be directly removed or which techniques contributed to lower and upper bounds the most.
 We take a more detailed look onto the log [here](./understanding_the_log.md).
 
 ### Decision Strategy
 
-In the end of this section, a more advanced parameter that looks interesting for advanced users as it gives some insights into the search algorithm, but is probably better left alone.
+In the end of this section, a more advanced parameter that looks interesting for advanced users as it gives some insights into the search algorithm, **but is probably better left alone**.
 
 We can tell CP-SAT, how to branch (or make a decision) whenever it can no longer deduce anything via propagation.
 For this, we need to provide a list of the variables (order may be important for some strategies), define which variable
@@ -1005,7 +1120,7 @@ solver.parameters.search_branching = cp_model.FIXED_SEARCH
 For example for [coloring](https://en.wikipedia.org/wiki/Graph_coloring) (with integer representation of the color), we could order the
 variables by decreasing neighborhood size (`CHOOSE_FIRST`) and then always try to assign
 the lowest color (`SELECT_MIN_VALUE`). This strategy should perform an implicit
-kernalization, because if we need at least $k$ colors, the vertices with less than $k$
+kernelization, because if we need at least $k$ colors, the vertices with less than $k$
 neighbors are trivial (and they would not be relevant for any conflict).
 Thus, by putting them at the end of the list, CP-SAT will only consider them once
 the vertices with higher degree could be colored without any conflict (and then the
@@ -1022,6 +1137,8 @@ by itself which vertices are the critical ones after some conflicts.
 ---
 
 ## How does it work?
+
+| :warning: This part is under construction and will be rewritten in large parts as soon as I have the time.
 
 Let us now take a look on what is actually happening under the hood.
 You may have already learned that CP-SAT is transforming the problem into a SAT-formula.
@@ -1040,7 +1157,7 @@ Remember, that this tutorial is written from the view of linear optimization.
 
 CP-SAT actually builds upon quite a set of techniques. However, it is enough if you understand the basics of those.
 
-| :warninng: This is still in a very drafty state. There are also still some useful examples  missing.
+| :warning: This is still in a very drafty state. There are also still some useful examples missing.
 
 #### SAT-Solvers
 
