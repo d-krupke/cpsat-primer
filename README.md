@@ -562,7 +562,7 @@ estimate the performance of CP-SAT for the TSP.
 * **Dantzig-Fulkerson-Johnson via iterative solving** can solve the eculidean TSP up to a size of around 50 vertices in 10 seconds to optimality.
 * **Dantzig-Fulkerson-Johnson via lazy constraints in Gurobi** can solve the eculidean TSP up to a size of around 225 vertices in 10 seconds to optimality.
 
-This tells you to use a MIP-solver for problems dominated by the tour constraint, and if you have to use CP-SAt, you should definitely use the `AddCircuit` constraint.
+This tells you to use a MIP-solver for problems dominated by the tour constraint, and if you have to use CP-SAT, you should definitely use the `AddCircuit` constraint.
 
 > These are all naive implementations, and the benchmark is not very rigorous. These values are only meant to give you
 > a rough idea of the performance. Additionally, this benchmark was regarding proving *optimality*. The performance in
