@@ -39,16 +39,20 @@ if __name__ == '__main__':
     vertex_vars = [{
         u: model.NewBoolVar(f"v_{u}") for u in range(num_nodes)
     } for _ in range(num_tours)]
+
     # Constraints: Add Circuit constraint
     # We need to tell CP-SAT which variable corresponds to which edge.
     # This is done by passing a list of tuples (u,v,var) to AddCircuit.
     for i in range(num_tours):
         circuit = [(u, v, var)  # (source, destination, variable)
                     for (u,v),var in edge_vars[i].items()]
-        # Add skipping variables to each circuit because not all vertices are essential. CP-SAT will detect them by
-        # v==v and not force v to be in the circuit, if the associated literal is true. Not() such that
-        circuit += [(v,v, var.Not())  # var==True <=> var.Not() == False(literal is false) <=> v in circuit
-                        for v,var in vertex_vars[i].items()]
+       
+        # AddCircuit() will take all nodes of the graph based on the given edges, 
+        # but in such case, the tour cost may exceed the budget. Therefore
+        # (i,i,true) can be added to exclude node i from the circuit. Here
+        # var == true <=> the node is taken and var.Not() == false <=> (v, v, false) 
+        circuit += [(v,v, var.Not())  # <=> the node must be added to the circuit
+                    for v,var in vertex_vars.items()]
         model.AddCircuit(circuit)
 
     # Constraints: Add constraint that each vertex is in exactly one tour

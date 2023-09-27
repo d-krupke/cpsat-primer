@@ -45,9 +45,12 @@ if __name__ == '__main__':
     # This is done by passing a list of tuples (u,v,var) to AddCircuit.
     circuit = [(u, v, var)  # (source, destination, variable)
                 for (u,v),var in edge_vars.items()]
-    # Add skipping variables to the circuit because not all vertices are essential. CP-SAT will detect them by
-    # v==v and not force v to be in the circuit, if the associated literal is true. Not() such that
-    circuit += [(v,v, var.Not())  # var==True <=> var.Not() == False(literal is false) <=> v in circuit
+    
+    # AddCircuit() will take all nodes of the graph based on the given edges, 
+    # but in such case, the tour cost may exceed the budget. Therefore
+    # (i,i,true) can be added to exclude node i from the circuit. 
+    # var == true <=> the node is taken and var.Not() == false <=> (v, v, false) 
+    circuit += [(v,v, var.Not())  # <=> the node must be added to the circuit
                  for v,var in vertex_vars.items()]
     model.AddCircuit(circuit)
 
@@ -62,7 +65,7 @@ if __name__ == '__main__':
     # Solve
     solver = cp_model.CpSolver()
     solver.parameters.max_time_in_seconds = 60.0
-    solver.parameters.log_search_progress = True
+    #solver.parameters.log_search_progress = True
     status = solver.Solve(model)
 
     # Print solution
