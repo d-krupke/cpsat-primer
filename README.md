@@ -1138,237 +1138,59 @@ by itself which vertices are the critical ones after some conflicts.
 
 ## How does it work?
 
-| :warning: This part is under construction and will be rewritten in large parts as soon as I have the time.
+CP-SAT is a versatile *portfolio* solver, centered around a *Lazy Clause Generation (LCG)* based Constraint Programming Solver, although it encompasses a broader spectrum of technologies.
 
-Let us now take a look on what is actually happening under the hood.
-You may have already learned that CP-SAT is transforming the problem into a SAT-formula.
-This is of course not just an application of
-the [Cook-Levin Theorem](https://en.wikipedia.org/wiki/Cook%E2%80%93Levin_theorem) and also not just creating a boolean
-variable for every possible integer assignment combined with many, many constraints.
-No, it is actually kind of a simulation of Branch and Bound on a SAT-solver (gifting us clause learning and stuff) with
-a lot (!) of lazy variables and clauses (LCG).
-Additionally, tools from classical linear optimization (linear relaxations, RINS, ...) are applied when useful to guide
-the process (it is not like everything is done by the SAT-solver, but every thread uses a different strategy).
+In its role as a portfolio solver, CP-SAT concurrently executes a multitude of diverse algorithms and strategies, each possessing unique strengths and weaknesses.
+These elements operate largely independently but engage in information exchange, sharing progress when better solutions emerge or tighter bounds become available.
 
-Before we dig any deeper, let us first get some prerequisites, so we are on the same page.
-Remember, that this tutorial is written from the view of linear optimization.
+While this may initially appear as an inefficient approach due to potential redundancy, it proves highly effective in practice.
+The rationale behind this lies in the inherent challenge of predicting which algorithm is best suited to solve a given problem (No Free Lunch Theorem).
+Thus, the pragmatic strategy involves running various approaches in parallel, with the hope that one will effectively address the problem at hand.
+Note that you can also specify which algorithms should be used if you already know which strategies are promising or futile.
 
-### Prerequisites
+In contrast, Branch and Cut-based Mixed Integer Programming solvers like Gurobi implement a more efficient partitioning of the search space to reduce redundancy.
+However, they specialize in a particular strategy, which may not always be the optimal choice, although it frequently proves to be so.
 
-CP-SAT actually builds upon quite a set of techniques. However, it is enough if you understand the basics of those.
+CP-SAT employs Branch and Cut techniques, including linear relaxations and cutting planes, as part of its toolkit.
+Models that can be efficiently addressed by a Mixed Integer Programming (MIP) solver are typically a good match for CP-SAT as well.
+Nevertheless, CP-SAT's central focus is the implementation of Lazy Clause Generation, harnessing SAT-solvers rather than relying primarily on linear relaxations.
+As a result, CP-SAT may exhibit somewhat reduced performance when confronted with MIP problems compared to dedicated MIP solvers.
+However, it gains a distinct advantage when dealing with problems laden with intricate logical constraints.
 
-| :warning: This is still in a very drafty state. There are also still some useful examples missing.
+The concept behind Lazy Clause Generation involves the (incremental) transformation of the problem into a SAT-formula, subsequently employing a SAT-solver to seek a solution (or prove bounds by infeasibility).
+To mitigate the impracticality of a straightforward conversion, Lazy Clause Generation leverages an abundance of lazy variables and clauses.
 
-#### SAT-Solvers
+Notably, the [Cook-Levin Theorem](https://en.wikipedia.org/wiki/Cook%E2%80%93Levin_theorem) attests that any problem within the realm of NP can be translated into a SAT-formula.
+Optimization, in theory, could be achieved through a simple binary search.
+However, this approach, while theoretically sound, lacks efficiency.
+CP-SAT employs a more refined encoding scheme to tackle optimization problems more effectively.
 
-Today's SAT-solvers have become quite powerful and are now able to frequently solve instances with millions of variables
-and clauses.
-The advent of performant SAT-solvers only came around 2000 and the improvements still have some momentum.
-You can get a good overview of the history and developments of SAT-solvers in [this video](https://youtu.be/DU44Y9Pt504)
-by Armin Biere.
-Remember that SAT-formulas are usually stated in [CNF](https://en.wikipedia.org/wiki/Conjunctive_normal_form), i.e., a
-conjunction of disjunctions of literals, e.g., 
-$(x_1 \vee x_2 \vee x_3) \wedge (\overline{x_1} \vee \overline{x_2})\wedge (x_1 \vee \overline{x_3})$.
-Any SAT-formula can be efficiently converted to such a representation.
+If you want to understand the inner workings of CP-SAT, you should be familiar with the following concepts:
 
-If you want to actually dig deep into SAT-solvers, luckily there is literature for you, e.g.,
-* *Donald Knuth - The Art of Computer Programming, Volume 4, Fascicle 6: Satisfiability*.
-* The *Handbook of Satisfiability* may provide much more information, but is unfortunately pretty expensive.
-* If you want some free material, I liked the slides
-of [Carsten Sinz and Tomas Baylo - Practical SAT Solving](https://baldur.iti.kit.edu/sat/#about) quite a lot.
+1. Learn how to get a feasible solution based on boolean logics with SAT-solvers: Backtracking, DPLL, CDCL, VSIDS, ...
+  * [Historical Overview by Armin Biere](https://youtu.be/DU44Y9Pt504) (video)
+  * [Donald Knuth - The Art of Computer Programming, Volume 4, Fascicle 6: Satisfiability](https://www-cs-faculty.stanford.edu/~knuth/taocp.html) (book)
+  * [Carsten Sinz and Tomas Baylo - Practical SAT Solving](https://baldur.iti.kit.edu/sat/#about) (Slides)
+2. Learn how to get provably optimal solutions via classical Mixed Integer Programming:
+  1. Linear Programming: Simplex, Duality, Dual Simplex, ...
+    * [Understanding and Using Linear Programming](https://link.springer.com/book/10.1007/978-3-540-30717-4) (book)
+  2. Mixed Integer Programming: Branch and Bound, Cutting Planes, Branch and Cut, ...
+    * [Discrete Optimization on Coursera](https://www.coursera.org/learn/discrete-optimization)
+    * [Gurobi Resources](https://www.gurobi.com/resource/mip-basics/)
+3. Learn the additional concepts of LCG Constraint Programming: Propagation, Lazy Clause Generation, ...
+  * [Combinatorial Optimisation and Constraint Programming by Prof. Pierre Flener at Uppsala University in Sweden](https://user.it.uu.se/~pierref/courses/COCP/slides/) (slides)
+  * [Talk by Peter Stucky](https://www.youtube.com/watch?v=lxiCHRFNgno) (video)
+4. Learn the details of CP-SAT:
+  * [The proto-file of the parameters](https://github.com/google/or-tools/blob/stable/ortools/sat/sat_parameters.proto) (source)
+  * [The complete source code](https://github.com/google/or-tools/tree/stable/ortools/sat) (source)
+  * [A talk by the developers of CP-SAT](https://youtu.be/lmy1ddn4cyw) (video)
 
-##### DPLL and Unit Propagation
+If you already have a background in Mixed Integer Programming, you may directly jump into the slides of [Combinatorial Optimisation and Constraint Programming](https://user.it.uu.se/~pierref/courses/COCP/slides/).
+This is a full and detailed course on constraint programming, and will probably take you some time to work through.
+However, it gives you all the knowledge you need to understand the constraint programming part of CP-SAT.
 
-The first important technique in solving SAT-formulas is
-the [Davis–Putnam–Logemann–Loveland (DPLL) algorithm](https://en.wikipedia.org/wiki/DPLL_algorithm).
-Modern SAT-solver are actually just this backtracking-based algorithm with extras.
-The probably most important part to remember is the unit-propagation: If we have a clause 
-$(x_1\vee x_2 \vee \overline{x_3})$ and we have already set $x_1=0$ and $x_3=1$, we know that $x_2=1$.
-The important thing about unit propagation is that there are highly-efficient data structures (e.g., 2-watched literals)
-that can notify us whenever this happens.
-This is actually a point I missed for quite some time, so I emphasize it especially for you so you don't have the same
-struggles as me: A lot of the further design decision are actually just to trigger unit propagation as often as
-possible.
-You may want to check out [these slides](https://baldur.iti.kit.edu/sat/files/2019/l05.pdf) for more information.
-
-##### Conflict-driven clause learning (CDCL)
-
-One very important idea in SAT-solving
-is [learning new clauses](https://en.wikipedia.org/wiki/Conflict-driven_clause_learning), which allows us to identify
-infeasibility earlier in the search tree.
-We are not learning anything that is not available in the original formulas, but we learn better representations of this
-information, which will help us not to repeat the same mistakes again and again.
-
-Let us look on an overly simplified example:
-Consider the formula
-$(x_0\vee x_1)\wedge (x_2 \vee x_3)\wedge (\overline{x_0}\vee\overline{x_2})\wedge (\overline{x_1}\vee x_2\vee\overline{x_3})$.
-Let us assign $x_0=0$, which results in $x_1=1$ by unit propagation.
-If we now assign $x_2 = 0$, we have to assign $x_3=1$ by unit propagation, but this creates a conflict in 
-$(\overline{x_1} \vee x_2 \vee \overline{x_3})$.
-The core of this conflict was setting $x_0=x_2=0$, and therefore we can add the clause $(x_0 \vee x_2)$.
-Actually, this specific clause is not very helpful.
-In CDCL we usually extract a clause (1UIP) that will easily be triggered by the unit propagation in the next step.
-
-For a better understanding, I recommend to take a look
-at [these slides](https://baldur.iti.kit.edu/sat/files/2019/l07.pdf).
-
-> For all the Branch and Bound-people: Clause learning can be considered as some kind of
-> infeasibility pruning. Instead of having bounds that tell you, you don't have to go 
-> deeper into this branch, you have get a number of conflict
-> clauses
-> that tell you, that nothing feasible can come out of branches that fit any of these clauses. There
-> is [some work](https://www.csc.kth.se/~jakobn/research/LearnToRelax_Constraints.pdf) in also integrating this into
-> branch and cut procedures, but it is not yet used in the state-of-the-art MIP-solvers, as far as I know. CP-SAT, on
-> the
-> other hand, does that (plus some rudimentary branch and cutting) which maybe explains why it is so much stronger for
-> some problems, especially if they have a lot of logic.
-
-#### Linear and Integer Programming
-
-For this topic, there is actually a [nice primer by Gurobi](https://www.gurobi.com/resource/mip-basics/).
-Let me quickly recap the most important parts for CP-SAT:
-
-* Mixed Integer Linear Programming is a subset of CP-SAT, but one that is still very powerful and can be reasonably well
-  solved. It limits you to linear constraints, but you can actually convert most of the other constraints to linear
-  constraints.
-* A mixed integer linear program is still hard to solve, but if we allow all integral values to become fractional it
-  suddenly becomes a problem that we can solve efficiently. This is called a **linear relaxation**, potentially further
-  improved by cutting planes. The linear relaxation provides us often with very good bounds (which is why Branch and Cut
-  works so well for many problems). Also take a look on how close the linear relaxation of the TSP example below is
-  already on the root node.
-* Thanks to duality theory, we can even get bounds without solving the linear relaxation completely (for example if we
-  just want to quickly estimate the influence of a potential branching decision).
-* We can warm-start this process and slight modifications to an already solved model will only take a small extra amount
-  of time to solve again.
-
-Let us take a quick look at an example for the famous NP-hard Traveling Salesman Problem.
-The idea is to solve the linear relaxation of the problem, which is a provable lower bound but maybe use edges only
-fractionally (which is of course prohibited).
-These fractional edges are highlighted in red in the image below.
-However, this relaxation is efficiently solvable and reasonably close to a proper solution.
-Next, we select a fractional edge and solve the problem once with this edge forced to one and once with this edge forced
-to false.
-This is called the branching step and it divides the solution space into two smaller once (cutting of all solutions
-where this edge is used fractionally).
-For the subproblems, we can again efficiently compute the linear relaxation.
-By continuing this process on the leaf with the currently best lower bound, we end reasonably quickly by a provably
-optimal solution (because all other leaves have a worse objective).
-Note that for this instance with 30 points, there exists over $10^{30}$ solutions which is out of reach of any computer.
-Still we managed to compute the optimal solution in just a few steps.
-
-![tsp bnb example](./images/tsp_bnb.png)
-
-This example has been generated with [this tool by Bill Cook](http://www.math.uwaterloo.ca/tsp/D3/bootQ.html#).
-Let me again recommend the
-book [In Pursuit of the Traveling Salesman by Bill Cook](https://press.princeton.edu/books/paperback/9780691163529/in-pursuit-of-the-traveling-salesman)
-, which actually covers all the fundamentals of linear and integer programming you need in an easily digestible way even
-suited for beginners.
-
-> **Even if SAT is the backbone of CP-SAT, linear programming techniques are used and still play a fundamental role,
-especially the linear relaxation. Also see [this talk](https://youtu.be/lmy1ddn4cyw?t=1355) by the developers.
-Using `model.parameters.linearization_level` you can also specify, how much of the model should be linearized. The
-importance of the LP for CP-SAT also shows in some benchmarks: Without it, only 130 problems of the MIPLIB 2017 could be
-solved to optimality, with LP 244, and with portfolio parallelization even 327.**
-
-### Lazy Clause Generation Constraint Programming
-
-The basic idea in lazy clause generation constraint programming is to convert the problem into a (lazy) SAT-formula, and
-have an additional set of propagators that dynamically add clauses to satisfy the complex constraints.
-
-> We will quickly go through how we can encode an optimization problem into a SAT-formula here, but you may want to read an 
-> [explanation by Peter Stuckey](https://people.eng.unimelb.edu.au/pstuckey/papers/lazy.pdf) himself. At this point, you
-> should have covered the basics to actually understand it. My explanation can probably not compete with his, since he
-> is one of the leading researchers in this field, and I am primarily a user of this technique.
-
-#### Encoding
-
-Let $x$ be a variable and $D(x)$ its domain, i.e., a set of the values it can take.
-In the beginning $D(x)$ will be defined by the lower and upper bound.
-
-CP-SAT uses an order and value encoding. Thus, we have the following variables:
-
-$$[x\leq v] \quad \forall v\in D(x)$$
-$$[x=v] \quad \forall v\in D(x)$$
-
-The inverse variables can be obtained by negation
-
-$$[x\geq v] \equiv \neg [x\leq v-1]$$
-$$[x\not=v] \equiv \neg [x=v]$$
-
-and the following constraints that enforce consistency:
-
-$$[x\leq v] \Rightarrow [x\leq v+1]$$
-$$[x=v] \Leftrightarrow [x\leq v] \wedge [x\geq v]$$
-
-This is linear in the size of the domain for each variable, and thus still prohibitively large.
-However, we probably will only need a few values for each variables.
-If only the values x=1, 7 or 20 are interesting, we could simply just create variables for those and the constraints
-$[x\leq 1] \Rightarrow [x\leq 7], [x\leq 7 \Rightarrow x\leq 20], \ldots$.
-When it turns out that we need more, we simply extend the model lazily.
-
-There are a few things to talk about:
-
-1. Why do we need the order variables $[x\leq v]$? Because otherwise we would need a quadratic amount of consistency
-   constraints ( $[x=v] \rightarrow [x\not= v'] ~ \forall v\not=v' \in D(x)$ ).
-2. Why use a unary encoding instead of a logarithmic? Because it propagates much better with unit propagation. E.g., if
-   $[x\leq v]$ is set, all $[x\leq v'], v'>v$ are automatically triggered. This is much harder, if not impossible, to
-   achieve if each value consist of multiple variables. Thanks to the lazy variable generation, we often still need only
-   few explicit values.
-
-#### Propagator
-
-So, we have consistent integral variables in a SAT-formula, but how do we add numerical constraints as boolean logic?
-
-Let us take a look on the simple constraint $x=y+z$.
-This constraint can also be expressed as $y=x-z$ and $z=x-y$.
-We can propagate the domains of the variables onto each other, especially if we fixed the value of one during search,
-e.g., $D(x)={0, 1, \ldots, 100} \rightarrow D(x)=\{5\}$.
-
-$$ x \geq \min(D(y))+\min(D(z)) \quad x \leq \max(D(y))+\max(D(z)) $$
-
-$$ y \geq \min(D(x))-\max(D(z)) \quad y \leq \max(D(x))-\min(D(z)) $$
-
-$$ z \geq \min(D(x))-\max(D(y)) \quad z \leq \max(D(x))-\min(D(y)) $$
-
-Other constraints will be more complex, but you see the general idea.
-
-In this context, the technique of [SMT solvers](https://en.wikipedia.org/wiki/Satisfiability_modulo_theories) can also
-be interesting.
-
-#### Branching/Searching
-
-Whenever we can no longer propagate anything, i.e., reached a fixpoint, we have to branch on some variable.
-Branching can be interpreted as fixing a variable, e.g., $[x\leq 7]=1$.
-This is actually just DPLL.
-
-For finding an optional solution, we just have to find a feasible solution with $[obj\leq T]=1$ is satisfiable and
-$[obj\leq T-1]$ is unsatisfiable (for a minimization problem).
-
-An example for LCG can be seen below.
-This example is taken from a [talk of Peter Stuckey](https://youtu.be/lxiCHRFNgno?t=642) (link directly guides you to
-the right position in the video, if you want this example explained to you) and shows a search process that leads to
-conflict and a newly learned clause to prevent this conflict earlier in other branches.
-The green literals show search decisions/branches (talking about branches is slightly odd because of the way SAT-solver
-search: they usually have only a single path of the tree in memory).
-The purple literals are triggered by the numeric consistency rules.
-The columns with the blue headlines show the application of propagators (i.e., clause generation) for the three
-constraints.
-The arrows pointing towards a node can be seen as conjunctive implication clauses ( $x\wedge y \Rightarrow z$ ),
-that are added lazily by the propagators.
-
-$$x_1,x_2,x_3,x_4,x_5 \in \{1,2,3,4,5\}$$
-
-$$\mathtt{AllDifferent}(x_1,x_2,x_3,x_4)$$
-
-$$x_2\leq x_5$$
-
-$$x_1+x_2+x_3+x_4\leq 9$$
-
-![LCG examples](./images/lcg.png)
-
-Note that the 1UIP is pretty great: independent of the $[[x_5\leq 2]]$ decision,
-the new clause will directly trigger and set $\neg [[x_2=2]]$
-(in addition to $\neg [[x_5\leq 2]]$ by search).
+> Originally, I wrote a short introduction into each of the topics, but I decided to remove them as the material I linked to is much better than what I could have written.
+> You can find a backup of the old version [here](./old_how_does_it_work.md).
 
 ### What happens in CP-SAT on solve?
 
@@ -1389,13 +1211,13 @@ So, what actually happens when you execute `solver.Solve(model)`?
    d. Substitute these by canonical representations
 
    e. Probe some variables to detect if they are actually fixed or detect further equivalences.
-4. Load the preprocessed model into the underlying SAT-solver and create the linear relaxation.
-5. **Search for an optimal solution using the SAT-model (LCG) and the linear relaxation.**
+4. Load the preprocessed model into the underlying solver and create the linear relaxations.
+5. **Search for solutions and bounds with the different solvers until the lower and upper bound match or a termination criterion is reached*
 6. Transform solution back to original model.
 
 This is taken from [this talk](https://youtu.be/lmy1ddn4cyw?t=434) and slightly extended.
 
-#### The use of linear programming techniques
+### The use of linear programming techniques
 
 As already mentioned before, CP-SAT also utilizes the (dual) simplex algorithm and linear relaxations.
 The linear relaxation is implemented as a propagator and potentially executed at every node in the search tree
