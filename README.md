@@ -46,7 +46,6 @@ After that (or if you are already familiar with combinatorial optimization), the
 5. [How does it work?](#how-does-it-work): After we know what we can do with CP-SAT, we look into how CP-SAT will do all
    these things.
 6. [Large Neighborhood Search](#large-neighborhood-search): The use of CP-SAT to create more powerful heuristics.
-7. [Further Material](#further-material): Some more resources if you want to dig deeper.
 
 > **Target audience:** People (especially my students at TU Braunschweig) with some background
 > in [integer programming](https://en.wikipedia.org/wiki/Integer_programming)
@@ -1179,7 +1178,8 @@ If you want to understand the inner workings of CP-SAT, you can follow the follo
         * [Gurobi Resources](https://www.gurobi.com/resource/mip-basics/) (website)
 3. Learn the additional concepts of LCG Constraint Programming: Propagation, Lazy Clause Generation, ...
     * [Combinatorial Optimisation and Constraint Programming by Prof. Pierre Flener at Uppsala University in Sweden](https://user.it.uu.se/~pierref/courses/COCP/slides/) (slides)
-    * [Talk by Peter Stucky](https://www.youtube.com/watch?v=lxiCHRFNgno) (video)
+    * [Talk by Peter Stuckey](https://www.youtube.com/watch?v=lxiCHRFNgno) (video)
+    * [Paper on Lazy Clause Generation](https://people.eng.unimelb.edu.au/pstuckey/papers/cp09-lc.pdf) (paper)
 4. Learn the details of CP-SAT:
     * [The proto-file of the parameters](https://github.com/google/or-tools/blob/stable/ortools/sat/sat_parameters.proto) (source)
     * [The complete source code](https://github.com/google/or-tools/tree/stable/ortools/sat) (source)
@@ -1276,35 +1276,3 @@ solutions for the crossover or as a mutation.
 
 > TODO: Continue. Provide concrete example....
 
-## Further Material
-
-Let me close this primer with some further references, that may come useful:
-
-* You may have already been referred to the talk [Search is Dead, Long Live Proof by Peter Stuckey](TODO).
-    * You can find [a recording](https://www.youtube.com/watch?v=lxiCHRFNgno) to nearly the same talk, which may be
-      helpful because the slides miss the intermediate steps.
-    * If you want to dig deeper, you also go
-      to [the accompanying paper](https://people.eng.unimelb.edu.au/pstuckey/papers/cp09-lc.pdf).
-    * This may be a little overwhelming if you are not familiar enough with SAT-solving.
-* There is also [a talk of the developers of CP-SAT](https://youtu.be/lmy1ddn4cyw), which however is highly technical.
-    * Gives more details on further tricks done by CP-SAT, on top of lazy clause generation.
-    * The second part especially goes into details on the usage of LPs in CP-SAT. So if you are coming from that
-      community, this talk will be fascinating for you.
-* The slides for the course 'Solving Hard Problems in Practice' by Jediah Katz are pretty great to understand the
-  techniques without any prior knowledge, however, they are currently no longer available online.
-* [This blog](https://www.msoos.org/) gives some pretty nice insights into developing state of the art SAT-solvers.
-* [Official Tutorial](https://developers.google.com/optimization/cp): The official tutorial is reasonably good, but
-  somehow missing important information and it also seems like it is actually just updated from the previous, not so
-  powerful, CP-solver.
-* [Documentation](https://google.github.io/or-tools/python/ortools/sat/python/cp_model.html): The documentations give a
-  good overview of the available functions but are often not extensively explained.
-* [Sources](https://github.com/google/or-tools/tree/stable/ortools/sat): The sources actually contain a lot of
-  information, once you know where to look. Especially a look into
-  the [parameters](https://github.com/google/or-tools/blob/stable/ortools/sat/sat_parameters.proto) can be very
-  enlightening.
-* [Model Building in Mathematical Programming by H. Paul Williams](https://www.wiley.com/en-us/Model+Building+in+Mathematical+Programming%2C+5th+Edition-p-9781118443330)
-    * A book about modelling practical problems. Quite comprehensive with lots of tricks I didn't know about earlier.
-  Be aware that too clever models are often hard to solve, so maybe it is not always a good thing to know too many
-  tricks. A nice thing about this book is that the second half gives you a lot of real world examples and solutions.
-    * Be aware that this book is about modelling, not solving. The latest edition is from 2013, the earliest from 1978.
-  The math hasn't changed, but the capabilities and techniques of the solvers quite a lot.
