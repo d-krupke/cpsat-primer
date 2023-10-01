@@ -107,7 +107,7 @@ The solvers can handle more and more 'bad' problem models effectively with every
 > by making all constraints linear as required for Mixed Integer Linear Programming.
 > Be aware that the [SAT](https://en.wikipedia.org/wiki/SAT_solver)-community uses the term *model* to refer to a (feasible) 
 > variable assignment, i.e., solution of a SAT-formula. If you struggle with this terminology, maybe you want to read
-> this short guide on [Math Programming Modelling Bascis](https://www.gurobi.com/resources/math-programming-modeling-basics/).
+> this short guide on [Math Programming Modelling Basics](https://www.gurobi.com/resources/math-programming-modeling-basics/).
 
 Our first problem has no deeper meaning, except of showing the basic workflow of creating the variables (x and y), adding the
 constraint x+y<=30 on them, setting the objective function (maximize 30*x + 50*y), and obtaining a solution:
@@ -218,7 +218,7 @@ equally efficient. The most efficient constraints are linear or boolean constrai
 Constraints such as `AddMultiplicationEquality` can be significantly(!!!) more expensive.
 
 > __If you are coming from the MIP-world, you should not overgeneralize your experience__
-> to CP-SAT as the underlying techniques are different. It does not relay on the linear
+> to CP-SAT as the underlying techniques are different. It does not rely on the linear
 > relaxation as much as MIP-solvers do. Thus, you can often use modelling techniques that are
 > not efficient in MIP-solvers, but perform reasonably well in CP-SAT. For example,
 > I had a model that required multiple absolute values and performed significantly
@@ -390,7 +390,7 @@ modelled as linear constraints.
 Linear constraints (Add), BoolOr, and BoolAnd support being activated by a condition.
 This is not only a very helpful constraint for many applications, but it is also a constraint that is highly inefficient
 to model with linear optimization ([Big M Method](https://en.wikipedia.org/wiki/Big_M_method)).
-My current experience shows that CP-SAT can work much more efficient with this kind of constraint.
+My current experience shows that CP-SAT can work much more efficiently with this kind of constraint.
 Note that you only can use a boolean variable and not directly add an expression, i.e., maybe you need to create an
 auxiliary variable.
 
@@ -534,7 +534,7 @@ dgraph = {
 ```
     Tour: [(0, 1), (2, 0), (3, 2), (1, 3)]
 
-You can use this constraint very flexible for many tour problems.
+You can use this constraint very flexibly for many tour problems.
 We added three examples:
 * [./examples/add_circuit.py](./examples/add_circuit.py): The example above, slightly extended. Find out how large you can make the graph.
 * [./examples/add_circuit_budget.py](./examples/add_circuit_budget.py): Find the largest tour with a given budget. This will be a bit more difficult to solve.
@@ -557,7 +557,7 @@ Using the `AddCircuit` constraint is thus highly recommendable for any circle or
 In [./examples/add_circuit_comparison.ipynb](./examples/add_circuit_comparison.ipynb), we compare the performance of some models for the TSP, to
 estimate the performance of CP-SAT for the TSP.
 
-* **AddCircuit** can solve the eculidean TSP up to a size of around 110 vertices in 10 seconds to optimality.
+* **AddCircuit** can solve the Euclidean TSP up to a size of around 110 vertices in 10 seconds to optimality.
 * **MTZ (Miller-Tucker-Zemlin)** can solve the eculidean TSP up to a size of around 50 vertices in 10 seconds to optimality.
 * **Dantzig-Fulkerson-Johnson via iterative solving** can solve the eculidean TSP up to a size of around 50 vertices in 10 seconds to optimality.
 * **Dantzig-Fulkerson-Johnson via lazy constraints in Gurobi** can solve the eculidean TSP up to a size of around 225 vertices in 10 seconds to optimality.
@@ -598,7 +598,7 @@ In two-dimensional intervals, only one dimension is allowed to overlap, i.e., th
 This is essentially rectangle packing.
 Let us see how we can model a simple 2-dimensional packing problem.
 Note that `NewIntervalVariable` may indicate a new variable, but it is actually a constraint container in which you have to insert the classical integer variables.
-You need them to insert them into the no-overlap constraint.
+This constraint container is required, e.g., for the no-overlap constraint.
 
 ```python
 from ortools.sat.python import cp_model
@@ -745,7 +745,7 @@ quality range.
 For this, we can set the parameters `absolute_gap_limit` and `relative_gap_limit`.
 The absolute limit tells CP-SAT to stop as soon as the solution is at most a specific value apart to the bound, the
 relative limit is relative to the bound.
-More specific, CP-SAT will stop as soon as the objective value (O) is within relative ratio
+More specifically, CP-SAT will stop as soon as the objective value(O) is within relative ratio
 $abs(O - B) / max(1, abs(O))$ of the bound (B).
 To stop as soon as we are within 5% of the optimum, we could state (TODO: Check)
 
@@ -761,7 +761,7 @@ In this case, we can make use of the solution callbacks.
 > For those not familiar with Gurobi or MIPs: With Mixed Integer Programming we can adapt the model during the solution
 > process via callbacks which allows us to solve problems with many(!) constraints by only adding them lazily. This is currently
 > the biggest shortcoming of CP-SAT for me. Sometimes you can still do dynamic model building with only little overhead 
-> by feeding information of previous itertions into the model.
+> feeding information of previous iterations into the model
 
 For adding a solution callback, we have to inherit from a base class.
 The documentation of the base class and the available operations can be found in
@@ -1171,7 +1171,7 @@ conjunction of disjunctions of literals, e.g.,
 $(x_1 \vee x_2 \vee x_3) \wedge (\overline{x_1} \vee \overline{x_2})\wedge (x_1 \vee \overline{x_3})$.
 Any SAT-formula can be efficiently converted to such a representation.
 
-If you want to actually dig deep into SAT-solvers, luckily there is literatur for you, e.g.,
+If you want to actually dig deep into SAT-solvers, luckily there is literature for you, e.g.,
 * *Donald Knuth - The Art of Computer Programming, Volume 4, Fascicle 6: Satisfiability*.
 * The *Handbook of Satisfiability* may provide much more information, but is unfortunately pretty expensive.
 * If you want some free material, I liked the slides
@@ -1196,7 +1196,7 @@ You may want to check out [these slides](https://baldur.iti.kit.edu/sat/files/20
 One very important idea in SAT-solving
 is [learning new clauses](https://en.wikipedia.org/wiki/Conflict-driven_clause_learning), which allows us to identify
 infeasibility earlier in the search tree.
-We are not learning anything that is not available in the original formular, but we learn better representations of this
+We are not learning anything that is not available in the original formulas, but we learn better representations of this
 information, which will help us not to repeat the same mistakes again and again.
 
 Let us look on an overly simplified example:
@@ -1338,7 +1338,7 @@ be interesting.
 #### Branching/Searching
 
 Whenever we can no longer propagate anything, i.e., reached a fixpoint, we have to branch on some variable.
-Branching can be interpreted fixing a variable, e.g., $[x\leq 7]=1$.
+Branching can be interpreted as fixing a variable, e.g., $[x\leq 7]=1$.
 This is actually just DPLL.
 
 For finding an optional solution, we just have to find a feasible solution with $[obj\leq T]=1$ is satisfiable and
@@ -1422,8 +1422,10 @@ current solvers. You could now fall back to classical meta-heuristics such as ge
 algorithms or any algorithm with a fancy name that will impress managers, but actually
 perform not much better than some greedy decisions (but because the algorithm is so
 fancy, you don't have the resources to compare it to something else and no one will ever
-know). Ok, you may have noticed the sarcasm and that I don't think very high of most
-meta-heuristics, especially if they have fancy names. In this section, I will show you
+know). Ok, you may have noticed the sarcasm and that I don't think very highly of most meta-heuristics, especially if they have fancy names.
+The proliferation of complex sounding meta-heuristics, that are actually just some variation of existing algorithms (potentially even missing important elements of them), is actually a problem in the field of meta-heuristics, and mentioned as first point in the [Policies on Heuristic Search by the Springer Journal of Heuristics](https://www.springer.com/journal/10732/updates/17199246).
+During my undergraduate years, I too ventured into creating my own intricate meta-heuristics. In hindsight, I recognize that these attempts were merely ineffectual adaptations of pre-existing concepts. I suspect that many individuals in our field have embarked on similar journeys at some stage in their academic pursuits.
+However, in this section, I will show you
 a technique that won't win you much awe, but is easy to implement as we again let a
 solver, i.e., CP-SAT, do the hard work, and will probably perform much better than most
 heuristics.
