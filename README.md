@@ -1227,15 +1227,15 @@ linear relaxation's objective and the reduced costs).
 The used Relaxation Induced Neighborhood Search RINS (LNS worker), a very successful heuristic, of course also uses
 linear programming.
 
-### The disadvantages of CP-SAT
+### Limitations of CP-SAT
 
-CP-SAT is a very powerful solver, but it also has some disadvantages compared to other technique:
+While CP-SAT is undeniably a potent solver, it does possess certain limitations when juxtaposed with alternative techniques:
 
-1. It is not as fast as a dedicated SAT-solver if you use it to solve SAT-formulas (but it is still pretty fast).
-2. It is not as fast as a dedicated MIP-solver if you use it to solve classical MIP-problems (but it is still pretty fast).
-3. It does not support continuous variables as MIP/LP-solvers do and the hacks to use them are not always very efficient.
-4. It does not support lazy constraints or iterative model building as MIP/LP-solvers and some SAT-solvers do. This prevents the usage of some exponential sized models, which are common and important in Mixed Integer Programming.
-5. As CP-SAT only has access to the Simplex-algorithm (and not interior point methods), it cannot use polynomial time algorithms for some classes of quadratic constraints (e.g., Second Order Cone). Gurobi, for example, can solve these constraints in polynomial time using the Barrier-algorithm.
+1. While proficient, it may not match the speed of a dedicated SAT-solver when tasked with solving SAT-formulas, although its performance remains quite commendable.
+2. Similarly, for classical MIP-problems, CP-SAT may not outpace dedicated MIP-solvers in terms of speed, although it still delivers respectable performance.
+3. Unlike MIP/LP-solvers, CP-SAT lacks support for continuous variables, and the workarounds to incorporate them may not always be highly efficient. In cases where your problem predominantly features continuous variables and linear constraints, opting for an LP-solver is likely to yield significantly improved performance.
+4. CP-SAT does not offer support for lazy constraints or iterative model building, a feature available in MIP/LP-solvers and select SAT-solvers. Consequently, the application of exponential-sized models, which are common and pivotal in Mixed Integer Programming, may be restricted.
+5. CP-SAT is limited to the Simplex algorithm and does not feature interior point methods. This limitation prevents it from employing polynomial time algorithms for certain classes of quadratic constraints, such as Second Order Cone constraints. In contrast, solvers like Gurobi utilize the Barrier algorithm to efficiently tackle these constraints in polynomial time.
 
 CP-SAT might also exhibit inefficiency when confronted with certain constraints, such as modulo constraints.
 However, it's noteworthy that I am not aware of any alternative solver capable of efficiently addressing these specific constraints.
