@@ -1168,22 +1168,22 @@ CP-SAT employs a more refined encoding scheme to tackle optimization problems mo
 If you want to understand the inner workings of CP-SAT, you should be familiar with the following concepts:
 
 1. Learn how to get a feasible solution based on boolean logics with SAT-solvers: Backtracking, DPLL, CDCL, VSIDS, ...
-  * [Historical Overview by Armin Biere](https://youtu.be/DU44Y9Pt504) (video)
-  * [Donald Knuth - The Art of Computer Programming, Volume 4, Fascicle 6: Satisfiability](https://www-cs-faculty.stanford.edu/~knuth/taocp.html) (book)
-  * [Carsten Sinz and Tomas Baylo - Practical SAT Solving](https://baldur.iti.kit.edu/sat/#about) (Slides)
+    * [Historical Overview by Armin Biere](https://youtu.be/DU44Y9Pt504) (video)
+    * [Donald Knuth - The Art of Computer Programming, Volume 4, Fascicle 6: Satisfiability](https://www-cs-faculty.stanford.edu/~knuth/taocp.html) (book)
+    * [Carsten Sinz and Tomas Baylo - Practical SAT Solving](https://baldur.iti.kit.edu/sat/#about) (Slides)
 2. Learn how to get provably optimal solutions via classical Mixed Integer Programming:
-  1. Linear Programming: Simplex, Duality, Dual Simplex, ...
-    * [Understanding and Using Linear Programming](https://link.springer.com/book/10.1007/978-3-540-30717-4) (book)
-  2. Mixed Integer Programming: Branch and Bound, Cutting Planes, Branch and Cut, ...
-    * [Discrete Optimization on Coursera](https://www.coursera.org/learn/discrete-optimization)
-    * [Gurobi Resources](https://www.gurobi.com/resource/mip-basics/)
+    * Linear Programming: Simplex, Duality, Dual Simplex, ...
+        * [Understanding and Using Linear Programming](https://link.springer.com/book/10.1007/978-3-540-30717-4) (book)
+    * Mixed Integer Programming: Branch and Bound, Cutting Planes, Branch and Cut, ...
+        * [Discrete Optimization on Coursera](https://www.coursera.org/learn/discrete-optimization)
+        * [Gurobi Resources](https://www.gurobi.com/resource/mip-basics/)
 3. Learn the additional concepts of LCG Constraint Programming: Propagation, Lazy Clause Generation, ...
-  * [Combinatorial Optimisation and Constraint Programming by Prof. Pierre Flener at Uppsala University in Sweden](https://user.it.uu.se/~pierref/courses/COCP/slides/) (slides)
-  * [Talk by Peter Stucky](https://www.youtube.com/watch?v=lxiCHRFNgno) (video)
+    * [Combinatorial Optimisation and Constraint Programming by Prof. Pierre Flener at Uppsala University in Sweden](https://user.it.uu.se/~pierref/courses/COCP/slides/) (slides)
+    * [Talk by Peter Stucky](https://www.youtube.com/watch?v=lxiCHRFNgno) (video)
 4. Learn the details of CP-SAT:
-  * [The proto-file of the parameters](https://github.com/google/or-tools/blob/stable/ortools/sat/sat_parameters.proto) (source)
-  * [The complete source code](https://github.com/google/or-tools/tree/stable/ortools/sat) (source)
-  * [A talk by the developers of CP-SAT](https://youtu.be/lmy1ddn4cyw) (video)
+    * [The proto-file of the parameters](https://github.com/google/or-tools/blob/stable/ortools/sat/sat_parameters.proto) (source)
+    * [The complete source code](https://github.com/google/or-tools/tree/stable/ortools/sat) (source)
+    * [A talk by the developers of CP-SAT](https://youtu.be/lmy1ddn4cyw) (video)
 
 If you already have a background in Mixed Integer Programming, you may directly jump into the slides of [Combinatorial Optimisation and Constraint Programming](https://user.it.uu.se/~pierref/courses/COCP/slides/).
 This is a full and detailed course on constraint programming, and will probably take you some time to work through.
