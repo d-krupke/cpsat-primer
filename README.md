@@ -1165,7 +1165,7 @@ Optimization, in theory, could be achieved through a simple binary search.
 However, this approach, while theoretically sound, lacks efficiency.
 CP-SAT employs a more refined encoding scheme to tackle optimization problems more effectively.
 
-If you want to understand the inner workings of CP-SAT, you should be familiar with the following concepts:
+If you want to understand the inner workings of CP-SAT, you can follow the following learning path:
 
 1. Learn how to get a feasible solution based on boolean logics with SAT-solvers: Backtracking, DPLL, CDCL, VSIDS, ...
     * [Historical Overview by Armin Biere](https://youtu.be/DU44Y9Pt504) (video)
