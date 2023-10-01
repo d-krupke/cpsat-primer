@@ -1194,25 +1194,18 @@ However, it gives you all the knowledge you need to understand the constraint pr
 
 ### What happens in CP-SAT on solve?
 
-So, what actually happens when you execute `solver.Solve(model)`?
+What actually happens when you execute `solver.Solve(model)`?
 
 1. The model is read.
 2. The model is verified.
 3. Preprocessing (multiple iterations):
-
-   a. Presolve (domain reduction)
-
-   b. Expanding higher-level constraints to lower-level constraints. See also the
-   analogous [FlatZinc and Flattening](https://www.minizinc.org/doc-2.5.5/en/flattening.html).
-
-   c. Detection of equivalent variables
-   and [affine relations](https://personal.math.ubc.ca/~cass/courses/m309-03a/a1/olafson/affine_fuctions.htm).
-
-   d. Substitute these by canonical representations
-
-   e. Probe some variables to detect if they are actually fixed or detect further equivalences.
+    1. Presolve (domain reduction)
+    2. Expanding higher-level constraints to lower-level constraints. See also the analogous [FlatZinc and Flattening](https://www.minizinc.org/doc-2.5.5/en/flattening.html).
+    3. Detection of equivalent variables and [affine relations](https://personal.math.ubc.ca/~cass/courses/m309-03a/a1/olafson/affine_fuctions.htm).
+    4. Substitute these by canonical representations
+    5. Probe some variables to detect if they are actually fixed or detect further equivalences.
 4. Load the preprocessed model into the underlying solver and create the linear relaxations.
-5. **Search for solutions and bounds with the different solvers until the lower and upper bound match or a termination criterion is reached*
+5. **Search for solutions and bounds with the different solvers until the lower and upper bound match or another termination criterion is reached (e.g., time limit)**
 6. Transform solution back to original model.
 
 This is taken from [this talk](https://youtu.be/lmy1ddn4cyw?t=434) and slightly extended.
