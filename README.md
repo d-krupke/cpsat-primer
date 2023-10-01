@@ -1227,6 +1227,20 @@ linear relaxation's objective and the reduced costs).
 The used Relaxation Induced Neighborhood Search RINS (LNS worker), a very successful heuristic, of course also uses
 linear programming.
 
+### The disadvantages of CP-SAT
+
+CP-SAT is a very powerful solver, but it also has some disadvantages compared to other technique:
+
+1. It is not as fast as a dedicated SAT-solver if you use it to solve SAT-formulas (but it is still pretty fast).
+2. It is not as fast as a dedicated MIP-solver if you use it to solve classical MIP-problems (but it is still pretty fast).
+3. It does not support continuous variables as MIP/LP-solvers do and the hacks to use them are not always very efficient.
+4. It does not support lazy constraints or iterative model building as MIP/LP-solvers and some SAT-solvers do. This prevents the usage of some exponential sized models, which are common and important in Mixed Integer Programming.
+5. As CP-SAT only has access to the Simplex-algorithm (and not interior point methods), it cannot use polynomial time algorithms for some classes of quadratic constraints (e.g., Second Order Cone). Gurobi, for example, can solve these constraints in polynomial time using the Barrier-algorithm.
+
+CP-SAT might also exhibit inefficiency when confronted with certain constraints, such as modulo constraints.
+However, it's noteworthy that I am not aware of any alternative solver capable of efficiently addressing these specific constraints.
+At times, NP-hard problems inherently pose formidable challenges, leaving us with no alternative but to seek more manageable modeling approaches instead of looking for better solvers.
+
 ## Large Neighborhood Search
 
 ### The use of CP-SAT to create more powerful heuristics
