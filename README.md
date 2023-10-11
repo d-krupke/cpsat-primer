@@ -7,7 +7,7 @@ any acknowledgement for non-commercial, educational purposes. Contributions are 
 
 > :warning: **You are reading a draft! Expect lots of mistakes (and please report them either as an issue or pull request :) )**
 
-Many [combinatorially difficult](https://en.wikipedia.org/wiki/NP-hardness) optimization problems can, despite their proved theoretical hardness, be solved reasonably well in practice.
+Many [combinatorially difficult](https://en.wikipedia.org/wiki/NP-hardness) optimization problems can, despite their proven theoretical hardness, be solved reasonably well in practice.
 The most successful approach is to use [Mixed Integer Linear Programming](https://en.wikipedia.org/wiki/Integer_programming) (MIP) to model the problem and then use a solver to find a solution.
 The most successful solvers for MIPs are [Gurobi](https://www.gurobi.com/) and [CPLEX](https://www.ibm.com/analytics/cplex-optimizer), which are both commercial and expensive (though, free for academics).
 There are also some open source solvers, but they are often not as powerful as the commercial ones.
@@ -65,7 +65,7 @@ After that (or if you are already familiar with combinatorial optimization), the
 
 We are using Python 3 in this primer and assume that you have a working Python 3 installation as well as the basic knowledge to use it.
 There are also interfaces for other languages, but Python 3 is, in my opinion, the most convenient one, as the mathematical
-expressions in Python are very close to the mathematical notation (allowing you to spot mathmetical errors much faster).
+expressions in Python are very close to the mathematical notation (allowing you to spot mathematical errors much faster).
 Only for huge models, you may need to use a compiled language such as C++ due to performance issues.
 For smaller models, you will not notice any performance difference.
 
@@ -77,7 +77,7 @@ pip3 install -U ortools
 ```
 
 This command will also update an existing installation of ortools.
-As this tool is in active development, it is recommendable to update it frequently.
+As this tool is in active development, it is recommended to update it frequently.
 We actually encountered wrong behavior, i.e., bugs, in earlier versions that then have
 been fixed by updates (this was on some more advanced features, don't worry about
 correctness with basic usage).
