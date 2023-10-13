@@ -1319,7 +1319,11 @@ $\quad I_{95}(w=10, v=30),I_{96}(w=18, v=65),I_{97}(w=19, v=56),I_{98}(w=12, v=4
 
 Initial solution of value 442: $\{I_{0}, I_{1}, I_{2}, I_{3}, I_{4}, I_{5}, I_{6}, I_{7}, I_{8}, I_{9}\}$
 
-**Round $1$ of LNS algorithm:**
+We will now repeatedly delete 5 items from the current solution and try to fill the newly gained capacity with an optimal solution built from the deleted items and 10 additional items.
+Note that this approach essentially considers $2^{5+10}=32768$ neighbored solutions in each iteration.
+However, we could easily scale it up to consider $2^{100+900}\sim 10^300$ neighbored solutions in each iteration thanks to the implicit representation of the neighbored solutions and CP-SAT ability to prune large parts of the search space.
+
+**Round 1 of LNS algorithm:**
 
 Deleting the following 5 items from the solution: $\{I_{0}, I_{7}, I_{8}, I_{9}, I_{6}\}$
 
@@ -1335,7 +1339,7 @@ Combining $\{I_{1}, I_{2}, I_{3}, I_{4}, I_{5}\}\cup \{I_{8}, I_{9}, I_{13}, I_{
 New solution of value 455: $\{I_{1}, I_{2}, I_{3}, I_{4}, I_{5}, I_{8}, I_{9}, I_{13}, I_{38}, I_{47}\}$
 
 
-**Round $2$ of LNS algorithm:**
+**Round 2 of LNS algorithm:**
 
 Deleting the following 5 items from the solution: $\{I_{3}, I_{13}, I_{2}, I_{9}, I_{1}\}$
 
@@ -1351,7 +1355,7 @@ Combining $\{I_{4}, I_{5}, I_{8}, I_{38}, I_{47}\}\cup \{I_{1}, I_{15}, I_{43}, 
 New solution of value 509: $\{I_{1}, I_{4}, I_{5}, I_{8}, I_{15}, I_{38}, I_{43}, I_{47}, I_{50}, I_{84}\}$
 
 
-**Round $3$ of LNS algorithm:**
+**Round 3 of LNS algorithm:**
 
 Deleting the following 5 items from the solution: $\{I_{8}, I_{43}, I_{84}, I_{1}, I_{50}\}$
 
@@ -1367,7 +1371,7 @@ Combining $\{I_{4}, I_{5}, I_{15}, I_{38}, I_{47}\}\cup \{I_{8}, I_{12}, I_{20},
 New solution of value 526: $\{I_{4}, I_{5}, I_{8}, I_{12}, I_{15}, I_{20}, I_{37}, I_{38}, I_{47}, I_{50}, I_{84}\}$
 
 
-**Round $4$ of LNS algorithm:**
+**Round 4 of LNS algorithm:**
 
 Deleting the following 5 items from the solution: $\{I_{37}, I_{4}, I_{20}, I_{5}, I_{15}\}$
 
@@ -1383,7 +1387,7 @@ Combining $\{I_{8}, I_{12}, I_{38}, I_{47}, I_{50}, I_{84}\}\cup \{I_{5}, I_{7},
 New solution of value 540: $\{I_{5}, I_{7}, I_{8}, I_{12}, I_{15}, I_{20}, I_{37}, I_{38}, I_{47}, I_{50}, I_{84}\}$
 
 
-**Round $5$ of LNS algorithm:**
+**Round 5 of LNS algorithm:**
 
 Deleting the following 5 items from the solution: $\{I_{38}, I_{12}, I_{20}, I_{47}, I_{37}\}$
 
