@@ -1280,7 +1280,9 @@ The first example is the knapsack problem. We have a set of items $I$ with a wei
 We want to select a subset of items such that the total weight does not exceed a given capacity $C$ and the total value is maximized.
 
 $$\max \sum_{i \in I} v_i x_i$$
+
 $$\text{s.t.} \sum_{i \in I} w_i x_i \leq C$$
+
 $$x_i \in \{0,1\}$$
 
 This is one of the simplest NP-hard problems and can be solved with a dynamic programming approach in pseudo-polynomial time.
@@ -1291,7 +1293,7 @@ not be of much use for this problem.
 A simple idea for the LNS is to delete some elements from the current solution, compute the remaining capacity after deletion, select some additional items from the remaining items, and try to find the optimal solution to fill the remaining capacity with the deleted items and the newly selected items.
 Repeat this until you are happy with the solution quality.
 The number of items you delete and select can be fixed such that the problem can be easily solved by CP-SAT.
-You can find a full implementation under [examples/lns_knapsack.py](examples/lns_knapsack.py).
+You can find a full implementation under [examples/lns_knapsack.ipynb](examples/lns_knapsack.ipynb).
 
 Let us look only on an example here:
 
