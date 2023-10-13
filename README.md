@@ -1241,7 +1241,6 @@ CP-SAT might also exhibit inefficiency when confronted with certain constraints,
 However, it's noteworthy that I am not aware of any alternative solver capable of efficiently addressing these specific constraints.
 At times, NP-hard problems inherently pose formidable challenges, leaving us with no alternative but to seek more manageable modeling approaches instead of looking for better solvers.
 
-Certainly, let's make this section easier to understand.
 
 ## Using CP-SAT for Bigger Problems with Large Neighborhood Search
 
