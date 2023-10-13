@@ -1263,7 +1263,7 @@ This technique, called Large Neighborhood Search, often outperforms all other ap
 
 ### What Sets Large Neighborhood Search Apart?
 
-Many traditional methods, known as heuristics, generate several "neighbor" options around an existing solution and pick the best one. However, making each neighbor solution takes time, limiting how many you can examine.
+Many traditional methods generate several "neighbor" options around an existing solution and pick the best one. However, making each neighbor solution takes time, limiting how many you can examine.
 
 Enter Large Neighborhood Search (LNS). Instead of making individual neighbor solutions one by one, LNS sets up a "mini-problem".
 This mini-problem allows us to tweak some parts of the existing solution. Often, this involves randomly selecting some variables and resetting them.
