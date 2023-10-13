@@ -1241,43 +1241,51 @@ CP-SAT might also exhibit inefficiency when confronted with certain constraints,
 However, it's noteworthy that I am not aware of any alternative solver capable of efficiently addressing these specific constraints.
 At times, NP-hard problems inherently pose formidable challenges, leaving us with no alternative but to seek more manageable modeling approaches instead of looking for better solvers.
 
-## Large Neighborhood Search
+Certainly, let's make this section easier to understand.
 
-### The use of CP-SAT to create more powerful heuristics
+## Using CP-SAT for Bigger Problems with Large Neighborhood Search
 
-CP-SAT can solve some small to medium-sized instances reasonably fast.
-However, for some problems you need to solve larger instances that are beyond any of the
-current solvers. You could now fall back to classical meta-heuristics such as genetic
-algorithms or any algorithm with a fancy name that will impress managers, but actually
-perform not much better than some greedy decisions (but because the algorithm is so
-fancy, you don't have the resources to compare it to something else and no one will ever
-know). Ok, you may have noticed the sarcasm and that I don't think very highly of most meta-heuristics, especially if they have fancy names.
-The proliferation of complex sounding meta-heuristics, that are actually just some variation of existing algorithms (potentially even missing important elements of them), is actually a problem in the field of meta-heuristics, and mentioned as first point in the [Policies on Heuristic Search by the Springer Journal of Heuristics](https://www.springer.com/journal/10732/updates/17199246).
-During my undergraduate years, I too ventured into creating my own intricate meta-heuristics. In hindsight, I recognize that these attempts were merely ineffectual adaptations of pre-existing concepts. I suspect that many individuals in our field have embarked on similar journeys at some stage in their academic pursuits.
-However, in this section, I will show you
-a technique that won't win you much awe, but is easy to implement as we again let a
-solver, i.e., CP-SAT, do the hard work, and will probably perform much better than most
-heuristics.
+CP-SAT is great at solving small and medium-sized problems.
+But what if you have a really big problem on your hands?
+One option might be to use a special kind of algorithm known as a "meta-heuristic", like a genetic algorithm.
+But these can be hard to set up and might not even give you good results.
 
-The problem with most meta-heuristics is, that they create for a given solution (pool) a
-number of explicit(!) neighbored solutions and select from them the next solution (pool).
-As one has to explicitly construct these solutions, only a limited number can be
-considered. This number can be in the tens of thousands, but it has to be at a size where
-each of them can be looked at individually. Note that this is also true for sampling
-based approaches that create neighbored solutions from an arbitrarily large space, but
-the samples that are considered will still be a small number. The idea of Large 
-Neighborhood Search is to not have concrete solutions but to specify an auxiliary
-optimization problem, e.g., allowing changes on a fixed number of variables, and let
-a solver such as CP-SAT find the best next solution based on this auxiliary optimization
-problem. This allows us to actually scan an exponential number of neighbored solutions
-as we do not explicitly construct these solutions. You could also integrate this approach
-into a genetic algorithm, where you use a solver to find the best combination of
-solutions for the crossover or as a mutation.
+Sometimes you will see new algorithms with cool-sounding names in scientific papers.
+While tempting, these are often just small twists on older methods and might leave out key details that make them work.
+If you're interested, there's a discussion about this issue in a paper by Sörensen, called ["Metaheuristics – The Metaphor Exposed"](http://onlinelibrary.wiley.com/doi/10.1111/itor.12001/).
+
+The good news?
+You do not have to implement an algorithm that simulates the mating behavior of forest frogs to solve your problem.
+If you already know how to use CP-SAT, you can stick with it to solve big problems without adding unnecessary complications.
+Even better?
+This technique, called Large Neighborhood Search, often outperforms all other approaches.
+
+
+### What Sets Large Neighborhood Search Apart?
+
+Many traditional methods, known as heuristics, generate several "neighbor" options around an existing solution and pick the best one. However, making each neighbor solution takes time, limiting how many you can examine.
+
+Enter Large Neighborhood Search (LNS). Instead of making individual neighbor solutions one by one, LNS sets up a "mini-problem".
+This mini-problem allows us to tweak some parts of the existing solution. Often, this involves randomly selecting some variables and resetting them.
+Then the mini-problem aims to find the best new values for these reset variables, given the rest of the current solution.
+To do this, we can use CP-SAT, which efficiently finds the optimal new values for us.
+This process of wiping out and reassigning values is sometimes called "destroy and repair."
+
+The advantage?
+LNS can explore a much bigger range of neighbor solutions without having to make them one at a time.
+
+What's more, LNS can easily be mixed with other methods like genetic algorithms.
+If you are already using a genetic algorithm, you could supercharge it by applying CP-SAT to find the best possible crossover of two or more existing solutions. 
+It's like genetic engineering, but without any ethical worries!
+
+We will now look into some examples to see this approach in action.
 
 #### Example 1: Knapsack
 
-The first example is the knapsack problem. We have a set of items $I$ with a weight $w_i$ and a value $v_i$.
-We want to select a subset of items such that the total weight does not exceed a given capacity $C$ and the total value is maximized.
+You are given a knapsack that can carry a certain weight limit $C$,
+and you have various items $I$ you can put into it.
+Each item has a weight and a value.
+The goal is to pick items to maximize the total value while staying within the weight limit.
 
 $$\max \sum_{i \in I} v_i x_i$$
 
@@ -1323,7 +1331,7 @@ Initial solution of value 442: $\{I_{0}, I_{1}, I_{2}, I_{3}, I_{4}, I_{5}, I_{6
 
 We will now repeatedly delete 5 items from the current solution and try to fill the newly gained capacity with an optimal solution built from the deleted items and 10 additional items.
 Note that this approach essentially considers $2^{5+10}=32768$ neighbored solutions in each iteration.
-However, we could easily scale it up to consider $2^{100+900}\sim 10^300$ neighbored solutions in each iteration thanks to the implicit representation of the neighbored solutions and CP-SAT ability to prune large parts of the search space.
+However, we could easily scale it up to consider $2^{100+900}\sim 10^{300}$ neighbored solutions in each iteration thanks to the implicit representation of the neighbored solutions and CP-SAT ability to prune large parts of the search space.
 
 **Round 1 of LNS algorithm:**
 
