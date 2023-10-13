@@ -1274,5 +1274,131 @@ as we do not explicitly construct these solutions. You could also integrate this
 into a genetic algorithm, where you use a solver to find the best combination of
 solutions for the crossover or as a mutation.
 
+#### Example 1: Knapsack
+
+The first example is the knapsack problem. We have a set of items $I$ with a weight $w_i$ and a value $v_i$.
+We want to select a subset of items such that the total weight does not exceed a given capacity $C$ and the total value is maximized.
+
+$$\max \sum_{i \in I} v_i x_i$$
+$$\text{s.t.} \sum_{i \in I} w_i x_i \leq C$$
+$$x_i \in \{0,1\}$$
+
+This is one of the simplest NP-hard problems and can be solved with a dynamic programming approach in pseudo-polynomial time.
+CP-SAT is also able to solve many large instances of this problem in an instant.
+However, its simple structure makes it a good example to demonstrate the use of Large Neighborhood Search, even if the algorithm will
+not be of much use for this problem.
+
+A simple idea for the LNS is to delete some elements from the current solution, compute the remaining capacity after deletion, select some additional items from the remaining items, and try to find the optimal solution to fill the remaining capacity with the deleted items and the newly selected items.
+Repeat this until you are happy with the solution quality.
+The number of items you delete and select can be fixed such that the problem can be easily solved by CP-SAT.
+You can find a full implementation under [examples/lns_knapsack.py](examples/lns_knapsack.py).
+
+Let us look only on an example here:
+
+Instance: $C=151$,
+$I=I_{0}(w=12, v=37),I_{1}(w=16, v=49),I_{2}(w=20, v=53),I_{3}(w=11, v=14),I_{4}(w=19, v=42),$
+$\quad I_{5}(w=13, v=53),I_{6}(w=18, v=54),I_{7}(w=16, v=56),I_{8}(w=14, v=45),I_{9}(w=12, v=39),$
+$\quad I_{10}(w=11, v=42),I_{11}(w=19, v=43),I_{12}(w=12, v=43),I_{13}(w=19, v=66),I_{14}(w=20, v=54),$
+$\quad I_{15}(w=13, v=54),I_{16}(w=12, v=33),I_{17}(w=12, v=38),I_{18}(w=14, v=43),I_{19}(w=15, v=28),$
+$\quad I_{20}(w=11, v=47),I_{21}(w=10, v=31),I_{22}(w=20, v=97),I_{23}(w=10, v=35),I_{24}(w=19, v=56),$
+$\quad I_{25}(w=11, v=33),I_{26}(w=12, v=38),I_{27}(w=15, v=45),I_{28}(w=17, v=58),I_{29}(w=11, v=48),$
+$\quad I_{30}(w=15, v=32),I_{31}(w=17, v=67),I_{32}(w=15, v=43),I_{33}(w=16, v=41),I_{34}(w=18, v=42),$
+$\quad I_{35}(w=14, v=44),I_{36}(w=20, v=45),I_{37}(w=13, v=50),I_{38}(w=17, v=57),I_{39}(w=17, v=33),$
+$\quad I_{40}(w=17, v=49),I_{41}(w=12, v=21),I_{42}(w=14, v=37),I_{43}(w=20, v=74),I_{44}(w=14, v=55),$
+$\quad I_{45}(w=10, v=25),I_{46}(w=16, v=26),I_{47}(w=10, v=37),I_{48}(w=18, v=63),I_{49}(w=16, v=39),$
+$\quad I_{50}(w=16, v=57),I_{51}(w=16, v=47),I_{52}(w=10, v=43),I_{53}(w=12, v=30),I_{54}(w=12, v=40),$
+$\quad I_{55}(w=19, v=48),I_{56}(w=12, v=39),I_{57}(w=14, v=43),I_{58}(w=17, v=35),I_{59}(w=19, v=51),$
+$\quad I_{60}(w=16, v=48),I_{61}(w=19, v=72),I_{62}(w=16, v=45),I_{63}(w=19, v=88),I_{64}(w=15, v=20),$
+$\quad I_{65}(w=17, v=49),I_{66}(w=14, v=40),I_{67}(w=14, v=27),I_{68}(w=19, v=51),I_{69}(w=10, v=37),$
+$\quad I_{70}(w=15, v=42),I_{71}(w=13, v=29),I_{72}(w=20, v=87),I_{73}(w=13, v=28),I_{74}(w=15, v=38),$
+$\quad I_{75}(w=19, v=77),I_{76}(w=13, v=35),I_{77}(w=17, v=55),I_{78}(w=13, v=39),I_{79}(w=10, v=26),$
+$\quad I_{80}(w=15, v=32),I_{81}(w=12, v=40),I_{82}(w=11, v=21),I_{83}(w=18, v=82),I_{84}(w=13, v=41),$
+$\quad I_{85}(w=12, v=27),I_{86}(w=15, v=35),I_{87}(w=18, v=48),I_{88}(w=15, v=64),I_{89}(w=19, v=62),$
+$\quad I_{90}(w=20, v=64),I_{91}(w=13, v=45),I_{92}(w=19, v=64),I_{93}(w=18, v=83),I_{94}(w=11, v=38),$
+$\quad I_{95}(w=10, v=30),I_{96}(w=18, v=65),I_{97}(w=19, v=56),I_{98}(w=12, v=41),I_{99}(w=17, v=36)$
+
+Initial solution of value 442: $\{I_{0}, I_{1}, I_{2}, I_{3}, I_{4}, I_{5}, I_{6}, I_{7}, I_{8}, I_{9}\}$
+
+**Round $1$ of LNS algorithm:**
+
+Deleting the following 5 items from the solution: $\{I_{0}, I_{7}, I_{8}, I_{9}, I_{6}\}$
+
+Repairing solution by considering the following subproblem:
+
+Subproblem: $C=72$,
+$I=\{I_{6},I_{9},I_{86},I_{13},I_{47},I_{73},I_{0},I_{8},I_{7},I_{38},I_{57},I_{11},I_{60},I_{14}\}$
+
+Computed the following solution of value 244 for the subproblem: $\{I_{8}, I_{9}, I_{13}, I_{38}, I_{47}\}$
+
+Combining $\{I_{1}, I_{2}, I_{3}, I_{4}, I_{5}\}\cup \{I_{8}, I_{9}, I_{13}, I_{38}, I_{47}\}$
+
+New solution of value 455: $\{I_{1}, I_{2}, I_{3}, I_{4}, I_{5}, I_{8}, I_{9}, I_{13}, I_{38}, I_{47}\}$
+
+
+**Round $2$ of LNS algorithm:**
+
+Deleting the following 5 items from the solution: $\{I_{3}, I_{13}, I_{2}, I_{9}, I_{1}\}$
+
+Repairing solution by considering the following subproblem:
+
+Subproblem: $C=78$,
+$I=\{I_{13},I_{9},I_{84},I_{41},I_{15},I_{42},I_{74},I_{16},I_{3},I_{1},I_{2},I_{67},I_{50},I_{89},I_{43}\}$
+
+Computed the following solution of value 275 for the subproblem: $\{I_{1}, I_{15}, I_{43}, I_{50}, I_{84}\}$
+
+Combining $\{I_{4}, I_{5}, I_{8}, I_{38}, I_{47}\}\cup \{I_{1}, I_{15}, I_{43}, I_{50}, I_{84}\}$
+
+New solution of value 509: $\{I_{1}, I_{4}, I_{5}, I_{8}, I_{15}, I_{38}, I_{43}, I_{47}, I_{50}, I_{84}\}$
+
+
+**Round $3$ of LNS algorithm:**
+
+Deleting the following 5 items from the solution: $\{I_{8}, I_{43}, I_{84}, I_{1}, I_{50}\}$
+
+Repairing solution by considering the following subproblem:
+
+Subproblem: $C=79$,
+$I=\{I_{84},I_{76},I_{34},I_{16},I_{37},I_{20},I_{8},I_{43},I_{50},I_{1},I_{12},I_{35},I_{53}\}$
+
+Computed the following solution of value 283 for the subproblem: $\{I_{8}, I_{12}, I_{20}, I_{37}, I_{50}, I_{84}\}$
+
+Combining $\{I_{4}, I_{5}, I_{15}, I_{38}, I_{47}\}\cup \{I_{8}, I_{12}, I_{20}, I_{37}, I_{50}, I_{84}\}$
+
+New solution of value 526: $\{I_{4}, I_{5}, I_{8}, I_{12}, I_{15}, I_{20}, I_{37}, I_{38}, I_{47}, I_{50}, I_{84}\}$
+
+
+**Round $4$ of LNS algorithm:**
+
+Deleting the following 5 items from the solution: $\{I_{37}, I_{4}, I_{20}, I_{5}, I_{15}\}$
+
+Repairing solution by considering the following subproblem:
+
+Subproblem: $C=69$,
+$I=\{I_{37},I_{4},I_{20},I_{15},I_{82},I_{41},I_{56},I_{76},I_{85},I_{5},I_{32},I_{57},I_{7},I_{67}\}$
+
+Computed the following solution of value 260 for the subproblem: $\{I_{5}, I_{7}, I_{15}, I_{20}, I_{37}\}$
+
+Combining $\{I_{8}, I_{12}, I_{38}, I_{47}, I_{50}, I_{84}\}\cup \{I_{5}, I_{7}, I_{15}, I_{20}, I_{37}\}$
+
+New solution of value 540: $\{I_{5}, I_{7}, I_{8}, I_{12}, I_{15}, I_{20}, I_{37}, I_{38}, I_{47}, I_{50}, I_{84}\}$
+
+
+**Round $5$ of LNS algorithm:**
+
+Deleting the following 5 items from the solution: $\{I_{38}, I_{12}, I_{20}, I_{47}, I_{37}\}$
+
+Repairing solution by considering the following subproblem:
+
+Subproblem: $C=66$,
+$I=\{I_{20},I_{47},I_{37},I_{86},I_{58},I_{56},I_{54},I_{38},I_{12},I_{39},I_{68},I_{75},I_{66},I_{2},I_{99}\}$
+
+Computed the following solution of value 254 for the subproblem: $\{I_{12}, I_{20}, I_{37}, I_{47}, I_{75}\}$
+
+Combining $\{I_{5}, I_{7}, I_{8}, I_{15}, I_{50}, I_{84}\}\cup \{I_{12}, I_{20}, I_{37}, I_{47}, I_{75}\}$
+
+New solution of value 560: $\{I_{5}, I_{7}, I_{8}, I_{12}, I_{15}, I_{20}, I_{37}, I_{47}, I_{50}, I_{75}, I_{84}\}$
+
+
+
 > TODO: Continue. Provide concrete example....
 
