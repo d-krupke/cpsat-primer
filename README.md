@@ -45,7 +45,7 @@ After that (or if you are already familiar with combinatorial optimization), the
    parallelization, ...
 5. [How does it work?](#how-does-it-work): After we know what we can do with CP-SAT, we look into how CP-SAT will do all
    these things.
-6. [Large Neighborhood Search](#large-neighborhood-search): The use of CP-SAT to create more powerful heuristics.
+6. [Large Neighborhood Search](#Using-CP-SAT-for-Bigger-Problems-with-Large-Neighborhood-Search): The use of CP-SAT to create more powerful heuristics.
 
 > **Target audience:** People (especially my students at TU Braunschweig) with some background
 > in [integer programming](https://en.wikipedia.org/wiki/Integer_programming)
