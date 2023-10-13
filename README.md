@@ -1260,6 +1260,8 @@ Even better?
 This technique, called Large Neighborhood Search, often outperforms all other approaches.
 
 
+
+
 ### What Sets Large Neighborhood Search Apart?
 
 Many traditional methods generate several "neighbor" options around an existing solution and pick the best one. However, making each neighbor solution takes time, limiting how many you can examine.
@@ -1276,6 +1278,22 @@ LNS can explore a much bigger range of neighbor solutions without having to make
 What's more, LNS can easily be mixed with other methods like genetic algorithms.
 If you are already using a genetic algorithm, you could supercharge it by applying CP-SAT to find the best possible crossover of two or more existing solutions. 
 It's like genetic engineering, but without any ethical worries!
+
+When looking into the logs of CP-SAT, you may notice that it uses LNS itself to find better solutions.
+
+```
+8 incomplete subsolvers: [feasibility_pump, graph_arc_lns, graph_cst_lns, graph_dec_lns, graph_var_lns, rins/rens, rnd_cst_lns, rnd_var_lns]
+```
+
+Why does it not suffice to just run CP-SAT if it already solves the problem with LNS?
+The reason is that CP-SAT has to be relatively problem-agnostic.
+It has no way of knowing the structure of your problem and thus cannot use this information to improve the search.
+You on the other hand know a lot about your problem and can use this knowledge to implement a more efficient version.
+
+**Literature:**
+
+* General Paper on LNS-variants: [Pisinger and Ropke - 2010](https://backend.orbit.dtu.dk/ws/portalfiles/portal/5293785/Pisinger.pdf)
+* A generic variant (RINS), that is also used by CP-SAT: [Danna et al. 2005](https://link.springer.com/article/10.1007/s10107-004-0518-7)
 
 We will now look into some examples to see this approach in action.
 
@@ -1411,7 +1429,11 @@ Combining $\{I_{5}, I_{7}, I_{8}, I_{15}, I_{50}, I_{84}\}\cup \{I_{12}, I_{20},
 
 New solution of value 560: $\{I_{5}, I_{7}, I_{8}, I_{12}, I_{15}, I_{20}, I_{37}, I_{47}, I_{50}, I_{75}, I_{84}\}$
 
+#### Example 2: Different Neighborhoods for the Traveling Salesman Problem
 
+Just randomly deleting a part of the solution and repairing is it not the best idea.
+In this section, we want to look at different neighborhoods for the Traveling Salesman Problem (TSP), as its geometry allows not only nice neighborhoods but also a nice visualization.
+If you have multiple neighborhood strategies, you can also dynamically combine them in the form of an Adaptive Large Neighborhood Search (ALNS).
 
-> TODO: Continue. Provide concrete example....
+> TODO: Continue...
 
