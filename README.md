@@ -1246,7 +1246,7 @@ At times, NP-hard problems inherently pose formidable challenges, leaving us wit
 
 CP-SAT is great at solving small and medium-sized problems.
 But what if you have a really big problem on your hands?
-One option might be to use a special kind of algorithm known as a "meta-heuristic", like a genetic algorithm.
+One option might be to use a special kind of algorithm known as a "meta-heuristic", like a [genetic algorithm](https://en.wikipedia.org/wiki/Genetic_algorithm).
 But these can be hard to set up and might not even give you good results.
 
 Sometimes you will see new algorithms with cool-sounding names in scientific papers.
