@@ -1301,7 +1301,7 @@ We will now look into some examples to see this approach in action.
 
 You are given a knapsack that can carry a certain weight limit $C$,
 and you have various items $I$ you can put into it.
-Each item has a weight and a value.
+Each item $i\in I$ has a weight $w_i$ and a value $v_i$.
 The goal is to pick items to maximize the total value while staying within the weight limit.
 
 $$\max \sum_{i \in I} v_i x_i$$
