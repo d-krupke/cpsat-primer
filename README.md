@@ -1246,7 +1246,7 @@ At times, NP-hard problems inherently pose formidable challenges, leaving us wit
 
 CP-SAT is great at solving small and medium-sized problems.
 But what if you have a really big problem on your hands?
-One option might be to use a special kind of algorithm known as a "meta-heuristic", like a genetic algorithm.
+One option might be to use a special kind of algorithm known as a "meta-heuristic", like a [genetic algorithm](https://en.wikipedia.org/wiki/Genetic_algorithm).
 But these can be hard to set up and might not even give you good results.
 
 Sometimes you will see new algorithms with cool-sounding names in scientific papers.
@@ -1308,7 +1308,7 @@ $$\max \sum_{i \in I} v_i x_i$$
 
 $$\text{s.t.} \sum_{i \in I} w_i x_i \leq C$$
 
-$$x_i \in \{0,1\}$$
+$$x_i \in \\{0,1\\}$$
 
 This is one of the simplest NP-hard problems and can be solved with a dynamic programming approach in pseudo-polynomial time.
 CP-SAT is also able to solve many large instances of this problem in an instant.
@@ -1344,7 +1344,7 @@ $\quad I_{85}(w=12, v=27),I_{86}(w=15, v=35),I_{87}(w=18, v=48),I_{88}(w=15, v=6
 $\quad I_{90}(w=20, v=64),I_{91}(w=13, v=45),I_{92}(w=19, v=64),I_{93}(w=18, v=83),I_{94}(w=11, v=38),$
 $\quad I_{95}(w=10, v=30),I_{96}(w=18, v=65),I_{97}(w=19, v=56),I_{98}(w=12, v=41),I_{99}(w=17, v=36)$
 
-Initial solution of value 442: $\{I_{0}, I_{1}, I_{2}, I_{3}, I_{4}, I_{5}, I_{6}, I_{7}, I_{8}, I_{9}\}$
+Initial solution of value 442: $\\{I_{0}, I_{1}, I_{2}, I_{3}, I_{4}, I_{5}, I_{6}, I_{7}, I_{8}, I_{9}\\}$
 
 We will now repeatedly delete 5 items from the current solution and try to fill the newly gained capacity with an optimal solution built from the deleted items and 10 additional items.
 Note that this approach essentially considers $2^{5+10}=32768$ neighbored solutions in each iteration.
@@ -1352,82 +1352,52 @@ However, we could easily scale it up to consider $2^{100+900}\sim 10^{300}$ neig
 
 **Round 1 of LNS algorithm:**
 
-Deleting the following 5 items from the solution: $\{I_{0}, I_{7}, I_{8}, I_{9}, I_{6}\}$
-
-Repairing solution by considering the following subproblem:
-
-Subproblem: $C=72$,
-$I=\{I_{6},I_{9},I_{86},I_{13},I_{47},I_{73},I_{0},I_{8},I_{7},I_{38},I_{57},I_{11},I_{60},I_{14}\}$
-
-Computed the following solution of value 244 for the subproblem: $\{I_{8}, I_{9}, I_{13}, I_{38}, I_{47}\}$
-
-Combining $\{I_{1}, I_{2}, I_{3}, I_{4}, I_{5}\}\cup \{I_{8}, I_{9}, I_{13}, I_{38}, I_{47}\}$
-
-New solution of value 455: $\{I_{1}, I_{2}, I_{3}, I_{4}, I_{5}, I_{8}, I_{9}, I_{13}, I_{38}, I_{47}\}$
+* Deleting the following 5 items from the solution: $\\{I_{0}, I_{7}, I_{8}, I_{9}, I_{6}\\}$
+* Repairing solution by considering the following subproblem:
+   * Subproblem: $C=72$, $I=\\{I_{6},I_{9},I_{86},I_{13},I_{47},I_{73},I_{0},I_{8},I_{7},I_{38},I_{57},I_{11},I_{60},I_{14}\\}$
+* Computed the following solution of value 244 for the subproblem: $\\{I_{8}, I_{9}, I_{13}, I_{38}, I_{47}\\}$
+* Combining $\\{I_{1}, I_{2}, I_{3}, I_{4}, I_{5}\\}\cup \\{I_{8}, I_{9}, I_{13}, I_{38}, I_{47}\\}$
+* New solution of value 455: $\\{I_{1}, I_{2}, I_{3}, I_{4}, I_{5}, I_{8}, I_{9}, I_{13}, I_{38}, I_{47}\\}$
 
 
 **Round 2 of LNS algorithm:**
 
-Deleting the following 5 items from the solution: $\{I_{3}, I_{13}, I_{2}, I_{9}, I_{1}\}$
-
-Repairing solution by considering the following subproblem:
-
-Subproblem: $C=78$,
-$I=\{I_{13},I_{9},I_{84},I_{41},I_{15},I_{42},I_{74},I_{16},I_{3},I_{1},I_{2},I_{67},I_{50},I_{89},I_{43}\}$
-
-Computed the following solution of value 275 for the subproblem: $\{I_{1}, I_{15}, I_{43}, I_{50}, I_{84}\}$
-
-Combining $\{I_{4}, I_{5}, I_{8}, I_{38}, I_{47}\}\cup \{I_{1}, I_{15}, I_{43}, I_{50}, I_{84}\}$
-
-New solution of value 509: $\{I_{1}, I_{4}, I_{5}, I_{8}, I_{15}, I_{38}, I_{43}, I_{47}, I_{50}, I_{84}\}$
+* Deleting the following 5 items from the solution: $\\{I_{3}, I_{13}, I_{2}, I_{9}, I_{1}\\}$
+* Repairing solution by considering the following subproblem:
+   * Subproblem: $C=78$, $I=\\{I_{13},I_{9},I_{84},I_{41},I_{15},I_{42},I_{74},I_{16},I_{3},I_{1},I_{2},I_{67},I_{50},I_{89},I_{43}\\}$
+* Computed the following solution of value 275 for the subproblem: $\\{I_{1}, I_{15}, I_{43}, I_{50}, I_{84}\\}$
+* Combining $\\{I_{4}, I_{5}, I_{8}, I_{38}, I_{47}\\}\cup \\{I_{1}, I_{15}, I_{43}, I_{50}, I_{84}\\}$
+* New solution of value 509: $\\{I_{1}, I_{4}, I_{5}, I_{8}, I_{15}, I_{38}, I_{43}, I_{47}, I_{50}, I_{84}\\}$
 
 
 **Round 3 of LNS algorithm:**
 
-Deleting the following 5 items from the solution: $\{I_{8}, I_{43}, I_{84}, I_{1}, I_{50}\}$
-
-Repairing solution by considering the following subproblem:
-
-Subproblem: $C=79$,
-$I=\{I_{84},I_{76},I_{34},I_{16},I_{37},I_{20},I_{8},I_{43},I_{50},I_{1},I_{12},I_{35},I_{53}\}$
-
-Computed the following solution of value 283 for the subproblem: $\{I_{8}, I_{12}, I_{20}, I_{37}, I_{50}, I_{84}\}$
-
-Combining $\{I_{4}, I_{5}, I_{15}, I_{38}, I_{47}\}\cup \{I_{8}, I_{12}, I_{20}, I_{37}, I_{50}, I_{84}\}$
-
-New solution of value 526: $\{I_{4}, I_{5}, I_{8}, I_{12}, I_{15}, I_{20}, I_{37}, I_{38}, I_{47}, I_{50}, I_{84}\}$
+* Deleting the following 5 items from the solution: $\\{I_{8}, I_{43}, I_{84}, I_{1}, I_{50}\\}$
+* Repairing solution by considering the following subproblem:
+   * Subproblem: $C=79$, $I=\\{I_{84},I_{76},I_{34},I_{16},I_{37},I_{20},I_{8},I_{43},I_{50},I_{1},I_{12},I_{35},I_{53}\\}$
+* Computed the following solution of value 283 for the subproblem: $\\{I_{8}, I_{12}, I_{20}, I_{37}, I_{50}, I_{84}\\}$
+* Combining $\\{I_{4}, I_{5}, I_{15}, I_{38}, I_{47}\\}\cup \\{I_{8}, I_{12}, I_{20}, I_{37}, I_{50}, I_{84}\\}$
+* New solution of value 526: $\\{I_{4}, I_{5}, I_{8}, I_{12}, I_{15}, I_{20}, I_{37}, I_{38}, I_{47}, I_{50}, I_{84}\\}$
 
 
 **Round 4 of LNS algorithm:**
 
-Deleting the following 5 items from the solution: $\{I_{37}, I_{4}, I_{20}, I_{5}, I_{15}\}$
-
-Repairing solution by considering the following subproblem:
-
-Subproblem: $C=69$,
-$I=\{I_{37},I_{4},I_{20},I_{15},I_{82},I_{41},I_{56},I_{76},I_{85},I_{5},I_{32},I_{57},I_{7},I_{67}\}$
-
-Computed the following solution of value 260 for the subproblem: $\{I_{5}, I_{7}, I_{15}, I_{20}, I_{37}\}$
-
-Combining $\{I_{8}, I_{12}, I_{38}, I_{47}, I_{50}, I_{84}\}\cup \{I_{5}, I_{7}, I_{15}, I_{20}, I_{37}\}$
-
-New solution of value 540: $\{I_{5}, I_{7}, I_{8}, I_{12}, I_{15}, I_{20}, I_{37}, I_{38}, I_{47}, I_{50}, I_{84}\}$
+* Deleting the following 5 items from the solution: $\\{I_{37}, I_{4}, I_{20}, I_{5}, I_{15}\\}$
+* Repairing solution by considering the following subproblem:
+   * Subproblem: $C=69$, $I=\\{I_{37},I_{4},I_{20},I_{15},I_{82},I_{41},I_{56},I_{76},I_{85},I_{5},I_{32},I_{57},I_{7},I_{67}\\}$
+* Computed the following solution of value 260 for the subproblem: $\\{I_{5}, I_{7}, I_{15}, I_{20}, I_{37}\\}$
+* Combining $\\{I_{8}, I_{12}, I_{38}, I_{47}, I_{50}, I_{84}\\}\cup \\{I_{5}, I_{7}, I_{15}, I_{20}, I_{37}\\}$
+* New solution of value 540: $\\{I_{5}, I_{7}, I_{8}, I_{12}, I_{15}, I_{20}, I_{37}, I_{38}, I_{47}, I_{50}, I_{84}\\}$
 
 
 **Round 5 of LNS algorithm:**
 
-Deleting the following 5 items from the solution: $\{I_{38}, I_{12}, I_{20}, I_{47}, I_{37}\}$
-
-Repairing solution by considering the following subproblem:
-
-Subproblem: $C=66$,
-$I=\{I_{20},I_{47},I_{37},I_{86},I_{58},I_{56},I_{54},I_{38},I_{12},I_{39},I_{68},I_{75},I_{66},I_{2},I_{99}\}$
-
-Computed the following solution of value 254 for the subproblem: $\{I_{12}, I_{20}, I_{37}, I_{47}, I_{75}\}$
-
-Combining $\{I_{5}, I_{7}, I_{8}, I_{15}, I_{50}, I_{84}\}\cup \{I_{12}, I_{20}, I_{37}, I_{47}, I_{75}\}$
-
-New solution of value 560: $\{I_{5}, I_{7}, I_{8}, I_{12}, I_{15}, I_{20}, I_{37}, I_{47}, I_{50}, I_{75}, I_{84}\}$
+* Deleting the following 5 items from the solution: $\\{I_{38}, I_{12}, I_{20}, I_{47}, I_{37}\\}$
+* Repairing solution by considering the following subproblem:
+   * Subproblem: $C=66$, $I=\\{I_{20},I_{47},I_{37},I_{86},I_{58},I_{56},I_{54},I_{38},I_{12},I_{39},I_{68},I_{75},I_{66},I_{2},I_{99}\\}$
+* Computed the following solution of value 254 for the subproblem: $\\{I_{12}, I_{20}, I_{37}, I_{47}, I_{75}\\}$
+* Combining $\\{I_{5}, I_{7}, I_{8}, I_{15}, I_{50}, I_{84}\\}\cup \\{I_{12}, I_{20}, I_{37}, I_{47}, I_{75}\\}$
+* New solution of value 560: $\\{I_{5}, I_{7}, I_{8}, I_{12}, I_{15}, I_{20}, I_{37}, I_{47}, I_{50}, I_{75}, I_{84}\\}$
 
 #### Example 2: Different Neighborhoods for the Traveling Salesman Problem
 
