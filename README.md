@@ -1401,15 +1401,12 @@ However, we could easily scale it up to consider $2^{100+900}\sim 10^{300}$ neig
 
 #### Example 2: Different Neighborhoods for the Traveling Salesman Problem
 
-Just randomly deleting a part of the solution and repairing is it not the best idea.
-In this section, we want to look at different neighborhoods for the Traveling Salesman Problem (TSP), as its geometry allows not only nice neighborhoods but also a nice visualization.
-If you have multiple neighborhood strategies, you can also dynamically combine them in the form of an Adaptive Large Neighborhood Search (ALNS).
+Simply removing a portion of the solution and then trying to fix it isn't the most effective approach. In this section, we'll explore various neighborhoods for the Traveling Salesman Problem (TSP). The geometry of TSP not only permits advantageous neighborhoods but also offers visually appealing representations. When you have several neighborhood strategies, they can be dynamically integrated using an Adaptive Large Neighborhood Search (ALNS).
 
-The following image shows an example where we optimize a tour (that has to visit the green areas with turn costs) in an embedded graph (mesh) by selecting small areas (red) and computing an optimal tour within these areas.
-The initial tour becomes better and better with most iteration, some iterations do not improve anything.
-We select the red areas based on how expensive the contained current tour is and afterwards add the center of the optimized area to a tabu list to avoid selecting it again.
+The image illustrates an optimization process for a tour that needs to traverse the green areas, factoring in turn costs, within an embedded graph (mesh). The optimization involves choosing specific regions (highlighted in red) and calculating the optimal tour within them. As iterations progress, the initial tour generally improves, although some iterations may not yield any enhancement. Regions in red are selected due to the high cost of the tour within them. Once optimized, the center of that region is added to a tabu list, preventing it from being chosen again.
 ![Large Neighborhood Search Geometry Example](./images/lns_pcpp.png)
 
+How can you determine the appropriate size of a region to select? You have two main options: conduct preliminary experiments or adjust the size adaptively during the search. Simply allocate a time limit for each iteration. If the solver doesn't optimize within that timeframe, decrease the region size. Conversely, if it does, increase the size. Utilizing exponential factors will help the size swiftly converge to its optimal dimension. However, it's essential to note that this method assumes subproblems are of comparable difficulty and may necessitate additional conditions.
 
 > TODO: Continue...
 
