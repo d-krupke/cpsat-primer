@@ -1408,5 +1408,9 @@ The image illustrates an optimization process for a tour that needs to traverse 
 
 How can you determine the appropriate size of a region to select? You have two main options: conduct preliminary experiments or adjust the size adaptively during the search. Simply allocate a time limit for each iteration. If the solver doesn't optimize within that timeframe, decrease the region size. Conversely, if it does, increase the size. Utilizing exponential factors will help the size swiftly converge to its optimal dimension. However, it's essential to note that this method assumes subproblems are of comparable difficulty and may necessitate additional conditions.
 
+For the Euclidean TSP, as opposed to a mesh, optimizing regions isn't straightforward. Multiple effective strategies exist, such as employing a segment from the previous tour rather than a geometric region. By implementing various neighborhoods and evaluating their success rates, you can allocate a higher selection probability to the top-performing ones. This approach is demonstrated in an animation crafted by two of my students, Gabriel Gehrke and Laurzen Illner. They incorporated four distinct neighborhoods and utilized ALNS to dynamically select the most effective one.
+
+![ALNS TSP](./images/alns_tsp_compr.gif)
+
 > TODO: Continue...
 
