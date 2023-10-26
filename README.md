@@ -1405,5 +1405,11 @@ Just randomly deleting a part of the solution and repairing is it not the best i
 In this section, we want to look at different neighborhoods for the Traveling Salesman Problem (TSP), as its geometry allows not only nice neighborhoods but also a nice visualization.
 If you have multiple neighborhood strategies, you can also dynamically combine them in the form of an Adaptive Large Neighborhood Search (ALNS).
 
+The following image shows an example where we optimize a tour (that has to visit the green areas with turn costs) in an embedded graph (mesh) by selecting small areas (red) and computing an optimal tour within these areas.
+The initial tour becomes better and better with most iteration, some iterations do not improve anything.
+We select the red areas based on how expensive the contained current tour is and afterwards add the center of the optimized area to a tabu list to avoid selecting it again.
+![Large Neighborhood Search Geometry Example](./images/lns_pcpp.png)
+
+
 > TODO: Continue...
 
