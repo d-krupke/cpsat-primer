@@ -1342,6 +1342,16 @@ Instead of plotting the number of solved instances, one can also plot the number
 This can be easier to read and additionally indicates the number of instances in the benchmark.
 However, I personally do not have a preference for one or the other, and would recommend using the one that is more intuitive to read for you.
 
+
+> If you want to make an automated decision on what model/solver to use, things can get complicated.
+> Often, there is none that dominates on all instances.
+> If you want a single metric for comparing the performance, there is no perfect solution.
+> I am actually the technical lead and co-organizer of a yearly challenge on solving hard optimization problems in computational geometry [CG:SHOP](https://cgshop.ibr.cs.tu-bs.de/), which is part of [CG Week](https://apps.utdallas.edu/SOCG23/challenge.html).
+> Here, I am confronted with scoring the solutions of the participants, without having any useful bounds.
+> It turned out that giving a score between zero and one for each instance, based on the squared difference to the best solution, works quite well.
+> While it still has flaws, it is showed to be relatively fair and robust.
+> The general problem of selecting the right strategy for a specific instance is called [Algorithm Selection](https://en.wikipedia.org/wiki/Algorithm_selection) problem and can be surprisingly complex, too.
+
 ## Using CP-SAT for Bigger Problems with Large Neighborhood Search
 
 CP-SAT is great at solving small and medium-sized problems.
