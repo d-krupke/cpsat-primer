@@ -17,6 +17,7 @@ if __name__ == "__main__":
             "num_nodes": entry["result"]["num_nodes"],
             "time_limit": entry["parameters"]["args"]["time_limit"],
             "strategy": entry["parameters"]["args"]["strategy"],
+            "opt_tol": entry["parameters"]["args"]["opt_tol"],
             "runtime": entry["runtime"],
             "objective": entry["result"]["objective"],
             "lower_bound": entry["result"]["lower_bound"],
@@ -24,5 +25,5 @@ if __name__ == "__main__":
         if is_valid(entry)
         else None,
     )
-    t.drop_duplicates(subset=["instance_name", "strategy"], inplace=True)
+    t.drop_duplicates(subset=["instance_name", "strategy", "opt_tol"], inplace=True)
     t.to_json(SIMPLIFIED_RESULTS)

@@ -4,9 +4,12 @@ This file implements the MTZ formulation of the TSP using CP-SAT.
 import networkx as nx
 from ortools.sat.python import cp_model
 import typing
+import logging
 
 class CpSatTspSolverMtz:
-    def __init__(self, G: nx.Graph):
+    def __init__(self, G: nx.Graph, logger: typing.Optional[logging.Logger] = None):
+        self.logger = logger if logger else logging.getLogger("CpSatTspSolverV1")
+        self.logger.info("Building model.")
         self.graph = G
         self._model = cp_model.CpModel()
 
@@ -36,6 +39,7 @@ class CpSatTspSolverMtz:
 
         # Objective
         self._model.Minimize(sum(x*G[u][v]['weight'] for (u,v),x in edge_vars.items()))
+        self.logger.info("Model built.")
 
     def solve(self, time_limit: float, opt_tol: float=0.001) -> typing.Tuple[float, float]:
         """
@@ -45,6 +49,7 @@ class CpSatTspSolverMtz:
         solver.parameters.max_time_in_seconds = time_limit
         solver.parameters.log_search_progress = True
         solver.parameters.relative_gap_limit = opt_tol
+        solver.log_callback = lambda s: self.logger.info(s)
         status = solver.Solve(self._model)
         if status in (cp_model.OPTIMAL, cp_model.FEASIBLE):
             return solver.ObjectiveValue(), solver.BestObjectiveBound()

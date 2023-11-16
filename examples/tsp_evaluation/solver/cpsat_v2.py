@@ -6,6 +6,7 @@ import networkx as nx
 from ortools.sat.python import cp_model
 import typing
 import time
+import logging
 
 class _EdgeVars:
     def __init__(self, model: cp_model.CpModel, graph: nx.Graph) -> None:
@@ -76,7 +77,9 @@ class _SubtourCallback(cp_model.CpSolverSolutionCallback):
         self.subtours = []
 
 class CpSatTspSolverDantzig:
-    def __init__(self, G: nx.Graph, early_abort=False):
+    def __init__(self, G: nx.Graph, logger: typing.Optional[logging.Logger] = None, early_abort=False):
+        self.logger = logger if logger else logging.getLogger("CpSatTspSolverV1")
+        self.logger.info("Building model.")
         self.graph = G
         self._model = cp_model.CpModel()
         self._edge_vars = _EdgeVars(self._model, G)
@@ -87,6 +90,7 @@ class CpSatTspSolverDantzig:
 
         # Objective
         self._model.Minimize(sum(x*G[u][v]['weight'] for (u,v),x in self._edge_vars))
+        self.logger.info("Model built.")
 
     def solve(self, time_limit: float, opt_tol: float=0.001) -> typing.Tuple[float, float]:
         """
@@ -101,6 +105,7 @@ class CpSatTspSolverDantzig:
         callback = _SubtourCallback(self._edge_vars, early_abort=self.early_abort)
         solver.parameters.log_search_progress = True
         solver.parameters.relative_gap_limit = opt_tol
+        solver.log_callback = lambda s: self.logger.info(s)
         status = solver.Solve(self._model, callback)
 
         # The following part is more complex. Here we repeatedly add constraints

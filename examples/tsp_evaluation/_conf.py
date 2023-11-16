@@ -26,3 +26,4 @@ STRATEGIES = solvers = {
     "CpSatTspSolverDantzig": CpSatTspSolverDantzig,
     "CpSatTspSolverMtz": CpSatTspSolverMtz,
 }
+OPTIMALITY_TOLERANCES = [0.001, 0.01, 0.05, 0.1, 0.25]

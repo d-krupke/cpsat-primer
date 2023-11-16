@@ -79,7 +79,7 @@ class GurobiTspSolver:
         self._model.Params.MIPGap = opt_tol  # https://www.gurobi.com/documentation/10.0/refman/mipgap.html
 
         def gurobi_subtour_callback(model, where):
-            if where == gp.GRB.Callbacks.MESSAGE:
+            if where == gp.GRB.Callback.MESSAGE:
                 msg = model.cbGet(gp.GRB.Callback.MSG_STRING)
                 self.logger.info(msg)
             if where == gp.GRB.Callback.MIPSOL:

@@ -1260,81 +1260,87 @@ At times, NP-hard problems inherently pose formidable challenges, leaving us wit
 
 ## Benchmarking your Model
 
-Evaluating and comparing the performance of your model is a crucial part of the optimization process.
-However, it also has some serious challenges.
-The primary challenge is that we are dealing with an NP-hard problem, and thus, the difficulty of the problem is often influenced by hidden structural properties of the problem.
-Some large instances can be easy to solve, while some small instance show impossible to solve.
-You will frequently have some instance on which the solver will not even find a feasible solution within a reasonable time limit.
-If you want to have your results within a reasonable time, you will thus have to deal with case where you only know that you could not find a solution within the time limit: It could have been that you would only have had to give it an additional second, or it could have been that you would have had to give it an additional millennium.
-Further challenges are that realistic instance and random instance may behave very differently, making the selection of a good benchmark crucial.
+Benchmarking is a vital part of optimizing your model, particularly when addressing NP-hard problems. This process isn't straightforward, as these problems often contain hidden structural complexities. For example, you might find that a large instance of a problem is easier to solve than a smaller one. Sometimes, your model might not find a feasible solution within a reasonable timeframe, presenting a unique challenge. The unpredictability of solving times – whether it's just a second more or an unreachable solution – highlights the importance of choosing the right benchmark. The performance of realistic and randomly generated instances can vary significantly, making the selection of an appropriate benchmark critical.
 
-### Exploratory vs. Workhorse Studies
+### Exploratory Studies vs. Workhorse Studies
 
-Exploratory studies are the initial phase in the benchmarking process. Think of them as the "getting to know you" stage for your model and the problem it's solving. Their purpose is to gather preliminary insights and to understand the dynamics of the problem.
-After the exploratory phase, you move on to workhorse studies. These are more rigorous and structured. They're where you seriously test your model's performance and gather data for your final analysis.
+#### Exploratory Studies: Laying the Groundwork
 
-It is natural to try to design the perfect benchmark study right from the beginning, such that you can just run your model in it and get a nice plot that tells you how well it performs.
-Unfortunately, this is doomed to fail in nearly all cases because to design a good benchmark, you need to know about what to expect from your model.
-For example, what problem size is realistic?
-If your benchmark is too easy, you will not be able to tell the difference between good and bad models because even a bad model can perform well on easy problems.
-If your benchmark is too hard, you will not be able to tell the difference between good and bad models because even a good model will perform badly on hard problems.
-Thus, you need to find a good middle ground.
-You will also have to find out, how to measure the performance of your model.
-Nearly all metrics are flawed in some way, and you need to find the one that is best suited for your problem.
-We will discuss on that part later.
-The important takeaway is that you need to do some exploratory studies first to get a feeling for your problem and then design a good workhorse benchmark, on which you can draw your final conclusions and create your plots for your ground-breaking paper.
-Don't try to create the perfect benchmark right from the beginning.
-Start with some explicitly labeled exploratory studies (keep them small and fast to run) and only create a workhorse benchmark once you have a good understanding of your problem.
-This has some redundancy, but it is the only way to get a good benchmark, once your models have become complex enough to be interesting, i.e., no longer predictable.
+Exploratory studies are the first step in the benchmarking process. Consider this phase as an introductory period to understand your model and the problem it's designed to solve. The aim here is to gather preliminary insights and comprehend the problem's dynamics.
 
-For well-known problems, there may already be some good benchmarks available.
-Those are often already reasonably well-designed, such that you can skip the exploratory phase and directly start with the workhorse benchmark.
-However, do not blindly trust those benchmarks, especially if they are old.
-The field of optimization is still evolving, and what was a good benchmark 10 years ago may not be a good benchmark anymore.
-What may have been a difficult problem 10 years ago, may now be trivially solved by CP-SAT thanks to new techniques.
+- **Approach**: Conduct smaller, less formal experiments to observe how your model performs under various conditions.
+- **Objective**: To gain initial insights rather than conclusive results. This phase helps determine realistic problem sizes and potential challenges your model and evaluation might face. If you have to do hyperparameter tuning, this is the time to limit the search space to a reasonable size.
 
-### Creating a good Benchmark
+#### Workhorse Studies: In-depth Evaluation
 
-#### Existing Benchmarks
+Following the exploratory phase are the workhorse studies, which are more structured and rigorous. This stage is crucial for thoroughly testing your model's performance and collecting data for your final analysis.
 
-In the best case, you can make use of an existing benchmark for your problem, or a problem that is similar enough.
-These benchmarks may be even based on real-world data, which allows you to benchmark for realistic scenarios.
-You can find such benchmarks especially in research papers, best if it even just references to an external benchmark because this gives you a second opinion on the quality of it.
-However, some available benchmarks are also of low quality, and you should always be critical about them.
-Reading the paper that introduced the benchmark can give you some insights into how much effort was put into it.
+- **Strategy**: Avoid attempting to create the perfect benchmark initially. Start with exploratory studies to understand your model's capabilities and limitations.
+- **Benchmark Design**: Find a balance in benchmark difficulty to differentiate between effective and ineffective models. Both overly simple and excessively challenging benchmarks can skew your results.
+- **Performance Metrics**: Determine the most suitable metrics for evaluating your model, considering that most metrics have their limitations.
 
-When you found such a benchmark and after some exploratory study decided it to be well suited for your problem, you still have to be aware of some pitfalls.
-1. Instances based on real-world data are often hard to come by, and thus, the benchmark may be too small to be representative. In this case, you have the option to either find some further benchmarks which you could combine (if they are of similar quality), or you could decide to only use the high-quality benchmark for verification and use some large, but lower-quality benchmark for a statistically sound evaluation.
-2. For getting a clear performance metric, you have to aggregate the results. For example, if you want to know the expected runtime for a specific problem size, you need to compute the mean over multiple instances of this size. In many benchmarks, the instances are very heterogeneously distributed. For example, you may have instances of size 12, 14,18, 22, 57, 64, 78, 151, 250, 311, 324, 500,... Could you get a good estimate of the mean runtime for instances of size 100? Probably not. While there are some interpolation techniques, they would be dangerous to use as you would also need a good estimate on the reliability of the interpolation at each point. However, there are still meaningful metrics that such a benchmark could be used for. In the end, your research questions will determine what you need to measure and what your requirements for the benchmark are.
+### Crafting an Effective Benchmark
 
-#### Creating a Benchmark
+In an ideal scenario, you would use an existing benchmark that aligns closely with your problem. These benchmarks, often found in research papers, may include real-world data, offering realistic testing scenarios.
 
-If you cannot find a good benchmark, you will have to create one yourself.
-There are a few things to watch out for:
-1. Random instances may be significantly easier or harder to solve than realistic instances. This has to do with the fact that certain structures are unlikely to appear in random point sets. For example, if your instances consist of points in the plane, it is very unlikely that any colinear points will appear in a randomly placed set of points. However, on real world data, colinear points are quite common. Think of a road network where the crossings will have a high colinearity. Depending on the problem, these colinearities can make things easier (e.g., if it is always useful to follow a straight road) or harder (if decisions suddenly look very symmetric and you have to try out a lot to find out which is the best). If possible, try to sample from some real data or implement your generator in a way that it can create instances with certain structures. Best, implement multiple generators with different characteristics.
-2. If you are already generating the instances yourself, try to generate them in buckets you can use for aggregation to obtain more robust data points. For example, instead of creating instances of random size, select a few instances sizes and create the same amount of instances for each of them. If you have multiple generators, make sure that they have the same distribution in each bucket. This provides you with a more robust data point for each bucket, and you can also use the confidence intervals to get a better idea of the reliability of your results.
-3. Create a sufficiently large benchmark. You can use statistical tools, e.g., confidence intervals, to estimate how many instances you need. For a simple benchmark, 10 data points each based on 10 instances can be sufficient. For a scientific paper, 1000 instances overall are usually sufficient, but this depends on how high the variance is.
-4. For the range of the problem size, use exploratory experiments to estimate the boundary up to which your model can be solved within a reasonable amount of time. Go a bit above this level, but not too much. Instances that are so larger that your model has no chance at all do not yield much useful information. Most information you will get from instances which your model can partially solve. These are the instances you want to tune your model on to see progress (measured in reduced optimality gap).
+- **Critical Assessment**: Be discerning about the quality of available benchmarks. Read the original research to understand the effort and thought put into creating the benchmark.
+- **Pitfalls to Avoid**:
+  1. **Data Representation**: Real-world data can be scarce, potentially making the benchmark less representative. Consider combining benchmarks or use a large but lower-quality dataset for aggregated analysis and provide a table with the results for the original dataset as validation.
+  2. **Result Aggregation**: Aim for a clear performance metric, but be cautious with benchmarks that have a wide range of problem sizes, as this can complicate the calculation of average performance metrics.
 
-### Managing your Benchmarks
+If a suitable benchmark doesn't exist, you'll need to develop one, keeping in mind:
 
-Managing the datas of your benchmarks can be a tedious task.
-If you don't do any tuning, things usually are pretty easy.
-As soon as you have multiple experiments and research questions, things quickly get out of hand.
-Here are some tips to keep things manageable:
-* Create a clean folder structure for your experiments.
-  * Create a folder `evaluations` on the top level to store all your evaluations.
-  * For each experiment create a subfolder in `evaluations` with a descriptive name. For example `2023-11-16_influence_of_symmetry_breaking`. For exploratory experiments, you could put a `_` in front, as you may be familiar with from Python.
-* Be not afraid of a little redundancy. Removing redundancy will create dependencies between your experiments, which can become a nightmare. Only remove redundancy if there is a serious overhead. Copy and paste is your friend in this case.
-* Save everything. You never know what you will need later. If you have a good folder structure, you can always find what you need. You don't have to share the complete data, but it is good to have it stored somewhere just in case. Too often you will notice some odd behavior later on and will want to investigate it. If you have the data, you can do it. If you don't, you will have to rerun the experiment, which can be a pain if the experiment took 2 weeks.
-* Document your experiments and data. What research question did you try to answer with it? How does the data look like?
-* Provide a reduced version of your results for plotting and sharing purposes. If you save all the data, the data may be too large and slow to use efficiently. Thus, automatically create a simplified version that is just enough to create the plots you want. In case you need differently styled plots later (e.g., when after a year it is time to create a journal version of your paper), this allows you to quickly changes some things without having to fetch and understand the full data. I have lost a lot of time in the past for just having to change the size of a plot and having to search for the data and understand the code again (complex data also needs complex code). If I would have had a simple pandas table containing just the essential data checked in the repository because it is so small, I could have just changed the plot size and be done with it. 
-* Make your experiments interuptable and extendible. Make it easier to add an additional configuration, without having to set up a new experiment. Make it possible that after a power outage, you can just continue where you left off. If you have a tool that only runs the instances and configurations that are not yet in the database, you will have a much easier life.
-* If you want to solve many instances, this will take a long time and the longer the time until you can analyze your results, the more you have already forgotten. Using for example slurm, allows you to easily distribute your experiment over a cluster.
+1. **Instance Realism**: Random instances may vary significantly in difficulty compared to real-world instances. Aim to mimic real-world complexities in your generated instances.
+2. **Prepare for Aggregation**: To get reliable results, you need to aggregate each data point over multiple instances. Generate your instances according to these needs. If you want to compare your results in dependency of the instance size, directly select a range of instance sizes and create for every size an equal number of instances.
+3. **Benchmark Size**: Ensure your benchmark is sufficiently large to be statistically significant. The number of instances required can depend on the variance in your data.
+4. **Problem Size Range**: Use exploratory experiments to estimate the maximum size your model can efficiently solve.
+5. **Separation of Benchmark Creation and Execution**: Ensure to separate benchmark creation from experiment execution. Do not generate instances in the same process, even if saving them to a file, to avoid a range of errors. Avoid relying on a single pseudo-random generator seed for your entire benchmark, as it can lead to unforeseen, non-deterministic results. It's better to use a bit more storage than compromise the reliability of your experiments.
+
+### Efficiently Managing Your Benchmarks
+
+Managing benchmark data can become complex, especially with multiple experiments and research questions. Here are some strategies to keep things organized:
+
+- **Folder Structure**: Maintain a clear folder structure for your experiments, with a top-level `evaluations` folder and descriptive subfolders for each experiment.
+- **Redundancy and Documentation**: While some redundancy is acceptable, comprehensive documentation of each experiment is crucial for future reference.
+- **Data Storage**: Save all your data, even if it seems insignificant at the time. This ensures you have a comprehensive dataset for later analysis or unexpected inquiries.
+- **Simplified Results**: Keep a streamlined version of your results for easy access, especially for plotting and sharing.
+- **Experiment Flexibility**: Design experiments to be interruptible and extendable, allowing for easy resumption or modification.
+- **Utilizing Technology**: Employ tools like slurm for efficient distribution of experiments across computing clusters, saving time and resources.
 
 ### Analyzing your results
 
+A common, yet simplistic method to assess a model's performance involves plotting its runtime against the size of the instances it processes. However, this approach can often lead to inaccurate interpretations, particularly because time-limited cutoffs can disproportionately affect the results.
+Instead of the expected exponential curves, you will get skewed sigmoidal curves.
+Consequently, such plots might not provide a clear understanding of the instance sizes your model is capable of handling efficiently.
 
+![Runtime](./examples/tsp_evaluation/PUBLIC_DATA/runtime.png)
+
+To gain a more accurate insight into the capacities of your model, consider plotting the proportion of instances of a certain size that your model successfully solves.
+This method requires a well-structured benchmark to yield meaningful statistics for each data point.
+Without this structure, the resulting curve may appear erratic, making it challenging to draw dependable conclusions.
+
+![Solved over size](./examples/tsp_evaluation/PUBLIC_DATA/solved_over_size.png)
+
+Furthermore, if the pursuit is not limited to optimal solutions but extends to encompass solutions of acceptable quality, the analysis can be expanded.
+One can plot the number of instances that the model solves within a defined optimality tolerance, as demonstrated in the subsequent figure: 
+![Solved over size with optimality tolerance](./examples/tsp_evaluation/PUBLIC_DATA/solved_over_size_opt_tol.png)
+
+
+#### Cactus/Survival Plots
+
+For a comparative analysis across various models against an arbitrary benchmark, cactus plots emerge as a potent tool. These plots illustrate the number of instances solved over time, providing a clear depiction of a model's efficiency. For example, a coordinate of $x=10, y=20$ on such a plot signifies that 20 instances were solved within a span of 10 seconds each. It is important to note, however, that these plots do not facilitate predictions for any specific instance unless the benchmark set is thoroughly familiar. They do allow for an estimation of which model is quicker for simpler instances and which can handle more challenging instances within a reasonable timeframe.
+The question of what exactly is a simple or challenging instance, however, is better answered by the previous plots.
+
+Cactus plots are notably prevalent in the evaluation of SAT-solvers, where instance size is a poor indicator of difficulty. A more detailed discussion on this subject can be found in the referenced academic paper: [Benchmarking Solvers, SAT-style by Brain, Davenport, and Griggio](http://www.sc-square.org/CSA/workshop2-papers/RP3-FinalVersion.pdf)
+
+![Cactus Plot 1](./examples/tsp_evaluation/PUBLIC_DATA/cactus_plot.png)
+
+Additionally, the analysis can be refined to account for different quality tolerances. This requires either multiple experimental runs or tracking the progression of the lower and upper bounds within the solver. In the context of CP-SAT, for instance, this tracking can be implemented via the Solution Callback, although its activation is may depend on updates to the objective rather than the bounds.
+![Cactus Plot 1](./examples/tsp_evaluation/PUBLIC_DATA/cactus_plot_opt_tol.png)
+
+Instead of plotting the number of solved instances, one can also plot the number of unsolved instances over time.
+This can be easier to read and additionally indicates the number of instances in the benchmark.
+However, I personally do not have a preference for one or the other, and would recommend using the one that is more intuitive to read for you.
 
 ## Using CP-SAT for Bigger Problems with Large Neighborhood Search
 
