@@ -49,7 +49,7 @@ def load_instance_and_run_solver(instance_name):
 
     # Will only run if the instance is not already solved.
     for strategy in STRATEGIES:
-        benchmark.run(run_solver, instance_name, TIME_LIMIT, strategy, instance)
+        benchmark.add(run_solver, instance_name, TIME_LIMIT, strategy, instance)
 
 
 # --------------------------
@@ -69,4 +69,4 @@ if __name__ == "__main__":
     for instance_name in instances:
         job_ids.append(load_instance_and_run_solver.distribute(instance_name))
     # compress the results at the end.
-    compress.wait_for(job_ids).distributed()
+    compress.wait_for(job_ids).distribute()

@@ -4,7 +4,7 @@ you to, e.g., quickly change the database without having to overwrite the
 old data.
 """
 from pathlib import Path
-from solver import GurobiTspSolver, CpSatTspSolverV1
+from solver import GurobiTspSolver, CpSatTspSolverV1, CpSatTspSolverDantzig, CpSatTspSolverMtz
 
 # Data that is meant to be shared to verify the results.
 PUBLIC_DATA = Path(__file__).parent / "PUBLIC_DATA"
@@ -12,7 +12,7 @@ PUBLIC_DATA = Path(__file__).parent / "PUBLIC_DATA"
 PRIVATE_DATA = Path(__file__).parent / "PRIVATE_DATA"
 
 # Saving the instances to repeat the experiment on exactly the same data.
-INSTANCE_DB = PUBLIC_DATA / "instance_db.json"
+INSTANCE_DB = PUBLIC_DATA / "instance_db.zip"
 # Saving the full experiment data for potential debugging.
 EXPERIMENT_DATA = PRIVATE_DATA / "full_experiment_data"
 # Saving the simplified experiment data for analysis.
@@ -23,4 +23,6 @@ TIME_LIMIT = 90
 STRATEGIES = solvers = {
     "GurobiTspSolver": GurobiTspSolver,
     "CpSatTspSolverV1": CpSatTspSolverV1,
+    "CpSatTspSolverDantzig": CpSatTspSolverDantzig,
+    "CpSatTspSolverMtz": CpSatTspSolverMtz,
 }

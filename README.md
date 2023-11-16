@@ -91,6 +91,8 @@ It's important to note that for CP-SAT usage, you don't need the capabilities of
 In terms of CPU power, the key is balancing the number of cores with the performance of each individual core. CP-SAT leverages all available cores, implementing different strategies on each. However, the effectiveness of these strategies can vary, and it's usually not apparent which one will be most effective. A higher single-core performance means that your primary strategy will operate more swiftly. I recommend a minimum of 4 cores and 16GB of RAM.
 
 While CP-SAT is quite efficient in terms of memory usage, the amount of available memory can still be a limiting factor in the size of problems you can tackle. When it came to setting up our lab for extensive benchmarking at TU Braunschweig, we faced a choice between desktop machines and more expensive workstations or servers. We chose desktop machines equipped with AMD Ryzen 9 7900 CPUs (Intel would be equally suitable) and 96GB of DDR5 RAM, managed using Slurm. This decision was driven by the fact that the performance gains from higher-priced workstations or servers were relatively marginal compared to their significantly higher costs.
+When on the road, I am often still able to do stuff with my old Intel Macbook Pro from 2018 with an i7 and only 16GB of RAM, but large models will overwhelm it.
+My workstation at home with AMD Ryzen 7 5700X and 32GB of RAM on the other hand rarely has any problems with the models I am working on.
 
 For further guidance, consider the [hardware recommendations for the Gurobi solver](https://support.gurobi.com/hc/en-us/articles/8172407217041-What-hardware-should-I-select-when-running-Gurobi-), which are likely to be similar. Since we frequently use Gurobi in addition to CP-SAT, our hardware choices were also influenced by their recommendations.
 
@@ -776,7 +778,7 @@ In this case, we can make use of the solution callbacks.
 
 For adding a solution callback, we have to inherit from a base class.
 The documentation of the base class and the available operations can be found in
-the [documentation](https://google.github.io/or-tools/python/ortools/sat/python/cp_model.html#CpSolverSolutionCallback).
+the [documentation](https://developers.google.com/optimization/reference/python/sat/python/cp_model#cp_model.CpSolverSolutionCallback).
 
 ```python
 class MySolutionCallback(cp_model.CpSolverSolutionCallback):
@@ -803,6 +805,9 @@ an [official example of using such callbacks](https://github.com/google/or-tools
 Beside querying the objective value of the currently best solution, the solution itself, and the best known bound, you
 can also find out about internals such as `NumBooleans(self)`, `NumConflicts(self)`, `NumBranches(self)`. What those
 values mean will be discussed later.
+
+
+
 
 ### Parallelization
 
@@ -1252,6 +1257,83 @@ While CP-SAT is undeniably a potent solver, it does possess certain limitations 
 CP-SAT might also exhibit inefficiency when confronted with certain constraints, such as modulo constraints.
 However, it's noteworthy that I am not aware of any alternative solver capable of efficiently addressing these specific constraints.
 At times, NP-hard problems inherently pose formidable challenges, leaving us with no alternative but to seek more manageable modeling approaches instead of looking for better solvers.
+
+## Benchmarking your Model
+
+Evaluating and comparing the performance of your model is a crucial part of the optimization process.
+However, it also has some serious challenges.
+The primary challenge is that we are dealing with an NP-hard problem, and thus, the difficulty of the problem is often influenced by hidden structural properties of the problem.
+Some large instances can be easy to solve, while some small instance show impossible to solve.
+You will frequently have some instance on which the solver will not even find a feasible solution within a reasonable time limit.
+If you want to have your results within a reasonable time, you will thus have to deal with case where you only know that you could not find a solution within the time limit: It could have been that you would only have had to give it an additional second, or it could have been that you would have had to give it an additional millennium.
+Further challenges are that realistic instance and random instance may behave very differently, making the selection of a good benchmark crucial.
+
+### Exploratory vs. Workhorse Studies
+
+Exploratory studies are the initial phase in the benchmarking process. Think of them as the "getting to know you" stage for your model and the problem it's solving. Their purpose is to gather preliminary insights and to understand the dynamics of the problem.
+After the exploratory phase, you move on to workhorse studies. These are more rigorous and structured. They're where you seriously test your model's performance and gather data for your final analysis.
+
+It is natural to try to design the perfect benchmark study right from the beginning, such that you can just run your model in it and get a nice plot that tells you how well it performs.
+Unfortunately, this is doomed to fail in nearly all cases because to design a good benchmark, you need to know about what to expect from your model.
+For example, what problem size is realistic?
+If your benchmark is too easy, you will not be able to tell the difference between good and bad models because even a bad model can perform well on easy problems.
+If your benchmark is too hard, you will not be able to tell the difference between good and bad models because even a good model will perform badly on hard problems.
+Thus, you need to find a good middle ground.
+You will also have to find out, how to measure the performance of your model.
+Nearly all metrics are flawed in some way, and you need to find the one that is best suited for your problem.
+We will discuss on that part later.
+The important takeaway is that you need to do some exploratory studies first to get a feeling for your problem and then design a good workhorse benchmark, on which you can draw your final conclusions and create your plots for your ground-breaking paper.
+Don't try to create the perfect benchmark right from the beginning.
+Start with some explicitly labeled exploratory studies (keep them small and fast to run) and only create a workhorse benchmark once you have a good understanding of your problem.
+This has some redundancy, but it is the only way to get a good benchmark, once your models have become complex enough to be interesting, i.e., no longer predictable.
+
+For well-known problems, there may already be some good benchmarks available.
+Those are often already reasonably well-designed, such that you can skip the exploratory phase and directly start with the workhorse benchmark.
+However, do not blindly trust those benchmarks, especially if they are old.
+The field of optimization is still evolving, and what was a good benchmark 10 years ago may not be a good benchmark anymore.
+What may have been a difficult problem 10 years ago, may now be trivially solved by CP-SAT thanks to new techniques.
+
+### Creating a good Benchmark
+
+#### Existing Benchmarks
+
+In the best case, you can make use of an existing benchmark for your problem, or a problem that is similar enough.
+These benchmarks may be even based on real-world data, which allows you to benchmark for realistic scenarios.
+You can find such benchmarks especially in research papers, best if it even just references to an external benchmark because this gives you a second opinion on the quality of it.
+However, some available benchmarks are also of low quality, and you should always be critical about them.
+Reading the paper that introduced the benchmark can give you some insights into how much effort was put into it.
+
+When you found such a benchmark and after some exploratory study decided it to be well suited for your problem, you still have to be aware of some pitfalls.
+1. Instances based on real-world data are often hard to come by, and thus, the benchmark may be too small to be representative. In this case, you have the option to either find some further benchmarks which you could combine (if they are of similar quality), or you could decide to only use the high-quality benchmark for verification and use some large, but lower-quality benchmark for a statistically sound evaluation.
+2. For getting a clear performance metric, you have to aggregate the results. For example, if you want to know the expected runtime for a specific problem size, you need to compute the mean over multiple instances of this size. In many benchmarks, the instances are very heterogeneously distributed. For example, you may have instances of size 12, 14,18, 22, 57, 64, 78, 151, 250, 311, 324, 500,... Could you get a good estimate of the mean runtime for instances of size 100? Probably not. While there are some interpolation techniques, they would be dangerous to use as you would also need a good estimate on the reliability of the interpolation at each point. However, there are still meaningful metrics that such a benchmark could be used for. In the end, your research questions will determine what you need to measure and what your requirements for the benchmark are.
+
+#### Creating a Benchmark
+
+If you cannot find a good benchmark, you will have to create one yourself.
+There are a few things to watch out for:
+1. Random instances may be significantly easier or harder to solve than realistic instances. This has to do with the fact that certain structures are unlikely to appear in random point sets. For example, if your instances consist of points in the plane, it is very unlikely that any colinear points will appear in a randomly placed set of points. However, on real world data, colinear points are quite common. Think of a road network where the crossings will have a high colinearity. Depending on the problem, these colinearities can make things easier (e.g., if it is always useful to follow a straight road) or harder (if decisions suddenly look very symmetric and you have to try out a lot to find out which is the best). If possible, try to sample from some real data or implement your generator in a way that it can create instances with certain structures. Best, implement multiple generators with different characteristics.
+2. If you are already generating the instances yourself, try to generate them in buckets you can use for aggregation to obtain more robust data points. For example, instead of creating instances of random size, select a few instances sizes and create the same amount of instances for each of them. If you have multiple generators, make sure that they have the same distribution in each bucket. This provides you with a more robust data point for each bucket, and you can also use the confidence intervals to get a better idea of the reliability of your results.
+3. Create a sufficiently large benchmark. You can use statistical tools, e.g., confidence intervals, to estimate how many instances you need. For a simple benchmark, 10 data points each based on 10 instances can be sufficient. For a scientific paper, 1000 instances overall are usually sufficient, but this depends on how high the variance is.
+4. For the range of the problem size, use exploratory experiments to estimate the boundary up to which your model can be solved within a reasonable amount of time. Go a bit above this level, but not too much. Instances that are so larger that your model has no chance at all do not yield much useful information. Most information you will get from instances which your model can partially solve. These are the instances you want to tune your model on to see progress (measured in reduced optimality gap).
+
+### Managing your Benchmarks
+
+Managing the datas of your benchmarks can be a tedious task.
+If you don't do any tuning, things usually are pretty easy.
+As soon as you have multiple experiments and research questions, things quickly get out of hand.
+Here are some tips to keep things manageable:
+* Create a clean folder structure for your experiments.
+  * Create a folder `evaluations` on the top level to store all your evaluations.
+  * For each experiment create a subfolder in `evaluations` with a descriptive name. For example `2023-11-16_influence_of_symmetry_breaking`. For exploratory experiments, you could put a `_` in front, as you may be familiar with from Python.
+* Be not afraid of a little redundancy. Removing redundancy will create dependencies between your experiments, which can become a nightmare. Only remove redundancy if there is a serious overhead. Copy and paste is your friend in this case.
+* Save everything. You never know what you will need later. If you have a good folder structure, you can always find what you need. You don't have to share the complete data, but it is good to have it stored somewhere just in case. Too often you will notice some odd behavior later on and will want to investigate it. If you have the data, you can do it. If you don't, you will have to rerun the experiment, which can be a pain if the experiment took 2 weeks.
+* Document your experiments and data. What research question did you try to answer with it? How does the data look like?
+* Provide a reduced version of your results for plotting and sharing purposes. If you save all the data, the data may be too large and slow to use efficiently. Thus, automatically create a simplified version that is just enough to create the plots you want. In case you need differently styled plots later (e.g., when after a year it is time to create a journal version of your paper), this allows you to quickly changes some things without having to fetch and understand the full data. I have lost a lot of time in the past for just having to change the size of a plot and having to search for the data and understand the code again (complex data also needs complex code). If I would have had a simple pandas table containing just the essential data checked in the repository because it is so small, I could have just changed the plot size and be done with it. 
+* Make your experiments interuptable and extendible. Make it easier to add an additional configuration, without having to set up a new experiment. Make it possible that after a power outage, you can just continue where you left off. If you have a tool that only runs the instances and configurations that are not yet in the database, you will have a much easier life.
+* If you want to solve many instances, this will take a long time and the longer the time until you can analyze your results, the more you have already forgotten. Using for example slurm, allows you to easily distribute your experiment over a cluster.
+
+### Analyzing your results
+
 
 
 ## Using CP-SAT for Bigger Problems with Large Neighborhood Search

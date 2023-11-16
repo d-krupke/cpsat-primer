@@ -31,6 +31,8 @@ class GraphInstanceDb:
                 )
 
     def __iter__(self):
+        if not self.path.exists():
+            return
         with ZipFile(self.path, "r") as z:
             for f in z.filelist:
                 yield f.filename[:-5]

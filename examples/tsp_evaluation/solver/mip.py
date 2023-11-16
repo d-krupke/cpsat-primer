@@ -1,10 +1,14 @@
 """
 This file provides a simple implementation of a TSP solver using Gurobi.
+
+Check out the book "In Pursuit of the Traveling Salesman" by William J Cook for a great introduction to the TSP.
+Check out the educational material on the Gurobi website (www.gurobi.com) for a great introduction to Gurobi and MIP.
 """
 
 import gurobipy as gp
 import typing
 import networkx as nx
+import logging
 
 class _EdgeVariables:
     def __init__(self, G: nx.Graph, model: gp.Model):
@@ -43,12 +47,15 @@ class _EdgeVariables:
 
 
 class GurobiTspSolver:
-    def __init__(self, G: nx.Graph):
+    def __init__(self, G: nx.Graph, logger: typing.Optional[logging.Logger] = None):
+        self.logger = logger if logger else logging.getLogger("GurobiTspSolver")
+        self.logger.info("Building model.")
         self.graph = G
         self._model = gp.Model()
         self._vars = _EdgeVariables(G, self._model)
         self._build_model()
         self.solution = None
+        self.logger.info("Model built.")
 
     def _build_model(self):
         # Constraints
@@ -62,15 +69,19 @@ class GurobiTspSolver:
         tour_cost = sum(dist(v,w) * x for (v,w), x in self._vars)
         self._model.setObjective(tour_cost, gp.GRB.MINIMIZE)
 
-    def solve(self, time_limit: float) -> typing.Tuple[float, float]:
+    def solve(self, time_limit: float, opt_tol: float = 0.001) -> typing.Tuple[float, float]:
         """
         Solve the model and return the objective value and the lower bound.
         """
-        self._model.Params.LogToConsole = 0
+        self._model.Params.LogToConsole = 1
         self._model.Params.TimeLimit = time_limit
         self._model.Params.lazyConstraints = 1
+        self._model.Params.MIPGap = opt_tol  # https://www.gurobi.com/documentation/10.0/refman/mipgap.html
 
         def gurobi_subtour_callback(model, where):
+            if where == gp.GRB.Callbacks.MESSAGE:
+                msg = model.cbGet(gp.GRB.Callback.MSG_STRING)
+                self.logger.info(msg)
             if where == gp.GRB.Callback.MIPSOL:
                 connected_components = list(nx.connected_components(self._vars.as_graph(in_callback=True)))
                 if len(connected_components) > 1:
@@ -78,6 +89,8 @@ class GurobiTspSolver:
                         model.cbLazy(sum(x for _, x in self._vars.outgoing_edges(comp)) >= 2)
         
         self._model.optimize(gurobi_subtour_callback)
+        # Should only terminate on optimal solution or time limit.
+        assert self._model.status in (gp.GRB.OPTIMAL, gp.GRB.TIME_LIMIT), f"Unexpected status: {self._model.status}"
         if self._model.SolCount > 0:
             self.solution = self._vars.as_graph()
         return self._model.objVal, self._model.ObjBound

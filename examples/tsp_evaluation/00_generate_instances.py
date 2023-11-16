@@ -33,9 +33,12 @@ def generate_random_euclidean_graph(
 
 
 if __name__ == "__main__":
-    assert not INSTANCE_DB.exists(), "Don't accidentally overwrite the instances!"
     graph_db = GraphInstanceDb(INSTANCE_DB)
-    for n in [25, 50, 75, 100, 150, 200, 250, 300, 350, 400]:
+    for n in [25, 50, 75, 100, 150, 200, 250, 300, 350, 400, 450, 500]:
         for i in range(10):
+            instance_name = f"random_euclidean_{n}_{i}"
+            if instance_name in graph_db:
+                continue
+            print(f"Generating '{instance_name}'")
             G, P = generate_random_euclidean_graph(n)
-            graph_db[f"random_euclidean_{n}_{i}"] = G
+            graph_db[instance_name] = G

@@ -24,4 +24,5 @@ if __name__ == "__main__":
         if is_valid(entry)
         else None,
     )
+    t.drop_duplicates(subset=["instance_name", "strategy"], inplace=True)
     t.to_json(SIMPLIFIED_RESULTS)

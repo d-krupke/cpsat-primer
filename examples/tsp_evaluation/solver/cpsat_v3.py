@@ -1,12 +1,11 @@
 """
-This file provides a simple TSP implementation using CP-SAT's AddCircuit constraint.
+This file implements the MTZ formulation of the TSP using CP-SAT.
 """
-
 import networkx as nx
 from ortools.sat.python import cp_model
 import typing
 
-class CpSatTspSolverV1:
+class CpSatTspSolverMtz:
     def __init__(self, G: nx.Graph):
         self.graph = G
         self._model = cp_model.CpModel()
@@ -17,12 +16,23 @@ class CpSatTspSolverV1:
             edge_vars[u, v] = self._model.NewBoolVar(f'edge_{u}_{v}')
             edge_vars[v, u] = self._model.NewBoolVar(f'edge_{v}_{u}')
 
+        depth_vars = dict()
+        for u in G.nodes:
+            depth_vars[u] =self._model.NewIntVar(0, G.number_of_nodes()-1, f'depth_{u}')
+
         # Constraints
-        # Because the nodes in the graph a indices 0, 1, ..., n-1, we can use the
-        # indices directly in the constraints. Otherwise, we would have to use
-        # a mapping from the nodes to indices.
-        circuit = [(u,v,x) for (u,v),x in edge_vars.items()]
-        self._model.AddCircuit(circuit)
+        # Every node has exactly one incoming and one outgoing edge.
+        for v in G.nodes:
+            self._model.AddExactlyOne([edge_vars[u,v] for u in G.neighbors(v)])
+            self._model.AddExactlyOne([edge_vars[v,u] for u in G.neighbors(v)])
+
+        # Use depth variables to prohibit subtours.
+        self._model.Add(depth_vars[0]==0)  # fix the root node to depth 0
+        for v,w in G.edges:
+            if w!=0:  # The root node is special.
+                self._model.Add(depth_vars[v]+1==depth_vars[w]).OnlyEnforceIf(edge_vars[v,w])
+            if v!=0:
+                self._model.Add(depth_vars[w]+1==depth_vars[v]).OnlyEnforceIf(edge_vars[w,v])
 
         # Objective
         self._model.Minimize(sum(x*G[u][v]['weight'] for (u,v),x in edge_vars.items()))
