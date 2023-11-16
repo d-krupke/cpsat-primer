@@ -84,6 +84,18 @@ correctness with basic usage).
 
 I personally like to use [Jupyter Notebooks](https://jupyter.org/) for experimenting with CP-SAT.
 
+### What hardware do I need?
+
+It's important to note that for CP-SAT usage, you don't need the capabilities of a supercomputer. A standard laptop is often sufficient for solving many problems. The primary requirements are CPU power and memory bandwidth, with a GPU being unnecessary.
+
+In terms of CPU power, the key is balancing the number of cores with the performance of each individual core. CP-SAT leverages all available cores, implementing different strategies on each. However, the effectiveness of these strategies can vary, and it's usually not apparent which one will be most effective. A higher single-core performance means that your primary strategy will operate more swiftly. I recommend a minimum of 4 cores and 16GB of RAM.
+
+While CP-SAT is quite efficient in terms of memory usage, the amount of available memory can still be a limiting factor in the size of problems you can tackle. When it came to setting up our lab for extensive benchmarking at TU Braunschweig, we faced a choice between desktop machines and more expensive workstations or servers. We chose desktop machines equipped with AMD Ryzen 9 7900 CPUs (Intel would be equally suitable) and 96GB of DDR5 RAM, managed using Slurm. This decision was driven by the fact that the performance gains from higher-priced workstations or servers were relatively marginal compared to their significantly higher costs.
+
+For further guidance, consider the [hardware recommendations for the Gurobi solver](https://support.gurobi.com/hc/en-us/articles/8172407217041-What-hardware-should-I-select-when-running-Gurobi-), which are likely to be similar. Since we frequently use Gurobi in addition to CP-SAT, our hardware choices were also influenced by their recommendations.
+
+
+
 ## Example
 
 Before we dive into any internals, let us take a quick look at a simple application of CP-SAT. This example is so simple
