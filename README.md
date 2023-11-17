@@ -1324,7 +1324,7 @@ You can find the whole experiment [here](./examples/tsp_evaluation/).
 
 | ![Runtime](./examples/tsp_evaluation/PUBLIC_DATA/runtime.png) |
 | :-----------------------------------: |
-| The runtimes are sigmoidal instead of exponential because the time limits skews the results. |
+| The runtimes are sigmoidal instead of exponential because the time limit skews the results. |
 
 To gain a more accurate insight into the capacities of your model, consider plotting the proportion of instances of a certain size that your model successfully solves.
 This method requires a well-structured benchmark to yield meaningful statistics for each data point.
@@ -1332,13 +1332,13 @@ Without this structure, the resulting curve may appear erratic, making it challe
 
 | ![Solved over size](./examples/tsp_evaluation/PUBLIC_DATA/solved_over_size.png) |
 | :-----------------------------------: |
-| For each x-value: What are the chances (y-values) that a model of this size can be solved? |
+| For each x-value: What are the chances (y-values) that a model of this size (x) can be solved? |
 
 Furthermore, if the pursuit is not limited to optimal solutions but extends to encompass solutions of acceptable quality, the analysis can be expanded.
 One can plot the number of instances that the model solves within a defined optimality tolerance, as demonstrated in the subsequent figure: 
 | ![Solved over size with optimality tolerance](./examples/tsp_evaluation/PUBLIC_DATA/solved_over_size_opt_tol.png) |
 | :-----------------------------------: |
-| For each x-value: What are the chances (y-values) that a model of this size can be solved to what quality (line style)? |
+| For each x-value: What are the chances (y-values) that a model of this size (x) can be solved to what quality (line style)? |
 
 
 #### Cactus/Survival Plots
@@ -1348,10 +1348,14 @@ The question of what exactly is a simple or challenging instance, however, is be
 
 Cactus plots are notably prevalent in the evaluation of SAT-solvers, where instance size is a poor indicator of difficulty. A more detailed discussion on this subject can be found in the referenced academic paper: [Benchmarking Solvers, SAT-style by Brain, Davenport, and Griggio](http://www.sc-square.org/CSA/workshop2-papers/RP3-FinalVersion.pdf)
 
-![Cactus Plot 1](./examples/tsp_evaluation/PUBLIC_DATA/cactus_plot.png)
+| ![Cactus Plot 1](./examples/tsp_evaluation/PUBLIC_DATA/cactus_plot.png) |
+| :-----------------------------------: |
+| For each x-value: How many (y) of the benchmark instances could have been solved with this time limit (x)? |
 
 Additionally, the analysis can be refined to account for different quality tolerances. This requires either multiple experimental runs or tracking the progression of the lower and upper bounds within the solver. In the context of CP-SAT, for instance, this tracking can be implemented via the Solution Callback, although its activation is may depend on updates to the objective rather than the bounds.
-![Cactus Plot 1](./examples/tsp_evaluation/PUBLIC_DATA/cactus_plot_opt_tol.png)
+| ![Cactus Plot 1](./examples/tsp_evaluation/PUBLIC_DATA/cactus_plot_opt_tol.png) |
+| :-----------------------------------: |
+| For each x-value: How many (y) of the benchmark instances could have been solved to a specific quality (line style) with this time limit (x)? |
 
 Instead of plotting the number of solved instances, one can also plot the number of unsolved instances over time.
 This can be easier to read and additionally indicates the number of instances in the benchmark.
