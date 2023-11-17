@@ -1334,7 +1334,7 @@ You can find the whole experiment [here](./examples/tsp_evaluation/).
 
 | ![Runtime](./examples/tsp_evaluation/PUBLIC_DATA/runtime.png) |
 | :-----------------------------------: |
-| The runtimes are sigmoidal instead of exponential because the time limit skews the results. The runtime can frequently exceed the time limit, because of expensive model building, etc. |
+| The runtimes are sigmoidal instead of exponential because the time limit skews the results. The runtime can frequently exceed the time limit, because of expensive model building, etc. Thus, a pure runtime plot says surprisingly little (or is misleading) and can usually be discarded. |
 
 To gain a more accurate insight into the capacities of your model, consider plotting the proportion of instances of a certain size that your model successfully solves.
 This method requires a well-structured benchmark to yield meaningful statistics for each data point.
