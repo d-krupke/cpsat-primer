@@ -45,7 +45,8 @@ After that (or if you are already familiar with combinatorial optimization), the
    parallelization, ...
 5. [How does it work?](#how-does-it-work): After we know what we can do with CP-SAT, we look into how CP-SAT will do all
    these things.
-6. [Large Neighborhood Search](#Using-CP-SAT-for-Bigger-Problems-with-Large-Neighborhood-Search): The use of CP-SAT to create more powerful heuristics.
+6. [Benchmarking your Model](#benchmarking-your-model): How to benchmark your model and how to interpret the results.
+7. [Large Neighborhood Search](#Using-CP-SAT-for-Bigger-Problems-with-Large-Neighborhood-Search): The use of CP-SAT to create more powerful heuristics.
 
 > **Target audience:** People (especially my students at TU Braunschweig) with some background
 > in [integer programming](https://en.wikipedia.org/wiki/Integer_programming)
@@ -1325,7 +1326,7 @@ You can find the whole experiment [here](./examples/tsp_evaluation/).
 
 | ![Runtime](./examples/tsp_evaluation/PUBLIC_DATA/runtime.png) |
 | :-----------------------------------: |
-| The runtimes are sigmoidal instead of exponential because the time limit skews the results. |
+| The runtimes are sigmoidal instead of exponential because the time limit skews the results. The runtime can frequently exceed the time limit, because of expensive model building, etc. |
 
 To gain a more accurate insight into the capacities of your model, consider plotting the proportion of instances of a certain size that your model successfully solves.
 This method requires a well-structured benchmark to yield meaningful statistics for each data point.

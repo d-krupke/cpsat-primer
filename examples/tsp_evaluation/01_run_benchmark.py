@@ -1,5 +1,8 @@
 """
 This file runs the actual benchmark on the instances.
+
+Slurminade: This script uses the slurminade package to distribute the benchmark on a cluster. If you do not have a slurm-cluster, it will run the benchmark locally.
+AlgBench: This script uses the AlgBench package to capture and manage the results
 """
 
 
@@ -33,6 +36,9 @@ slurminade.set_dispatch_limit(1_000)
 @slurminade.slurmify()  # makes the function distributable on a cluster
 def load_instance_and_run_solver(instance_name):
     instance = instances[instance_name]
+
+    # The logging framework is much more powerful than print statements.
+    # I recommend using it instead of print statements to report progress.
     logger = logging.getLogger("Evaluation")
     benchmark.capture_logger("Evaluation", logging.INFO)
 
