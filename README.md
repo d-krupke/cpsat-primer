@@ -580,6 +580,7 @@ This tells you to use a MIP-solver for problems dominated by the tour constraint
 > These are all naive implementations, and the benchmark is not very rigorous. These values are only meant to give you
 > a rough idea of the performance. Additionally, this benchmark was regarding proving *optimality*. The performance in
 > just optimizing a tour could be different. The numbers could also look different for differently generated instances.
+> You can find a more detailed benchmark in the later section on proper evaluation.
 
 > :warning: This section could need some more work, as it is relatively important. I just did some experiments, and hastily jotted down some notes here.
 
@@ -1533,13 +1534,45 @@ However, we could easily scale it up to consider $2^{100+900}\sim 10^{300}$ neig
 Simply removing a portion of the solution and then trying to fix it isn't the most effective approach. In this section, we'll explore various neighborhoods for the Traveling Salesman Problem (TSP). The geometry of TSP not only permits advantageous neighborhoods but also offers visually appealing representations. When you have several neighborhood strategies, they can be dynamically integrated using an Adaptive Large Neighborhood Search (ALNS).
 
 The image illustrates an optimization process for a tour that needs to traverse the green areas, factoring in turn costs, within an embedded graph (mesh). The optimization involves choosing specific regions (highlighted in red) and calculating the optimal tour within them. As iterations progress, the initial tour generally improves, although some iterations may not yield any enhancement. Regions in red are selected due to the high cost of the tour within them. Once optimized, the center of that region is added to a tabu list, preventing it from being chosen again.
-![Large Neighborhood Search Geometry Example](./images/lns_pcpp.png)
+| ![Large Neighborhood Search Geometry Example](./images/lns_pcpp.png) |
+| :-----------------------------------: |
+| Large Neighbordhood Search for Coverage Path Planning by repeatedly selecting a geometric region (red) and optimizing the tour within it. The red parts of the tour highlight the changes in the iteration. Read from left to right, and from up to down. |
 
 How can you determine the appropriate size of a region to select? You have two main options: conduct preliminary experiments or adjust the size adaptively during the search. Simply allocate a time limit for each iteration. If the solver doesn't optimize within that timeframe, decrease the region size. Conversely, if it does, increase the size. Utilizing exponential factors will help the size swiftly converge to its optimal dimension. However, it's essential to note that this method assumes subproblems are of comparable difficulty and may necessitate additional conditions.
 
 For the Euclidean TSP, as opposed to a mesh, optimizing regions isn't straightforward. Multiple effective strategies exist, such as employing a segment from the previous tour rather than a geometric region. By implementing various neighborhoods and evaluating their success rates, you can allocate a higher selection probability to the top-performing ones. This approach is demonstrated in an animation crafted by two of my students, Gabriel Gehrke and Laurenz Illner. They incorporated four distinct neighborhoods and utilized ALNS to dynamically select the most effective one.
 
-![ALNS TSP](./images/alns_tsp_compr.gif)
+| ![ALNS TSP](./images/alns_tsp_compr.gif) |
+| :-----------------------------------: |
+| Animation of an Adaptive Large Neighborhood Search for the classical Traveling Salesman Problem. It uses four different neighborhood strategies which are selected randomly with a probability based on their success rate in previous iterations. If you check the logs of the latest (v9.8) version of CP-SAT, it also rates the performance of its LNS-strategies and uses the best performing strategies more often (UCB1-algorithm). |
+
+
+#### Multi-Armed Bandit: Exploration vs. Exploitation
+
+Having multiple strategies for each iteration of your LNS available is great, but how do you decide which one to use?
+You could just pick one randomly, but this is not very efficient as it is unlikely to select the best one.
+You could also use the strategy that worked best in the past, but maybe there is a better one you haven't tried yet.
+This is the so-called exploration vs. exploitation dilemma.
+You want to exploit the strategies that worked well in the past, but you also want to explore new strategies to find even better ones.
+Luckily, this problem has been studied extensively as the [Multi-Armed Bandit Problem](https://en.wikipedia.org/wiki/Multi-armed_bandit) for decades, and there are many good solutions.
+One of the most popular ones is the Upper Confidence Bound (UCB1) algorithm, which is also used by CP-SAT.
+In the following, you can see the a LNS-statistic of the CP-SATs strategies.
+
+```
+LNS stats                Improv/Calls  Closed  Difficulty  TimeLimit
+       'graph_arc_lns':          5/65     49%        0.26       0.10
+       'graph_cst_lns':          4/65     54%        0.47       0.10
+       'graph_dec_lns':          3/65     49%        0.26       0.10
+       'graph_var_lns':          4/66     55%        0.56       0.10
+           'rins/rens':         23/66     39%        0.03       0.10
+         'rnd_cst_lns':         12/66     50%        0.19       0.10
+         'rnd_var_lns':          6/66     52%        0.36       0.10
+    'routing_path_lns':         41/65     48%        0.10       0.10
+  'routing_random_lns':         24/65     52%        0.26       0.10
+```
+
+We will not dig into the details of the algorithm here, but if you are interested, you can find many good resources online.
+I just wanted to make you aware of the exploration vs. exploitation dilemma and that many smart people have already thought about it.
 
 > TODO: Continue...
 
