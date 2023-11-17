@@ -45,7 +45,8 @@ After that (or if you are already familiar with combinatorial optimization), the
    parallelization, ...
 5. [How does it work?](#how-does-it-work): After we know what we can do with CP-SAT, we look into how CP-SAT will do all
    these things.
-6. [Large Neighborhood Search](#Using-CP-SAT-for-Bigger-Problems-with-Large-Neighborhood-Search): The use of CP-SAT to create more powerful heuristics.
+6. [Benchmarking your Model](#benchmarking-your-model): How to benchmark your model and how to interpret the results.
+7. [Large Neighborhood Search](#Using-CP-SAT-for-Bigger-Problems-with-Large-Neighborhood-Search): The use of CP-SAT to create more powerful heuristics.
 
 > **Target audience:** People (especially my students at TU Braunschweig) with some background
 > in [integer programming](https://en.wikipedia.org/wiki/Integer_programming)
@@ -83,6 +84,20 @@ been fixed by updates (this was on some more advanced features, don't worry abou
 correctness with basic usage).
 
 I personally like to use [Jupyter Notebooks](https://jupyter.org/) for experimenting with CP-SAT.
+
+### What hardware do I need?
+
+It's important to note that for CP-SAT usage, you don't need the capabilities of a supercomputer. A standard laptop is often sufficient for solving many problems. The primary requirements are CPU power and memory bandwidth, with a GPU being unnecessary.
+
+In terms of CPU power, the key is balancing the number of cores with the performance of each individual core. CP-SAT leverages all available cores, implementing different strategies on each. However, the effectiveness of these strategies can vary, and it's usually not apparent which one will be most effective. A higher single-core performance means that your primary strategy will operate more swiftly. I recommend a minimum of 4 cores and 16GB of RAM.
+
+While CP-SAT is quite efficient in terms of memory usage, the amount of available memory can still be a limiting factor in the size of problems you can tackle. When it came to setting up our lab for extensive benchmarking at TU Braunschweig, we faced a choice between desktop machines and more expensive workstations or servers. We chose desktop machines equipped with AMD Ryzen 9 7900 CPUs (Intel would be equally suitable) and 96GB of DDR5 RAM, managed using Slurm. This decision was driven by the fact that the performance gains from higher-priced workstations or servers were relatively marginal compared to their significantly higher costs.
+When on the road, I am often still able to do stuff with my old Intel Macbook Pro from 2018 with an i7 and only 16GB of RAM, but large models will overwhelm it.
+My workstation at home with AMD Ryzen 7 5700X and 32GB of RAM on the other hand rarely has any problems with the models I am working on.
+
+For further guidance, consider the [hardware recommendations for the Gurobi solver](https://support.gurobi.com/hc/en-us/articles/8172407217041-What-hardware-should-I-select-when-running-Gurobi-), which are likely to be similar. Since we frequently use Gurobi in addition to CP-SAT, our hardware choices were also influenced by their recommendations.
+
+
 
 ## Example
 
@@ -566,6 +581,7 @@ This tells you to use a MIP-solver for problems dominated by the tour constraint
 > These are all naive implementations, and the benchmark is not very rigorous. These values are only meant to give you
 > a rough idea of the performance. Additionally, this benchmark was regarding proving *optimality*. The performance in
 > just optimizing a tour could be different. The numbers could also look different for differently generated instances.
+> You can find a more detailed benchmark in the later section on proper evaluation.
 
 > :warning: This section could need some more work, as it is relatively important. I just did some experiments, and hastily jotted down some notes here.
 
@@ -764,7 +780,7 @@ In this case, we can make use of the solution callbacks.
 
 For adding a solution callback, we have to inherit from a base class.
 The documentation of the base class and the available operations can be found in
-the [documentation](https://google.github.io/or-tools/python/ortools/sat/python/cp_model.html#CpSolverSolutionCallback).
+the [documentation](https://developers.google.com/optimization/reference/python/sat/python/cp_model#cp_model.CpSolverSolutionCallback).
 
 ```python
 class MySolutionCallback(cp_model.CpSolverSolutionCallback):
@@ -791,6 +807,9 @@ an [official example of using such callbacks](https://github.com/google/or-tools
 Beside querying the objective value of the currently best solution, the solution itself, and the best known bound, you
 can also find out about internals such as `NumBooleans(self)`, `NumConflicts(self)`, `NumBranches(self)`. What those
 values mean will be discussed later.
+
+
+
 
 ### Parallelization
 
@@ -1241,6 +1260,118 @@ CP-SAT might also exhibit inefficiency when confronted with certain constraints,
 However, it's noteworthy that I am not aware of any alternative solver capable of efficiently addressing these specific constraints.
 At times, NP-hard problems inherently pose formidable challenges, leaving us with no alternative but to seek more manageable modeling approaches instead of looking for better solvers.
 
+## Benchmarking your Model
+
+Benchmarking is a vital part of optimizing your model, particularly when addressing NP-hard problems. This process isn't straightforward, as these problems often contain hidden structural complexities. For example, you might find that a large instance of a problem is easier to solve than a smaller one. Sometimes, your model might not find a feasible solution within a reasonable timeframe, presenting a unique challenge. The unpredictability of solving times – whether it's just a second more or an unreachable solution – highlights the importance of choosing the right benchmark. The performance of realistic and randomly generated instances can vary significantly, making the selection of an appropriate benchmark critical.
+
+### Exploratory Studies vs. Workhorse Studies
+
+#### Exploratory Studies: Laying the Groundwork
+
+Exploratory studies are the first step in the benchmarking process. Consider this phase as an introductory period to understand your model and the problem it's designed to solve. The aim here is to gather preliminary insights and comprehend the problem's dynamics.
+
+- **Approach**: Conduct smaller, less formal experiments to observe how your model performs under various conditions.
+- **Objective**: To gain initial insights rather than conclusive results. This phase helps determine realistic problem sizes and potential challenges your model and evaluation might face. If you have to do hyperparameter tuning, this is the time to limit the search space to a reasonable size.
+
+#### Workhorse Studies: In-depth Evaluation
+
+Following the exploratory phase are the workhorse studies, which are more structured and rigorous. This stage is crucial for thoroughly testing your model's performance and collecting data for your final analysis.
+
+- **Strategy**: Avoid attempting to create the perfect benchmark initially. Start with exploratory studies to understand your model's capabilities and limitations.
+- **Benchmark Design**: Find a balance in benchmark difficulty to differentiate between effective and ineffective models. Both overly simple and excessively challenging benchmarks can skew your results.
+- **Performance Metrics**: Determine the most suitable metrics for evaluating your model, considering that most metrics have their limitations.
+
+### Crafting an Effective Benchmark
+
+In an ideal scenario, you would use an existing benchmark that aligns closely with your problem. These benchmarks, often found in research papers, may include real-world data, offering realistic testing scenarios.
+
+- **Critical Assessment**: Be discerning about the quality of available benchmarks. Read the original research to understand the effort and thought put into creating the benchmark.
+- **Pitfalls to Avoid**:
+  1. **Data Representation**: Real-world data can be scarce, potentially making the benchmark less representative. Consider combining benchmarks or use a large but lower-quality dataset for aggregated analysis and provide a table with the results for the original dataset as validation.
+  2. **Result Aggregation**: Aim for a clear performance metric, but be cautious with benchmarks that have a wide range of problem sizes, as this can complicate the calculation of average performance metrics.
+
+If a suitable benchmark doesn't exist, you'll need to develop one, keeping in mind:
+
+1. **Instance Realism**: Random instances may vary significantly in difficulty compared to real-world instances. Aim to mimic real-world complexities in your generated instances.
+2. **Prepare for Aggregation**: To get reliable results, you need to aggregate each data point over multiple instances. Generate your instances according to these needs. If you want to compare your results in dependency of the instance size, directly select a range of instance sizes and create for every size an equal number of instances.
+3. **Benchmark Size**: Ensure your benchmark is sufficiently large to be statistically significant. The number of instances required can depend on the variance in your data.
+4. **Problem Size Range**: Use exploratory experiments to estimate the maximum size your model can efficiently solve.
+5. **Separation of Benchmark Creation and Execution**: Ensure to separate benchmark creation from experiment execution. Do not generate instances in the same process, even if saving them to a file, to avoid a range of errors. Avoid relying on a single pseudo-random generator seed for your entire benchmark, as it can lead to unforeseen, non-deterministic results. It's better to use a bit more storage than compromise the reliability of your experiments.
+
+### Efficiently Managing Your Benchmarks
+
+Managing benchmark data can become complex, especially with multiple experiments and research questions. Here are some strategies to keep things organized:
+
+- **Folder Structure**: Maintain a clear folder structure for your experiments, with a top-level `evaluations` folder and descriptive subfolders for each experiment.
+- **Redundancy and Documentation**: While some redundancy is acceptable, comprehensive documentation of each experiment is crucial for future reference.
+- **Data Storage**: Save all your data, even if it seems insignificant at the time. This ensures you have a comprehensive dataset for later analysis or unexpected inquiries.
+- **Simplified Results**: Keep a streamlined version of your results for easy access, especially for plotting and sharing.
+- **Experiment Flexibility**: Design experiments to be interruptible and extendable, allowing for easy resumption or modification.
+- **Utilizing Technology**: Employ tools like slurm for efficient distribution of experiments across computing clusters, saving time and resources.
+
+Due to a lack of tools that exactly fitted my needs I developed [AlgBench](https://github.com/d-krupke/AlgBench) to manage the results, and [Slurminade](https://github.com/d-krupke/slurminade) to easily distribute the experiments on a cluster via a simple decorator.
+However, there may be better tools out there, now, especially from the Machine Learning community.
+Drop me a quick mail if you have found some tools you are happy with, and I will take a look myself.
+
+### Analyzing your results
+
+A common, yet simplistic method to assess a model's performance involves plotting its runtime against the size of the instances it processes. However, this approach can often lead to inaccurate interpretations, particularly because time-limited cutoffs can disproportionately affect the results.
+Instead of the expected exponential curves, you will get skewed sigmoidal curves.
+Consequently, such plots might not provide a clear understanding of the instance sizes your model is capable of handling efficiently.
+
+For the following benchmark on TSP models, I generated 10 random graphs for each number of nodes [25, 50, 75, 100, 150, 200, 250, 300, 350, 400, 450, 500].
+The weights were chosen based on randomly embedding the nodes into a 2D plane and using the Euclidean distances.
+We compare the four models we got to know earlier when taking about the `AddCircuit` constraint.
+You can find the whole experiment [here](./examples/tsp_evaluation/).
+
+| ![Runtime](./examples/tsp_evaluation/PUBLIC_DATA/runtime.png) |
+| :-----------------------------------: |
+| The runtimes are sigmoidal instead of exponential because the time limit skews the results. The runtime can frequently exceed the time limit, because of expensive model building, etc. |
+
+To gain a more accurate insight into the capacities of your model, consider plotting the proportion of instances of a certain size that your model successfully solves.
+This method requires a well-structured benchmark to yield meaningful statistics for each data point.
+Without this structure, the resulting curve may appear erratic, making it challenging to draw dependable conclusions.
+
+| ![Solved over size](./examples/tsp_evaluation/PUBLIC_DATA/solved_over_size.png) |
+| :-----------------------------------: |
+| For each x-value: What are the chances (y-values) that a model of this size (x) can be solved? |
+
+Furthermore, if the pursuit is not limited to optimal solutions but extends to encompass solutions of acceptable quality, the analysis can be expanded.
+One can plot the number of instances that the model solves within a defined optimality tolerance, as demonstrated in the subsequent figure: 
+| ![Solved over size with optimality tolerance](./examples/tsp_evaluation/PUBLIC_DATA/solved_over_size_opt_tol.png) |
+| :-----------------------------------: |
+| For each x-value: What are the chances (y-values) that a model of this size (x) can be solved to what quality (line style)? |
+
+
+#### Cactus/Survival Plots
+
+For a comparative analysis across various models against an arbitrary benchmark, cactus plots emerge as a potent tool. These plots illustrate the number of instances solved over time, providing a clear depiction of a model's efficiency. For example, a coordinate of $x=10, y=20$ on such a plot signifies that 20 instances were solved within a span of 10 seconds each. It is important to note, however, that these plots do not facilitate predictions for any specific instance unless the benchmark set is thoroughly familiar. They do allow for an estimation of which model is quicker for simpler instances and which can handle more challenging instances within a reasonable timeframe.
+The question of what exactly is a simple or challenging instance, however, is better answered by the previous plots.
+
+Cactus plots are notably prevalent in the evaluation of SAT-solvers, where instance size is a poor indicator of difficulty. A more detailed discussion on this subject can be found in the referenced academic paper: [Benchmarking Solvers, SAT-style by Brain, Davenport, and Griggio](http://www.sc-square.org/CSA/workshop2-papers/RP3-FinalVersion.pdf)
+
+| ![Cactus Plot 1](./examples/tsp_evaluation/PUBLIC_DATA/cactus_plot.png) |
+| :-----------------------------------: |
+| For each x-value: How many (y) of the benchmark instances could have been solved with this time limit (x)? |
+
+Additionally, the analysis can be refined to account for different quality tolerances. This requires either multiple experimental runs or tracking the progression of the lower and upper bounds within the solver. In the context of CP-SAT, for instance, this tracking can be implemented via the Solution Callback, although its activation is may depend on updates to the objective rather than the bounds.
+| ![Cactus Plot 1](./examples/tsp_evaluation/PUBLIC_DATA/cactus_plot_opt_tol.png) |
+| :-----------------------------------: |
+| For each x-value: How many (y) of the benchmark instances could have been solved to a specific quality (line style) with this time limit (x)? |
+
+Instead of plotting the number of solved instances, one can also plot the number of unsolved instances over time.
+This can be easier to read and additionally indicates the number of instances in the benchmark.
+However, I personally do not have a preference for one or the other, and would recommend using the one that is more intuitive to read for you.
+
+
+> If you want to make an automated decision on what model/solver to use, things can get complicated.
+> Often, there is none that dominates on all instances.
+> If you want a single metric for comparing the performance, there is no perfect solution.
+> I am actually the technical lead and co-organizer of a yearly challenge on solving hard optimization problems in computational geometry [CG:SHOP](https://cgshop.ibr.cs.tu-bs.de/), which is part of [CG Week](https://apps.utdallas.edu/SOCG23/challenge.html).
+> Here, I am confronted with scoring the solutions of the participants, without having any useful bounds.
+> It turned out that giving a score between zero and one for each instance, based on the squared difference to the best solution, works quite well.
+> While it still has flaws, it is showed to be relatively fair and robust.
+> The general problem of selecting the right strategy for a specific instance is called [Algorithm Selection](https://en.wikipedia.org/wiki/Algorithm_selection) problem and can be surprisingly complex, too.
 
 ## Using CP-SAT for Bigger Problems with Large Neighborhood Search
 
@@ -1404,13 +1535,45 @@ However, we could easily scale it up to consider $2^{100+900}\sim 10^{300}$ neig
 Simply removing a portion of the solution and then trying to fix it isn't the most effective approach. In this section, we'll explore various neighborhoods for the Traveling Salesman Problem (TSP). The geometry of TSP not only permits advantageous neighborhoods but also offers visually appealing representations. When you have several neighborhood strategies, they can be dynamically integrated using an Adaptive Large Neighborhood Search (ALNS).
 
 The image illustrates an optimization process for a tour that needs to traverse the green areas, factoring in turn costs, within an embedded graph (mesh). The optimization involves choosing specific regions (highlighted in red) and calculating the optimal tour within them. As iterations progress, the initial tour generally improves, although some iterations may not yield any enhancement. Regions in red are selected due to the high cost of the tour within them. Once optimized, the center of that region is added to a tabu list, preventing it from being chosen again.
-![Large Neighborhood Search Geometry Example](./images/lns_pcpp.png)
+| ![Large Neighborhood Search Geometry Example](./images/lns_pcpp.png) |
+| :-----------------------------------: |
+| Large Neighbordhood Search for Coverage Path Planning by repeatedly selecting a geometric region (red) and optimizing the tour within it. The red parts of the tour highlight the changes in the iteration. Read from left to right, and from up to down. |
 
 How can you determine the appropriate size of a region to select? You have two main options: conduct preliminary experiments or adjust the size adaptively during the search. Simply allocate a time limit for each iteration. If the solver doesn't optimize within that timeframe, decrease the region size. Conversely, if it does, increase the size. Utilizing exponential factors will help the size swiftly converge to its optimal dimension. However, it's essential to note that this method assumes subproblems are of comparable difficulty and may necessitate additional conditions.
 
 For the Euclidean TSP, as opposed to a mesh, optimizing regions isn't straightforward. Multiple effective strategies exist, such as employing a segment from the previous tour rather than a geometric region. By implementing various neighborhoods and evaluating their success rates, you can allocate a higher selection probability to the top-performing ones. This approach is demonstrated in an animation crafted by two of my students, Gabriel Gehrke and Laurenz Illner. They incorporated four distinct neighborhoods and utilized ALNS to dynamically select the most effective one.
 
-![ALNS TSP](./images/alns_tsp_compr.gif)
+| ![ALNS TSP](./images/alns_tsp_compr.gif) |
+| :-----------------------------------: |
+| Animation of an Adaptive Large Neighborhood Search for the classical Traveling Salesman Problem. It uses four different neighborhood strategies which are selected randomly with a probability based on their success rate in previous iterations. If you check the logs of the latest (v9.8) version of CP-SAT, it also rates the performance of its LNS-strategies and uses the best performing strategies more often (UCB1-algorithm). |
+
+
+#### Multi-Armed Bandit: Exploration vs. Exploitation
+
+Having multiple strategies for each iteration of your LNS available is great, but how do you decide which one to use?
+You could just pick one randomly, but this is not very efficient as it is unlikely to select the best one.
+You could also use the strategy that worked best in the past, but maybe there is a better one you haven't tried yet.
+This is the so-called exploration vs. exploitation dilemma.
+You want to exploit the strategies that worked well in the past, but you also want to explore new strategies to find even better ones.
+Luckily, this problem has been studied extensively as the [Multi-Armed Bandit Problem](https://en.wikipedia.org/wiki/Multi-armed_bandit) for decades, and there are many good solutions.
+One of the most popular ones is the Upper Confidence Bound (UCB1) algorithm, which is also used by CP-SAT.
+In the following, you can see the a LNS-statistic of the CP-SATs strategies.
+
+```
+LNS stats                Improv/Calls  Closed  Difficulty  TimeLimit
+       'graph_arc_lns':          5/65     49%        0.26       0.10
+       'graph_cst_lns':          4/65     54%        0.47       0.10
+       'graph_dec_lns':          3/65     49%        0.26       0.10
+       'graph_var_lns':          4/66     55%        0.56       0.10
+           'rins/rens':         23/66     39%        0.03       0.10
+         'rnd_cst_lns':         12/66     50%        0.19       0.10
+         'rnd_var_lns':          6/66     52%        0.36       0.10
+    'routing_path_lns':         41/65     48%        0.10       0.10
+  'routing_random_lns':         24/65     52%        0.26       0.10
+```
+
+We will not dig into the details of the algorithm here, but if you are interested, you can find many good resources online.
+I just wanted to make you aware of the exploration vs. exploitation dilemma and that many smart people have already thought about it.
 
 > TODO: Continue...
 
