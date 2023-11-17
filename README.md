@@ -1307,23 +1307,38 @@ Managing benchmark data can become complex, especially with multiple experiments
 - **Experiment Flexibility**: Design experiments to be interruptible and extendable, allowing for easy resumption or modification.
 - **Utilizing Technology**: Employ tools like slurm for efficient distribution of experiments across computing clusters, saving time and resources.
 
+Due to a lack of tools that exactly fitted my needs I developed [AlgBench](https://github.com/d-krupke/AlgBench) to manage the results, and [Slurminade](https://github.com/d-krupke/slurminade) to easily distribute the experiments on a cluster via a simple decorator.
+However, there may be better tools out there, now, especially from the Machine Learning community.
+Drop me a quick mail if you have found some tools you are happy with, and I will take a look myself.
+
 ### Analyzing your results
 
 A common, yet simplistic method to assess a model's performance involves plotting its runtime against the size of the instances it processes. However, this approach can often lead to inaccurate interpretations, particularly because time-limited cutoffs can disproportionately affect the results.
 Instead of the expected exponential curves, you will get skewed sigmoidal curves.
 Consequently, such plots might not provide a clear understanding of the instance sizes your model is capable of handling efficiently.
 
-![Runtime](./examples/tsp_evaluation/PUBLIC_DATA/runtime.png)
+For the following benchmark on TSP models, I generated 10 random graphs for each number of nodes [25, 50, 75, 100, 150, 200, 250, 300, 350, 400, 450, 500].
+The weights were chosen based on randomly embedding the nodes into a 2D plane and using the Euclidean distances.
+We compare the four models we got to know earlier when taking about the `AddCircuit` constraint.
+You can find the whole experiment [here](./examples/tsp_evaluation/).
+
+| ![Runtime](./examples/tsp_evaluation/PUBLIC_DATA/runtime.png) |
+| :-----------------------------------: |
+| The runtimes are sigmoidal instead of exponential because the time limits skews the results. |
 
 To gain a more accurate insight into the capacities of your model, consider plotting the proportion of instances of a certain size that your model successfully solves.
 This method requires a well-structured benchmark to yield meaningful statistics for each data point.
 Without this structure, the resulting curve may appear erratic, making it challenging to draw dependable conclusions.
 
-![Solved over size](./examples/tsp_evaluation/PUBLIC_DATA/solved_over_size.png)
+| ![Solved over size](./examples/tsp_evaluation/PUBLIC_DATA/solved_over_size.png) |
+| :-----------------------------------: |
+| For each x-value: What are the chances (y-values) that a model of this size can be solved? |
 
 Furthermore, if the pursuit is not limited to optimal solutions but extends to encompass solutions of acceptable quality, the analysis can be expanded.
 One can plot the number of instances that the model solves within a defined optimality tolerance, as demonstrated in the subsequent figure: 
-![Solved over size with optimality tolerance](./examples/tsp_evaluation/PUBLIC_DATA/solved_over_size_opt_tol.png)
+| ![Solved over size with optimality tolerance](./examples/tsp_evaluation/PUBLIC_DATA/solved_over_size_opt_tol.png) |
+| :-----------------------------------: |
+| For each x-value: What are the chances (y-values) that a model of this size can be solved to what quality (line style)? |
 
 
 #### Cactus/Survival Plots
