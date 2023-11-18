@@ -1264,6 +1264,8 @@ At times, NP-hard problems inherently pose formidable challenges, leaving us wit
 
 Benchmarking is a vital part of optimizing your model, particularly when addressing NP-hard problems. This process isn't straightforward, as these problems often contain hidden structural complexities. For example, you might find that a large instance of a problem is easier to solve than a smaller one. Sometimes, your model might not find a feasible solution within a reasonable timeframe, presenting a unique challenge. The unpredictability of solving times – whether it's just a second more or an unreachable solution – highlights the importance of choosing the right benchmark. The performance of realistic and randomly generated instances can vary significantly, making the selection of an appropriate benchmark critical.
 
+> For a more detailed discussion of benchmarking, I recommend reading the book [A Guide to Experimental Algorithmics by Catherine C. McGeoch](https://www.cambridge.org/core/books/guide-to-experimental-algorithmics/CDB0CB718F6250E0806C909E1D3D1082).
+
 ### Exploratory Studies vs. Workhorse Studies
 
 #### Exploratory Studies: Laying the Groundwork
@@ -1272,6 +1274,10 @@ Exploratory studies are the first step in the benchmarking process. Consider thi
 
 - **Approach**: Conduct smaller, less formal experiments to observe how your model performs under various conditions.
 - **Objective**: To gain initial insights rather than conclusive results. This phase helps determine realistic problem sizes and potential challenges your model and evaluation might face. If you have to do hyperparameter tuning, this is the time to limit the search space to a reasonable size.
+
+> If you notice your solver struggling before CP-SAT takes over, you can profile your code nicely using [Scalene](https://github.com/plasma-umass/scalene).
+> Model building can be surprisingly expensive with Python, and Scalene will help you find out which parts of your code are the problem.
+> After trying out different profiling tools, I found Scalene to be the most useful for this purpose.
 
 #### Workhorse Studies: In-depth Evaluation
 
@@ -1297,6 +1303,8 @@ If a suitable benchmark doesn't exist, you'll need to develop one, keeping in mi
 3. **Benchmark Size**: Ensure your benchmark is sufficiently large to be statistically significant. The number of instances required can depend on the variance in your data.
 4. **Problem Size Range**: Use exploratory experiments to estimate the maximum size your model can efficiently solve.
 5. **Separation of Benchmark Creation and Execution**: Ensure to separate benchmark creation from experiment execution. Do not generate instances in the same process, even if saving them to a file, to avoid a range of errors. Avoid relying on a single pseudo-random generator seed for your entire benchmark, as it can lead to unforeseen, non-deterministic results. It's better to use a bit more storage than compromise the reliability of your experiments.
+
+**Hint: Use the [SIGPLAN Empirical Evaluation Checklist](https://raw.githubusercontent.com/SIGPLAN/empirical-evaluation/master/checklist/checklist.pdf) if your evaluation has to satisfy academic standards.**
 
 ### Efficiently Managing Your Benchmarks
 
@@ -1326,7 +1334,7 @@ You can find the whole experiment [here](./examples/tsp_evaluation/).
 
 | ![Runtime](./examples/tsp_evaluation/PUBLIC_DATA/runtime.png) |
 | :-----------------------------------: |
-| The runtimes are sigmoidal instead of exponential because the time limit skews the results. The runtime can frequently exceed the time limit, because of expensive model building, etc. |
+| The runtimes are sigmoidal instead of exponential because the time limit skews the results. The runtime can frequently exceed the time limit, because of expensive model building, etc. Thus, a pure runtime plot says surprisingly little (or is misleading) and can usually be discarded. |
 
 To gain a more accurate insight into the capacities of your model, consider plotting the proportion of instances of a certain size that your model successfully solves.
 This method requires a well-structured benchmark to yield meaningful statistics for each data point.

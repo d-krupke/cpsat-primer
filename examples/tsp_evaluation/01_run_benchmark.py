@@ -7,6 +7,7 @@ AlgBench: This script uses the AlgBench package to capture and manage the result
 
 
 import logging
+import random
 # for saving the results easily
 from algbench import Benchmark  # pip install algbench
 
@@ -23,10 +24,13 @@ benchmark = Benchmark(EXPERIMENT_DATA)
 # If you don't have Slurm, this won't do anything.
 # If you have slurm, you have to update the configuration to your needs.
 slurminade.update_default_configuration(
+    # This setup is for the TU BS Alg cluster.
+    # This doubles as documentation for on which cluster the benchmark was run.
     partition="alg",
-    constraint="alggen03",
-    mail_user="my_mail@supermail.com",
-    mail_type="ALL",  # or "FAIL" if you only want to be notified about failures.
+    constraint="alggen05",
+    cpus_per_task=24,
+    mail_user="...@...",
+    mail_type="FAIL",  # Send a mail if a job fails.
 )
 slurminade.set_dispatch_limit(1_000)
 # -----------------------------------------
@@ -71,11 +75,16 @@ def compress():
 
 
 # --------------------------
-
 # Run the benchmark on all instances.
 if __name__ == "__main__":
-    job_ids = []
-    for instance_name in instances:
-        job_ids.append(load_instance_and_run_solver.distribute(instance_name))
-    # compress the results at the end.
-    compress.wait_for(job_ids).distribute()
+    instance_names = list(instance for instance in instances)
+    # shuffle the instances to distribute the load more evenly.
+    random.shuffle(instance_names)
+    # Distribute the benchmark on a cluster.
+    with slurminade.Batch(max_size=5) as batch:
+        for instance_name in instance_names:
+            load_instance_and_run_solver.distribute(instance_name)
+        # compress the results at the end.
+        job_ids = batch.flush()
+        compress.wait_for(job_ids).distribute()
+        
