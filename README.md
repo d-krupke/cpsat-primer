@@ -1803,7 +1803,7 @@ is more intuitive to read for you.
 #### Example of a Case where we have to use a Cactus Plot
 
 Building on our previous discussion of a more straightforward benchmark, let's
-explore a scenario that introduces unique challenges:
+explore a scenario that introduces some challenges:
 
 1. The difficulty in aggregating benchmark data due to its limited size and
    heterogeneous nature.
@@ -1811,23 +1811,23 @@ explore a scenario that introduces unique challenges:
    random and real-world instances.
 
 Our second benchmark for the Traveling Salesman Problem leverages the TSPLib, a
-set of instances that mimic real-world conditions. The irregularity in instance
-sizes makes traditional plotting methods, like graphing the number of solved
+set of instances based on real-world data. The irregularity in instance
+sizes makes traditional plotting methods, like plotting the number of solved
 instances over time, less effective. While data smoothing methods, such as
 rolling averages, are available, they too have their limitations.
 
 |                ![Variation in Data](./evaluations/tsp/2023-11-18_tsplib/PUBLIC_DATA/solved_over_size.png)                |
 | :----------------------------------------------------------------------------------------------------------------------: |
-| Plots may prove inefficient when dealing with high variability, particularly when some data points are underrepresented. |
+| Such a plot may prove inefficient when dealing with high variability, particularly when some data points are underrepresented. |
 
-In contrast, a cactus plot provides a clear and comprehensive perspective of
-various model performances. An interesting observation is the diminished
+In contrast, the cactus plot still provides a clear and comprehensive perspective of
+various model performances. An interesting observation we can clearly see in it, is the diminished
 capability of the "Iterative Dantzig" model in solving instances, and a closer
 performance alignment between the `AddCircuit` and Gurobi models.
 
 |                    ![Effective Cactus Plot](./evaluations/tsp/2023-11-18_tsplib/PUBLIC_DATA/cactus_plot_opt_tol.png)                     |
 | :--------------------------------------------------------------------------------------------------------------------------------------: |
-| Cactus plots maintain clarity and relevance, especially in highlighting the performance differences between TSPLib and random instances. |
+| Cactus plots maintain clarity and relevance, and show a performance differences between TSPLib and random instances. |
 
 However, since cactus plots do not offer insights into individual instances,
 it's beneficial to complement them with a detailed table of results for the
