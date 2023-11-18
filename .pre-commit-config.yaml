@@ -89,7 +89,7 @@ repos:
     rev: v2.2.4
     hooks:
       - id: codespell
-        exclude: ^(LICENSE$)
+        exclude: ^(LICENSE$|.*\.ipynb$)
 
   - repo: https://github.com/shellcheck-py/shellcheck-py
     rev: v0.9.0.2

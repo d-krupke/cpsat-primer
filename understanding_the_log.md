@@ -1,6 +1,6 @@
 # Understanding the CP-SAT log
 
-> **WORK IN PROGRSS**
+> **WORK IN PROGRESS**
 
 Just printing version and parameters:
 
