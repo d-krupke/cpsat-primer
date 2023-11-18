@@ -724,6 +724,18 @@ The following table shows the runtime for different resolutions (the solution is
 
 See [this notebook](./examples/add_no_overlap_2d_scaling.ipynb) for the full example.
 
+However, while playing around with less documented features, I noticed that the performance can be improved
+drastically with the following parameters:
+
+```python
+solver.parameters.use_energetic_reasoning_in_no_overlap_2d = True
+solver.parameters.use_timetabling_in_no_overlap_2d = True
+solver.parameters.use_pairwise_reasoning_in_no_overlap_2d = True
+```
+
+Instances that could not be solved in 15 minutes before, can now be solved in less than a second.
+This of course does not apply for all instances, but if you are working with this constraint, you may want to jiggle with these parameters if it struggles with solving your instances.
+
 ### There is more
 
 CP-SAT has even more constraints, but I think I covered the most important ones.
