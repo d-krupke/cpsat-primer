@@ -204,8 +204,8 @@ from ortools.sat.python import cp_model
 model = cp_model.CpModel()
 
 # Variables
-x = model.NewIntVar(0, 100, 'x')  # you always need to specify an upper bound.
-y = model.NewIntVar(0, 100, 'y')
+x = model.NewIntVar(0, 100, "x")  # you always need to specify an upper bound.
+y = model.NewIntVar(0, 100, "y")
 # there are also no continuous variables: You have to decide for a resolution and then work on integers.
 
 # Constraints
@@ -217,7 +217,9 @@ model.Maximize(30 * x + 50 * y)
 # Solve
 solver = cp_model.CpSolver()  # Contrary to Gurobi, model and solver are separated.
 status = solver.Solve(model)
-assert status == cp_model.OPTIMAL  # The status tells us if we were able to compute a solution.
+assert (
+    status == cp_model.OPTIMAL
+)  # The status tells us if we were able to compute a solution.
 print(f"x={solver.Value(x)},  y={solver.Value(y)}")
 print("=====Stats:======")
 print(solver.SolutionInfo())
@@ -367,9 +369,9 @@ For the integer variables, you have to specify a lower and an upper bound.
 
 ```python
 # integer variable z with bounds -100 <= z <= 100
-z = model.NewIntVar(-100, 100, 'z')
+z = model.NewIntVar(-100, 100, "z")
 # boolean variable b
-b = model.NewBoolVar('b')
+b = model.NewBoolVar("b")
 # implicitly available negation of b:
 not_b = b.Not()  # will be 1 if b is 0 and 0 if b is 1
 ```
@@ -434,8 +436,10 @@ Let us look on how to model more complicated expressions, using boolean
 variables and generators.
 
 ```python
-x_vars = [model.NewBoolVar(f'x{i}') for i in range(10)]
-model.Minimize(sum(i*x_vars[i] if i%2==0 else i*x_vars[i].Not() for i in range(10)))
+x_vars = [model.NewBoolVar(f"x{i}") for i in range(10)]
+model.Minimize(
+    sum(i * x_vars[i] if i % 2 == 0 else i * x_vars[i].Not() for i in range(10))
+)
 ```
 
 This objective evaluates to
@@ -508,9 +512,9 @@ You can actually model logical constraints also as linear constraints, but it
 may be advantageous to show your intent:
 
 ```python
-b1 = model.NewBoolVar('b1')
-b2 = model.NewBoolVar('b2')
-b3 = model.NewBoolVar('b3')
+b1 = model.NewBoolVar("b1")
+b2 = model.NewBoolVar("b2")
+b3 = model.NewBoolVar("b3")
 
 model.AddBoolOr(b1, b2, b3)  # b1 or b2 or b3 (at least one)
 model.AddBoolAnd(b1, b2.Not(), b3.Not())  # b1 and not b2 and not b3 (all)
@@ -552,7 +556,7 @@ model.AddAllDifferent(x, y, z)
 
 # You can also add a constant to the variables.
 vars = [model.NewIntVar(0, 10) for i in range(10)]
-model.AddAllDifferent(x+i for i, x in enumerate(vars))
+model.AddAllDifferent(x + i for i, x in enumerate(vars))
 ```
 
 The [N-queens](https://developers.google.com/optimization/cp/queens) example of
@@ -617,7 +621,7 @@ end up being slow to solve, and would recommend to only use them if you really
 need them and cannot find a way around them.
 
 ```python
-xyz = model.NewIntVar(-100 * 100 * 100, 100 ** 3, 'x*y*z')
+xyz = model.NewIntVar(-100 * 100 * 100, 100**3, "x*y*z")
 model.AddMultiplicationEquality(xyz, [x, y, z])  # xyz = x*y*z
 model.AddModuloEquality(x, y, 3)  # x = y % 3
 ```
@@ -647,44 +651,44 @@ vertex v.
 
 ```python
 from ortools.sat.python import cp_model
+
 # Weighted, directed graph as instance
 # (source, destination) -> cost
 dgraph = {
-     (0, 1): 13,
-     (1, 0): 17,
-     (1, 2): 16,
-     (2, 1): 19,
-     (0, 2): 22,
-     (2, 0): 14,
-     (3, 0): 15,
-     (3, 1): 28,
-     (3, 2): 25,
-     (0, 3): 24,
-     (1, 3): 11,
-     (2, 3): 27
- }
- model = cp_model.CpModel()
- # Variables: Binary decision variables for the edges
- edge_vars = {
-     (u,v): model.NewBoolVar(f"e_{u}_{v}") for (u,v) in dgraph.keys()
- }
- # Constraints: Add Circuit constraint
- # We need to tell CP-SAT which variable corresponds to which edge.
- # This is done by passing a list of tuples (u,v,var) to AddCircuit.
- circuit = [(u, v, var)  # (source, destination, variable)
-             for (u,v), var in edge_vars.items()]
- model.AddCircuit(circuit)
+    (0, 1): 13,
+    (1, 0): 17,
+    (1, 2): 16,
+    (2, 1): 19,
+    (0, 2): 22,
+    (2, 0): 14,
+    (3, 0): 15,
+    (3, 1): 28,
+    (3, 2): 25,
+    (0, 3): 24,
+    (1, 3): 11,
+    (2, 3): 27,
+}
+model = cp_model.CpModel()
+# Variables: Binary decision variables for the edges
+edge_vars = {(u, v): model.NewBoolVar(f"e_{u}_{v}") for (u, v) in dgraph.keys()}
+# Constraints: Add Circuit constraint
+# We need to tell CP-SAT which variable corresponds to which edge.
+# This is done by passing a list of tuples (u,v,var) to AddCircuit.
+circuit = [
+    (u, v, var) for (u, v), var in edge_vars.items()  # (source, destination, variable)
+]
+model.AddCircuit(circuit)
 
- # Objective: minimize the total cost of edges
- obj = sum(dgraph[(u,v)]*x for (u,v),x  in edge_vars.items())
- model.Minimize(obj)
+# Objective: minimize the total cost of edges
+obj = sum(dgraph[(u, v)] * x for (u, v), x in edge_vars.items())
+model.Minimize(obj)
 
- # Solve
- solver = cp_model.CpSolver()
- status = solver.Solve(model)
- assert status in (cp_model.OPTIMAL, cp_model.FEASIBLE)
- tour = [(u,v) for (u,v),x in edge_vars.items() if solver.Value(x)]
- print("Tour:", tour)
+# Solve
+solver = cp_model.CpSolver()
+status = solver.Solve(model)
+assert status in (cp_model.OPTIMAL, cp_model.FEASIBLE)
+tour = [(u, v) for (u, v), x in edge_vars.items() if solver.Value(x)]
+print("Tour:", tour)
 ```
 
     Tour: [(0, 1), (2, 0), (3, 2), (1, 3)]
@@ -824,41 +828,57 @@ container = (40, 15)
 boxes = [
     (11, 3),
     (13, 3),
-    (9,  2),
-    (7,  2),
-    (9,  3),
-    (7,  3),
+    (9, 2),
+    (7, 2),
+    (9, 3),
+    (7, 3),
     (11, 2),
     (13, 2),
     (11, 4),
     (13, 4),
-    (3,  5),
+    (3, 5),
     (11, 2),
-    (2,  2),
+    (2, 2),
     (11, 3),
-    (2,  3),
-    (5,  4),
-    (6,  4),
+    (2, 3),
+    (5, 4),
+    (6, 4),
     (12, 2),
-    (1,  2),
-    (3,  5),
+    (1, 2),
+    (3, 5),
     (13, 5),
     (12, 4),
-    (1,  4),
-    (5,  2),
-    #(6,  2),  # add to make tight
+    (1, 4),
+    (5, 2),
+    # (6,  2),  # add to make tight
     # (6,3), # add to make infeasible
 ]
 model = cp_model.CpModel()
 
 # We have to create the variable for the bottom left corner of the boxes.
 # We directly limit their range, such that the boxes are inside the container
-x_vars = [model.NewIntVar(0, container[0]-box[0], name = f'x1_{i}') for i, box in enumerate(boxes)]
-y_vars = [model.NewIntVar(0, container[1]-box[1], name = f'y1_{i}') for i, box in enumerate(boxes)]
+x_vars = [
+    model.NewIntVar(0, container[0] - box[0], name=f"x1_{i}")
+    for i, box in enumerate(boxes)
+]
+y_vars = [
+    model.NewIntVar(0, container[1] - box[1], name=f"y1_{i}")
+    for i, box in enumerate(boxes)
+]
 # Interval variables are actually more like constraint containers, that are then passed to the no overlap constraint
 # Note that we could also make size and end variables, but we don't need them here
-x_interval_vars = [model.NewIntervalVar(start=x_vars[i], size=box[0], end=x_vars[i]+box[0], name = f'x_interval_{i}') for i, box in enumerate(boxes)]
-y_interval_vars = [model.NewIntervalVar(start=y_vars[i], size=box[1], end=y_vars[i]+box[1], name = f'y_interval_{i}') for i, box in enumerate(boxes)]
+x_interval_vars = [
+    model.NewIntervalVar(
+        start=x_vars[i], size=box[0], end=x_vars[i] + box[0], name=f"x_interval_{i}"
+    )
+    for i, box in enumerate(boxes)
+]
+y_interval_vars = [
+    model.NewIntervalVar(
+        start=y_vars[i], size=box[1], end=y_vars[i] + box[1], name=f"y_interval_{i}"
+    )
+    for i, box in enumerate(boxes)
+]
 # Enforce that no two rectangles overlap
 model.AddNoOverlap2D(x_interval_vars, y_interval_vars)
 
@@ -869,8 +889,9 @@ solver.log_callback = print
 status = solver.Solve(model)
 assert status == cp_model.OPTIMAL
 for i, box in enumerate(boxes):
-    print(f'box {i} is placed at ({solver.Value(x_vars[i])}, {solver.Value(y_vars[i])})')
-
+    print(
+        f"box {i} is placed at ({solver.Value(x_vars[i])}, {solver.Value(y_vars[i])})"
+    )
 ```
 
 > The keywords `start` may be named `begin` in some versions of ortools.
@@ -1811,22 +1832,23 @@ explore a scenario that introduces some challenges:
    random and real-world instances.
 
 Our second benchmark for the Traveling Salesman Problem leverages the TSPLib, a
-set of instances based on real-world data. The irregularity in instance
-sizes makes traditional plotting methods, like plotting the number of solved
-instances over time, less effective. While data smoothing methods, such as
-rolling averages, are available, they too have their limitations.
+set of instances based on real-world data. The irregularity in instance sizes
+makes traditional plotting methods, like plotting the number of solved instances
+over time, less effective. While data smoothing methods, such as rolling
+averages, are available, they too have their limitations.
 
-|                ![Variation in Data](./evaluations/tsp/2023-11-18_tsplib/PUBLIC_DATA/solved_over_size.png)                |
-| :----------------------------------------------------------------------------------------------------------------------: |
+|                   ![Variation in Data](./evaluations/tsp/2023-11-18_tsplib/PUBLIC_DATA/solved_over_size.png)                   |
+| :----------------------------------------------------------------------------------------------------------------------------: |
 | Such a plot may prove inefficient when dealing with high variability, particularly when some data points are underrepresented. |
 
-In contrast, the cactus plot still provides a clear and comprehensive perspective of
-various model performances. An interesting observation we can clearly see in it, is the diminished
-capability of the "Iterative Dantzig" model in solving instances, and a closer
-performance alignment between the `AddCircuit` and Gurobi models.
+In contrast, the cactus plot still provides a clear and comprehensive
+perspective of various model performances. An interesting observation we can
+clearly see in it, is the diminished capability of the "Iterative Dantzig" model
+in solving instances, and a closer performance alignment between the
+`AddCircuit` and Gurobi models.
 
-|                    ![Effective Cactus Plot](./evaluations/tsp/2023-11-18_tsplib/PUBLIC_DATA/cactus_plot_opt_tol.png)                     |
-| :--------------------------------------------------------------------------------------------------------------------------------------: |
+|          ![Effective Cactus Plot](./evaluations/tsp/2023-11-18_tsplib/PUBLIC_DATA/cactus_plot_opt_tol.png)           |
+| :------------------------------------------------------------------------------------------------------------------: |
 | Cactus plots maintain clarity and relevance, and show a performance differences between TSPLib and random instances. |
 
 However, since cactus plots do not offer insights into individual instances,
