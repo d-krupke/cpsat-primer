@@ -1,3 +1,5 @@
+#!/bin/sh
+
 # Run the benchmark
 python3 01_run_benchmark.py && \
 # Extract the data into a nice table

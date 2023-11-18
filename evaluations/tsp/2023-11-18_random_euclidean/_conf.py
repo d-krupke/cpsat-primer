@@ -4,7 +4,12 @@ you to, e.g., quickly change the database without having to overwrite the
 old data.
 """
 from pathlib import Path
-from solver import GurobiTspSolver, CpSatTspSolverV1, CpSatTspSolverDantzig, CpSatTspSolverMtz
+from solver import (
+    GurobiTspSolver,
+    CpSatTspSolverV1,
+    CpSatTspSolverDantzig,
+    CpSatTspSolverMtz,
+)
 
 # Data that is meant to be shared to verify the results.
 PUBLIC_DATA = Path(__file__).parent / "PUBLIC_DATA"

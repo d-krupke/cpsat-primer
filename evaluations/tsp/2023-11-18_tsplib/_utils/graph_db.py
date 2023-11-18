@@ -43,8 +43,6 @@ class GraphInstanceDb:
                 yield f.filename[:-5]
 
 
-
-
 class TspLibGraphInstanceDb:
     def __init__(self, archive_path: Path = Path("./ALL_tsp.tar.gz")):
         self.archive_path = archive_path
@@ -106,7 +104,7 @@ class TspLibGraphInstanceDb:
                     raise ValueError("Instance is not 2d-coordinate based.")
                 x = float(point_data[1])
                 y = float(point_data[2])
-                points.append(tuple(float(x) for x in line.split()[1:]))
+                points.append((x, y))
         if not start_parsing:
             raise ValueError("Instance is not coordinate based.")
         return points

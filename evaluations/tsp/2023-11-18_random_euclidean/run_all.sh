@@ -1,4 +1,6 @@
-# Generate the instances 
+#!/bin/sh
+
+# Generate the instances
 python3 00_generate_instances.py && \
 # Run the benchmark
 python3 01_run_benchmark.py && \

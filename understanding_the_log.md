@@ -3,13 +3,16 @@
 > **WORK IN PROGRSS**
 
 Just printing version and parameters:
+
 ```
 Starting CP-SAT solver v9.3.10497
 Parameters: log_search_progress: true
 Setting number of workers to 16
 ```
 
-Description of the model how you created it. For example we used 34 `AllDifferent`, 1 `MaxEquality`, and 2312 linear constraints with 2 variables.
+Description of the model how you created it. For example we used 34
+`AllDifferent`, 1 `MaxEquality`, and 2312 linear constraints with 2 variables.
+
 ```
 Initial optimization model '':
 #Variables: 290 (#ints:1 in objective)
@@ -18,9 +21,12 @@ Initial optimization model '':
 #kLinMax: 1
 #kLinear2: 2312 (#complex_domain: 2312)
 ```
+
 ## Presolve
 
-We first see multiple rounds of domain reduction, expansion, equivalence checking, substitution, and probing.
+We first see multiple rounds of domain reduction, expansion, equivalence
+checking, substitution, and probing.
+
 ```
 Starting presolve at 0.00s
 [ExtractEncodingFromLinear] #potential_supersets=0 #potential_subsets=0 #at_most_one_encodings=0 #exactly_one_encodings=0 #unique_terms=0 #multiple_terms=0 #literals=0 time=9.558e-06s
@@ -38,7 +44,10 @@ Starting presolve at 0.00s
 [DetectOverlappingColumns] #processed_columns=0 #work_done=0 #nz_reduction=0 time=0.000992311s
 [ProcessSetPPC] #relevant_constraints=612 #num_inclusions=0 work=29376 time=0.00121334s
 ```
-Here we see for example that the `AllDifferent` constraint was expanded 34 times.
+
+Here we see for example that the `AllDifferent` constraint was expanded 34
+times.
+
 ```
 Presolve summary:
   - 0 affine relations were detected.
@@ -50,10 +59,12 @@ Presolve summary:
   - rule 'variables: add encoding constraint' was applied 5202 times.
 
 ```
-Here we see the optimization model with its variables and constraints.
-For example, we have 5492 variables with 5202 of them being boolean, 289 of them
-being in {0, 1, 2, ... , 17} and 1 of them being in {1, 2, ..., 17}.
-Afterwards come the different constraints that are used internally.
+
+Here we see the optimization model with its variables and constraints. For
+example, we have 5492 variables with 5202 of them being boolean, 289 of them
+being in {0, 1, 2, ... , 17} and 1 of them being in {1, 2, ..., 17}. Afterwards
+come the different constraints that are used internally.
+
 ```
 Presolved optimization model '':
 #Variables: 5492 (#ints:1 in objective)
@@ -65,7 +76,9 @@ Presolved optimization model '':
 #kLinear1: 10404 (#enforced: 10404)
 #kLinear2: 2312 (#complex_domain: 2312)
 ```
+
 ## Search progress
+
 ```
 Preloading model.
 #Bound   0.45s best:inf   next:[1,17]     initial_domain
@@ -82,35 +95,43 @@ Interleaved subsolvers: [feasibility_pump, rnd_var_lns_default, rnd_cst_lns_defa
 ```
 
 The list has the following columns:
+
 1. Event or solution count (e.g. `#1` or `#Done`)
 2. Time in seconds (e.g. `0.71s`)
 3. Best objective (e.g. `best:17` or `best:inf`)
-4. Next objective range (e.g. `next:[8,14]` for looking for better solutions with an objective between 8 and 14.) The first number is the current lower bound.
+4. Next objective range (e.g. `next:[8,14]` for looking for better solutions
+   with an objective between 8 and 14.) The first number is the current lower
+   bound.
 5. Info on how the solution/event was achieved.
 
 ## Subsolver statistics
 
 ### Statistics on the internal LPs
+
 You will notice that the LP solver returns only three different states:
+
 1. OPTIMAL: An optimal linear relaxation was found.
-2. DUAL_UNBOUNDED: The linear relaxation is infeasible (because the dual problem is unbounded).
-3. DUAL_FEASIBLE: We have a feasible solution for the dual problem (which gives us at least a lower bound).
+2. DUAL_UNBOUNDED: The linear relaxation is infeasible (because the dual problem
+   is unbounded).
+3. DUAL_FEASIBLE: We have a feasible solution for the dual problem (which gives
+   us at least a lower bound).
 
-Note that the dual simplex algorithm will only give us a solution for the linear relaxation
-if it is optimal.
+Note that the dual simplex algorithm will only give us a solution for the linear
+relaxation if it is optimal.
 
-We can see that the LP in `max_lp` has much more constraints (2498 rows) than the other solvers.
-On top come the cutting planes (cuts) of various types that can be deduced from the LP
-to improve the integrality.
-The numbers of simplex iterations are surprisingly low: Usually simplex can need quite a
-lot of iterations.
+We can see that the LP in `max_lp` has much more constraints (2498 rows) than
+the other solvers. On top come the cutting planes (cuts) of various types that
+can be deduced from the LP to improve the integrality. The numbers of simplex
+iterations are surprisingly low: Usually simplex can need quite a lot of
+iterations.
+
 ```
 Sub-solver search statistics:
   'max_lp':
      LP statistics:
        final dimension: 2498 rows, 5781 columns, 106908 entries with magnitude in [6.155988e-02, 1.000000e+00]
        total number of simplex iterations: 3401
-       num solves: 
+       num solves:
          - #OPTIMAL: 6
          - #DUAL_UNBOUNDED: 1
          - #DUAL_FEASIBLE: 1
@@ -133,7 +154,7 @@ Sub-solver search statistics:
      LP statistics:
        final dimension: 979 rows, 5781 columns, 6456 entries with magnitude in [3.333333e-01, 1.000000e+00]
        total number of simplex iterations: 1369
-       num solves: 
+       num solves:
          - #OPTIMAL: 15
          - #DUAL_FEASIBLE: 51
        managed constraints: 2962
@@ -152,7 +173,7 @@ Sub-solver search statistics:
      LP statistics:
        final dimension: 929 rows, 5781 columns, 6580 entries with magnitude in [3.333333e-01, 1.000000e+00]
        total number of simplex iterations: 1174
-       num solves: 
+       num solves:
          - #OPTIMAL: 14
          - #DUAL_FEASIBLE: 33
        managed constraints: 2923
@@ -171,7 +192,7 @@ Sub-solver search statistics:
      LP statistics:
        final dimension: 929 rows, 5781 columns, 6650 entries with magnitude in [3.333333e-01, 1.000000e+00]
        total number of simplex iterations: 1249
-       num solves: 
+       num solves:
          - #OPTIMAL: 16
          - #DUAL_FEASIBLE: 14
        managed constraints: 2924
@@ -186,31 +207,40 @@ Sub-solver search statistics:
          - 'MIR_1': 87
          - 'MIR_2': 79
 ```
-Which solvers actually found solutions?
-In this case, both solvers do not make use of linear programming.
+
+Which solvers actually found solutions? In this case, both solvers do not make
+use of linear programming.
+
 ```
 Solutions found per subsolver:
   'no_lp': 1
   'quick_restart_no_lp': 2
 ```
-Which solvers were able to improve the lower bounds?
-While the LP-based solver were not able to provide good solutions the solver that
-makes maximal usage of linear programming was able to proof the lower bound.
+
+Which solvers were able to improve the lower bounds? While the LP-based solver
+were not able to provide good solutions the solver that makes maximal usage of
+linear programming was able to proof the lower bound.
+
 ```
 Objective bounds found per subsolver:
   'initial_domain': 1
   'max_lp': 1
 ```
+
 The bounds on individual variables one the other hand were best improved by the
 solvers without linear programming.
+
 ```
 Improving variable bounds shared per subsolver:
   'no_lp': 579
   'quick_restart_no_lp': 1159
 ```
+
 ## Summary
 
-The final `CpSolverResponse`, which is defined and partially commented [here](https://github.com/google/or-tools/blob/49b6301e1e1e231d654d79b6032e79809868a70e/ortools/sat/cp_model.proto#L704).
+The final `CpSolverResponse`, which is defined and partially commented
+[here](https://github.com/google/or-tools/blob/49b6301e1e1e231d654d79b6032e79809868a70e/ortools/sat/cp_model.proto#L704).
+
 ```bash
 CpSolverResponse summary:
 status: OPTIMAL  # We solved the problem to optimality

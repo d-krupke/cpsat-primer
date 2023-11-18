@@ -8,13 +8,20 @@ AlgBench: This script uses the AlgBench package to capture and manage the result
 
 import logging
 import random
+
 # for saving the results easily
 from algbench import Benchmark  # pip install algbench
 
 # for distributing the benchmark on a cluster
 import slurminade  # pip install slurminade
 from _utils import GraphInstanceDb
-from _conf import INSTANCE_DB, EXPERIMENT_DATA, TIME_LIMIT, STRATEGIES, OPTIMALITY_TOLERANCES
+from _conf import (
+    INSTANCE_DB,
+    EXPERIMENT_DATA,
+    TIME_LIMIT,
+    STRATEGIES,
+    OPTIMALITY_TOLERANCES,
+)
 
 instances = GraphInstanceDb(INSTANCE_DB)
 benchmark = Benchmark(EXPERIMENT_DATA)
@@ -34,7 +41,6 @@ slurminade.update_default_configuration(
 )
 slurminade.set_dispatch_limit(1_000)
 # -----------------------------------------
-
 
 
 @slurminade.slurmify()  # makes the function distributable on a cluster
@@ -62,7 +68,9 @@ def load_instance_and_run_solver(instance_name):
     # Will only run if the instance is not already solved.
     for strategy in STRATEGIES:
         for opt_tol in OPTIMALITY_TOLERANCES:
-            benchmark.add(run_solver, instance_name, TIME_LIMIT, strategy, opt_tol, instance)
+            benchmark.add(
+                run_solver, instance_name, TIME_LIMIT, strategy, opt_tol, instance
+            )
 
 
 # --------------------------
@@ -87,4 +95,3 @@ if __name__ == "__main__":
         # compress the results at the end.
         job_ids = batch.flush()
         compress.wait_for(job_ids).distribute()
-        
