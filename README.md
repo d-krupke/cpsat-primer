@@ -1364,7 +1364,7 @@ Consequently, such plots might not provide a clear understanding of the instance
 For the following benchmark on TSP models, I generated 10 random graphs for each number of nodes [25, 50, 75, 100, 150, 200, 250, 300, 350, 400, 450, 500].
 The weights were chosen based on randomly embedding the nodes into a 2D plane and using the Euclidean distances.
 We compare the four models we got to know earlier when taking about the `AddCircuit` constraint.
-You can find the whole experiment [here](./evaluations/tsp/2023-11-18_random_euclidean/).
+You can find the whole experiment [here](./evaluations/tsp/).
 
 | ![Runtime](./evaluations/tsp/2023-11-18_random_euclidean/PUBLIC_DATA/runtime.png) |
 | :-----------------------------------: |
