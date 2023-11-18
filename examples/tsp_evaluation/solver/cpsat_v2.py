@@ -56,6 +56,7 @@ class _SubtourCallback(cp_model.CpSolverSolutionCallback):
         self.best_solution = None
         self.best_objective = float('inf')
 
+
     def on_solution_callback(self):
         solution = self.edge_vars.as_graph(lambda x: self.Value(x))
         connected_components = list(nx.connected_components(solution))
@@ -69,6 +70,7 @@ class _SubtourCallback(cp_model.CpSolverSolutionCallback):
             if obj < self.best_objective:
                 self.best_objective = obj
                 self.best_solution = solution
+                
 
     def has_subtours(self):
         return len(self.subtours) > 0
@@ -84,6 +86,7 @@ class CpSatTspSolverDantzig:
         self._model = cp_model.CpModel()
         self._edge_vars = _EdgeVars(self._model, G)
         self.early_abort = early_abort
+        self.best_bound = 0
 
         for v in G.nodes:
             self._model.Add(sum(x for _,x in self._edge_vars.incident_edges(v))==2)
@@ -107,6 +110,7 @@ class CpSatTspSolverDantzig:
         solver.parameters.relative_gap_limit = opt_tol
         solver.log_callback = lambda s: self.logger.info(s)
         status = solver.Solve(self._model, callback)
+        self.best_bound = max(self.best_bound, solver.BestObjectiveBound())
 
         # The following part is more complex. Here we repeatedly add constraints
         # and solve the model again, until we find a solution without subtours.
@@ -118,18 +122,20 @@ class CpSatTspSolverDantzig:
                     outgoing_edges = sum(x for _,x in self._edge_vars.outgoing_edges(comp))
                     self._model.Add(outgoing_edges >= 2)
                 callback.reset()
+                
                 tour_cost = sum(x*self.graph[u][v]['weight'] for (u,v),x in self._edge_vars)
-                self._model.Add(tour_cost >= int(solver.BestObjectiveBound()))  # help with lower bound
+                self._model.Add(tour_cost >= int(self.best_bound))  # help with lower bound
                 solver.parameters.max_time_in_seconds = remaining_time()
                 if remaining_time() <= 0:
                     # Time limit reached without 
-                    return callback.best_objective, solver.BestObjectiveBound()
+                    return callback.best_objective, self.best_bound
                 status = solver.Solve(self._model, callback)
+                self.best_bound = max(self.best_bound, solver.BestObjectiveBound())
             else:
                 break
         if status in (cp_model.OPTIMAL, cp_model.FEASIBLE):
             self.solution = callback.best_solution
-            return callback.best_objective, solver.BestObjectiveBound()
+            return callback.best_objective, self.best_bound
         # Check that the only reason for stopping before optimality is the time limit.
         assert status == cp_model.UNKNOWN, f'Unexpected status {status}'
-        return callback.best_objective, solver.BestObjectiveBound()
+        return callback.best_objective, self.best_bound
