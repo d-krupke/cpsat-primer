@@ -89,7 +89,7 @@ I personally like to use [Jupyter Notebooks](https://jupyter.org/) for experimen
 
 It's important to note that for CP-SAT usage, you don't need the capabilities of a supercomputer. A standard laptop is often sufficient for solving many problems. The primary requirements are CPU power and memory bandwidth, with a GPU being unnecessary.
 
-In terms of CPU power, the key is balancing the number of cores with the performance of each individual core. CP-SAT leverages all available cores, implementing different strategies on each. However, the effectiveness of these strategies can vary, and it's usually not apparent which one will be most effective. A higher single-core performance means that your primary strategy will operate more swiftly. I recommend a minimum of 4 cores and 16GB of RAM.
+In terms of CPU power, the key is balancing the number of cores with the performance of each individual core. CP-SAT leverages all available cores, implementing different strategies on each. [Depending on the number of cores, CP-SAT will behave differently](https://github.com/google/or-tools/blob/main/ortools/sat/docs/troubleshooting.md#improving-performance-with-multiple-workers). However, the effectiveness of these strategies can vary, and it's usually not apparent which one will be most effective. A higher single-core performance means that your primary strategy will operate more swiftly. I recommend a minimum of 4 cores and 16GB of RAM.
 
 While CP-SAT is quite efficient in terms of memory usage, the amount of available memory can still be a limiting factor in the size of problems you can tackle. When it came to setting up our lab for extensive benchmarking at TU Braunschweig, we faced a choice between desktop machines and more expensive workstations or servers. We chose desktop machines equipped with AMD Ryzen 9 7900 CPUs (Intel would be equally suitable) and 96GB of DDR5 RAM, managed using Slurm. This decision was driven by the fact that the performance gains from higher-priced workstations or servers were relatively marginal compared to their significantly higher costs.
 When on the road, I am often still able to do stuff with my old Intel Macbook Pro from 2018 with an i7 and only 16GB of RAM, but large models will overwhelm it.
@@ -583,7 +583,39 @@ This tells you to use a MIP-solver for problems dominated by the tour constraint
 > just optimizing a tour could be different. The numbers could also look different for differently generated instances.
 > You can find a more detailed benchmark in the later section on proper evaluation.
 
-> :warning: This section could need some more work, as it is relatively important. I just did some experiments, and hastily jotted down some notes here.
+Here is the performance of `AddCircuit` for the TSP on some instances (rounded eucl. distance) from the TSPLIB with a time limit of 90 seconds.
+
+| Instance   |   # nodes |   runtime |   lower bound |   objective |   opt. gap |
+|:----------------|------------:|----------:|--------------:|------------:|----------:|
+| att48           |          48 |      0.47 |         33522 |       33522 |      0    |
+| eil51           |          51 |      0.69 |           426 |         426 |      0    |
+| st70            |          70 |      0.8  |           675 |         675 |      0    |
+| eil76           |          76 |      2.49 |           538 |         538 |      0    |
+| pr76            |          76 |     54.36 |        108159 |      108159 |      0    |
+| kroD100         |         100 |      9.72 |         21294 |       21294 |      0    |
+| kroC100         |         100 |      5.57 |         20749 |       20749 |      0    |
+| kroB100         |         100 |      6.2  |         22141 |       22141 |      0    |
+| kroE100         |         100 |      9.06 |         22049 |       22068 |      0    |
+| kroA100         |         100 |      8.41 |         21282 |       21282 |      0    |
+| eil101          |         101 |      2.24 |           629 |         629 |      0    |
+| lin105          |         105 |      1.37 |         14379 |       14379 |      0    |
+| pr107           |         107 |      1.2  |         44303 |       44303 |      0    |
+| pr124           |         124 |     33.8  |         59009 |       59030 |      0    |
+| pr136           |         136 |     35.98 |         96767 |       96861 |      0    |
+| pr144           |         144 |     21.27 |         58534 |       58571 |      0    |
+| kroB150         |         150 |     58.44 |         26130 |       26130 |      0    |
+| kroA150         |         150 |     90.94 |         26498 |       26977 |      2% |
+| pr152           |         152 |     15.28 |         73682 |       73682 |      0    |
+| kroA200         |         200 |     90.99 |         29209 |       29459 |      1% |
+| kroB200         |         200 |     31.69 |         29437 |       29437 |      0    |
+| pr226           |         226 |     74.61 |         80369 |       80369 |      0    |
+| gil262          |         262 |     91.58 |          2365 |        2416 |      2% |
+| pr264           |         264 |     92.03 |         49121 |       49512 |      1% |
+| pr299           |         299 |     92.18 |         47709 |       49217 |      3% |
+| linhp318        |         318 |     92.45 |         41915 |       52032 |      19% |
+| lin318          |         318 |     92.43 |         41915 |       52025 |      19% |
+| pr439           |         439 |     94.22 |        105610 |      163452 |      35% |
+
 
 ### Array operations
 
@@ -859,6 +891,8 @@ This indicates that at least selecting the right subsolvers that are best fitted
 For example `max_lp` is probably a waste of resources if you know that your model has a terrible linear relaxation.
 In this context I want to recommend having a look on some relaxed solutions when dealing with difficult problems to get a
 better understanding of which parts a solver may struggle with (use a linear programming solver, like Gurobi, for this).
+
+[CP-SAT also has different parallelization tiers based on the number of workers](https://github.com/google/or-tools/blob/main/ortools/sat/docs/troubleshooting.md#improving-performance-with-multiple-workers).
 
 ### Assumptions
 
@@ -1330,9 +1364,9 @@ Consequently, such plots might not provide a clear understanding of the instance
 For the following benchmark on TSP models, I generated 10 random graphs for each number of nodes [25, 50, 75, 100, 150, 200, 250, 300, 350, 400, 450, 500].
 The weights were chosen based on randomly embedding the nodes into a 2D plane and using the Euclidean distances.
 We compare the four models we got to know earlier when taking about the `AddCircuit` constraint.
-You can find the whole experiment [here](./examples/tsp_evaluation/).
+You can find the whole experiment [here](./evaluations/tsp/2023-11-18_random_euclidean/).
 
-| ![Runtime](./examples/tsp_evaluation/PUBLIC_DATA/runtime.png) |
+| ![Runtime](./evaluations/tsp/2023-11-18_random_euclidean/PUBLIC_DATA/runtime.png) |
 | :-----------------------------------: |
 | The runtimes are sigmoidal instead of exponential because the time limit skews the results. The runtime can frequently exceed the time limit, because of expensive model building, etc. Thus, a pure runtime plot says surprisingly little (or is misleading) and can usually be discarded. |
 
@@ -1340,13 +1374,13 @@ To gain a more accurate insight into the capacities of your model, consider plot
 This method requires a well-structured benchmark to yield meaningful statistics for each data point.
 Without this structure, the resulting curve may appear erratic, making it challenging to draw dependable conclusions.
 
-| ![Solved over size](./examples/tsp_evaluation/PUBLIC_DATA/solved_over_size.png) |
+| ![Solved over size](./evaluations/tsp/2023-11-18_random_euclidean/PUBLIC_DATA/solved_over_size.png) |
 | :-----------------------------------: |
 | For each x-value: What are the chances (y-values) that a model of this size (x) can be solved? |
 
 Furthermore, if the pursuit is not limited to optimal solutions but extends to encompass solutions of acceptable quality, the analysis can be expanded.
 One can plot the number of instances that the model solves within a defined optimality tolerance, as demonstrated in the subsequent figure: 
-| ![Solved over size with optimality tolerance](./examples/tsp_evaluation/PUBLIC_DATA/solved_over_size_opt_tol.png) |
+| ![Solved over size with optimality tolerance](./evaluations/tsp/2023-11-18_random_euclidean/PUBLIC_DATA/solved_over_size_opt_tol.png) |
 | :-----------------------------------: |
 | For each x-value: What are the chances (y-values) that a model of this size (x) can be solved to what quality (line style)? |
 
@@ -1358,12 +1392,12 @@ The question of what exactly is a simple or challenging instance, however, is be
 
 Cactus plots are notably prevalent in the evaluation of SAT-solvers, where instance size is a poor indicator of difficulty. A more detailed discussion on this subject can be found in the referenced academic paper: [Benchmarking Solvers, SAT-style by Brain, Davenport, and Griggio](http://www.sc-square.org/CSA/workshop2-papers/RP3-FinalVersion.pdf)
 
-| ![Cactus Plot 1](./examples/tsp_evaluation/PUBLIC_DATA/cactus_plot.png) |
+| ![Cactus Plot 1](./evaluations/tsp/2023-11-18_random_euclidean/PUBLIC_DATA/cactus_plot.png) |
 | :-----------------------------------: |
 | For each x-value: How many (y) of the benchmark instances could have been solved with this time limit (x)? |
 
 Additionally, the analysis can be refined to account for different quality tolerances. This requires either multiple experimental runs or tracking the progression of the lower and upper bounds within the solver. In the context of CP-SAT, for instance, this tracking can be implemented via the Solution Callback, although its activation is may depend on updates to the objective rather than the bounds.
-| ![Cactus Plot 1](./examples/tsp_evaluation/PUBLIC_DATA/cactus_plot_opt_tol.png) |
+| ![Cactus Plot 1](./evaluations/tsp/2023-11-18_random_euclidean/PUBLIC_DATA/cactus_plot_opt_tol.png) |
 | :-----------------------------------: |
 | For each x-value: How many (y) of the benchmark instances could have been solved to a specific quality (line style) with this time limit (x)? |
 
@@ -1371,6 +1405,64 @@ Instead of plotting the number of solved instances, one can also plot the number
 This can be easier to read and additionally indicates the number of instances in the benchmark.
 However, I personally do not have a preference for one or the other, and would recommend using the one that is more intuitive to read for you.
 
+
+
+#### Example of a Case where we have to use a Cactus Plot
+
+Building on our previous discussion of a more straightforward benchmark, let's explore a scenario that introduces unique challenges:
+
+1. The difficulty in aggregating benchmark data due to its limited size and heterogeneous nature.
+2. Notable disparities in results, arising from the differing characteristics of random and real-world instances.
+
+Our second benchmark for the Traveling Salesman Problem leverages the TSPLib, a set of instances that mimic real-world conditions.
+The irregularity in instance sizes makes traditional plotting methods, like graphing the number of solved instances over time, less effective.
+While data smoothing methods, such as rolling averages, are available, they too have their limitations.
+
+| ![Variation in Data](./evaluations/tsp/2023-11-18_tsplib/PUBLIC_DATA/solved_over_size.png) |
+| :-----------------------------------: |
+| Plots may prove inefficient when dealing with high variability, particularly when some data points are underrepresented. |
+
+In contrast, a cactus plot provides a clear and comprehensive perspective of various model performances. An interesting observation is the diminished capability of the "Iterative Dantzig" model in solving instances, and a closer performance alignment between the `AddCircuit` and Gurobi models.
+
+| ![Effective Cactus Plot](./evaluations/tsp/2023-11-18_tsplib/PUBLIC_DATA/cactus_plot_opt_tol.png) |
+| :-----------------------------------: |
+| Cactus plots maintain clarity and relevance, especially in highlighting the performance differences between TSPLib and random instances. |
+
+However, since cactus plots do not offer insights into individual instances, it's beneficial to complement them with a detailed table of results for the specific model you are focusing on. This approach ensures a more nuanced understanding of model performance across varied instances.
+The following table provides the results for the `AddCircuit`-model.
+
+| Instance   |   # nodes |   runtime |   lower bound |   objective |   opt. gap |
+|:----------------|------------:|----------:|--------------:|------------:|----------:|
+| att48           |          48 |      0.47 |         33522 |       33522 |      0    |
+| eil51           |          51 |      0.69 |           426 |         426 |      0    |
+| st70            |          70 |      0.8  |           675 |         675 |      0    |
+| eil76           |          76 |      2.49 |           538 |         538 |      0    |
+| pr76            |          76 |     54.36 |        108159 |      108159 |      0    |
+| kroD100         |         100 |      9.72 |         21294 |       21294 |      0    |
+| kroC100         |         100 |      5.57 |         20749 |       20749 |      0    |
+| kroB100         |         100 |      6.2  |         22141 |       22141 |      0    |
+| kroE100         |         100 |      9.06 |         22049 |       22068 |      0    |
+| kroA100         |         100 |      8.41 |         21282 |       21282 |      0    |
+| eil101          |         101 |      2.24 |           629 |         629 |      0    |
+| lin105          |         105 |      1.37 |         14379 |       14379 |      0    |
+| pr107           |         107 |      1.2  |         44303 |       44303 |      0    |
+| pr124           |         124 |     33.8  |         59009 |       59030 |      0    |
+| pr136           |         136 |     35.98 |         96767 |       96861 |      0    |
+| pr144           |         144 |     21.27 |         58534 |       58571 |      0    |
+| kroB150         |         150 |     58.44 |         26130 |       26130 |      0    |
+| kroA150         |         150 |     90.94 |         26498 |       26977 |      2% |
+| pr152           |         152 |     15.28 |         73682 |       73682 |      0    |
+| kroA200         |         200 |     90.99 |         29209 |       29459 |      1% |
+| kroB200         |         200 |     31.69 |         29437 |       29437 |      0    |
+| pr226           |         226 |     74.61 |         80369 |       80369 |      0    |
+| gil262          |         262 |     91.58 |          2365 |        2416 |      2% |
+| pr264           |         264 |     92.03 |         49121 |       49512 |      1% |
+| pr299           |         299 |     92.18 |         47709 |       49217 |      3% |
+| linhp318        |         318 |     92.45 |         41915 |       52032 |      19% |
+| lin318          |         318 |     92.43 |         41915 |       52025 |      19% |
+| pr439           |         439 |     94.22 |        105610 |      163452 |      35% |
+
+This should highlight that often you need a combination of different benchmarks and plots to get a good understanding of the performance of your model.
 
 > If you want to make an automated decision on what model/solver to use, things can get complicated.
 > Often, there is none that dominates on all instances.
