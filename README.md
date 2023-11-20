@@ -1683,11 +1683,12 @@ determine that our focus should be on instances with 100 to 200 nodes. If you
 encounter fundamental issues with your model at this stage, it’s advisable to
 address these before proceeding to workhorse studies.
 
-> For code profiling, especially if you encounter issues before CP-SAT
-> optimization, [Scalene](https://github.com/plasma-umass/scalene) is a valuable
-> tool. It's effective in pinpointing which parts of your Python code are
-> resource-intensive. My experience has shown Scalene to be particularly helpful
-> for this purpose, among various profiling tools.
+> Occasionally, the primary performance bottleneck in your model may not be
+> CP-SAT but rather the Python segment where the model is being generated. In
+> these instances, identifying the most resource-intensive parts of your Python
+> code is crucial. I have found the profiler
+> [Scalene](https://github.com/plasma-umass/scalene) to be well-suited to
+> investigate and pinpoint these bottlenecks.
 
 #### Workhorse Studies: Conducting In-depth Evaluations
 
