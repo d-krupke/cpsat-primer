@@ -1839,13 +1839,21 @@ following questions:
 
 - Up to which size can we solve TSP instances with the different solvers?
 - Which solver is the fastest?
+- How does the performance change if we increase the optimality tolerance?
 
-For the following benchmark on TSP models, I generated 10 random graphs for each
-number of nodes [25, 50, 75, 100, 150, 200, 250, 300, 350, 400, 450, 500]. The
-weights were chosen based on randomly embedding the nodes into a 2D plane and
-using the Euclidean distances. We compare the four models we got to know earlier
-when taking about the `AddCircuit` constraint. You can find the whole experiment
-[here](./evaluations/tsp/).
+> **Our Benchmarks:** We executed the four solvers with a time limit of 90s and the optimality tolerances [0.1%, 1%, 5%, 10%, 25%] on
+> a random benchmark set and a TSPLIB benchmark set. The random benchmark set
+> consists of 10 instances for each number of nodes [25, 50, 75, 100, 150, 200,
+> 250, 300, 350, 400, 450, 500]. The weights were chosen based on randomly
+> embedding the nodes into a 2D plane and using the Euclidean distances. The TSPLIB
+> benchmark consists of all euclidean instances with less than 500 nodes. It is
+> critical to have a time limit, as otherwise, the benchmarks would take forever.
+> You can find all find the whole experiment [here](./evaluations/tsp/).
+
+Let us first look at the results of the random benchmark, as they are easier to
+interpret. We will then compare them to the TSPLIB benchmark.
+
+#### Random Instances
 
 A common, yet simplistic method to assess a model's performance involves
 plotting its runtime against the size of the instances it processes. However,
@@ -1877,8 +1885,6 @@ tolerance, as demonstrated in the subsequent figure:
 | ![Solved over size with optimality tolerance](./evaluations/tsp/2023-11-18_random_euclidean/PUBLIC_DATA/solved_over_size_opt_tol.png) |
 | :-----------------------------------------------------------------------------------------------------------------------------------: |
 |      For each x-value: What are the chances (y-values) that a model of this size (x) can be solved to what quality (line style)?      |
-
-#### Cactus/Survival Plots
 
 For a comparative analysis across various models against an arbitrary benchmark,
 cactus plots emerge as a potent tool. These plots illustrate the number of
@@ -1918,18 +1924,17 @@ indicates the number of instances in the benchmark. However, I personally do not
 have a preference for one or the other, and would recommend using the one that
 is more intuitive to read for you.
 
-#### Example of a Case where we have to use a Cactus Plot
+#### TSPLIB
 
-Building on our previous discussion of a more straightforward benchmark, let's
-explore a scenario that introduces some challenges:
-
+Our second benchmark for the Traveling Salesman Problem leverages the TSPLIB, a
+set of instances based on real-world data. 
+This will introduce two challenges:
 1. The difficulty in aggregating benchmark data due to its limited size and
    heterogeneous nature.
 2. Notable disparities in results, arising from the differing characteristics of
    random and real-world instances.
 
-Our second benchmark for the Traveling Salesman Problem leverages the TSPLib, a
-set of instances based on real-world data. The irregularity in instance sizes
+The irregularity in instance sizes
 makes traditional plotting methods, like plotting the number of solved instances
 over time, less effective. While data smoothing methods, such as rolling
 averages, are available, they too have their limitations.
@@ -1993,7 +1998,7 @@ and plots to get a good understanding of the performance of your model.
 Benchmarking solvers for NP-hard problems is not as straightforward as it might
 seem at first. There are many pitfalls and often there is no perfect solution.
 On the example of the TSP, we have seen how we can still get some useful results
-on which we can base our decisions.
+and nice plots on which we can base our decisions.
 
 > If you want to make an automated decision on what model/solver to use, things
 > can get complicated. Often, there is none that dominates on all instances. If
