@@ -1614,21 +1614,25 @@ looking for better solvers.
 
 ## Benchmarking your Model
 
-Benchmarking is a vital part of optimizing your model, particularly when
-addressing NP-hard problems. This process isn't straightforward, as these
-problems often contain hidden structural complexities. For example, you might
-find that a large instance of a problem is easier to solve than a smaller one.
-Sometimes, your model might not find a feasible solution within a reasonable
-timeframe, presenting a unique challenge. The unpredictability of solving times
-– whether it's just a second more or an unreachable solution – highlights the
-importance of choosing the right benchmark. The performance of realistic and
-randomly generated instances can vary significantly, making the selection of an
-appropriate benchmark critical.
+## Benchmarking Your Model for Enhanced Performance and Academic Pursuits
 
-> For a more detailed discussion of benchmarking, I recommend reading the book
-> [A Guide to Experimental Algorithmics by Catherine C. McGeoch](https://www.cambridge.org/core/books/guide-to-experimental-algorithmics/CDB0CB718F6250E0806C909E1D3D1082).
+Benchmarking is an essential step if your model isn't yet meeting the performance standards of your application or if you're aiming for an academic publication. This process involves analyzing your model's performance, especially important if your model has adjustable parameters. Running your model on a set of predefined instances (a benchmark) allows you to fine-tune these parameters and compare results. Moreover, if alternative models exist, benchmarking helps you ascertain whether your model truly outperforms these competitors.
+
+Designing an effective benchmark is a nuanced task that demands expertise. This section aims to guide you in creating a reliable benchmark suitable for publication purposes.
+
+Given the breadth and complexity of benchmarking, our focus will be on the basics, particularly through the lens of the Traveling Salesman Problem (TSP), as previously discussed in the `AddCircuit` section. We refer to the different model implementations as 'solvers', and we'll explore four specific types:
+* A solver employing the `AddCircuit` approach.
+* A solver based on the Miller-Tucker-Zemlin formulation.
+* A solver utilizing the Dantzig-Fulkerson-Johnson formulation with iterative addition of subtour constraints until a connected tour is achieved.
+* A Gurobi-based solver applying the Dantzig-Fulkerson-Johnson formulation via Lazy Constraints, which are not supported by CP-SAT.
+
+This example highlights common challenges in benchmarking and strategies to address them. A key obstacle in solving NP-hard problems is the variability in solver performance across different instances. For instance, a solver might easily handle a large instance but struggle with a smaller one, and vice versa. Consequently, it's crucial to ensure that your benchmark encompasses a representative variety of instances. This diversity is vital for drawing meaningful conclusions, such as the maximum size of a TSP instance that can be solved or the most effective solver to use.
+
+For a comprehensive exploration of benchmarking, I highly recommend Catherine C. McGeoch's book, ["A Guide to Experimental Algorithmics"](https://www.cambridge.org/core/books/guide-to-experimental-algorithmics/CDB0CB718F6250E0806C909E1D3D1082), which offers an in-depth discussion on this topic.
 
 ### Exploratory Studies vs. Workhorse Studies
+
+
 
 #### Exploratory Studies: Laying the Groundwork
 
@@ -1644,6 +1648,12 @@ comprehend the problem's dynamics.
   model and evaluation might face. If you have to do hyperparameter tuning, this
   is the time to limit the search space to a reasonable size.
 
+We actually did already do an exploratory study in the `AddCircuit`-section,
+from which we learned that we should focus on instances in the range of
+100 to 200 nodes. Thus, we will not repeat it here. If you notice fundamental
+problems with your model in this phase, you should first fix them before
+continuing with the workhorse studies.
+
 > If you notice your solver struggling before CP-SAT takes over, you can profile
 > your code nicely using [Scalene](https://github.com/plasma-umass/scalene).
 > Model building can be surprisingly expensive with Python, and Scalene will
@@ -1655,7 +1665,9 @@ comprehend the problem's dynamics.
 
 Following the exploratory phase are the workhorse studies, which are more
 structured and rigorous. This stage is crucial for thoroughly testing your
-model's performance and collecting data for your final analysis.
+model's performance and collecting data for your final analysis. This is the
+study you would describe in a scientific paper, while the exploratory studies
+would at most be mentioned as a side note to justify some design decisions.
 
 - **Strategy**: Avoid attempting to create the perfect benchmark initially.
   Start with exploratory studies to understand your model's capabilities and
