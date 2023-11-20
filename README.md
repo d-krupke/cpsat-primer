@@ -1614,8 +1614,6 @@ looking for better solvers.
 
 ## Benchmarking your Model
 
-## Benchmarking Your Model for Enhanced Performance and Academic Pursuits
-
 Benchmarking is an essential step if your model isn't yet meeting the
 performance standards of your application or if you're aiming for an academic
 publication. This process involves analyzing your model's performance,
@@ -1708,51 +1706,75 @@ problem deepens. These studies, unlike exploratory ones, will be the focus of
 your scientific publications, with exploratory studies only referenced for
 justifying certain design decisions.
 
-### Crafting an Effective Benchmark
-
-In an ideal scenario, you would use an existing benchmark that aligns closely
-with your problem. These benchmarks, often found in research papers, may include
-real-world data, offering realistic testing scenarios.
-
-- **Critical Assessment**: Be discerning about the quality of available
-  benchmarks. Read the original research to understand the effort and thought
-  put into creating the benchmark.
-- **Pitfalls to Avoid**:
-  1. **Data Representation**: Real-world data can be scarce, potentially making
-     the benchmark less representative. Consider combining benchmarks or use a
-     large but lower-quality dataset for aggregated analysis and provide a table
-     with the results for the original dataset as validation.
-  2. **Result Aggregation**: Aim for a clear performance metric, but be cautious
-     with benchmarks that have a wide range of problem sizes, as this can
-     complicate the calculation of average performance metrics.
-
-If a suitable benchmark doesn't exist, you'll need to develop one, keeping in
-mind:
-
-1. **Instance Realism**: Random instances may vary significantly in difficulty
-   compared to real-world instances. Aim to mimic real-world complexities in
-   your generated instances.
-2. **Prepare for Aggregation**: To get reliable results, you need to aggregate
-   each data point over multiple instances. Generate your instances according to
-   these needs. If you want to compare your results in dependency of the
-   instance size, directly select a range of instance sizes and create for every
-   size an equal number of instances.
-3. **Benchmark Size**: Ensure your benchmark is sufficiently large to be
-   statistically significant. The number of instances required can depend on the
-   variance in your data.
-4. **Problem Size Range**: Use exploratory experiments to estimate the maximum
-   size your model can efficiently solve.
-5. **Separation of Benchmark Creation and Execution**: Ensure to separate
-   benchmark creation from experiment execution. Do not generate instances in
-   the same process, even if saving them to a file, to avoid a range of errors.
-   Avoid relying on a single pseudo-random generator seed for your entire
-   benchmark, as it can lead to unforeseen, non-deterministic results. It's
-   better to use a bit more storage than compromise the reliability of your
-   experiments.
-
 **Hint: Use the
 [SIGPLAN Empirical Evaluation Checklist](https://raw.githubusercontent.com/SIGPLAN/empirical-evaluation/master/checklist/checklist.pdf)
 if your evaluation has to satisfy academic standards.**
+
+### Designing a Robust Benchmark for Effective Studies
+
+When undertaking both exploratory and workhorse studies, the creation of a
+well-designed benchmark is a critical step. This benchmark is the basis upon
+which you'll test and evaluate your solvers. For exploratory studies, your
+benchmark can start simple and progressively evolve. However, when it comes to
+workhorse studies, the design of your benchmark demands meticulous attention to
+ensure comprehensiveness and reliability.
+
+While exploratory studies also benefit from a thoughtfully designed benchmark—as
+it accelerates insight acquisition—the primary emphasis at this stage is to have
+a functioning benchmark in place. This initial benchmark acts as a springboard,
+providing a foundation for deeper, more detailed analysis in the subsequent
+workhorse studies. The key is to balance the immediacy of starting with a
+benchmark against the long-term goal of refining it for more rigorous
+evaluations.
+
+Ideally, a robust benchmark would consist of a large set of real-world
+instances, closely reflecting the actual performance of your solver. Real-world
+instances, however, are often limited in quantity and may not provide enough
+data for a statistically significant benchmark. In such cases, it's advisable to
+explore existing benchmarks from literature, like the
+[TSPLIB](http://comopt.ifi.uni-heidelberg.de/software/TSPLIB95/) for TSP.
+Leveraging established benchmarks allows for comparison with prior studies, but
+be cautious about their quality, as not all are equally well-constructed. For
+example, TSPLIB's limitations in terms of instance size variation and
+heterogeneity can hinder result aggregation.
+
+Therefore, creating custom instances might be necessary. When doing so, aim for
+enough instances per size category to establish reliable and statistically
+significant data points. For instance, generating 10 instances for each size
+category (e.g., 25, 50, 75, 100, 150, 200, 250, 300, 350, 400, 450, 500) can
+provide a solid basis for analysis. This approach, though modest in scale,
+suffices to illustrate the benchmarking process.
+
+Exercise caution with random instance generators, as they may not accurately
+represent real-world scenarios. For example, randomly generated TSP instances
+might lack collinear points common in real-world situations, like houses aligned
+on straight roads, or they might not replicate real-world clustering patterns.
+To better mimic reality, incorporate real-world data or use diverse generation
+methods to ensure a broader variety of instances. For the TSP, we could for
+example also have sampled from the larger TSPLIB instances.
+
+Consider conducting your evaluation using two distinct benchmarks, especially
+when dealing with different data types. For instance, you might have one
+benchmark derived from real-world data which, although highly relevant, is too
+limited in size to provide robust statistical insights. Simultaneously, you
+could use a second benchmark based on a larger set of random instances, better
+suited for detailed statistical analysis. This dual-benchmark approach allows
+you to demonstrate the consistency and reliability of your results, ensuring
+they are not merely artifacts of a particular dataset's characteristics. It's a
+strategy that adds depth to your evaluation, showcasing the robustness of your
+findings across varied data sources. We will use this approach below, generating
+robust plots from random instances, but also comparing them to real-world
+instances. Mixing the two benchmarks would not be advisable, as the random
+instances would dominate the results.
+
+Lastly, always separate the creation of your benchmark from the execution of
+experiments. Create and save instances in a separate process to minimize errors.
+The goal is to make your evaluation as error-proof as possible, avoiding the
+frustration and wasted effort of basing decisions on flawed data. Be
+particularly cautious with pseudo-random number generators; while theoretically
+deterministic, their use can inadvertently lead to irreproducible results.
+Sharing benchmarks is also more straightforward when you can distribute the
+instances themselves, rather than the code used to generate them.
 
 ### Efficiently Managing Your Benchmarks
 
@@ -1761,19 +1783,46 @@ and research questions. Here are some strategies to keep things organized:
 
 - **Folder Structure**: Maintain a clear folder structure for your experiments,
   with a top-level `evaluations` folder and descriptive subfolders for each
-  experiment.
+  experiment. For our experiment we have the following structure:
+  ```
+  evaluations
+  ├── tsp
+  │   ├── 2023-11-18_random_euclidean
+  │   │   ├── PRIVATE_DATA
+  │   │   │   ├── ... all data for debugging
+  │   │   ├── PUBLIC_DATA
+  │   │   │   ├── ... selected data to share
+  │   │   ├── README.md: Provide a short description of the experiment
+  │   │   ├── 00_generate_instances.py
+  │   │   ├── 01_run_experiments.py
+  │   │   ├── ....
+  │   ├── 2023-11-18_tsplib
+  │   │   ├── PRIVATE_DATA
+  │   │   │   ├── ... all data for debugging
+  │   │   ├── PUBLIC_DATA
+  │   │   │   ├── ... selected data to share
+  │   │   ├── README.md: Provide a short description of the experiment
+  │   │   ├── 01_run_experiments.py
+  │   │   ├── ....
+  ```
 - **Redundancy and Documentation**: While some redundancy is acceptable,
   comprehensive documentation of each experiment is crucial for future
   reference.
-- **Data Storage**: Save all your data, even if it seems insignificant at the
-  time. This ensures you have a comprehensive dataset for later analysis or
-  unexpected inquiries.
 - **Simplified Results**: Keep a streamlined version of your results for easy
   access, especially for plotting and sharing.
+- **Data Storage**: Save all your data, even if it seems insignificant at the
+  time. This ensures you have a comprehensive dataset for later analysis or
+  unexpected inquiries. Because this can become a lot of data, it's advisable to
+  have two folders: One with all data and one with a selection of data that you
+  want to share.
 - **Experiment Flexibility**: Design experiments to be interruptible and
-  extendable, allowing for easy resumption or modification.
+  extendable, allowing for easy resumption or modification. This is especially
+  important for exploratory studies, where you may need to make frequent
+  adjustments. However, if your workhorse study takes a long time to run, you
+  don't want to repeat it from scratch if you want to add a further solver.
 - **Utilizing Technology**: Employ tools like slurm for efficient distribution
-  of experiments across computing clusters, saving time and resources.
+  of experiments across computing clusters, saving time and resources. The
+  faster you have your results, the faster you can act on them.
 
 Due to a lack of tools that exactly fitted my needs I developed
 [AlgBench](https://github.com/d-krupke/AlgBench) to manage the results, and
@@ -1783,7 +1832,20 @@ tools out there, now, especially from the Machine Learning community. Drop me a
 quick mail if you have found some tools you are happy with, and I will take a
 look myself.
 
-### Analyzing your results
+### Analyzing the results
+
+Let us now come to the actual analysis of the results. We will focus on the
+following questions:
+
+- Up to which size can we solve TSP instances with the different solvers?
+- Which solver is the fastest?
+
+For the following benchmark on TSP models, I generated 10 random graphs for each
+number of nodes [25, 50, 75, 100, 150, 200, 250, 300, 350, 400, 450, 500]. The
+weights were chosen based on randomly embedding the nodes into a 2D plane and
+using the Euclidean distances. We compare the four models we got to know earlier
+when taking about the `AddCircuit` constraint. You can find the whole experiment
+[here](./evaluations/tsp/).
 
 A common, yet simplistic method to assess a model's performance involves
 plotting its runtime against the size of the instances it processes. However,
@@ -1792,13 +1854,6 @@ time-limited cutoffs can disproportionately affect the results. Instead of the
 expected exponential curves, you will get skewed sigmoidal curves. Consequently,
 such plots might not provide a clear understanding of the instance sizes your
 model is capable of handling efficiently.
-
-For the following benchmark on TSP models, I generated 10 random graphs for each
-number of nodes [25, 50, 75, 100, 150, 200, 250, 300, 350, 400, 450, 500]. The
-weights were chosen based on randomly embedding the nodes into a 2D plane and
-using the Euclidean distances. We compare the four models we got to know earlier
-when taking about the `AddCircuit` constraint. You can find the whole experiment
-[here](./evaluations/tsp/).
 
 |                                                                                                      ![Runtime](./evaluations/tsp/2023-11-18_random_euclidean/PUBLIC_DATA/runtime.png)                                                                                                      |
 | :-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
@@ -1932,6 +1987,13 @@ provides the results for the `AddCircuit`-model.
 
 This should highlight that often you need a combination of different benchmarks
 and plots to get a good understanding of the performance of your model.
+
+### Conclusion
+
+Benchmarking solvers for NP-hard problems is not as straightforward as it might
+seem at first. There are many pitfalls and often there is no perfect solution.
+On the example of the TSP, we have seen how we can still get some useful results
+on which we can base our decisions.
 
 > If you want to make an automated decision on what model/solver to use, things
 > can get complicated. Often, there is none that dominates on all instances. If
