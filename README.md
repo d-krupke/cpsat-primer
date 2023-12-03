@@ -416,6 +416,16 @@ solver specialized on boolean variables by using a SAT-solver as a base, such as
 CP-SAT, thus, is quite sensible. The resolution of coefficients (in combination
 with boolean variables) is less critical than for variables.
 
+You might question the need for naming variables in your model. While it's true
+that CP-SAT wouldn't need named variables to work (as it could just give them
+automatically generated names), assigning names is incredibly useful for
+debugging purposes. Solver APIs often create an internal representation of your
+model, which is subsequently used by the solver. There are instances where you
+might need to examine this internal model, such as when debugging issues like
+infeasibility. In such scenarios, having named variables can significantly
+enhance the clarity of the internal representation, making your debugging
+process much more manageable.
+
 ### Objectives
 
 Not every problem actually has an objective, sometimes you only need to find a
@@ -1841,14 +1851,15 @@ following questions:
 - Which solver is the fastest?
 - How does the performance change if we increase the optimality tolerance?
 
-> **Our Benchmarks:** We executed the four solvers with a time limit of 90s and the optimality tolerances [0.1%, 1%, 5%, 10%, 25%] on
-> a random benchmark set and a TSPLIB benchmark set. The random benchmark set
-> consists of 10 instances for each number of nodes [25, 50, 75, 100, 150, 200,
-> 250, 300, 350, 400, 450, 500]. The weights were chosen based on randomly
-> embedding the nodes into a 2D plane and using the Euclidean distances. The TSPLIB
-> benchmark consists of all euclidean instances with less than 500 nodes. It is
-> critical to have a time limit, as otherwise, the benchmarks would take forever.
-> You can find all find the whole experiment [here](./evaluations/tsp/).
+> **Our Benchmarks:** We executed the four solvers with a time limit of 90s and
+> the optimality tolerances [0.1%, 1%, 5%, 10%, 25%] on a random benchmark set
+> and a TSPLIB benchmark set. The random benchmark set consists of 10 instances
+> for each number of nodes [25, 50, 75, 100, 150, 200, > 250, 300, 350, 400,
+> 450, 500]. The weights were chosen based on randomly embedding the nodes into
+> a 2D plane and using the Euclidean distances. The TSPLIB benchmark consists of
+> all euclidean instances with less than 500 nodes. It is critical to have a
+> time limit, as otherwise, the benchmarks would take forever. You can find all
+> find the whole experiment [here](./evaluations/tsp/).
 
 Let us first look at the results of the random benchmark, as they are easier to
 interpret. We will then compare them to the TSPLIB benchmark.
@@ -1927,17 +1938,17 @@ is more intuitive to read for you.
 #### TSPLIB
 
 Our second benchmark for the Traveling Salesman Problem leverages the TSPLIB, a
-set of instances based on real-world data. 
-This will introduce two challenges:
+set of instances based on real-world data. This will introduce two challenges:
+
 1. The difficulty in aggregating benchmark data due to its limited size and
    heterogeneous nature.
 2. Notable disparities in results, arising from the differing characteristics of
    random and real-world instances.
 
-The irregularity in instance sizes
-makes traditional plotting methods, like plotting the number of solved instances
-over time, less effective. While data smoothing methods, such as rolling
-averages, are available, they too have their limitations.
+The irregularity in instance sizes makes traditional plotting methods, like
+plotting the number of solved instances over time, less effective. While data
+smoothing methods, such as rolling averages, are available, they too have their
+limitations.
 
 |                   ![Variation in Data](./evaluations/tsp/2023-11-18_tsplib/PUBLIC_DATA/solved_over_size.png)                   |
 | :----------------------------------------------------------------------------------------------------------------------------: |
