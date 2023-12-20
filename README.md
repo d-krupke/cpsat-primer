@@ -1368,7 +1368,21 @@ gap_integral: 11.2892
 The log is actually very interesting to understand CP-SAT, but also to learn
 about the optimization problem at hand. It gives you a lot of details on, e.g.,
 how many variables could be directly removed or which techniques contributed to
-lower and upper bounds the most. We take a more detailed look onto the log
+lower and upper bounds the most.
+
+As the log can be quite overwhelming, I developed a small tool to visualize and
+comment the log. You can just copy and paste your log into it, and it will
+automatically show you the most important details. Also be sure to check
+out the examples in it.
+
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://cpsat-log-analyzer.streamlit.app/) [![d-krupke - CP-SAT Log Analyzer](https://img.shields.io/badge/d--krupke-CP--SAT%20Log%20Analyzer-blue?style=for-the-badge&logo=github)](https://github.com/d-krupke/CP-SAT-Log-Analyzer)
+
+
+| ![Search Progress](./images/search_progress.png) |
+| :-------------------------: |
+| A plot of the search progress over time as visualized by the log analyzer by utilizing the information from the log (a different log than displayed above). Such a plot helps you understand what part of your problem is more challenging: Finding a good solution or proving its quality. Based on that you can implement respective countermeasures. |
+
+You can also find an older explanation of the log
 [here](./understanding_the_log.md).
 
 ### Decision Strategy
