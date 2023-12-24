@@ -1,0 +1,13 @@
+# YAML 1.2
+---
+cff-version: "1.1.0"
+message: "You are free to use material from this primer. If so, please cite it using this metadata."
+title: "CP-SAT Primer"
+abstract: "Using and Understanding ortools' CP-SAT: A Primer and Cheat Sheet"
+authors:
+  - affiliation: "TU Braunschweig"
+    family-names: Krupke
+    given-names: Dominik
+    orcid: "https://orcid.org/0000-0003-1573-3496"
+license: CC-BY-4.0
+repository-code: "https://github.com/d-krupke/cpsat-primer"
