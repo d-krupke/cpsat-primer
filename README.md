@@ -1112,7 +1112,7 @@ If you want to use more LNS-worker, you can specify
 the different cores should be used by configuring/reordering.
 
 ```
-solver.parameters.subsolvers = ["default_lp", "fixed", "less_encoding", "no_lp", "max_lp", "pseudo_costs", "reduced_costs", "quick_restart", "quick_restart_no_lp", "lb_tree_search", "probing"]
+solver.parameters.subsolvers.extend(["default_lp", "fixed", "less_encoding", "no_lp", "max_lp", "pseudo_costs", "reduced_costs", "quick_restart", "quick_restart_no_lp", "lb_tree_search", "probing"])
 ```
 
 This can be interesting, e.g., if you are using CP-SAT especially because the
