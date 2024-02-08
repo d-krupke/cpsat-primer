@@ -1,8 +1,8 @@
 # plot the solution
-import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
 from ._instance import Instance, Solution
+
 
 def plot_solution(ax, instance: Instance, solution: Solution):
     ax.set_xlim(0, instance.container.width)

@@ -819,11 +819,15 @@ model.AddInverse([x, y, z], [z, y, x])
 
 ### Interval Variables and No-Overlap Constraints
 
-A special case of variables are the interval variables, that allow to model intervals, i.e., a span of some length with a start and an end.
-There are fixed length intervals, flexible length intervals, and optional intervals to model various use cases.
-These intervals become interesting in combination with the no-overlap constraints for 1D and 2D.
-We can use this for geometric packing problems, scheduling problems, and many other problems, where we have to prevent overlaps between intervals.
-These variables are special because they are actually not a variable, but a container that bounds separately defined start, length, and end variables.
+A special case of variables are the interval variables, that allow to model
+intervals, i.e., a span of some length with a start and an end. There are fixed
+length intervals, flexible length intervals, and optional intervals to model
+various use cases. These intervals become interesting in combination with the
+no-overlap constraints for 1D and 2D. We can use this for geometric packing
+problems, scheduling problems, and many other problems, where we have to prevent
+overlaps between intervals. These variables are special because they are
+actually not a variable, but a container that bounds separately defined start,
+length, and end variables.
 
 ```python
 from ortools.sat.python import cp_model
@@ -843,9 +847,11 @@ optional_fixed_interval = model.NewOptionalFixedSizeIntervalVar(start=start_var,
 optional_interval = model.NewOptionalIntervalVar(start=start_var, size=length_var, end=end_var, is_present=is_present_var, name='optional_interval')
 ```
 
-There are now the two no-overlap constraints for 1D and 2D that can be used to prevent overlaps between intervals.
-The 1D no-overlap constraint is used to prevent overlaps between intervals on a single dimension, e.g., time.
-The 2D no-overlap constraint is used to prevent overlaps between intervals on two dimensions, e.g., time and resources or for packing rectangles.
+There are now the two no-overlap constraints for 1D and 2D that can be used to
+prevent overlaps between intervals. The 1D no-overlap constraint is used to
+prevent overlaps between intervals on a single dimension, e.g., time. The 2D
+no-overlap constraint is used to prevent overlaps between intervals on two
+dimensions, e.g., time and resources or for packing rectangles.
 
 ```python
 # 1D no-overlap constraint
@@ -854,8 +860,10 @@ model.AddNoOverlap([... interval vars...])
 model.AddNoOverlap2D([... interval vars first dimension...], [... interval vars second dimension...])
 ```
 
-Let us take a quick look on how we can use this to check if we can pack a set of rectangles into a container without overlaps.
-This can be an interesting problem in logistics, where we have to pack boxes into a container, or in cutting stock problems, where we have to cut pieces from a larger piece of material.
+Let us take a quick look on how we can use this to check if we can pack a set of
+rectangles into a container without overlaps. This can be an interesting problem
+in logistics, where we have to pack boxes into a container, or in cutting stock
+problems, where we have to cut pieces from a larger piece of material.
 
 ```python
 class RectanglePackingWithoutRotationsModel:
@@ -921,14 +929,15 @@ class RectanglePackingWithoutRotationsModel:
 
     def is_infeasible(self):
         return self.status == cp_model.INFEASIBLE
-    
+
     def is_feasible(self):
         return self.status in (cp_model.OPTIMAL, cp_model.FEASIBLE)
 ```
 
-The optional intervals with flexible length allow us to even model rotations and instead of just checking if
-a feasible packing exists, finding the largest possible packing. The code may look a bit more complex, but
-considering the complexity of the problem, it is still quite simple.
+The optional intervals with flexible length allow us to even model rotations and
+instead of just checking if a feasible packing exists, finding the largest
+possible packing. The code may look a bit more complex, but considering the
+complexity of the problem, it is still quite simple.
 
 ```python
 class RectangleKnapsackWithRotationsModel:
@@ -1055,35 +1064,55 @@ class RectangleKnapsackWithRotationsModel:
 
 ```
 
-| ![./images/dense_packing.png](./images/dense_packing.png) |
-| :--: |
+|                                               ![./images/dense_packing.png](./images/dense_packing.png)                                                |
+| :----------------------------------------------------------------------------------------------------------------------------------------------------: |
 | This dense packing was found by CP-SAT in less than 0.3s, which is quite impressive and seems to be more efficient than a naive Gurobi implementation. |
 
+You can find the full code here: | Problem Variant | Code | | :--: | :--: | |
+Deciding feasibility of packing rectangles without rotations |
+[./evaluations/packing/solver/packing_wo_rotations.py](./evaluations/packing/solver/packing_wo_rotations.py)
+| | Finding the largest possible packing of rectangles without rotations |
+[./evaluations/packing/solver/knapsack_wo_rotations.py](./evaluations/packing/solver/knapsack_wo_rotations.py)
+| | Deciding feasibility of packing rectangles with rotations |
+[./evaluations/packing/solver/packing_with_rotations.py](./evaluations/packing/solver/packing_with_rotations.py)
+| | Finding the largest possible packing of rectangles with rotations |
+[./evaluations/packing/solver/knapsack_with_rotations.py](./evaluations/packing/solver/knapsack_with_rotations.py)
+|
 
-You can find the full code here:
-| Problem Variant | Code |
-| :--: | :--: |
-| Deciding feasibility of packing rectangles without rotations | [./evaluations/packing/solver/packing_wo_rotations.py](./evaluations/packing/solver/packing_wo_rotations.py) |
-| Finding the largest possible packing of rectangles without rotations | [./evaluations/packing/solver/knapsack_wo_rotations.py](./evaluations/packing/solver/knapsack_wo_rotations.py) |
-| Deciding feasibility of packing rectangles with rotations | [./evaluations/packing/solver/packing_with_rotations.py](./evaluations/packing/solver/packing_with_rotations.py) |
-| Finding the largest possible packing of rectangles with rotations | [./evaluations/packing/solver/knapsack_with_rotations.py](./evaluations/packing/solver/knapsack_with_rotations.py) |
+CP-SAT is good at finding a feasible packing, but incapable of proofing
+infeasibility in most cases. When using the knapsack variant, it can still pack
+most of the rectangles even for the larger instances.
+
+|                                           ![./images/packing_plot_solved.png](./images/packing_plot_solved.png)                                            |          ![./images/packing_percentage.png](./images/packing_percentage.png)          |
+| :--------------------------------------------------------------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------: |
+| The number of solved instances for the packing problem. Rotations make things slightly more difficult. None of the used instances were proofed infeasible. | However, CP-SAT is able to pack nearly all rectangles even for the largest instances. |
 
 #### Resolution and Parameters
 
-In earlier versions of CP-SAT, the performance of no-overlap constraints was greatly influenced by the resolution. This impact has evolved, yet it remains somewhat inconsistent. In a notebook example, I explored how resolution affects the execution time of the no-overlap constraint in versions 9.3 and 9.8 of CP-SAT. For version 9.3, there is a noticeable increase in execution time as the resolution grows. Conversely, in version 9.8, execution time actually reduces when the resolution is higher, a finding supported by repeated tests. This unexpected behavior suggests that the performance of CP-SAT regarding no-overlap constraints has not stabilized and may continue to vary in upcoming versions.
+In earlier versions of CP-SAT, the performance of no-overlap constraints was
+greatly influenced by the resolution. This impact has evolved, yet it remains
+somewhat inconsistent. In a notebook example, I explored how resolution affects
+the execution time of the no-overlap constraint in versions 9.3 and 9.8 of
+CP-SAT. For version 9.3, there is a noticeable increase in execution time as the
+resolution grows. Conversely, in version 9.8, execution time actually reduces
+when the resolution is higher, a finding supported by repeated tests. This
+unexpected behavior suggests that the performance of CP-SAT regarding no-overlap
+constraints has not stabilized and may continue to vary in upcoming versions.
 
 | Resolution | Runtime (CP-SAT 9.3) | Runtime (CP-SAT 9.8) |
-| ---------- | ------- | ------- |
-| 1x         | 0.02s   | 0.03s  |
-| 10x        | 0.7s    | 0.02s | 
-| 100x       | 7.6s    | 1.1s |
-| 1000x      | 75s     | 40.3s |
-| 10_000x    | >15min  | 0.4s |
+| ---------- | -------------------- | -------------------- |
+| 1x         | 0.02s                | 0.03s                |
+| 10x        | 0.7s                 | 0.02s                |
+| 100x       | 7.6s                 | 1.1s                 |
+| 1000x      | 75s                  | 40.3s                |
+| 10_000x    | >15min               | 0.4s                 |
 
-[This notebook](./examples/add_no_overlap_2d.ipynb) was used to create the table above.
+[This notebook](./examples/add_no_overlap_2d.ipynb) was used to create the table
+above.
 
 However, while playing around with less documented features, I noticed that the
-performance for the older version can be improved drastically with the following parameters:
+performance for the older version can be improved drastically with the following
+parameters:
 
 ```python
 solver.parameters.use_energetic_reasoning_in_no_overlap_2d = True
@@ -1091,9 +1120,8 @@ solver.parameters.use_timetabling_in_no_overlap_2d = True
 solver.parameters.use_pairwise_reasoning_in_no_overlap_2d = True
 ```
 
-With the latest version of CP-SAT, I did not notice a significant difference in performance when using these parameters.
-
-
+With the latest version of CP-SAT, I did not notice a significant difference in
+performance when using these parameters.
 
 ### There is more
 
@@ -1540,14 +1568,14 @@ lower and upper bounds the most.
 
 As the log can be quite overwhelming, I developed a small tool to visualize and
 comment the log. You can just copy and paste your log into it, and it will
-automatically show you the most important details. Also be sure to check
-out the examples in it.
+automatically show you the most important details. Also be sure to check out the
+examples in it.
 
-[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://cpsat-log-analyzer.streamlit.app/) [![d-krupke - CP-SAT Log Analyzer](https://img.shields.io/badge/d--krupke-CP--SAT%20Log%20Analyzer-blue?style=for-the-badge&logo=github)](https://github.com/d-krupke/CP-SAT-Log-Analyzer)
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://cpsat-log-analyzer.streamlit.app/)
+[![d-krupke - CP-SAT Log Analyzer](https://img.shields.io/badge/d--krupke-CP--SAT%20Log%20Analyzer-blue?style=for-the-badge&logo=github)](https://github.com/d-krupke/CP-SAT-Log-Analyzer)
 
-
-| ![Search Progress](./images/search_progress.png) |
-| :-------------------------: |
+|                                                                                                                                                    ![Search Progress](./images/search_progress.png)                                                                                                                                                     |
+| :-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
 | A plot of the search progress over time as visualized by the log analyzer by utilizing the information from the log (a different log than displayed above). Such a plot helps you understand what part of your problem is more challenging: Finding a good solution or proving its quality. Based on that you can implement respective countermeasures. |
 
 You can also find an older explanation of the log
@@ -2026,7 +2054,7 @@ following questions:
 > **Our Benchmarks:** We executed the four solvers with a time limit of 90s and
 > the optimality tolerances [0.1%, 1%, 5%, 10%, 25%] on a random benchmark set
 > and a TSPLIB benchmark set. The random benchmark set consists of 10 instances
-> for each number of nodes [25, 50, 75, 100, 150, 200, > 250, 300, 350, 400,
+> for each number of nodes [25, 50, 75, 100, 150, 200, > 250, 300, 350, 400, >
 > 450, 500]. The weights were chosen based on randomly embedding the nodes into
 > a 2D plane and using the Euclidean distances. The TSPLIB benchmark consists of
 > all euclidean instances with less than 500 nodes. It is critical to have a

@@ -2,6 +2,7 @@ from ._instance import Instance, Solution, Placement
 from ortools.sat.python import cp_model
 from typing import Optional
 
+
 class RectanglePackingWithoutRotationsModel:
     def __init__(self, instance: Instance) -> None:
         self.instance = instance
@@ -65,6 +66,6 @@ class RectanglePackingWithoutRotationsModel:
 
     def is_infeasible(self):
         return self.status == cp_model.INFEASIBLE
-    
+
     def is_feasible(self):
         return self.status in (cp_model.OPTIMAL, cp_model.FEASIBLE)

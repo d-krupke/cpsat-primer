@@ -3,7 +3,7 @@ This module implements various rectangle packing models with CP-SAT using interv
 It is surprisingly performant.
 """
 
-from ._instance import Instance,Rectangle, Placement, Solution, Container
+from ._instance import Instance, Rectangle, Placement, Solution, Container
 from .packing_wo_rotations import RectanglePackingWithoutRotationsModel
 from .packing_with_rotations import RectanglePackingWithRotationsModel
 from .knapsack_with_rotations import RectangleKnapsackWithRotationsModel
@@ -20,5 +20,5 @@ __all__ = [
     "RectanglePackingWithRotationsModel",
     "RectangleKnapsackWithRotationsModel",
     "RectangleKnapsackWithoutRotationsModel",
-    "plot_solution"
+    "plot_solution",
 ]

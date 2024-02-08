@@ -1,1 +1,30 @@
-{"container":{"width":200,"height":200},"rectangles":[{"width":14,"height":50,"value":1},{"width":67,"height":13,"value":1},{"width":51,"height":57,"value":1},{"width":68,"height":44,"value":1},{"width":38,"height":37,"value":1},{"width":29,"height":96,"value":1},{"width":22,"height":13,"value":1},{"width":46,"height":75,"value":1},{"width":52,"height":59,"value":1},{"width":33,"height":40,"value":1},{"width":40,"height":22,"value":1},{"width":21,"height":18,"value":1},{"width":19,"height":40,"value":1},{"width":54,"height":22,"value":1},{"width":47,"height":24,"value":1},{"width":21,"height":67,"value":1},{"width":13,"height":10,"value":1},{"width":97,"height":36,"value":1},{"width":35,"height":67,"value":1},{"width":17,"height":67,"value":1},{"width":30,"height":43,"value":1},{"width":81,"height":45,"value":1},{"width":16,"height":31,"value":1},{"width":51,"height":24,"value":1},{"width":51,"height":14,"value":1}]}
+{
+  "container": { "width": 200, "height": 200 },
+  "rectangles": [
+    { "width": 14, "height": 50, "value": 1 },
+    { "width": 67, "height": 13, "value": 1 },
+    { "width": 51, "height": 57, "value": 1 },
+    { "width": 68, "height": 44, "value": 1 },
+    { "width": 38, "height": 37, "value": 1 },
+    { "width": 29, "height": 96, "value": 1 },
+    { "width": 22, "height": 13, "value": 1 },
+    { "width": 46, "height": 75, "value": 1 },
+    { "width": 52, "height": 59, "value": 1 },
+    { "width": 33, "height": 40, "value": 1 },
+    { "width": 40, "height": 22, "value": 1 },
+    { "width": 21, "height": 18, "value": 1 },
+    { "width": 19, "height": 40, "value": 1 },
+    { "width": 54, "height": 22, "value": 1 },
+    { "width": 47, "height": 24, "value": 1 },
+    { "width": 21, "height": 67, "value": 1 },
+    { "width": 13, "height": 10, "value": 1 },
+    { "width": 97, "height": 36, "value": 1 },
+    { "width": 35, "height": 67, "value": 1 },
+    { "width": 17, "height": 67, "value": 1 },
+    { "width": 30, "height": 43, "value": 1 },
+    { "width": 81, "height": 45, "value": 1 },
+    { "width": 16, "height": 31, "value": 1 },
+    { "width": 51, "height": 24, "value": 1 },
+    { "width": 51, "height": 14, "value": 1 }
+  ]
+}

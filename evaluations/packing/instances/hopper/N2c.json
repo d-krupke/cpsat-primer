@@ -1,1 +1,30 @@
-{"container":{"width":200,"height":200},"rectangles":[{"width":34,"height":79,"value":1},{"width":79,"height":30,"value":1},{"width":24,"height":112,"value":1},{"width":63,"height":71,"value":1},{"width":47,"height":49,"value":1},{"width":32,"height":86,"value":1},{"width":52,"height":41,"value":1},{"width":11,"height":69,"value":1},{"width":81,"height":37,"value":1},{"width":76,"height":28,"value":1},{"width":75,"height":47,"value":1},{"width":14,"height":38,"value":1},{"width":24,"height":24,"value":1},{"width":22,"height":37,"value":1},{"width":89,"height":13,"value":1},{"width":77,"height":24,"value":1},{"width":12,"height":47,"value":1},{"width":4,"height":9,"value":1},{"width":10,"height":46,"value":1},{"width":30,"height":7,"value":1},{"width":49,"height":27,"value":1},{"width":26,"height":30,"value":1},{"width":4,"height":20,"value":1},{"width":99,"height":23,"value":1},{"width":53,"height":10,"value":1}]}
+{
+  "container": { "width": 200, "height": 200 },
+  "rectangles": [
+    { "width": 34, "height": 79, "value": 1 },
+    { "width": 79, "height": 30, "value": 1 },
+    { "width": 24, "height": 112, "value": 1 },
+    { "width": 63, "height": 71, "value": 1 },
+    { "width": 47, "height": 49, "value": 1 },
+    { "width": 32, "height": 86, "value": 1 },
+    { "width": 52, "height": 41, "value": 1 },
+    { "width": 11, "height": 69, "value": 1 },
+    { "width": 81, "height": 37, "value": 1 },
+    { "width": 76, "height": 28, "value": 1 },
+    { "width": 75, "height": 47, "value": 1 },
+    { "width": 14, "height": 38, "value": 1 },
+    { "width": 24, "height": 24, "value": 1 },
+    { "width": 22, "height": 37, "value": 1 },
+    { "width": 89, "height": 13, "value": 1 },
+    { "width": 77, "height": 24, "value": 1 },
+    { "width": 12, "height": 47, "value": 1 },
+    { "width": 4, "height": 9, "value": 1 },
+    { "width": 10, "height": 46, "value": 1 },
+    { "width": 30, "height": 7, "value": 1 },
+    { "width": 49, "height": 27, "value": 1 },
+    { "width": 26, "height": 30, "value": 1 },
+    { "width": 4, "height": 20, "value": 1 },
+    { "width": 99, "height": 23, "value": 1 },
+    { "width": 53, "height": 10, "value": 1 }
+  ]
+}

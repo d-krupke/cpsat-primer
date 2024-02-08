@@ -1,1 +1,22 @@
-{"container":{"width":200,"height":200},"rectangles":[{"width":29,"height":137,"value":1},{"width":11,"height":31,"value":1},{"width":75,"height":22,"value":1},{"width":22,"height":107,"value":1},{"width":63,"height":132,"value":1},{"width":44,"height":9,"value":1},{"width":31,"height":27,"value":1},{"width":55,"height":18,"value":1},{"width":28,"height":74,"value":1},{"width":58,"height":58,"value":1},{"width":80,"height":16,"value":1},{"width":70,"height":14,"value":1},{"width":38,"height":36,"value":1},{"width":24,"height":27,"value":1},{"width":39,"height":68,"value":1},{"width":99,"height":22,"value":1},{"width":161,"height":41,"value":1}]}
+{
+  "container": { "width": 200, "height": 200 },
+  "rectangles": [
+    { "width": 29, "height": 137, "value": 1 },
+    { "width": 11, "height": 31, "value": 1 },
+    { "width": 75, "height": 22, "value": 1 },
+    { "width": 22, "height": 107, "value": 1 },
+    { "width": 63, "height": 132, "value": 1 },
+    { "width": 44, "height": 9, "value": 1 },
+    { "width": 31, "height": 27, "value": 1 },
+    { "width": 55, "height": 18, "value": 1 },
+    { "width": 28, "height": 74, "value": 1 },
+    { "width": 58, "height": 58, "value": 1 },
+    { "width": 80, "height": 16, "value": 1 },
+    { "width": 70, "height": 14, "value": 1 },
+    { "width": 38, "height": 36, "value": 1 },
+    { "width": 24, "height": 27, "value": 1 },
+    { "width": 39, "height": 68, "value": 1 },
+    { "width": 99, "height": 22, "value": 1 },
+    { "width": 161, "height": 41, "value": 1 }
+  ]
+}

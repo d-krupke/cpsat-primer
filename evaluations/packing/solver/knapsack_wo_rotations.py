@@ -3,8 +3,6 @@ from ortools.sat.python import cp_model
 from typing import Optional
 
 
-
-
 class RectangleKnapsackWithoutRotationsModel:
     def __init__(self, instance: Instance) -> None:
         self.instance = instance
@@ -85,4 +83,3 @@ class RectangleKnapsackWithoutRotationsModel:
         self.upper_bound = solver.BestObjectiveBound()
         self.objective_value = solver.ObjectiveValue()
         return self.status
-
