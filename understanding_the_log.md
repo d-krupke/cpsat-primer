@@ -1,11 +1,12 @@
 # Understanding the CP-SAT log
 
-> As the log can be quite overwhelming, I developed a small tool to visualize and
-> comment the log. You can just copy and paste your log into it, and it will
-> automatically show you the most important details. Also be sure to check
-> out the examples in it.
+> As the log can be quite overwhelming, I developed a small tool to visualize
+> and comment the log. You can just copy and paste your log into it, and it will
+> automatically show you the most important details. Also be sure to check out
+> the examples in it.
 
-[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://cpsat-log-analyzer.streamlit.app/) [![d-krupke - CP-SAT Log Analyzer](https://img.shields.io/badge/d--krupke-CP--SAT%20Log%20Analyzer-blue?style=for-the-badge&logo=github)](https://github.com/d-krupke/CP-SAT-Log-Analyzer)
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://cpsat-log-analyzer.streamlit.app/)
+[![d-krupke - CP-SAT Log Analyzer](https://img.shields.io/badge/d--krupke-CP--SAT%20Log%20Analyzer-blue?style=for-the-badge&logo=github)](https://github.com/d-krupke/CP-SAT-Log-Analyzer)
 
 The text below is partially deprecated and supposed to be completely replaced by
 the tool, which will have extensive documentation.

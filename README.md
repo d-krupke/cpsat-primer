@@ -1083,9 +1083,13 @@ CP-SAT is good at finding a feasible packing, but incapable of proofing
 infeasibility in most cases. When using the knapsack variant, it can still pack
 most of the rectangles even for the larger instances.
 
-|                                           ![./images/packing_plot_solved.png](./images/packing_plot_solved.png)                                            |          ![./images/packing_percentage.png](./images/packing_percentage.png)          |
-| :--------------------------------------------------------------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------: |
-| The number of solved instances for the packing problem. Rotations make things slightly more difficult. None of the used instances were proofed infeasible. | However, CP-SAT is able to pack nearly all rectangles even for the largest instances. |
+|                                           ![./images/packing_plot_solved.png](./images/packing_plot_solved.png)                                            |
+| :--------------------------------------------------------------------------------------------------------------------------------------------------------: |
+| The number of solved instances for the packing problem. Rotations make things slightly more difficult. None of the used instances were proofed infeasible. |
+
+|          ![./images/packing_percentage.png](./images/packing_percentage.png)          |
+| :-----------------------------------------------------------------------------------: |
+| However, CP-SAT is able to pack nearly all rectangles even for the largest instances. |
 
 #### Resolution and Parameters
 
@@ -2054,7 +2058,7 @@ following questions:
 > **Our Benchmarks:** We executed the four solvers with a time limit of 90s and
 > the optimality tolerances [0.1%, 1%, 5%, 10%, 25%] on a random benchmark set
 > and a TSPLIB benchmark set. The random benchmark set consists of 10 instances
-> for each number of nodes [25, 50, 75, 100, 150, 200, > 250, 300, 350, 400, >
+> for each number of nodes [25, 50, 75, 100, 150, 200, > 250, 300, 350, 400, > >
 > 450, 500]. The weights were chosen based on randomly embedding the nodes into
 > a 2D plane and using the Euclidean distances. The TSPLIB benchmark consists of
 > all euclidean instances with less than 500 nodes. It is critical to have a
