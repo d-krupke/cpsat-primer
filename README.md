@@ -1071,21 +1071,25 @@ You can find the full code here:
 #### Resolution and Parameters
 
 In previous versions of CP-SAT, the resolution seemed to have a big impact on the performance of the no-overlap constraints.
-This does not seem to be the case anymore, but I still recommend to not increase the resolution too much.
-In [this notebook](./examples/add_no_overlap_2d.ipynb) I played around with an earlier version of CP-SAT and measured the
-impact of the resolution for a small rectangle packing problem. These are the results:
+This behavior has changed but is still not completely stable.
+In [this notebook](./examples/add_no_overlap_2d.ipynb), I measured the influence of the resolution on the runtime of the no-overlap constraint for CP-SAT 9.3 and 9.8.
+For CP-SAT 9.3, the runtime increases significantly with the resolution, while for CP-SAT 9.8, the runtime decreases at a higher resolution (repeated measurements showed similar results).
+This is quite surprising, and indicate that the performance is not yet stable and might change with future versions.
 
-| Resolution | Runtime |
-| ---------- | ------- |
-| 1x         | 0.02s   |
-| 10x        | 0.7s    |
-| 100x       | 7.6s    |
-| 1000x      | 75s     |
-| 10_000x    | >15min  |
+In earlier versions of CP-SAT, the performance of no-overlap constraints was greatly influenced by the resolution. This impact has evolved, yet it remains somewhat inconsistent. In a notebook example, I explored how resolution affects the execution time of the no-overlap constraint in versions 9.3 and 9.8 of CP-SAT. For version 9.3, there is a noticeable increase in execution time as the resolution grows. Conversely, in version 9.8, execution time actually reduces when the resolution is higher, a finding supported by repeated tests. This unexpected behavior suggests that the performance of CP-SAT regarding no-overlap constraints has not stabilized and may continue to vary in upcoming versions.
 
-While the solutions won't change when we just multiply all values, the runtime increased significantly.
+| Resolution | Runtime (CP-SAT 9.3) | Runtime (CP-SAT 9.8) |
+| ---------- | ------- | ------- |
+| 1x         | 0.02s   | 0.03s  |
+| 10x        | 0.7s    | 0.02s | 
+| 100x       | 7.6s    | 1.1s |
+| 1000x      | 75s     | 40.3s |
+| 10_000x    | >15min  | 0.4s |
+
+[This notebook](./examples/add_no_overlap_2d.ipynb) was used to create the table above.
+
 However, while playing around with less documented features, I noticed that the
-performance can be improved drastically with the following parameters:
+performance for the older version can be improved drastically with the following parameters:
 
 ```python
 solver.parameters.use_energetic_reasoning_in_no_overlap_2d = True
