@@ -1068,16 +1068,14 @@ class RectangleKnapsackWithRotationsModel:
 | :----------------------------------------------------------------------------------------------------------------------------------------------------: |
 | This dense packing was found by CP-SAT in less than 0.3s, which is quite impressive and seems to be more efficient than a naive Gurobi implementation. |
 
-You can find the full code here: | Problem Variant | Code | | :--: | :--: | |
-Deciding feasibility of packing rectangles without rotations |
-[./evaluations/packing/solver/packing_wo_rotations.py](./evaluations/packing/solver/packing_wo_rotations.py)
-| | Finding the largest possible packing of rectangles without rotations |
-[./evaluations/packing/solver/knapsack_wo_rotations.py](./evaluations/packing/solver/knapsack_wo_rotations.py)
-| | Deciding feasibility of packing rectangles with rotations |
-[./evaluations/packing/solver/packing_with_rotations.py](./evaluations/packing/solver/packing_with_rotations.py)
-| | Finding the largest possible packing of rectangles with rotations |
-[./evaluations/packing/solver/knapsack_with_rotations.py](./evaluations/packing/solver/knapsack_with_rotations.py)
-|
+You can find the full code here:
+
+|                           Problem Variant                            |                                                        Code                                                        |
+| :------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------------------------: |
+|     Deciding feasibility of packing rectangles without rotations     |    [./evaluations/packing/solver/packing_wo_rotations.py](./evaluations/packing/solver/packing_wo_rotations.py)    |
+| Finding the largest possible packing of rectangles without rotations |   [./evaluations/packing/solver/knapsack_wo_rotations.py](./evaluations/packing/solver/knapsack_wo_rotations.py)   |
+|      Deciding feasibility of packing rectangles with rotations       |  [./evaluations/packing/solver/packing_with_rotations.py](./evaluations/packing/solver/packing_with_rotations.py)  |
+|  Finding the largest possible packing of rectangles with rotations   | [./evaluations/packing/solver/knapsack_with_rotations.py](./evaluations/packing/solver/knapsack_with_rotations.py) |
 
 CP-SAT is good at finding a feasible packing, but incapable of proofing
 infeasibility in most cases. When using the knapsack variant, it can still pack
@@ -1085,7 +1083,7 @@ most of the rectangles even for the larger instances.
 
 |                                           ![./images/packing_plot_solved.png](./images/packing_plot_solved.png)                                            |
 | :--------------------------------------------------------------------------------------------------------------------------------------------------------: |
-| The number of solved instances for the packing problem. Rotations make things slightly more difficult. None of the used instances were proofed infeasible. |
+| The number of solved instances for the packing problem (90s time limit). Rotations make things slightly more difficult. None of the used instances were proofed infeasible. |
 
 |          ![./images/packing_percentage.png](./images/packing_percentage.png)          |
 | :-----------------------------------------------------------------------------------: |
@@ -2059,11 +2057,12 @@ following questions:
 > the optimality tolerances [0.1%, 1%, 5%, 10%, 25%] on a random benchmark set
 > and a TSPLIB benchmark set. The random benchmark set consists of 10 instances
 > for each number of nodes [25, 50, 75, 100, 150, 200, > 250, 300, 350, 400, > >
-> 450, 500]. The weights were chosen based on randomly embedding the nodes into
-> a 2D plane and using the Euclidean distances. The TSPLIB benchmark consists of
-> all euclidean instances with less than 500 nodes. It is critical to have a
-> time limit, as otherwise, the benchmarks would take forever. You can find all
-> find the whole experiment [here](./evaluations/tsp/).
+>
+> > 450, 500]. The weights were chosen based on randomly embedding the nodes
+> > into a 2D plane and using the Euclidean distances. The TSPLIB benchmark
+> > consists of all euclidean instances with less than 500 nodes. It is critical
+> > to have a time limit, as otherwise, the benchmarks would take forever. You
+> > can find all find the whole experiment [here](./evaluations/tsp/).
 
 Let us first look at the results of the random benchmark, as they are easier to
 interpret. We will then compare them to the TSPLIB benchmark.
