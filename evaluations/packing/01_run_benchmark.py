@@ -111,7 +111,7 @@ def compress():
 # Run the benchmark on all instances.
 if __name__ == "__main__":
     instance_names = [
-        str(instance_name.relative_to("./instances")) for instance_name in Path("./instances/hopper").iterdir() if instance_name.is_file()
+            str(instance_name.relative_to("./instances")) for instance_name in Path("./instances/hopper").iterdir() if instance_name.is_file() and str(instance_name)[-3:] != ".md"
     ]
     # shuffle the instances to distribute the load more evenly.
     random.shuffle(instance_names)
