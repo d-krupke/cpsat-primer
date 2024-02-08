@@ -819,102 +819,261 @@ model.AddInverse([x, y, z], [z, y, x])
 
 ### Interval Variables and No-Overlap Constraints
 
-CP-SAT also supports interval variables and corresponding constraints. These are
-important for scheduling and packing problems. There are simple no-overlap
-constraints for intervals for one-dimensional and two-dimensional intervals. In
-two-dimensional intervals, only one dimension is allowed to overlap, i.e., the
-other dimension has to be disjoint. This is essentially rectangle packing. Let
-us see how we can model a simple 2-dimensional packing problem. Note that
-`NewIntervalVariable` may indicate a new variable, but it is actually a
-constraint container in which you have to insert the classical integer
-variables. This constraint container is required, e.g., for the no-overlap
-constraint.
+A special case of variables are the interval variables, that allow to model intervals, i.e., a span of some length with a start and an end.
+There are fixed length intervals, flexible length intervals, and optional intervals to model various use cases.
+These intervals become interesting in combination with the no-overlap constraints for 1D and 2D.
+We can use this for geometric packing problems, scheduling problems, and many other problems, where we have to prevent overlaps between intervals.
+These variables are special because they are actually not a variable, but a container that bounds separately defined start, length, and end variables.
 
 ```python
 from ortools.sat.python import cp_model
 
-# Instance
-container = (40, 15)
-boxes = [
-    (11, 3),
-    (13, 3),
-    (9, 2),
-    (7, 2),
-    (9, 3),
-    (7, 3),
-    (11, 2),
-    (13, 2),
-    (11, 4),
-    (13, 4),
-    (3, 5),
-    (11, 2),
-    (2, 2),
-    (11, 3),
-    (2, 3),
-    (5, 4),
-    (6, 4),
-    (12, 2),
-    (1, 2),
-    (3, 5),
-    (13, 5),
-    (12, 4),
-    (1, 4),
-    (5, 2),
-    # (6,  2),  # add to make tight
-    # (6,3), # add to make infeasible
-]
-model = cp_model.CpModel()
+start_var = model.NewIntVar(0, 100, 'start')
+length_var = model.NewIntVar(10, 20, 'length')
+end_var = model.NewIntVar(0, 100, 'end')
+is_present_var = model.NewBoolVar('is_present')
 
-# We have to create the variable for the bottom left corner of the boxes.
-# We directly limit their range, such that the boxes are inside the container
-x_vars = [
-    model.NewIntVar(0, container[0] - box[0], name=f"x1_{i}")
-    for i, box in enumerate(boxes)
-]
-y_vars = [
-    model.NewIntVar(0, container[1] - box[1], name=f"y1_{i}")
-    for i, box in enumerate(boxes)
-]
-# Interval variables are actually more like constraint containers, that are then passed to the no overlap constraint
-# Note that we could also make size and end variables, but we don't need them here
-x_interval_vars = [
-    model.NewIntervalVar(
-        start=x_vars[i], size=box[0], end=x_vars[i] + box[0], name=f"x_interval_{i}"
-    )
-    for i, box in enumerate(boxes)
-]
-y_interval_vars = [
-    model.NewIntervalVar(
-        start=y_vars[i], size=box[1], end=y_vars[i] + box[1], name=f"y_interval_{i}"
-    )
-    for i, box in enumerate(boxes)
-]
-# Enforce that no two rectangles overlap
-model.AddNoOverlap2D(x_interval_vars, y_interval_vars)
-
-# Solve!
-solver = cp_model.CpSolver()
-solver.parameters.log_search_progress = True
-solver.log_callback = print
-status = solver.Solve(model)
-assert status == cp_model.OPTIMAL
-for i, box in enumerate(boxes):
-    print(
-        f"box {i} is placed at ({solver.Value(x_vars[i])}, {solver.Value(y_vars[i])})"
-    )
+# creating an interval of fixed length
+fixed_interval = model.NewFixedSizeIntervalVar(start=start_var, size=10, end=end_var, name='fixed_interval')
+# creating an interval whose length can be influenced by a variable (more expensive)
+flexible_interval = model.NewIntervalVar(start=start_var, size=length_var, end=end_var, name='flexible_interval')
+# creating an interval that can be present or not
+optional_fixed_interval = model.NewOptionalFixedSizeIntervalVar(start=start_var, size=10, end=end_var, is_present=is_present_var, name='optional_fixed_interval')
+# creating an interval that can be present or not and whose length can be influenced by a variable (most expensive)
+optional_interval = model.NewOptionalIntervalVar(start=start_var, size=length_var, end=end_var, is_present=is_present_var, name='optional_interval')
 ```
 
-> The keywords `start` may be named `begin` in some versions of ortools.
+There are now the two no-overlap constraints for 1D and 2D that can be used to prevent overlaps between intervals.
+The 1D no-overlap constraint is used to prevent overlaps between intervals on a single dimension, e.g., time.
+The 2D no-overlap constraint is used to prevent overlaps between intervals on two dimensions, e.g., time and resources or for packing rectangles.
 
-See [this notebook](./examples/add_no_overlap_2d.ipynb) for the full example.
+```python
+# 1D no-overlap constraint
+model.AddNoOverlap([... interval vars...])
+# 2D no-overlap constraint. The two lists need to have the same length.
+model.AddNoOverlap2D([... interval vars first dimension...], [... interval vars second dimension...])
+```
 
-There is also the option for optional intervals, i.e., intervals that may be
-skipped. This would allow you to have multiple containers or do a knapsack-like
-packing.
+Let us take a quick look on how we can use this to check if we can pack a set of rectangles into a container without overlaps.
+This can be an interesting problem in logistics, where we have to pack boxes into a container, or in cutting stock problems, where we have to cut pieces from a larger piece of material.
 
-The resolution seems to be quite important for this problem, as mentioned
-before. The following table shows the runtime for different resolutions (the
-solution is always the same, just scaled).
+```python
+class RectanglePackingWithoutRotationsModel:
+    def __init__(self, instance: Instance) -> None:
+        self.instance = instance
+        self.model = cp_model.CpModel()
+
+        # We have to create the variable for the bottom left corner of the boxes.
+        # We directly limit their range, such that the boxes are inside the container
+        self.x_vars = [
+            self.model.NewIntVar(
+                0, instance.container.width - box.width, name=f"x1_{i}"
+            )
+            for i, box in enumerate(instance.rectangles)
+        ]
+        self.y_vars = [
+            self.model.NewIntVar(
+                0, instance.container.height - box.height, name=f"y1_{i}"
+            )
+            for i, box in enumerate(instance.rectangles)
+        ]
+
+        # Interval variables are actually more like constraint containers, that are then passed to the no overlap constraint
+        # Note that we could also make size and end variables, but we don't need them here
+        x_interval_vars = [
+            self.model.NewFixedSizeIntervalVar(
+                start=self.x_vars[i],  # the x value of the bottom left corner
+                size=box.width,  # the width of the rectangle
+                name=f"x_interval_{i}",
+            )
+            for i, box in enumerate(instance.rectangles)
+        ]
+        y_interval_vars = [
+            self.model.NewFixedSizeIntervalVar(
+                start=self.y_vars[i],  # the y value of the bottom left corner
+                size=box.height,  # the height of the rectangle
+                name=f"y_interval_{i}",
+            )
+            for i, box in enumerate(instance.rectangles)
+        ]
+        # Enforce that no two rectangles overlap
+        self.model.AddNoOverlap2D(x_interval_vars, y_interval_vars)
+
+    def _extract_solution(self, solver: cp_model.CpSolver) -> Optional[Solution]:
+        if self.status not in (cp_model.OPTIMAL, cp_model.FEASIBLE):
+            return None
+        placements = []
+        for i, box in enumerate(self.instance.rectangles):
+            x = solver.Value(self.x_vars[i])
+            y = solver.Value(self.y_vars[i])
+            placements.append(Placement(x=x, y=y))
+        return Solution(placements=placements)
+
+    def solve(self, time_limit: float = 900.0):
+        solver = cp_model.CpSolver()
+        solver.parameters.log_search_progress = True
+        solver.parameters.max_time_in_seconds = time_limit
+        self.status = solver.Solve(self.model)
+        self.solution = self._extract_solution(solver)
+        self.upper_bound = solver.BestObjectiveBound()
+        self.objective_value = solver.ObjectiveValue()
+        return self.status
+
+    def is_infeasible(self):
+        return self.status == cp_model.INFEASIBLE
+    
+    def is_feasible(self):
+        return self.status in (cp_model.OPTIMAL, cp_model.FEASIBLE)
+```
+
+The optional intervals with flexible length allow us to even model rotations and instead of just checking if
+a feasible packing exists, finding the largest possible packing. The code may look a bit more complex, but
+considering the complexity of the problem, it is still quite simple.
+
+```python
+class RectangleKnapsackWithRotationsModel:
+    def __init__(self, instance: Instance) -> None:
+        self.instance = instance
+        self.model = cp_model.CpModel()
+
+        # Create coordinates for the placement. We need variables for the begin and end of each rectangle.
+        # This will also ensure that the rectangles are placed inside the container.
+        self.bottom_left_x_vars = [
+            self.model.NewIntVar(0, instance.container.width, name=f"x1_{i}")
+            for i, box in enumerate(instance.rectangles)
+        ]
+        self.bottom_left_y_vars = [
+            self.model.NewIntVar(0, instance.container.height, name=f"y1_{i}")
+            for i, box in enumerate(instance.rectangles)
+        ]
+        self.upper_right_x_vars = [
+            self.model.NewIntVar(0, instance.container.width, name=f"x2_{i}")
+            for i, box in enumerate(instance.rectangles)
+        ]
+        self.upper_right_y_vars = [
+            self.model.NewIntVar(0, instance.container.height, name=f"y2_{i}")
+            for i, box in enumerate(instance.rectangles)
+        ]
+        # These variables indicate if a rectangle is rotated or not
+        self.rotated_vars = [
+            self.model.NewBoolVar(f"rotated_{i}")
+            for i in range(len(instance.rectangles))
+        ]
+        # Depending on if a rectangle is rotated or not, we have to adjust the width and height variables
+        self.width_vars = [
+            self.model.NewIntVar(0, max(box.width, box.height), name=f"width_{i}")
+            for i, box in enumerate(instance.rectangles)
+        ]
+        self.height_vars = [
+            self.model.NewIntVar(0, max(box.width, box.height), name=f"height_{i}")
+            for i, box in enumerate(instance.rectangles)
+        ]
+        # Here we enforce that the width and height variables are correctly set
+        for i, box in enumerate(instance.rectangles):
+            if box.width > box.height:
+                diff = box.width - box.height
+                self.model.Add(
+                    self.width_vars[i] == box.width - self.rotated_vars[i] * diff
+                )
+                self.model.Add(
+                    self.height_vars[i] == box.height + self.rotated_vars[i] * diff
+                )
+            else:
+                diff = box.height - box.width
+                self.model.Add(
+                    self.width_vars[i] == box.width + self.rotated_vars[i] * diff
+                )
+                self.model.Add(
+                    self.height_vars[i] == box.height - self.rotated_vars[i] * diff
+                )
+        # And finally, a variable indicating if a rectangle is packed or not
+        self.packed_vars = [
+            self.model.NewBoolVar(f"packed_{i}")
+            for i in range(len(instance.rectangles))
+        ]
+
+        # Interval variables are actually more like constraint containers, that are then passed to the no overlap constraint
+        # Note that we could also make size and end variables, but we don't need them here
+        self.x_interval_vars = [
+            self.model.NewOptionalIntervalVar(
+                start=self.bottom_left_x_vars[i],
+                size=self.width_vars[i],
+                is_present=self.packed_vars[i],
+                end=self.upper_right_x_vars[i],
+                name=f"x_interval_{i}",
+            )
+            for i, box in enumerate(instance.rectangles)
+        ]
+        self.y_interval_vars = [
+            self.model.NewOptionalIntervalVar(
+                start=self.bottom_left_y_vars[i],
+                size=self.height_vars[i],
+                is_present=self.packed_vars[i],
+                end=self.upper_right_y_vars[i],
+                name=f"y_interval_{i}",
+            )
+            for i, box in enumerate(instance.rectangles)
+        ]
+        # Enforce that no two rectangles overlap
+        self.model.AddNoOverlap2D(self.x_interval_vars, self.y_interval_vars)
+
+        # maximize the number of packed rectangles
+        self.model.Maximize(
+            sum(
+                box.value * self.packed_vars[i]
+                for i, box in enumerate(instance.rectangles)
+            )
+        )
+
+    def _extract_solution(self, solver: cp_model.CpSolver) -> Optional[Solution]:
+        if self.status not in (cp_model.OPTIMAL, cp_model.FEASIBLE):
+            return None
+        placements = []
+        for i, box in enumerate(self.instance.rectangles):
+            if solver.Value(self.packed_vars[i]):
+                placements.append(
+                    Placement(
+                        x=solver.Value(self.bottom_left_x_vars[i]),
+                        y=solver.Value(self.bottom_left_y_vars[i]),
+                        rotated=bool(solver.Value(self.rotated_vars[i])),
+                    )
+                )
+            else:
+                placements.append(None)
+        return Solution(placements=placements)
+
+    def solve(self, time_limit: float = 900.0, opt_tol: float = 0.01):
+        solver = cp_model.CpSolver()
+        solver.parameters.log_search_progress = True
+        solver.parameters.max_time_in_seconds = time_limit
+        solver.parameters.relative_gap_limit = opt_tol
+        self.status = solver.Solve(self.model)
+        self.solution = self._extract_solution(solver)
+        self.upper_bound = solver.BestObjectiveBound()
+        self.objective_value = solver.ObjectiveValue()
+        return self.status
+
+```
+
+| ![./images/dense_packing.png](./images/dense_packing.png) |
+| :--: |
+| This dense packing was found by CP-SAT in less than 0.3s, which is quite impressive and seems to be more efficient than a naive Gurobi implementation. |
+
+
+You can find the full code here:
+| Problem Variant | Code |
+| :--: | :--: |
+| Deciding feasibility of packing rectangles without rotations | [./evaluations/packing/solver/packing_wo_rotations.py](./evaluations/packing/solver/packing_wo_rotations.py) |
+| Finding the largest possible packing of rectangles without rotations | [./evaluations/packing/solver/knapsack_wo_rotations.py](./evaluations/packing/solver/knapsack_wo_rotations.py) |
+| Deciding feasibility of packing rectangles with rotations | [./evaluations/packing/solver/packing_with_rotations.py](./evaluations/packing/solver/packing_with_rotations.py) |
+| Finding the largest possible packing of rectangles with rotations | [./evaluations/packing/solver/knapsack_with_rotations.py](./evaluations/packing/solver/knapsack_with_rotations.py) |
+
+#### Resolution and Parameters
+
+In previous versions of CP-SAT, the resolution seemed to have a big impact on the performance of the no-overlap constraints.
+This does not seem to be the case anymore, but I still recommend to not increase the resolution too much.
+In [this notebook](./examples/add_no_overlap_2d.ipynb) I played around with an earlier version of CP-SAT and measured the
+impact of the resolution for a small rectangle packing problem. These are the results:
 
 | Resolution | Runtime |
 | ---------- | ------- |
@@ -924,9 +1083,7 @@ solution is always the same, just scaled).
 | 1000x      | 75s     |
 | 10_000x    | >15min  |
 
-See [this notebook](./examples/add_no_overlap_2d_scaling.ipynb) for the full
-example.
-
+While the solutions won't change when we just multiply all values, the runtime increased significantly.
 However, while playing around with less documented features, I noticed that the
 performance can be improved drastically with the following parameters:
 
@@ -936,10 +1093,9 @@ solver.parameters.use_timetabling_in_no_overlap_2d = True
 solver.parameters.use_pairwise_reasoning_in_no_overlap_2d = True
 ```
 
-Instances that could not be solved in 15 minutes before, can now be solved in
-less than a second. This of course does not apply for all instances, but if you
-are working with this constraint, you may want to jiggle with these parameters
-if it struggles with solving your instances.
+With the latest version of CP-SAT, I did not notice a significant difference in performance when using these parameters.
+
+
 
 ### There is more
 
