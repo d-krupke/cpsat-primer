@@ -1771,6 +1771,7 @@ following learning path:
      - [Understanding and Using Linear Programming](https://link.springer.com/book/10.1007/978-3-540-30717-4)
        (book)
      - [Optimization in Operations Research by Ronald Rardin](https://www.pearson.com/en-us/subject-catalog/p/optimization-in-operations-research/P200000003508/9780137982066) (very long book also containing Mixed Integer Programming, Heuristics, and advanced topics. For those who want to dive deep.)
+     - [Video Series by Gurobi](https://www.youtube.com/playlist?list=PLHiHZENG6W8BeAfJfZ3myo5dsSQjEV5pJ)
    - Mixed Integer Programming: Branch and Bound, Cutting Planes, Branch and
      Cut, ...
      - [Discrete Optimization on Coursera with Pascal Van Hentenryck and Carleton Coffrin](https://www.coursera.org/learn/discrete-optimization)
