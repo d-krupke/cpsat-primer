@@ -60,8 +60,6 @@ class RectanglePackingWithoutRotationsModel:
         solver.parameters.max_time_in_seconds = time_limit
         self.status = solver.Solve(self.model)
         self.solution = self._extract_solution(solver)
-        self.upper_bound = solver.BestObjectiveBound()
-        self.objective_value = solver.ObjectiveValue()
         return self.status
 
     def is_infeasible(self):

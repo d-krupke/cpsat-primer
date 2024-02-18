@@ -426,6 +426,56 @@ infeasibility. In such scenarios, having named variables can significantly
 enhance the clarity of the internal representation, making your debugging
 process much more manageable.
 
+#### Domain Variables
+
+When dealing with integer variables that you know will only need to take certain
+values, or when you wish to limit their possible values, domain variables can
+become interesting. Unlike regular integer variables, domain variables are
+tailored to represent a specific set of values. This approach can enhance
+efficiency when the domain - the range of sensible values - is small. However,
+it may not be the best choice for larger domains.
+
+CP-SAT works by converting all integer variables into boolean variables
+(warning: simplification). For each potential value, it creates two boolean
+variables: one indicating whether the integer variable is equal to this value,
+and another indicating whether it is less than or equal to it. This is called an
+_order encoding_. At first glance, this might suggest that using domain
+variables is always preferable, as it appears to reduce the number of boolean
+variables needed.
+
+However, CP-SAT employs a lazy creation strategy for these boolean variables.
+This means it only generates them as needed, based on the solver's
+decision-making process. Therefore, an integer variable with a wide range - say,
+from 0 to 100 - won't immediately result in 200 boolean variables. It might lead
+to the creation of only a few, depending on the solver's requirements.
+
+Limiting the domain of a variable can have drawbacks. Firstly, defining a domain
+explicitly can be computationally costly and increase the model size drastically
+as it now need to contain not just a lower and upper bound for a variable but an
+explicit list of numbers (model size is often a limiting factor). Secondly, by
+narrowing down the solution space, you might inadvertently make it more
+challenging for the solver to find a viable solution. First, try to let CP-SAT
+handle the domain of your variables itself and only intervene if you have a good
+reason to do so.
+
+If you choose to utilize domain variables for their benefits in specific
+scenarios, here is how to define them:
+
+```python
+from ortools.sat.python import cp_model
+
+# Define a domain with selected values
+domain = cp_model.Domain.FromValues([2, 5, 8, 10, 20, 50, 90])
+
+# Create a domain variable within this defined domain
+x = model.NewIntVarFromDomain(domain, "x")
+```
+
+This example illustrates the process of creating a domain variable `x` that can
+only take on the values specified in `domain`. This method is particularly
+useful when you are working with variables that only have a meaningful range of
+possible values within your problem's context.
+
 ### Objectives
 
 Not every problem actually has an objective, sometimes you only need to find a
