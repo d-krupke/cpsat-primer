@@ -589,7 +589,7 @@ model.AddImplication(b1, b2)  # b1 -> b2
 In this context you could also mention `AddAtLeastOne`, `AddAtMostOne`, and
 `AddExactlyOne`, but these can also be modelled as linear constraints.
 
-### Conditional Constraints
+### Conditional Constraints (Channeling, Reification)
 
 Linear constraints (Add), BoolOr, and BoolAnd support being activated by a
 condition. This is not only a very helpful constraint for many applications, but
