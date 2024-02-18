@@ -404,7 +404,7 @@ discussed further below, has the following runtime for different resolutions:
 always the same, just scaled, and there was no objective, i.e., only a feasible
 solution had to be found. Note that this is just an example, not a
 representative benchmark. See
-[./examples/add_no_overlap_2d_scaling.ipynb](./examples/add_no_overlap_2d_scaling.ipynb)
+[./examples/add_no_overlap_2d_scaling.ipynb](https://github.com/d-krupke/cpsat-primer/blob/main/examples/add_no_overlap_2d_scaling.ipynb)
 for the code. If you have a problem with a lot of continuous variables, such as
 [network flow problems](https://en.wikipedia.org/wiki/Network_flow_problem), you
 are probably better served with a MIP-solver.
@@ -638,7 +638,7 @@ penalty. You may also want to use `!=` instead of `AllDifferent` if you apply it
 to overlapping sets of variables without proper optimization, because then
 CP-SAT will do the inference for you.
 
-In [./examples/add_all_different.ipynb](./examples/add_all_different.ipynb) you
+In [./examples/add_all_different.ipynb](https://github.com/d-krupke/cpsat-primer/blob/main/examples/add_all_different.ipynb) you
 can find a quick experiment based on the graph coloring problem. In the graph
 coloring problem, the colors of two adjacent vertices have to be different. This
 can be easily modelled by `!=` or `AllDifferent` constraints on every edge.
@@ -760,11 +760,11 @@ print("Tour:", tour)
 You can use this constraint very flexibly for many tour problems. We added three
 examples:
 
-- [./examples/add_circuit.py](./examples/add_circuit.py): The example above,
+- [./examples/add_circuit.py](https://github.com/d-krupke/cpsat-primer/blob/main/examples/add_circuit.py): The example above,
   slightly extended. Find out how large you can make the graph.
-- [./examples/add_circuit_budget.py](./examples/add_circuit_budget.py): Find the
+- [./examples/add_circuit_budget.py](https://github.com/d-krupke/cpsat-primer/blob/main/examples/add_circuit_budget.py): Find the
   largest tour with a given budget. This will be a bit more difficult to solve.
-- [./examples/add_circuit_multi_tour.py](./examples/add_circuit_multi_tour.py):
+- [./examples/add_circuit_multi_tour.py](https://github.com/d-krupke/cpsat-primer/blob/main/examples/add_circuit_multi_tour.py):
   Allow $k$ tours, which in sum need to be minimal and cover all vertices.
 
 The most powerful TSP-solver _concorde_ uses a linear programming based
@@ -794,7 +794,7 @@ internally. Using the `AddCircuit` constraint is thus highly recommendable for
 any circle or path constraints.
 
 In
-[./examples/add_circuit_comparison.ipynb](./examples/add_circuit_comparison.ipynb),
+[./examples/add_circuit_comparison.ipynb](https://github.com/d-krupke/cpsat-primer/blob/main/examples/add_circuit_comparison.ipynb),
 we compare the performance of some models for the TSP, to estimate the
 performance of CP-SAT for the TSP.
 
@@ -1118,7 +1118,7 @@ class RectangleKnapsackWithRotationsModel:
 
 ```
 
-|                                               ![./images/dense_packing.png](./images/dense_packing.png)                                                |
+|                                               ![./images/dense_packing.png](https://github.com/d-krupke/cpsat-primer/blob/main/images/dense_packing.png)                                                |
 | :----------------------------------------------------------------------------------------------------------------------------------------------------: |
 | This dense packing was found by CP-SAT in less than 0.3s, which is quite impressive and seems to be more efficient than a naive Gurobi implementation. |
 
@@ -1126,19 +1126,19 @@ You can find the full code here:
 
 |                           Problem Variant                            |                                                        Code                                                        |
 | :------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------------------------: |
-|     Deciding feasibility of packing rectangles without rotations     |    [./evaluations/packing/solver/packing_wo_rotations.py](./evaluations/packing/solver/packing_wo_rotations.py)    |
-| Finding the largest possible packing of rectangles without rotations |   [./evaluations/packing/solver/knapsack_wo_rotations.py](./evaluations/packing/solver/knapsack_wo_rotations.py)   |
-|      Deciding feasibility of packing rectangles with rotations       |  [./evaluations/packing/solver/packing_with_rotations.py](./evaluations/packing/solver/packing_with_rotations.py)  |
-|  Finding the largest possible packing of rectangles with rotations   | [./evaluations/packing/solver/knapsack_with_rotations.py](./evaluations/packing/solver/knapsack_with_rotations.py) |
+|     Deciding feasibility of packing rectangles without rotations     |    [./evaluations/packing/solver/packing_wo_rotations.py](https://github.com/d-krupke/cpsat-primer/blob/main/evaluations/packing/solver/packing_wo_rotations.py)    |
+| Finding the largest possible packing of rectangles without rotations |   [./evaluations/packing/solver/knapsack_wo_rotations.py](https://github.com/d-krupke/cpsat-primer/blob/main/evaluations/packing/solver/knapsack_wo_rotations.py)   |
+|      Deciding feasibility of packing rectangles with rotations       |  [./evaluations/packing/solver/packing_with_rotations.py](https://github.com/d-krupke/cpsat-primer/blob/main/evaluations/packing/solver/packing_with_rotations.py)  |
+|  Finding the largest possible packing of rectangles with rotations   | [./evaluations/packing/solver/knapsack_with_rotations.py](https://github.com/d-krupke/cpsat-primer/blob/main/evaluations/packing/solver/knapsack_with_rotations.py) |
 
 CP-SAT is good at finding a feasible packing, but incapable of proofing
 infeasibility in most cases. When using the knapsack variant, it can still pack
 most of the rectangles even for the larger instances.
 
-|                                                    ![./images/packing_plot_solved.png](./images/packing_plot_solved.png)                                                    |
+|                                                    ![./images/packing_plot_solved.png](https://github.com/d-krupke/cpsat-primer/blob/main/images/packing_plot_solved.png)                                                    |
 | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
 | The number of solved instances for the packing problem (90s time limit). Rotations make things slightly more difficult. None of the used instances were proofed infeasible. |
-|                                                     ![./images/packing_percentage.png](./images/packing_percentage.png)                                                     |
+|                                                     ![./images/packing_percentage.png](https://github.com/d-krupke/cpsat-primer/blob/main/images/packing_percentage.png)                                                     |
 |                                            However, CP-SAT is able to pack nearly all rectangles even for the largest instances.                                            |
 
 #### Resolution and Parameters
@@ -1161,7 +1161,7 @@ constraints has not stabilized and may continue to vary in upcoming versions.
 | 1000x      | 75s                  | 40.3s                |
 | 10_000x    | >15min               | 0.4s                 |
 
-[This notebook](./examples/add_no_overlap_2d.ipynb) was used to create the table
+[This notebook](https://github.com/d-krupke/cpsat-primer/blob/main/examples/add_no_overlap_2d.ipynb) was used to create the table
 above.
 
 However, while playing around with less documented features, I noticed that the
@@ -1628,12 +1628,12 @@ examples in it.
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://cpsat-log-analyzer.streamlit.app/)
 [![d-krupke - CP-SAT Log Analyzer](https://img.shields.io/badge/d--krupke-CP--SAT%20Log%20Analyzer-blue?style=for-the-badge&logo=github)](https://github.com/d-krupke/CP-SAT-Log-Analyzer)
 
-|                                                                                                                                                    ![Search Progress](./images/search_progress.png)                                                                                                                                                     |
+|                                                                                                                                                    ![Search Progress](https://github.com/d-krupke/cpsat-primer/blob/main/images/search_progress.png)                                                                                                                                                     |
 | :-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
 | A plot of the search progress over time as visualized by the log analyzer by utilizing the information from the log (a different log than displayed above). Such a plot helps you understand what part of your problem is more challenging: Finding a good solution or proving its quality. Based on that you can implement respective countermeasures. |
 
 You can also find an older explanation of the log
-[here](./understanding_the_log.md).
+[here](https://github.com/d-krupke/cpsat-primer/blob/main/understanding_the_log.md).
 
 ### Decision Strategy
 
@@ -1794,7 +1794,7 @@ need to understand the constraint programming part of CP-SAT.
 > Originally, I wrote a short introduction into each of the topics, but I
 > decided to remove them as the material I linked to is much better than what I
 > could have written. You can find a backup of the old version
-> [here](./old_how_does_it_work.md).
+> [here](https://github.com/d-krupke/cpsat-primer/blob/main/old_how_does_it_work.md).
 
 ### What happens in CP-SAT on solve?
 
@@ -2114,7 +2114,7 @@ following questions:
 > > into a 2D plane and using the Euclidean distances. The TSPLIB benchmark
 > > consists of all euclidean instances with less than 500 nodes. It is critical
 > > to have a time limit, as otherwise, the benchmarks would take forever. You
-> > can find all find the whole experiment [here](./evaluations/tsp/).
+> > can find all find the whole experiment [here](https://github.com/d-krupke/cpsat-primer/blob/main/evaluations/tsp/).
 
 Let us first look at the results of the random benchmark, as they are easier to
 interpret. We will then compare them to the TSPLIB benchmark.
@@ -2129,7 +2129,7 @@ expected exponential curves, you will get skewed sigmoidal curves. Consequently,
 such plots might not provide a clear understanding of the instance sizes your
 model is capable of handling efficiently.
 
-|                                                                                                      ![Runtime](./evaluations/tsp/2023-11-18_random_euclidean/PUBLIC_DATA/runtime.png)                                                                                                      |
+|                                                                                                      ![Runtime](https://github.com/d-krupke/cpsat-primer/blob/main/evaluations/tsp/2023-11-18_random_euclidean/PUBLIC_DATA/runtime.png)                                                                                                      |
 | :-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
 | The runtimes are sigmoidal instead of exponential because the time limit skews the results. The runtime can frequently exceed the time limit, because of expensive model building, etc. Thus, a pure runtime plot says surprisingly little (or is misleading) and can usually be discarded. |
 
@@ -2139,7 +2139,7 @@ successfully solves. This method requires a well-structured benchmark to yield
 meaningful statistics for each data point. Without this structure, the resulting
 curve may appear erratic, making it challenging to draw dependable conclusions.
 
-| ![Solved over size](./evaluations/tsp/2023-11-18_random_euclidean/PUBLIC_DATA/solved_over_size.png) |
+| ![Solved over size](https://github.com/d-krupke/cpsat-primer/blob/main/evaluations/tsp/2023-11-18_random_euclidean/PUBLIC_DATA/solved_over_size.png) |
 | :-------------------------------------------------------------------------------------------------: |
 |   For each x-value: What are the chances (y-values) that a model of this size (x) can be solved?    |
 
@@ -2148,7 +2148,7 @@ encompass solutions of acceptable quality, the analysis can be expanded. One can
 plot the number of instances that the model solves within a defined optimality
 tolerance, as demonstrated in the subsequent figure:
 
-| ![Solved over size with optimality tolerance](./evaluations/tsp/2023-11-18_random_euclidean/PUBLIC_DATA/solved_over_size_opt_tol.png) |
+| ![Solved over size with optimality tolerance](https://github.com/d-krupke/cpsat-primer/blob/main/evaluations/tsp/2023-11-18_random_euclidean/PUBLIC_DATA/solved_over_size_opt_tol.png) |
 | :-----------------------------------------------------------------------------------------------------------------------------------: |
 |      For each x-value: What are the chances (y-values) that a model of this size (x) can be solved to what quality (line style)?      |
 
@@ -2169,7 +2169,7 @@ instance size is a poor indicator of difficulty. A more detailed discussion on
 this subject can be found in the referenced academic paper:
 [Benchmarking Solvers, SAT-style by Brain, Davenport, and Griggio](http://www.sc-square.org/CSA/workshop2-papers/RP3-FinalVersion.pdf)
 
-|        ![Cactus Plot 1](./evaluations/tsp/2023-11-18_random_euclidean/PUBLIC_DATA/cactus_plot.png)         |
+|        ![Cactus Plot 1](https://github.com/d-krupke/cpsat-primer/blob/main/evaluations/tsp/2023-11-18_random_euclidean/PUBLIC_DATA/cactus_plot.png)         |
 | :--------------------------------------------------------------------------------------------------------: |
 | For each x-value: How many (y) of the benchmark instances could have been solved with this time limit (x)? |
 
@@ -2180,7 +2180,7 @@ CP-SAT, for instance, this tracking can be implemented via the Solution
 Callback, although its activation is may depend on updates to the objective
 rather than the bounds.
 
-|                      ![Cactus Plot 1](./evaluations/tsp/2023-11-18_random_euclidean/PUBLIC_DATA/cactus_plot_opt_tol.png)                      |
+|                      ![Cactus Plot 1](https://github.com/d-krupke/cpsat-primer/blob/main/evaluations/tsp/2023-11-18_random_euclidean/PUBLIC_DATA/cactus_plot_opt_tol.png)                      |
 | :-------------------------------------------------------------------------------------------------------------------------------------------: |
 | For each x-value: How many (y) of the benchmark instances could have been solved to a specific quality (line style) with this time limit (x)? |
 
@@ -2205,7 +2205,7 @@ plotting the number of solved instances over time, less effective. While data
 smoothing methods, such as rolling averages, are available, they too have their
 limitations.
 
-|                   ![Variation in Data](./evaluations/tsp/2023-11-18_tsplib/PUBLIC_DATA/solved_over_size.png)                   |
+|                   ![Variation in Data](https://github.com/d-krupke/cpsat-primer/blob/main/evaluations/tsp/2023-11-18_tsplib/PUBLIC_DATA/solved_over_size.png)                   |
 | :----------------------------------------------------------------------------------------------------------------------------: |
 | Such a plot may prove inefficient when dealing with high variability, particularly when some data points are underrepresented. |
 
@@ -2215,7 +2215,7 @@ clearly see in it, is the diminished capability of the "Iterative Dantzig" model
 in solving instances, and a closer performance alignment between the
 `AddCircuit` and Gurobi models.
 
-|          ![Effective Cactus Plot](./evaluations/tsp/2023-11-18_tsplib/PUBLIC_DATA/cactus_plot_opt_tol.png)           |
+|          ![Effective Cactus Plot](https://github.com/d-krupke/cpsat-primer/blob/main/evaluations/tsp/2023-11-18_tsplib/PUBLIC_DATA/cactus_plot_opt_tol.png)           |
 | :------------------------------------------------------------------------------------------------------------------: |
 | Cactus plots maintain clarity and relevance, and show a performance differences between TSPLib and random instances. |
 
@@ -2498,7 +2498,7 @@ Regions in red are selected due to the high cost of the tour within them. Once
 optimized, the center of that region is added to a tabu list, preventing it from
 being chosen again.
 
-|                                                                                           ![Large Neighborhood Search Geometry Example](./images/lns_pcpp.png)                                                                                            |
+|                                                                                           ![Large Neighborhood Search Geometry Example](https://github.com/d-krupke/cpsat-primer/blob/main/images/lns_pcpp.png)                                                                                            |
 | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
 | Large Neighbordhood Search for Coverage Path Planning by repeatedly selecting a geometric region (red) and optimizing the tour within it. The red parts of the tour highlight the changes in the iteration. Read from left to right, and from up to down. |
 
@@ -2520,7 +2520,7 @@ demonstrated in an animation crafted by two of my students, Gabriel Gehrke and
 Laurenz Illner. They incorporated four distinct neighborhoods and utilized ALNS
 to dynamically select the most effective one.
 
-|                                                                                                                                                                                                 ![ALNS TSP](./images/alns_tsp_compr.gif)                                                                                                                                                                                                  |
+|                                                                                                                                                                                                 ![ALNS TSP](https://github.com/d-krupke/cpsat-primer/blob/main/images/alns_tsp_compr.gif)                                                                                                                                                                                                  |
 | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
 | Animation of an Adaptive Large Neighborhood Search for the classical Traveling Salesman Problem. It uses four different neighborhood strategies which are selected randomly with a probability based on their success rate in previous iterations. If you check the logs of the latest (v9.8) version of CP-SAT, it also rates the performance of its LNS-strategies and uses the best performing strategies more often (UCB1-algorithm). |
 
