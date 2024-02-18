@@ -428,6 +428,10 @@ process much more manageable.
 
 #### Domain Variables
 
+_This section is especially for those with a constraint programming background,
+who may be tempted to use domain variables instead of sticking to boolean and
+integer variables. Everyone else can probably skip this section._
+
 When dealing with integer variables that you know will only need to take certain
 values, or when you wish to limit their possible values, domain variables can
 become interesting. Unlike regular integer variables, domain variables are
