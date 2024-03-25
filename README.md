@@ -1183,6 +1183,154 @@ solver.parameters.use_pairwise_reasoning_in_no_overlap_2d = True
 With the latest version of CP-SAT, I did not notice a significant difference in
 performance when using these parameters.
 
+### Non-Linear Constraints/Piecewise Linear Functions
+
+In practice, you often have cost functions that are not linear.
+For example, consider a production problem where you have three different items you produce.
+Each item has different components, you have to buy.
+The cost of the components will first decrease with the amount you buy, then at some point increase again as your supplier will be out of stock and you have to buy from a more expensive supplier.
+Additionally, you only have a certain amount of customers willing to pay a certain price for your product.
+If you want to sell more, you will have to lower the price, which will decrease your profit.
+
+Let us assume such a function looks like $y=f(x)$ in the following figure.
+Unfortunately, it is a rather complex function that we cannot directly express in CP-SAT.
+However, we can approximate it with a piecewise linear function as shown in red.
+Such piecewise linear approximations are very common, and some solvers can even do them automatically, e.g., Gurobi.
+The resolution can be arbitrarily high, but the more segments you have, the more complex the model becomes.
+Thus, it is usually only chosen to be as high as necessary.
+| ![./images/pwla.png](./images/pwla.png) |
+| :------------------------------------: |
+| We can model an arbitrary continuous function with a piecewise linear function. Here, we split the original function into a number of straight segments. The accuracy can be adapted to the requirements. The linear segments can then be expressed in CP-SAT. The fewer such segments, the easier it remains to model and solve. |
+
+Using linear constraints (`model.Add`) and reification (`.OnlyEnforceIf`), we can model such a piecewise linear function in CP-SAT.
+For this we simply use boolean variables to decide for a segment, and then activate the corresponding linear constraint via reification.
+However, this has two problems in CP-SAT, as shown in the next figure.
+
+| ![./images/pwla_problems.png](./images/pwla_problems.png) |
+| :------------------------------------------------------: |
+| Even if the function f(x) now consists of linear segments, we cannot simply implement $y=f(x)$ in CP-SAT. First, for many $x$-values, $f(x)$ will be not integral and, thus, infeasible. Second, the canonical representation of many linear segments will require non-integral coefficients, which are also not allowed in CP-SAT. |
+
+* **Problem A:** Even if we can express a segment as a linear function, the result of the function may not be integral. In the example, $f(5)$ would be $3.5$ and, thus, if we enforce $y=f(x)$, $x$ would be prohibited to be $5$, which is not what we want. There are two options now. Either, we use a more complex piecewise linear approximation that ensures that the function will always yield integral solutions or we use inequalities instead. The first solution has the issue that this can require too many segments, making it far too expensive to optimize. The second solution will be a weaker constraint as now we can only enforce $y<=f(x)$ or $y>=f(x)$, but not $y=f(x)$. If you try to enforce it by $y<=f(x)$ and $y>=f(x)$, you will end with the same infeasibility as before. However, often an inequality will be enough. If the problem is to prevent $y$ from becoming too large, you use $y<=f(x)$, if the problem is to prevent $y$ from becoming too small, you use $y>=f(x)$. If we want to represent the costs by $f(x)$, we would use $y>=f(x)$ to minimize the costs.
+
+* **Problem B:** The canonical representation of a linear function is $y=ax+b$. However, this will often require non-integral coefficients. Luckily, we can automatically scale them up to integral values by adding a scaling factor. The inequality $y=0.5x+0.5$ in the example can also be represented as $2y=x+1$. I will spare you the math, but it just requires a simple trick with the least common multiple. Of course, the required scaling factor can become large, and at some point lead to overflows.
+
+An implementation could now look as follows:
+
+```python
+# We want to enforce y=f(x)
+x = model.NewIntVar(0, 7, "x")
+y = model.NewIntVar(0, 5, "y")
+
+# use boolean variables to decide for a segment
+segment_active = [model.NewBoolVar("segment_1"), model.NewBoolVar("segment_2")]
+model.AddAtMostOne(segment_active)  # enforce one segment to be active
+
+# Segment 1
+# if 0<=x<=3, then y <= 0.5*X + 0.5
+model.Add(2*y >= 2*x + 1).OnlyEnforceIf(segment_active[0])
+model.Add(x>=0).OnlyEnforceIf(segment_active[0])
+model.Add(x<=3).OnlyEnforceIf(segment_active[0])
+
+# Segment 2
+model.Add(_SLIGHTLY_MORE_COMPLEX_INEQUALITY_).OnlyEnforceIf(segment_active[0])
+model.Add(x>=3).OnlyEnforceIf(segment_active[0])
+model.Add(x<=7).OnlyEnforceIf(segment_active[0])
+
+model.Minimize(y)
+# if we were to maximize y, we would have user <= instead of >=
+```
+
+This can be quite tedious, but luckily, I wrote a small helper class that will do this automatically for you.
+You can find it in [./utils/piecewise_functions](./utils/piecewise_functions/).
+Simply copy it into your code.
+
+Let us use this code to solve an instance of the problem above.
+
+We have two products that each require three components.
+The first product requires 3 of component 1, 5 of component 2, and 2 of component 3.
+The second product requires 2 of component 1, 1 of component 2, and 3 of component 3.
+We can buy up to 1500 of each component for the price given in the figure below.
+We can produce up to 300 of each product and sell them for the price given in the figure below.
+| ![./images/production_example_cost_components.png](images/production_example_cost_components.png) | ![./images/production_example_selling_price.png](./images/production_example_selling_price.png) |
+| :--------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------: |
+| Costs for buying components necessary for production. | Selling price for the products. |
+
+We want to maximize the profit, i.e., the selling price minus the costs for buying the components.
+We can model this as follows:
+```python
+requirements_1 = (3,5,2)
+requirements_2 = (2, 1, 3)
+
+from ortools.sat.python import cp_model
+
+model = cp_model.CpModel()
+buy_1 = model.NewIntVar(0, 1_500, 'buy_1')
+buy_2 = model.NewIntVar(0, 1_500, 'buy_2')
+buy_3 = model.NewIntVar(0, 1_500, 'buy_3')
+
+produce_1 = model.NewIntVar(0, 300, 'produce_1')
+produce_2 = model.NewIntVar(0, 300, 'produce_2')
+
+model.Add(produce_1 * requirements_1[0] + produce_2 * requirements_2[0] <= buy_1)
+model.Add(produce_1 * requirements_1[1] + produce_2 * requirements_2[1] <= buy_2)
+model.Add(produce_1 * requirements_1[2] + produce_2 * requirements_2[2] <= buy_3)
+
+# You can find this code it ./utils!
+from piecewise_functions import PiecewiseLinearFunction, PiecewiseLinearConstraint
+
+# Define the functions for the costs
+costs_1 = [(0, 0), (1000, 400), (1500, 1300)]
+costs_2 = [(0, 0), (300, 300), (700, 500), (1200, 600), (1500, 1100)]
+costs_3 = [(0, 0), (200, 400), (500, 700), (1000, 900), (1500, 1500)]
+# PiecewiseLinearFunction is a pydantic model and can be serialized easily!
+f_costs_1 = PiecewiseLinearFunction(xs=[x for x,y in costs_1], ys=[y for x,y in costs_1])
+f_costs_2 = PiecewiseLinearFunction(xs=[x for x,y in costs_2], ys=[y for x,y in costs_2])
+f_costs_3 = PiecewiseLinearFunction(xs=[x for x,y in costs_3], ys=[y for x,y in costs_3])
+
+# Define the functions for the gain
+gain_1 = [(0,0), (100, 800), (200, 1600), (300, 2_000)]
+gain_2 = [(0,0), (80, 1_000), (150, 1_300), (200, 1_400), (300, 1_500)]
+f_gain_1 = PiecewiseLinearFunction(xs=[x for x,y in gain_1], ys=[y for x,y in gain_1])
+f_gain_2 = PiecewiseLinearFunction(xs=[x for x,y in gain_2], ys=[y for x,y in gain_2])
+
+# Create y>=f(x) constraints for the costs
+x_costs_1 = PiecewiseLinearConstraint(model,buy_1, f_costs_1, upper_bound=False)
+x_costs_2 = PiecewiseLinearConstraint(model,buy_2, f_costs_2, upper_bound=False)
+x_costs_3 = PiecewiseLinearConstraint(model,buy_3, f_costs_3, upper_bound=False)
+
+# Create y<=f(x) constraints for the gain
+x_gain_1 = PiecewiseLinearConstraint(model,produce_1, f_gain_1, upper_bound=True)
+x_gain_2 = PiecewiseLinearConstraint(model,produce_2, f_gain_2, upper_bound=True)
+
+# Maximize the gain minus the costs
+model.Maximize(x_gain_1.y + x_gain_2.y - (x_costs_1.y + x_costs_2.y + x_costs_3.y))
+
+solver = cp_model.CpSolver()
+solver.parameters.log_search_progress = True
+status = solver.Solve(model)
+print(f"Buy {solver.Value(buy_1)} of component 1")
+print(f"Buy {solver.Value(buy_2)} of component 2")
+print(f"Buy {solver.Value(buy_3)} of component 3")
+print(f"Produce {solver.Value(produce_1)} of product 1")
+print(f"Produce {solver.Value(produce_2)} of product 2")
+print(f"Overall gain: {solver.ObjectiveValue()}")
+```
+
+This will give you the following output:
+```
+Buy 930 of component 1
+Buy 1200 of component 2
+Buy 870 of component 3
+Produce 210 of product 1
+Produce 150 of product 2
+Overall gain: 1120.0
+```
+
+Unfortunately, these problems quickly get very complicated to model and solve.
+This is just a proof that, theoretically, you can model such problems in CP-SAT.
+Practically, you can lose a lot of time and sanity with this if you are not an expert.
+
+
 ### There is more
 
 CP-SAT has even more constraints, but I think I covered the most important ones.
