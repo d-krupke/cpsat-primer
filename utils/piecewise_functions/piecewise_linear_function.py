@@ -257,7 +257,10 @@ def split_into_convex_segments(
         )
     return convex_parts
 
-def remove_redundant_convex_segments(fs: List[PiecewiseLinearFunction]) -> List[PiecewiseLinearFunction]:
+
+def remove_redundant_convex_segments(
+    fs: List[PiecewiseLinearFunction],
+) -> List[PiecewiseLinearFunction]:
     """
     Remove redundant segments from a list of convex segments.
     """
@@ -267,20 +270,20 @@ def remove_redundant_convex_segments(fs: List[PiecewiseLinearFunction]) -> List[
     for i, f in enumerate(fs):
         if i == 0 or i == len(fs) - 1:
             continue
-        if i-1 in redunant:
+        if i - 1 in redunant:
             # if the previous segment was redundant, this segments is required
             continue
-        if f.xs[0] != f.xs[-1] -1:
+        if f.xs[0] != f.xs[-1] - 1:
             # spans intermediate values and is, thus, not redundant
             continue
-        if fs[i-1].xs[-1] == f.xs[0] and fs[i+1].xs[0] == f.xs[-1]:
-            assert fs[i-1].ys[-1] == f.ys[0]
-            assert fs[i+1].ys[0] == f.ys[-1]
+        if fs[i - 1].xs[-1] == f.xs[0] and fs[i + 1].xs[0] == f.xs[-1]:
+            assert fs[i - 1].ys[-1] == f.ys[0]
+            assert fs[i + 1].ys[0] == f.ys[-1]
             # redundant segment. Both values are already bound by the other segments
             redunant.append(i)
             continue
     return [f for i, f in enumerate(fs) if i not in redunant]
-    
+
 
 def split_into_segments(f: PiecewiseLinearFunction) -> List[PiecewiseLinearFunction]:
     """

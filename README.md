@@ -1185,34 +1185,62 @@ performance when using these parameters.
 
 ### Non-Linear Constraints/Piecewise Linear Functions
 
-In practice, you often have cost functions that are not linear.
-For example, consider a production problem where you have three different items you produce.
-Each item has different components, you have to buy.
-The cost of the components will first decrease with the amount you buy, then at some point increase again as your supplier will be out of stock and you have to buy from a more expensive supplier.
-Additionally, you only have a certain amount of customers willing to pay a certain price for your product.
-If you want to sell more, you will have to lower the price, which will decrease your profit.
+In practice, you often have cost functions that are not linear. For example,
+consider a production problem where you have three different items you produce.
+Each item has different components, you have to buy. The cost of the components
+will first decrease with the amount you buy, then at some point increase again
+as your supplier will be out of stock and you have to buy from a more expensive
+supplier. Additionally, you only have a certain amount of customers willing to
+pay a certain price for your product. If you want to sell more, you will have to
+lower the price, which will decrease your profit.
 
 Let us assume such a function looks like $y=f(x)$ in the following figure.
-Unfortunately, it is a rather complex function that we cannot directly express in CP-SAT.
-However, we can approximate it with a piecewise linear function as shown in red.
-Such piecewise linear approximations are very common, and some solvers can even do them automatically, e.g., Gurobi.
-The resolution can be arbitrarily high, but the more segments you have, the more complex the model becomes.
-Thus, it is usually only chosen to be as high as necessary.
-| ![./images/pwla.png](https://github.com/d-krupke/cpsat-primer/blob/main/images/pwla.png) |
-| :------------------------------------: |
-| We can model an arbitrary continuous function with a piecewise linear function. Here, we split the original function into a number of straight segments. The accuracy can be adapted to the requirements. The linear segments can then be expressed in CP-SAT. The fewer such segments, the easier it remains to model and solve. |
+Unfortunately, it is a rather complex function that we cannot directly express
+in CP-SAT. However, we can approximate it with a piecewise linear function as
+shown in red. Such piecewise linear approximations are very common, and some
+solvers can even do them automatically, e.g., Gurobi. The resolution can be
+arbitrarily high, but the more segments you have, the more complex the model
+becomes. Thus, it is usually only chosen to be as high as necessary. |
+![./images/pwla.png](https://github.com/d-krupke/cpsat-primer/blob/main/images/pwla.png)
+| | :------------------------------------: | | We can model an arbitrary
+continuous function with a piecewise linear function. Here, we split the
+original function into a number of straight segments. The accuracy can be
+adapted to the requirements. The linear segments can then be expressed in
+CP-SAT. The fewer such segments, the easier it remains to model and solve. |
 
-Using linear constraints (`model.Add`) and reification (`.OnlyEnforceIf`), we can model such a piecewise linear function in CP-SAT.
-For this we simply use boolean variables to decide for a segment, and then activate the corresponding linear constraint via reification.
-However, this has two problems in CP-SAT, as shown in the next figure.
+Using linear constraints (`model.Add`) and reification (`.OnlyEnforceIf`), we
+can model such a piecewise linear function in CP-SAT. For this we simply use
+boolean variables to decide for a segment, and then activate the corresponding
+linear constraint via reification. However, this has two problems in CP-SAT, as
+shown in the next figure.
 
-| ![./images/pwla_problems.png](https://github.com/d-krupke/cpsat-primer/blob/main/images/pwla_problems.png) |
-| :------------------------------------------------------: |
+|                                                                                                             ![./images/pwla_problems.png](https://github.com/d-krupke/cpsat-primer/blob/main/images/pwla_problems.png)                                                                                                              |
+| :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
 | Even if the function f(x) now consists of linear segments, we cannot simply implement $y=f(x)$ in CP-SAT. First, for many $x$-values, $f(x)$ will be not integral and, thus, infeasible. Second, the canonical representation of many linear segments will require non-integral coefficients, which are also not allowed in CP-SAT. |
 
-* **Problem A:** Even if we can express a segment as a linear function, the result of the function may not be integral. In the example, $f(5)$ would be $3.5$ and, thus, if we enforce $y=f(x)$, $x$ would be prohibited to be $5$, which is not what we want. There are two options now. Either, we use a more complex piecewise linear approximation that ensures that the function will always yield integral solutions or we use inequalities instead. The first solution has the issue that this can require too many segments, making it far too expensive to optimize. The second solution will be a weaker constraint as now we can only enforce $y<=f(x)$ or $y>=f(x)$, but not $y=f(x)$. If you try to enforce it by $y<=f(x)$ and $y>=f(x)$, you will end with the same infeasibility as before. However, often an inequality will be enough. If the problem is to prevent $y$ from becoming too large, you use $y<=f(x)$, if the problem is to prevent $y$ from becoming too small, you use $y>=f(x)$. If we want to represent the costs by $f(x)$, we would use $y>=f(x)$ to minimize the costs.
+- **Problem A:** Even if we can express a segment as a linear function, the
+  result of the function may not be integral. In the example, $f(5)$ would be
+  $3.5$ and, thus, if we enforce $y=f(x)$, $x$ would be prohibited to be $5$,
+  which is not what we want. There are two options now. Either, we use a more
+  complex piecewise linear approximation that ensures that the function will
+  always yield integral solutions or we use inequalities instead. The first
+  solution has the issue that this can require too many segments, making it far
+  too expensive to optimize. The second solution will be a weaker constraint as
+  now we can only enforce $y<=f(x)$ or $y>=f(x)$, but not $y=f(x)$. If you try
+  to enforce it by $y<=f(x)$ and $y>=f(x)$, you will end with the same
+  infeasibility as before. However, often an inequality will be enough. If the
+  problem is to prevent $y$ from becoming too large, you use $y<=f(x)$, if the
+  problem is to prevent $y$ from becoming too small, you use $y>=f(x)$. If we
+  want to represent the costs by $f(x)$, we would use $y>=f(x)$ to minimize the
+  costs.
 
-* **Problem B:** The canonical representation of a linear function is $y=ax+b$. However, this will often require non-integral coefficients. Luckily, we can automatically scale them up to integral values by adding a scaling factor. The inequality $y=0.5x+0.5$ in the example can also be represented as $2y=x+1$. I will spare you the math, but it just requires a simple trick with the least common multiple. Of course, the required scaling factor can become large, and at some point lead to overflows.
+- **Problem B:** The canonical representation of a linear function is $y=ax+b$.
+  However, this will often require non-integral coefficients. Luckily, we can
+  automatically scale them up to integral values by adding a scaling factor. The
+  inequality $y=0.5x+0.5$ in the example can also be represented as $2y=x+1$. I
+  will spare you the math, but it just requires a simple trick with the least
+  common multiple. Of course, the required scaling factor can become large, and
+  at some point lead to overflows.
 
 An implementation could now look as follows:
 
@@ -1240,23 +1268,32 @@ model.Minimize(y)
 # if we were to maximize y, we would have user <= instead of >=
 ```
 
-This can be quite tedious, but luckily, I wrote a small helper class that will do this automatically for you.
-You can find it in [./utils/piecewise_functions](./utils/piecewise_functions/).
-Simply copy it into your code.
+This can be quite tedious, but luckily, I wrote a small helper class that will
+do this automatically for you. You can find it in
+[./utils/piecewise_functions](./utils/piecewise_functions/). Simply copy it into
+your code.
 
 Let us use this code to solve an instance of the problem above.
 
-We have two products that each require three components.
-The first product requires 3 of component 1, 5 of component 2, and 2 of component 3.
-The second product requires 2 of component 1, 1 of component 2, and 3 of component 3.
-We can buy up to 1500 of each component for the price given in the figure below.
-We can produce up to 300 of each product and sell them for the price given in the figure below.
-| ![./images/production_example_cost_components.png](images/production_example_cost_components.png) | ![./images/production_example_selling_price.png](https://github.com/d-krupke/cpsat-primer/blob/main/images/production_example_selling_price.png) |
-| :--------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------: |
-| Costs for buying components necessary for production. | Selling price for the products. |
+We have two products that each require three components. The first product
+requires 3 of component 1, 5 of component 2, and 2 of component 3. The second
+product requires 2 of component 1, 1 of component 2, and 3 of component 3. We
+can buy up to 1500 of each component for the price given in the figure below. We
+can produce up to 300 of each product and sell them for the price given in the
+figure below. |
+![./images/production_example_cost_components.png](images/production_example_cost_components.png)
+|
+![./images/production_example_selling_price.png](https://github.com/d-krupke/cpsat-primer/blob/main/images/production_example_selling_price.png)
+| |
+:--------------------------------------------------------------------------------------------------:
+|
+:--------------------------------------------------------------------------------------------------:
+| | Costs for buying components necessary for production. | Selling price for
+the products. |
 
-We want to maximize the profit, i.e., the selling price minus the costs for buying the components.
-We can model this as follows:
+We want to maximize the profit, i.e., the selling price minus the costs for
+buying the components. We can model this as follows:
+
 ```python
 requirements_1 = (3,5,2)
 requirements_2 = (2, 1, 3)
@@ -1317,6 +1354,7 @@ print(f"Overall gain: {solver.ObjectiveValue()}")
 ```
 
 This will give you the following output:
+
 ```
 Buy 930 of component 1
 Buy 1200 of component 2
@@ -1328,8 +1366,8 @@ Overall gain: 1120.0
 
 Unfortunately, these problems quickly get very complicated to model and solve.
 This is just a proof that, theoretically, you can model such problems in CP-SAT.
-Practically, you can lose a lot of time and sanity with this if you are not an expert.
-
+Practically, you can lose a lot of time and sanity with this if you are not an
+expert.
 
 ### There is more
 
