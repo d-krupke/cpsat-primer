@@ -1200,13 +1200,11 @@ in CP-SAT. However, we can approximate it with a piecewise linear function as
 shown in red. Such piecewise linear approximations are very common, and some
 solvers can even do them automatically, e.g., Gurobi. The resolution can be
 arbitrarily high, but the more segments you have, the more complex the model
-becomes. Thus, it is usually only chosen to be as high as necessary. |
-![./images/pwla.png](https://github.com/d-krupke/cpsat-primer/blob/main/images/pwla.png)
-| | :------------------------------------: | | We can model an arbitrary
-continuous function with a piecewise linear function. Here, we split the
-original function into a number of straight segments. The accuracy can be
-adapted to the requirements. The linear segments can then be expressed in
-CP-SAT. The fewer such segments, the easier it remains to model and solve. |
+becomes. Thus, it is usually only chosen to be as high as necessary. 
+
+| ![./images/pwla.png](https://github.com/d-krupke/cpsat-primer/blob/main/images/pwla.png) | 
+| :------------------------------------: | 
+| We can model an arbitrary continuous function with a piecewise linear function. Here, we split the original function into a number of straight segments. The accuracy can be adapted to the requirements. The linear segments can then be expressed in CP-SAT. The fewer such segments, the easier it remains to model and solve. |
 
 Using linear constraints (`model.Add`) and reification (`.OnlyEnforceIf`), we
 can model such a piecewise linear function in CP-SAT. For this we simply use
@@ -1280,16 +1278,11 @@ requires 3 of component 1, 5 of component 2, and 2 of component 3. The second
 product requires 2 of component 1, 1 of component 2, and 3 of component 3. We
 can buy up to 1500 of each component for the price given in the figure below. We
 can produce up to 300 of each product and sell them for the price given in the
-figure below. |
-![./images/production_example_cost_components.png](images/production_example_cost_components.png)
-|
-![./images/production_example_selling_price.png](https://github.com/d-krupke/cpsat-primer/blob/main/images/production_example_selling_price.png)
-| |
-:--------------------------------------------------------------------------------------------------:
-|
-:--------------------------------------------------------------------------------------------------:
-| | Costs for buying components necessary for production. | Selling price for
-the products. |
+figure below. 
+
+| ![./images/production_example_cost_components.png](https://github.com/d-krupke/cpsat-primer/blob/main/images/production_example_cost_components.png) | ![./images/production_example_selling_price.png](https://github.com/d-krupke/cpsat-primer/blob/main/images/production_example_selling_price.png) | 
+| :--------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------:|
+ | Costs for buying components necessary for production. | Selling price for the products. |
 
 We want to maximize the profit, i.e., the selling price minus the costs for
 buying the components. We can model this as follows:
