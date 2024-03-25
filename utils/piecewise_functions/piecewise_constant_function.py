@@ -5,6 +5,13 @@ with respect to x, i.e., y = f(x) where f is a piecewise constant function.
 
 The function is defined by a pydantic model, allowing for easy serialization and validation.
 This is useful if you want to define your function in a config file.
+
+The code is under MIT license, and is free to use, modify, or distribute.
+Just copy and paste for whatever project you are working on.
+
+https://github.com/d-krupke/cpsat-primer
+
+Author: Dominik Krupke (2024)
 """
 
 from typing import List

@@ -2,6 +2,13 @@
 This file implements piecewise linear functions and constraints for CP-SAT.
 Because CP-SAT only supports integer values, the functions can only be used as lower or upper bounds,
 but not for equality constraints as they would most likely not be satisfiable.
+
+The code is under MIT license, and is free to use, modify, or distribute.
+Just copy and paste for whatever project you are working on.
+
+https://github.com/d-krupke/cpsat-primer
+
+Author: Dominik Krupke (2024)
 """
 
 from typing import List, Optional, Tuple
