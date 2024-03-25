@@ -1,5 +1,5 @@
 """
-This module contains code for piecewise functions, which can be used to approximate 
+This module contains code for piecewise functions, which can be used to approximate
 more complex functions for CP-SAT.
 
 The code is under MIT license, and is free to use, modify, or distribute.
@@ -10,14 +10,21 @@ https://github.com/d-krupke/cpsat-primer
 Author: Dominik Krupke (2024)
 """
 
-from .piecewise_constant_function import PiecewiseConstantFunction, PiecewiseConstantFunctionConstraintViaDiff, PiecewiseConstantFunctionConstraintViaOnlyIf
+from .piecewise_constant_function import (
+    PiecewiseConstantFunction,
+    PiecewiseConstantConstraint,
+    PiecewiseConstantConstraintViaOnlyIf,
+)
 
-from .piecewise_linear_function import PiecewiseLinearFunction, PiecewiseLinearConstraint
+from .piecewise_linear_function import (
+    PiecewiseLinearFunction,
+    PiecewiseLinearConstraint,
+)
 
 __all__ = [
-    'PiecewiseConstantFunction',
-    'PiecewiseConstantFunctionConstraintViaDiff',
-    'PiecewiseConstantFunctionConstraintViaOnlyIf',
-    'PiecewiseLinearFunction',
-    'PiecewiseLinearConstraint',
+    "PiecewiseConstantFunction",
+    "PiecewiseConstantConstraint",
+    "PiecewiseConstantConstraintViaOnlyIf",
+    "PiecewiseLinearFunction",
+    "PiecewiseLinearConstraint",
 ]

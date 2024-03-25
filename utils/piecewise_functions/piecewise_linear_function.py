@@ -257,6 +257,7 @@ def split_into_convex_segments(
         )
     return convex_parts
 
+
 def split_into_segments(f: PiecewiseLinearFunction) -> List[PiecewiseLinearFunction]:
     """
     Split a piecewise linear function into segments.
