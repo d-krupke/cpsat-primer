@@ -1252,18 +1252,18 @@ segment_active = [model.NewBoolVar("segment_1"), model.NewBoolVar("segment_2")]
 model.AddAtMostOne(segment_active)  # enforce one segment to be active
 
 # Segment 1
-# if 0<=x<=3, then y <= 0.5*X + 0.5
-model.Add(2*y >= 2*x + 1).OnlyEnforceIf(segment_active[0])
+# if 0<=x<=3, then y >= 0.5*x + 0.5
+model.Add(2*y >= x + 1).OnlyEnforceIf(segment_active[0])
 model.Add(x>=0).OnlyEnforceIf(segment_active[0])
 model.Add(x<=3).OnlyEnforceIf(segment_active[0])
 
 # Segment 2
-model.Add(_SLIGHTLY_MORE_COMPLEX_INEQUALITY_).OnlyEnforceIf(segment_active[0])
-model.Add(x>=3).OnlyEnforceIf(segment_active[0])
-model.Add(x<=7).OnlyEnforceIf(segment_active[0])
+model.Add(_SLIGHTLY_MORE_COMPLEX_INEQUALITY_).OnlyEnforceIf(segment_active[1])
+model.Add(x>=3).OnlyEnforceIf(segment_active[1])
+model.Add(x<=7).OnlyEnforceIf(segment_active[1])
 
 model.Minimize(y)
-# if we were to maximize y, we would have user <= instead of >=
+# if we were to maximize y, we would have used <= instead of >=
 ```
 
 This can be quite tedious, but luckily, I wrote a small helper class that will
@@ -1288,7 +1288,7 @@ We want to maximize the profit, i.e., the selling price minus the costs for
 buying the components. We can model this as follows:
 
 ```python
-requirements_1 = (3,5,2)
+requirements_1 = (3, 5, 2)
 requirements_2 = (2, 1, 3)
 
 from ortools.sat.python import cp_model
