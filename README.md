@@ -259,6 +259,14 @@ can differ slightly between multiple runs due to additional randomness). This is
 called a portfolio strategy and is a common technique in combinatorial
 optimization, if you cannot predict which strategy will perform best.
 
+In a later section, we will explore how to review and interpret the CP-SAT
+solver's log. Analyzing the log is vital, especially when the solver's
+performance is suboptimal. An expert can often pinpoint the cause of any issues
+within seconds by examining the log, which is key to optimizing solver
+efficiency.
+
+### Mathematical Model
+
 The mathematical model of the code above would usually be written by experts
 something like this:
 
@@ -283,6 +291,43 @@ x,y \in \mathbb{Z}
 ```
 
 The `s.t.` stands for `subject to`, sometimes also read as `such that`.
+
+### Overloading
+
+One aspect of using CP-SAT solver that often poses challenges for learners is
+understanding operator overloading in Python and the distinction between the two
+types of variables involved. In this context, `x` and `y` serve as mathematical
+variables. That is, they are placeholders that will only be assigned specific
+values during the solving phase. To illustrate this more clearly, let us explore
+an example within the Python shell:
+
+```python
+>>> model = cp_model.CpModel()
+>>> x = model.NewIntVar(0, 100, "x")
+>>> x
+x(0..100)
+>>> type(x)
+<class 'ortools.sat.python.cp_model.IntVar'>
+>>> x + 1
+sum(x(0..100), 1)
+>>> x + 1 <= 1
+<ortools.sat.python.cp_model.BoundedLinearExpression object at 0x7d8d5a765df0>
+```
+
+In this example, `x` is not a conventional number but a placeholder defined to
+potentially assume any value between 0 and 100. When 1 is added to `x`, the
+result is a new placeholder representing the sum of `x` and 1. Similarly,
+comparing this sum to 1 produces another placeholder, which encapsulates the
+comparison of the sum with 1. These placeholders do not hold concrete values at
+this stage but are essential for defining constraints within the model.
+Attempting operations like `if x + 1 <= 1: print("True")` will trigger a
+`NotImplementedError`, as the condition `x+1<=1` cannot be evaluated directly.
+
+Although this approach to defining models might initially seem perplexing, it
+facilitates a closer alignment with mathematical notation, which in turn can
+make it easier to identify and correct errors in the modeling process.
+
+### More examples
 
 Here are some further examples, if you are not yet satisfied:
 
@@ -1200,10 +1245,10 @@ in CP-SAT. However, we can approximate it with a piecewise linear function as
 shown in red. Such piecewise linear approximations are very common, and some
 solvers can even do them automatically, e.g., Gurobi. The resolution can be
 arbitrarily high, but the more segments you have, the more complex the model
-becomes. Thus, it is usually only chosen to be as high as necessary. 
+becomes. Thus, it is usually only chosen to be as high as necessary.
 
-| ![./images/pwla.png](https://github.com/d-krupke/cpsat-primer/blob/main/images/pwla.png) | 
-| :------------------------------------: | 
+|                                                                                                                     ![./images/pwla.png](https://github.com/d-krupke/cpsat-primer/blob/main/images/pwla.png)                                                                                                                      |
+| :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
 | We can model an arbitrary continuous function with a piecewise linear function. Here, we split the original function into a number of straight segments. The accuracy can be adapted to the requirements. The linear segments can then be expressed in CP-SAT. The fewer such segments, the easier it remains to model and solve. |
 
 Using linear constraints (`model.Add`) and reification (`.OnlyEnforceIf`), we
@@ -1278,11 +1323,11 @@ requires 3 of component 1, 5 of component 2, and 2 of component 3. The second
 product requires 2 of component 1, 1 of component 2, and 3 of component 3. We
 can buy up to 1500 of each component for the price given in the figure below. We
 can produce up to 300 of each product and sell them for the price given in the
-figure below. 
+figure below.
 
-| ![./images/production_example_cost_components.png](https://github.com/d-krupke/cpsat-primer/blob/main/images/production_example_cost_components.png) | ![./images/production_example_selling_price.png](https://github.com/d-krupke/cpsat-primer/blob/main/images/production_example_selling_price.png) | 
-| :--------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------:|
- | Costs for buying components necessary for production. | Selling price for the products. |
+| ![./images/production_example_cost_components.png](https://github.com/d-krupke/cpsat-primer/blob/main/images/production_example_cost_components.png) | ![./images/production_example_selling_price.png](https://github.com/d-krupke/cpsat-primer/blob/main/images/production_example_selling_price.png) |
+| :--------------------------------------------------------------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------------------------------------------------------: |
+|                                                Costs for buying components necessary for production.                                                 |                                                         Selling price for the products.                                                          |
 
 We want to maximize the profit, i.e., the selling price minus the costs for
 buying the components. We can model this as follows:
