@@ -268,7 +268,7 @@ def remove_redundant_convex_segments(
         return fs
     redunant = []
     for i, f in enumerate(fs):
-        if i == 0 or i == len(fs) - 1:
+        if i in [0, len(fs) - 1]:
             continue
         if i - 1 in redunant:
             # if the previous segment was redundant, this segments is required

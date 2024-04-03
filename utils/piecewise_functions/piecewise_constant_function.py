@@ -1,6 +1,6 @@
 """
 This file implements a piecewise constant function.
-It create a variable y that is constraint to be piecewise constant
+It create a variable y that is constrained to be piecewise constant
 with respect to x, i.e., y = f(x) where f is a piecewise constant function.
 
 The function is defined by a pydantic model, allowing for easy serialization and validation.
@@ -47,7 +47,7 @@ class PiecewiseConstantFunction(BaseModel):
         """
         Returns the value of the function at x.
         """
-        if not self.is_defined(x):
+        if not self.is_defined_for(x):
             raise ValueError(f"x={x} is out of bounds")
         # binary search for the interval
         i = bisect.bisect_right(self.xs, x) - 1
@@ -62,7 +62,7 @@ class PiecewiseConstantFunction(BaseModel):
             y1 >= y2 for y1, y2 in zip(self.ys[:-1], self.ys[1:])
         )
 
-    def is_defined(self, x: int) -> bool:
+    def is_defined_for(self, x: int) -> bool:
         return self.xs[0] <= x < self.xs[-1]
 
     @model_validator(mode="after")
@@ -84,9 +84,9 @@ class PiecewiseConstantConstraint:
 
     def __init__(
         self,
+        model: cp_model.CpModel,
         x_var: cp_model.IntVar,
         f: PiecewiseConstantFunction,
-        model: cp_model.CpModel,
         restrict_domain: bool = True,
     ):
         self.x = x_var
@@ -168,7 +168,11 @@ def test_stairs():
     model = cp_model.CpModel()
     x = model.NewIntVar(0, 10, "x")
     f_ = PiecewiseConstantFunction(xs=[0, 1, 2, 3], ys=[0, 1, 2])
-    f = PiecewiseConstantConstraint(x, f_, model)
+    f = PiecewiseConstantConstraint(
+        model,
+        x,
+        f_,
+    )
     model.Maximize(f.y)
     solver = cp_model.CpSolver()
     status = solver.Solve(model)
@@ -185,7 +189,11 @@ def test_stairs_min():
     model = cp_model.CpModel()
     x = model.NewIntVar(0, 10, "x")
     f_ = PiecewiseConstantFunction(xs=[0, 1, 2, 3], ys=[0, 1, 2])
-    f = PiecewiseConstantConstraint(x, f_, model)
+    f = PiecewiseConstantConstraint(
+        model,
+        x,
+        f_,
+    )
     model.Minimize(f.y)
     solver = cp_model.CpSolver()
     status = solver.Solve(model)
@@ -200,7 +208,11 @@ def test_pyramid():
     model = cp_model.CpModel()
     x = model.NewIntVar(0, 10, "x")
     f_ = PiecewiseConstantFunction(xs=[0, 1, 2, 3], ys=[0, 1, 0])
-    f = PiecewiseConstantConstraint(x, f_, model)
+    f = PiecewiseConstantConstraint(
+        model,
+        x,
+        f_,
+    )
     model.Maximize(f.y)
     solver = cp_model.CpSolver()
     status = solver.Solve(model)
@@ -215,7 +227,11 @@ def test_larger_pyramid():
     model = cp_model.CpModel()
     x = model.NewIntVar(0, 10, "x")
     f_ = PiecewiseConstantFunction(xs=[0, 1, 2, 3, 4, 5], ys=[0, 1, 5, 1, 0])
-    f = PiecewiseConstantConstraint(x, f_, model)
+    f = PiecewiseConstantConstraint(
+        model,
+        x,
+        f_,
+    )
     model.Maximize(f.y)
     solver = cp_model.CpSolver()
     status = solver.Solve(model)
@@ -235,9 +251,9 @@ class PiecewiseConstantConstraintViaOnlyIf:
 
     def __init__(
         self,
+        model: cp_model.CpModel,
         x_var: cp_model.IntVar,
         f: PiecewiseConstantFunction,
-        model: cp_model.CpModel,
     ):
         self.x = x_var
         self.f = f
@@ -276,7 +292,11 @@ def test_stairs_onlyif():
     model = cp_model.CpModel()
     x = model.NewIntVar(0, 10, "x")
     f_ = PiecewiseConstantFunction(xs=[0, 1, 2, 3], ys=[0, 1, 2])
-    f = PiecewiseConstantConstraintViaOnlyIf(x, f_, model)
+    f = PiecewiseConstantConstraintViaOnlyIf(
+        model,
+        x,
+        f_,
+    )
     model.Maximize(f.y)
     solver = cp_model.CpSolver()
     status = solver.Solve(model)
@@ -293,7 +313,11 @@ def test_stairs_min_onlyif():
     model = cp_model.CpModel()
     x = model.NewIntVar(0, 10, "x")
     f_ = PiecewiseConstantFunction(xs=[0, 1, 2, 3], ys=[0, 1, 2])
-    f = PiecewiseConstantConstraintViaOnlyIf(x, f_, model)
+    f = PiecewiseConstantConstraintViaOnlyIf(
+        model,
+        x,
+        f_,
+    )
     model.Minimize(f.y)
     solver = cp_model.CpSolver()
     status = solver.Solve(model)
@@ -308,7 +332,11 @@ def test_pyramid_onlyif():
     model = cp_model.CpModel()
     x = model.NewIntVar(0, 10, "x")
     f_ = PiecewiseConstantFunction(xs=[0, 1, 2, 3], ys=[0, 1, 0])
-    f = PiecewiseConstantConstraintViaOnlyIf(x, f_, model)
+    f = PiecewiseConstantConstraintViaOnlyIf(
+        model,
+        x,
+        f_,
+    )
     model.Maximize(f.y)
     solver = cp_model.CpSolver()
     status = solver.Solve(model)
@@ -323,7 +351,11 @@ def test_larger_pyramid_onlyif():
     model = cp_model.CpModel()
     x = model.NewIntVar(0, 10, "x")
     f_ = PiecewiseConstantFunction(xs=[0, 1, 2, 3, 4, 5], ys=[0, 1, 5, 1, 0])
-    f = PiecewiseConstantConstraintViaOnlyIf(x, f_, model)
+    f = PiecewiseConstantConstraintViaOnlyIf(
+        model,
+        x,
+        f_,
+    )
     model.Maximize(f.y)
     solver = cp_model.CpSolver()
     status = solver.Solve(model)
