@@ -34,4 +34,17 @@ def test_cpsat_bool_vars(bool_var):
     # check if b is either 0 or 1
     assert b_value in [0, 1], "0 or 1 is expected"
 
+def test_cpsat_not_b(bool_var): 
+    b, b_value = bool_var 
+
+    # implicitly available negation of b:
+    not_b = b.Not() # will be 1 if b is 0 and 0 if b is 1
+    not_b_value = solver.Value(not_b)
+
+    # check if not_b is either 0 or 1
+    assert not_b_value in [0, 1], "expected 0 or 1, but got different value"
+
+    # check if not_b is the negation of b
+    assert not_b_value == (not b_value), "not_b must be the negation of b"
+
      
