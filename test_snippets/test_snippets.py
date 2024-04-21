@@ -18,6 +18,17 @@ def bool_var():
     solver.Solve(model)
     return b, solver.Value(b)
 
+@pytest.fixture
+def domain():
+    # Define a domain with selected values
+    domain = cp_model.Domain.FromValues([2])
+
+    # Create a integer variable within this defined domain
+    x = model.NewIntVarFromDomain(domain, "x")
+
+    solver.Solve(model)
+    return solver.Value(x)
+
 def test_cpsat_integer_vars(integer_var):  
     z, z_value = integer_var
 
@@ -46,5 +57,14 @@ def test_cpsat_not_b(bool_var):
 
     # check if not_b is the negation of b
     assert not_b_value == (not b_value), "not_b must be the negation of b"
+
+def test_cpsat_domain(domain):
+    x = domain
+
+    # check if x is an integer variable
+    assert isinstance(x, int), "expected an integer, but got different type"
+
+    # Check if 'x' is within the desired domain
+    assert x in [2], "Expected integer in domain [2], but got {x}"
 
      
