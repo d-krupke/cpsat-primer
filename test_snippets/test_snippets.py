@@ -11,6 +11,13 @@ def integer_var():
     solver.Solve(model)
     return z, solver.Value(z)
 
+@pytest.fixture
+def bool_var():
+    # boolean variable b
+    b = model.NewBoolVar("b")
+    solver.Solve(model)
+    return b, solver.Value(b)
+
 def test_cpsat_integer_vars(integer_var):  
     z, z_value = integer_var
 
@@ -20,4 +27,11 @@ def test_cpsat_integer_vars(integer_var):
     # Check if z has desired lower and upper bounds
     assert z.Proto().domain[0] == -100, "integer variable's lowerbound is incorrect"
     assert z.Proto().domain[1] == 100, "integer variable's upperbound is incorrect"
+
+def test_cpsat_bool_vars(bool_var): 
+    _, b_value = bool_var
+
+    # check if b is either 0 or 1
+    assert b_value in [0, 1], "0 or 1 is expected"
+
      
