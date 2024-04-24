@@ -2516,6 +2516,31 @@ class _ItemVariables:
         self.instance = instance
         self.x = [model.NewBoolVar(f"x_{i}") for i in range(len(instance.weights))]
 
+    def __getitem__(self, i):
+        return self.x[i]
+
+    def extract_packed_items(self, solver: cp_model.CpSolver) -> List[int]:
+        return [i for i, x_i in enumerate(self.x) if solver.Value(x_i)]
+
+    def used_weight(self) -> cp_model.LinearExpr:
+        return sum(weight * x_i for weight, x_i in zip(self.instance.weights, self.x))
+
+    def packed_value(self) -> cp_model.LinearExpr:
+        return sum(value * x_i for value, x_i in zip(self.instance.values, self.x))
+
+    def iter_items(
+        self,
+        weight_lb: float = 0.0,
+        weight_ub: float = float("inf"),
+        value_lb: float = 0.0,
+        value_ub: float = float("inf"),
+    ) -> Generator[Tuple[int, cp_model.BoolVar], None, None]:
+        for i, (weight, x_i) in enumerate(zip(self.instance.weights, self.x)):
+            if (
+                weight_lb <= weight <= weight_ub
+                and value_lb <= self.instance.values[i] <= value_ub
+            ):
+                yield i, x_i
 
 class _BonusVariables:
     def __init__(
