@@ -79,6 +79,8 @@ awaits you in this primer:
    constraints. The constraints make the most important part.
 4. [Parameters](#parameters): How to specify CP-SATs behavior, if needed.
    Timelimits, hints, assumptions, parallelization, ...
+5. [Coding Patterns](#Coding-Patterns-for-Optimization-Problems): Basic design patterns
+    for creating maintainable algorithms.
 5. [How does it work?](#how-does-it-work): After we know what we can do with
    CP-SAT, we look into how CP-SAT will do all these things.
 6. [Benchmarking your Model](#benchmarking-your-model): How to benchmark your
@@ -1940,6 +1942,444 @@ some conflicts.
 > advantage for a bad model and after improving the model by symmetry breaking,
 > it performed worse. Further, I assume that CP-SAT can learn the best strategy
 > (Gurobi does such a thing, too) much better dynamically on its own.
+
+---
+
+## Coding Patterns for Optimization Problems
+
+In this section, I will show you some coding patterns that are useful for
+optimization problems. I will not show you how to model specific problems, but
+rather how to structure your code to make it more readable and maintainable.
+
+### Simple Function
+
+For very simple problems, you can just write a function that creates the model
+and solves it. It is only recommended for very simple problems and is not
+very flexible. Parameters to the solver can be passed via keyword arguments with
+default parameters.
+
+```python
+from ortools.sat.python import cp_model
+from typing import List
+
+def solve_knapsack(
+    # instance
+    weights: List[int], values: List[int], capacity: int
+    # parameters
+    , *, time_limit: int = 900, opt_tol: float = 0.01
+  ) -> List[int]:
+    model = cp_model.CpModel()
+    n = len(weights)
+    x = [model.NewBoolVar(f"x_{i}") for i in range(n)]
+    model.Add(sum(weights[i] * x[i] for i in range(n)) <= capacity)
+    model.Maximize(sum(values[i] * x[i] for i in range(n)))
+    solver = cp_model.CpSolver()
+    solver.parameters.max_time_in_seconds = time_limit
+    solver.parameters.relative_gap_limit = opt_tol
+    status = solver.Solve(model)
+    if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
+        return [i for i in range(n) if solver.Value(x[i])]
+    return []
+```
+
+### Custom Data Classes for Instances, Configurations, and Solutions
+
+Using serializable data classes for instances, configurations, and solutions
+can make your code more readable and maintainable. It also makes it easier to
+document and test your code, ensure data consistency, and use it in larger
+projects were you may have to exchange data with other parts of the code.
+
+We did the following changes:
+* We created Pydantic data classes for the instance, configuration, and solution.
+
+```python
+from ortools.sat.python import cp_model
+from pydantic import BaseModel, PositiveInt, List, PositiveFloat, NonNegativeFloat
+
+class KnapsackInstance(BaseModel):
+    weights: List[PositiveInt]  # the weight of each item
+    values: List[PositiveInt]  # the value of each item
+    capacity: PositiveInt  # the capacity of the knapsack
+
+    # ensure that the number of weights and values is the same
+    @model_validator(mode="after")
+    def check_lengths(cls, v):
+        if len(v.weights) != len(v.values):
+            raise ValueError("The number of weights and values must be the same.")
+        return v
+
+class KnapsackSolverConfig(BaseModel):
+    time_limit: PositiveInt = 900  # the time limit for the solver in seconds
+    opt_tol: NonNegativeFloat = 0.01  # the optimality tolerance for the solver. 0.01 means 1% optimality gap is allowed.
+
+class KnapsackSolution(BaseModel):
+    selected_items: List[int]  # the indices of the selected items
+    objective: int  # the objective value of the solution
+    upper_bound: float  # the upper bound of the solution
+
+def solve_knapsack(instance: KnapsackInstance, config: KnapsackSolverConfig) -> KnapsackSolution:
+    model = cp_model.CpModel()
+    n = len(instance.weights)
+    x = [model.NewBoolVar(f"x_{i}") for i in range(n)]
+    model.Add(sum(instance.weights[i] * x[i] for i in range(n)) <= instance.capacity)
+    model.Maximize(sum(instance.values[i] * x[i] for i in range(n)))
+    solver = cp_model.CpSolver()
+    solver.parameters.max_time_in_seconds = config.time_limit
+    solver.parameters.relative_gap_limit = config.opt_tol
+    status = solver.Solve(model)
+    if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
+        return KnapsackSolution(
+            selected_items=[i for i in range(n) if solver.Value(x[i])],
+            objective=solver.ObjectiveValue(),
+            upper_bound=solver.BestObjectiveBound()
+        )
+    return KnapsackSolution(selected_items=[], objective=0, upper_bound=0)
+  
+```
+
+Once you have implemented a first version with Pydantic, you can easily serialize a
+few instances, configurations, and solutions to JSON and use them as test cases
+to ensure that further changes to your code do not break the expected behavior.
+
+### Solver Class
+
+For many optimization problems, you may have to iterate on the model and
+the solution. In the real world, some constraints will be only known after
+you have shown a solution to a user. For example, if your solver is used
+to schedule shifts, you may want to have the option to add constraints
+after seeing the solution and compute a new solution. It not necessarily has
+to be a person at the other end, but it could also be a higher-level algorithm
+that needs to iterate on a model. In this case, it is useful to have a class
+that encapsulates the model and the solver.
+
+We did the following changes:
+* We created a `KnapsackSolver` class that encapsulates the model and the solver.
+
+```python
+from ortools.sat.python import cp_model
+from pydantic import BaseModel, PositiveInt, List, PositiveFloat, NonNegativeFloat
+
+class KnapsackInstance(BaseModel):
+    weights: List[PositiveInt]  # the weight of each item
+    values: List[PositiveInt]  # the value of each item
+    capacity: PositiveInt  # the capacity of the knapsack
+
+    # ensure that the number of weights and values is the same
+    @model_validator(mode="after")
+    def check_lengths(cls, v):
+        if len(v.weights) != len(v.values):
+            raise ValueError("The number of weights and values must be the same.")
+        return v
+
+class KnapsackSolverConfig(BaseModel):
+    time_limit: PositiveInt = 900  # the time limit for the solver in seconds
+    opt_tol: NonNegativeFloat = 0.01  # the optimality tolerance for the solver. 0.01 means 1% optimality gap is allowed.
+    log_search_progress: bool = False  # whether to log the search progress
+
+class KnapsackSolution(BaseModel):
+    selected_items: List[int]  # the indices of the selected items
+    objective: int  # the objective value of the solution
+    upper_bound: float  # the upper bound of the solution
+
+class KnapsackSolver:
+    def __init__(self, instance: KnapsackInstance, config: KnapsackSolverConfig):
+        self.instance = instance
+        self.config = config
+        self.model = cp_model.CpModel()
+        self.n = len(instance.weights)
+        self.x = [self.model.NewBoolVar(f"x_{i}") for i in range(self.n)]
+        self._build_model()
+        self.solver = cp_model.CpSolver()
+
+    def _add_constraints(self):
+        # you can use auxiliary variables to separate mathematical elements and make
+        # the constraints more readable
+        used_weight = sum(weight * x_i for weight, x_i in zip(self.instance.weights, self.x))
+        self.model.Add(used_weight <= self.instance.capacity)
+      
+    def _add_objective(self):
+        # constraints and objectives can become complex, so it is useful to separate
+        # them into different functions for better readability.
+        self.model.Maximize(sum(value*x_i for value, x_i in zip(self.instance.values, self.x)))
+
+    def _build_model(self):
+        self._add_constraints()
+        self._add_objective()
+
+    def solve(self) -> KnapsackSolution:
+        # the configuration may change between iterations
+        self.solver.parameters.max_time_in_seconds = self.config.time_limit
+        self.solver.parameters.relative_gap_limit = self.config.opt_tol
+        self.solver.parameters.log_search_progress = self.config.log_search_progress
+        status = self.solver.Solve(self.model)
+        if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
+            return KnapsackSolution(
+                selected_items=[i for i in range(self.n) if self.solver.Value(self.x[i])],
+                objective=self.solver.ObjectiveValue(),
+                upper_bound=self.solver.BestObjectiveBound()
+            )
+        return KnapsackSolution(selected_items=[], objective=0, upper_bound=float('inf'))
+
+    def prohibit_combination(self, item_a: int, item_b: int):
+        """
+        Prohibit the combination of two items.
+        """
+        self.model.Add(self.x[item_a] + self.x[item_b] <= 1)
+
+if __name__ == "__main__":
+    instance = KnapsackInstance(weights=[1, 2, 3], values=[4, 5, 6], capacity=3)
+    config = KnapsackSolverConfig(time_limit=10, opt_tol=0.01, log_search_progress=True)
+    solver = KnapsackSolver(instance, config)
+    solution = solver.solve()
+    print(solution)
+    # Iterate on the solution by adding constraints
+    solver.prohibit_combination(0, 1)
+    # No need to rebuild the model, just solve it again
+    solution = solver.solve()
+    print(solution)
+```
+
+### Variable Containers
+
+Modularization is key to writing maintainable code.
+One way to modularize your code is to separate the variables from the model.
+By creating a variable container, you can easily create the variables and
+provide handy methods to access them.
+
+We did the following changes:
+* We created a `_ItemVariables` class that creates the variables for the items and provides methods to access them.
+* We added a `prohibit_combination` method that adds a constraint to the model that prohibits two items from being packed together.
+
+```python
+
+from ortools.sat.python import cp_model
+from pydantic import BaseModel, PositiveInt, List, PositiveFloat, NonNegativeFloat
+from typing import Generator, Tuple
+
+class KnapsackInstance(BaseModel):
+    weights: List[PositiveInt]  # the weight of each item
+    values: List[PositiveInt]  # the value of each item
+    capacity: PositiveInt  # the capacity of the knapsack
+
+    # ensure that the number of weights and values is the same
+    @model_validator(mode="after")
+    def check_lengths(cls, v):
+        if len(v.weights) != len(v.values):
+            raise ValueError("The number of weights and values must be the same.")
+        return v
+
+class KnapsackSolverConfig(BaseModel):
+    time_limit: PositiveInt = 900  # the time limit for the solver in seconds
+    opt_tol: NonNegativeFloat = 0.01  # the optimality tolerance for the solver. 0.01 means 1% optimality gap is allowed.
+    log_search_progress: bool = False  # whether to log the search progress
+
+class KnapsackSolution(BaseModel):
+    selected_items: List[int]  # the indices of the selected items
+    objective: int  # the objective value of the solution
+    upper_bound: float  # the upper bound of the solution
+
+class _ItemVariables:
+    def __init__(self, instance: KnapsackInstance, model: cp_model.CpModel):
+        self.instance = instance
+        self.x = [model.NewBoolVar(f"x_{i}") for i in range(len(instance.weights))]
+
+    def __getitem__(self, i):
+        return self.x[i]
+
+    def extract_packed_items(self, solver: cp_model.CpSolver) -> List[int]:
+        return [i for i, x_i in enumerate(self.x) if solver.Value(x_i)]
+
+    def used_weight(self) -> cp_model.LinearExpr:
+        return sum(weight * x_i for weight, x_i in zip(self.instance.weights, self.x))
+
+    def packed_value(self) -> cp_model.LinearExpr:
+        return sum(value * x_i for value, x_i in zip(self.instance.values, self.x))
+
+    def iter_items(
+      self, weight_lb: float = 0.0, weight_ub: float = float('inf'),
+       value_lb: float = 0.0, value_ub: float = float('inf')
+      ) -> Generator[Tuple[int, cp_model.BoolVar], None, None]:
+        for i, (weight, x_i) in enumerate(zip(self.instance.weights, self.x)):
+            if weight_lb <= weight <= weight_ub and value_lb <= self.instance.values[i] <= value_ub:
+                yield i, x_i
+    
+class KnapsackSolver:
+    def __init__(self, instance: KnapsackInstance, config: KnapsackSolverConfig):
+        self.instance = instance
+        self.config = config
+        self.model = cp_model.CpModel()
+        self._item_vars = _ItemVariables(instance, self.model)
+        self._build_model()
+        self.solver = cp_model.CpSolver()
+
+    def _add_constraints(self):
+        self.model.Add(self._item_vars.used_weight() <= self.instance.capacity)
+        # prohibit more than one very heavy item to be packed
+        num_of_heavy_items_packed = sum(x for _, x in self._item_vars.iter_items(weight_lb=100))
+        self.model.Add(num_of_heavy_items_packed <= 1)
+
+    def _add_objective(self):
+        self.model.Maximize(self._item_vars.packed_value())
+
+    def _build_model(self):
+        self._add_constraints()
+        self._add_objective()
+    
+    def solve(self) -> KnapsackSolution:
+        self.solver.parameters.max_time_in_seconds = self.config.time_limit
+        self.solver.parameters.relative_gap_limit = self.config.opt_tol
+        self.solver.parameters.log_search_progress = self.config.log_search_progress
+        status = self.solver.Solve(self.model)
+        if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
+            return KnapsackSolution(
+                selected_items=self._item_vars.extract_packed_items(self.solver),
+                objective=self.solver.ObjectiveValue(),
+                upper_bound=self.solver.BestObjectiveBound()
+            )
+        return KnapsackSolution(selected_items=[], objective=0, upper_bound=float('inf'))
+
+    def prohibit_combination(self, item_a: int, item_b: int):
+        self.model.Add(self._item_vars[item_a] + self._item_vars[item_b] <= 1)
+
+```
+
+### Submodels
+
+When your model becomes more complex, you may want to split it into submodels that only communicate via some shared variables, but hide their details, such as auxiliary variables.
+
+An example for such a submodule has already been seen for the piecewise linear function.
+Here, we create for every piecewise linear function an object that communicates via the `x` and `y` variables to the main model,
+but internally creates auxiliary variables to model the piecewise linear function.
+As the logic is the same for every piecewise linear function, we can create a class that encapsulates this logic and make it reusable.
+The next pattern (Lazy Variable Construction) will also separate some of its logic into a separate class.
+
+### Lazy Variable Construction
+
+Especially for models with many auxiliary variables, it turns out that only a subset of them is actually used in the constraints.
+For example, let us consider a variant of the Knapsack problem where we get a bonus if we pack certain items together.
+Here, it makes sense to create auxiliary variables indicating whether a pair of items is packed together.
+However, not every pair of items will actually result in a bonus, so we can create a variable container that lazily constructs the auxiliary variables only when they are needed.
+
+We did the following changes:
+* We added a `_BonusVariables` class that lazily constructs the bonus variables when they are accessed. This way, only variables that are actually used are created.
+* We added an `add_bonus` method that adds a bonus for packing two items together. This method can be called after the model has been built.
+* We add the objective in the `solve` method, as it may change when we add bonuses.
+
+```python
+from ortools.sat.python import cp_model
+from pydantic import BaseModel, PositiveInt, List, PositiveFloat, NonNegativeFloat
+from typing import Generator, Tuple
+
+class KnapsackInstance(BaseModel):
+    weights: List[PositiveInt]  # the weight of each item
+    values: List[PositiveInt]  # the value of each item
+    capacity: PositiveInt  # the capacity of the knapsack
+
+    # ensure that the number of weights and values is the same
+    @model_validator(mode="after")
+    def check_lengths(cls, v):
+        if len(v.weights) != len(v.values):
+            raise ValueError("The number of weights and values must be the same.")
+        return v
+
+class KnapsackSolverConfig(BaseModel):
+    time_limit: PositiveInt = 900  # the time limit for the solver in seconds
+    opt_tol: NonNegativeFloat = 0.01  # the optimality tolerance for the solver. 0.01 means 1% optimality gap is allowed.
+    log_search_progress: bool = False  # whether to log the search progress
+
+class KnapsackSolution(BaseModel):
+    selected_items: List[int]  # the indices of the selected items
+    objective: int  # the objective value of the solution
+    upper_bound: float  # the upper bound of the solution
+
+class _ItemVariables:
+    def __init__(self, instance: KnapsackInstance, model: cp_model.CpModel):
+        self.instance = instance
+        self.x = [model.NewBoolVar(f"x_{i}") for i in range(len(instance.weights))]
+
+    def __getitem__(self, i):
+        return self.x[i]
+
+    def extract_packed_items(self, solver: cp_model.CpSolver) -> List[int]:
+        return [i for i, x_i in enumerate(self.x) if solver.Value(x_i)]
+
+    def used_weight(self) -> cp_model.LinearExpr:
+        return sum(weight * x_i for weight, x_i in zip(self.instance.weights, self.x))
+
+    def packed_value(self) -> cp_model.LinearExpr:
+        return sum(value * x_i for value, x_i in zip(self.instance.values, self.x))
+
+    def iter_items(
+      self, weight_lb: float = 0.0, weight_ub: float = float('inf'),
+       value_lb: float = 0.0, value_ub: float = float('inf')
+      ) -> Generator[Tuple[int, cp_model.BoolVar], None, None]:
+        for i, (weight, x_i) in enumerate(zip(self.instance.weights, self.x)):
+            if weight_lb <= weight <= weight_ub and value_lb <= self.instance.values[i] <= value_ub:
+                yield i, x_i
+
+class _BonusVariables:
+    def __init__(self, instance: KnapsackInstance, model: cp_model.CpModel, item_vars: _ItemVariables):
+        self.instance = instance
+        self.model = model
+        self.item_vars = item_vars
+        self.bonus = {}
+    
+    def __getitem__(self, i, j):
+        # i,j and j,i are the same pair. We do not want to have separate variables for them.
+        i, j = min(i, j), max(i, j)
+        if (i, j) not in self.bonus:
+            # Add variable and constraint
+            self.bonus[(i, j)] = model.NewBoolVar(f"bonus_{i}_{j}")
+            self.model.Add(self.item_vars[i] + self.item_vars[j] >= 2*self.bonus[(i, j)])
+        return self.bonus[(i, j)]
+
+class KnapsackSolver:
+    def __init__(self, instance: KnapsackInstance, config: KnapsackSolverConfig):
+        self.instance = instance
+        self.config = config
+        self.model = cp_model.CpModel()
+        self._item_vars = _ItemVariables(instance, self.model)
+        self._bonus_vars = _BonusVariables(instance, self.model)
+        self._build_model()
+        self._objective = self._item_vars.packed_value()
+        self.solver = cp_model.CpSolver()
+
+    def _add_constraints(self):
+        self.model.Add(self._item_vars.used_weight() <= self.instance.capacity)
+        # prohibit more than one very heavy item to be packed
+        num_of_heavy_items_packed = sum(x for _, x in self._item_vars.iter_items(weight_lb=100))
+        self.model.Add(num_of_heavy_items_packed <= 1)
+        # add bonus constraints
+        for i, j in self._bonus_vars.bonus.keys():
+            self.model.Add(self._item_vars[i] + self._item_vars[j] <= 1 + self._bonus_vars[i, j])
+
+    def _build_model(self):
+        self._add_constraints()
+
+    def solve(self) -> KnapsackSolution:
+        self.solver.parameters.max_time_in_seconds = self.config.time_limit
+        self.solver.parameters.relative_gap_limit = self.config.opt_tol
+        self.solver.parameters.log_search_progress = self.config.log_search_progress
+        self.model.Maximize(self._objective)
+        status = self.solver.Solve(self.model)
+        if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
+            return KnapsackSolution(
+                selected_items=self._item_vars.extract_packed_items(self.solver),
+                objective=self.solver.ObjectiveValue(),
+                upper_bound=self.solver.BestObjectiveBound()
+            )
+        return KnapsackSolution(selected_items=[], objective=0, upper_bound=float('inf'))
+
+    def prohibit_combination(self, item_a: int, item_b: int):
+        self.model.Add(self._item_vars[item_a] + self._item_vars[item_b] <= 1)
+
+    def add_bonus(self, item_a: int, item_b: int, bonus: int):
+        self._objective += bonus * self._bonus_vars[item_a, item_b]
+
+```
+
+
+      
 
 ---
 
