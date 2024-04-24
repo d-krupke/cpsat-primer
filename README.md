@@ -2118,7 +2118,7 @@ def solve_knapsack(
     return KnapsackSolution(selected_items=[], objective=0, upper_bound=0)
 ```
 
-**Benefits of This Approach:**
+**Key Benefits:**
 
 - **Structured Data Handling**: By defining explicit structures for each aspect
   of the problem, we ensure that the data handling is robust and errors are
@@ -2373,17 +2373,15 @@ class KnapsackSolver:
         self.model.Add(self._item_vars[item_a] + self._item_vars[item_b] <= 1)
 ```
 
-**Explanation of Changes:**
+**Key Benefits:**
 
-- **Variable Container Creation**: The `_ItemVariables` class abstracts the
-  creation and management of decision variables, making the main solver class
-  cleaner and more focused on solving logic.
-- **Utility Methods**: Methods such as `extract_packed_items`, `used_weight`,
-  and `packed_value` provide easy access to common operations related to
-  variables, improving code readability and reusability.
-
-This approach enhances the modularity of the optimization model, making the
-codebase easier to manage and extend.
+- **Enhanced Readability**: By encapsulating the item variables and their
+  interactions within a dedicated class, the main solver class becomes more
+  focused and easier to understand.
+- **Improved Modularity**: The `_ItemVariables`-class allows to easily hand over
+  the variables to a function that may create complex constraints, without
+  creating a cyclic dependency. The model can now be split over multiple files
+  without any issues.
 
 ### Submodels
 
@@ -2483,10 +2481,12 @@ computation time if only a small subset is actually used.
 
 #### Implemented Changes:
 
-We have introduced the new class `_BonusVariables` for managing bonus-related
-variables, and creating them only when accessed. This lazy construction ensures
-that only necessary variables are generated, reducing memory usage and
-computational overhead.
+We have introduced the new class `_CombiVariables` that manges auxiliary
+variables indicating that a pair of items were packed, allowing to give
+additional bonuses for packing certain items together. Theoretically, there is a
+square number of possible combinations, but there will probably only be a
+handful of them that are actually used. By creating the variables only when they
+are accessed, we can reduce memory usage and computational overhead.
 
 ```python
 from ortools.sat.python import cp_model
@@ -2542,7 +2542,7 @@ class _ItemVariables:
             ):
                 yield i, x_i
 
-class _BonusVariables:
+class _CombiVariables:
     def __init__(
         self,
         instance: KnapsackInstance,
@@ -2570,7 +2570,7 @@ class KnapsackSolver:
         self.config = config
         self.model = cp_model.CpModel()
         self._item_vars = _ItemVariables(instance, self.model)
-        self._bonus_vars = _BonusVariables(instance, self.model, self._item_vars)
+        self._bonus_vars = _CombiVariables(instance, self.model, self._item_vars)
         self._objective = self._item_vars.packed_value()  # Initial objective setup
         self.solver = cp_model.CpSolver()
 
