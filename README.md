@@ -1316,6 +1316,20 @@ do this automatically for you. You can find it in
 [./utils/piecewise_functions](./utils/piecewise_functions/). Simply copy it into
 your code.
 
+This code does some further optimizations:
+
+1. Considering every segment as a separate case can be quite expensive and
+   inefficient. Thus, it can make a serious difference if you can combine
+   multiple segments into a single case. This can be achieved by detecting
+   convex ranges, as the constraints of convex areas do not interfere with each
+   other.
+2. Adding the convex hull of the segments as a redundant constraint that does
+   not depend on any `OnlyEnforceIf` can in some cases help the solver to find
+   better bounds. `OnlyEnforceIf`-constraints are often not very good for the
+   linear relaxation, and having the convex hull as independent constraint can
+   directly limit the solution space, without having to do any branching on the
+   cases.
+
 Let us use this code to solve an instance of the problem above.
 
 We have two products that each require three components. The first product
