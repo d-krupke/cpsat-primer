@@ -2583,9 +2583,6 @@ class KnapsackSolver:
 - **Efficiency**: Lazy construction of bonus variables ensures that only
   necessary variables are created, reducing memory usage and computational
   overhead.
-- **Modularity**: The separation of bonus variables into a dedicated class
-  enhances code organization and readability, promoting maintainability and
-  extensibility.
 - **Simplicity**: By just creating the bonus variables when accessed, we do not
   need any logic to decide which variables are needed upfront, simplifying the
   model construction process.
