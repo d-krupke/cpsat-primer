@@ -2238,20 +2238,20 @@ if __name__ == "__main__":
     print(solution)
 ```
 
-**Explanation of Changes:**
+**Key Benefits:**
 
-- **Initialization**: The solver class initializes the CP model, creates
-  decision variables, and builds the initial model configuration based on the
-  provided instance and solver settings.
-- **Model Construction**: Separate methods for adding constraints and objectives
-  improve code readability and maintainability.
-- **Dynamic Adaptation**: Functions like `prohibit_combination` allow for the
-  dynamic addition of constraints based on external inputs or iterative
-  feedback, demonstrating the class's flexibility to adapt the model without a
-  complete rebuild.
+- **Incremental Model Building**: The class structure allows for the dynamic
+  addition of constraints and objectives, enabling users to modify the model
+  iteratively without rebuilding it from scratch.
 - **Re-solving**: The class structure supports multiple invocations of the
   `solve` method, enabling users to refine the solution iteratively by modifying
-  constraints and re-solving the problem seamlessly.
+  constraints and re-solving the problem seamlessly. You can also use this
+  to try to solve the model again with modified solver parameters, such as
+  a longer time limit or a stricter optimality tolerance.
+- **Access to Model and Solver**: The class provides direct access to the model
+  and solver, allowing users to interact with them directly for more advanced
+  operations or debugging purposes. The function-based approach did not expose
+  these elements, limiting the flexibility of the solution.
 
 This class structure is especially useful in scenarios where the optimization
 process is part of a larger system or requires interaction with users or other
