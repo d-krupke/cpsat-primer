@@ -2046,10 +2046,9 @@ code. These classes also simplify the documentation process, testing, and ensure
 data consistency across larger projects where data exchange among different
 components is necessary.
 
-**Implemented Changes:**
-We have introduced data classes using Pydantic, a popular Python library that
-supports data validation and settings management through Python type
-annotations. The changes include:
+**Implemented Changes:** We have introduced data classes using Pydantic, a
+popular Python library that supports data validation and settings management
+through Python type annotations. The changes include:
 
 - **Instance Class**: Defines the knapsack problem with attributes for weights,
   values, and capacity. It includes a validation method to ensure that the
@@ -2118,8 +2117,8 @@ def solve_knapsack(
 
 - **Structured Data Handling**: By defining explicit structures for each aspect
   of the problem, we ensure that the data handling is robust and errors are
-  minimized. This allows an easier integration into a larger system and exposition
-  in APIs.
+  minimized. This allows an easier integration into a larger system and
+  exposition in APIs.
 - **Easy Serialization**: Pydantic models can be easily converted to and from
   JSON, facilitating the storage and transmission of configurations and results.
 - **Enhanced Testing and Documentation**: With clear definitions and
@@ -2140,8 +2139,8 @@ encapsulate both the model and the solver within a single class. This setup
 facilitates the dynamic addition of constraints and subsequent re-solving
 without needing to rebuild the entire model.
 
-**Implemented Changes:** We introduced the `KnapsackSolver` class, which encapsulates the entire setup
-and solving process of the knapsack problem:
+**Implemented Changes:** We introduced the `KnapsackSolver` class, which
+encapsulates the entire setup and solving process of the knapsack problem:
 
 ```python
 from ortools.sat.python import cp_model
@@ -2236,9 +2235,9 @@ if __name__ == "__main__":
   iteratively without rebuilding it from scratch.
 - **Re-solving**: The class structure supports multiple invocations of the
   `solve` method, enabling users to refine the solution iteratively by modifying
-  constraints and re-solving the problem seamlessly. You can also use this
-  to try to solve the model again with modified solver parameters, such as
-  a longer time limit or a stricter optimality tolerance.
+  constraints and re-solving the problem seamlessly. You can also use this to
+  try to solve the model again with modified solver parameters, such as a longer
+  time limit or a stricter optimality tolerance.
 - **Access to Model and Solver**: The class provides direct access to the model
   and solver, allowing users to interact with them directly for more advanced
   operations or debugging purposes. The function-based approach did not expose
@@ -2252,11 +2251,10 @@ separating variables from the core model logic is a strategic approach. This
 separation facilitates easier management of variables and provides methods for
 more structured interactions with them.
 
-**Implemented Changes:**
-We introduced the `_ItemVariables` class, which acts as a container for the
-decision variables associated with the knapsack items. This class not only
-creates these variables but also offers several utility methods to interact with
-them, improving the clarity and maintainability of the code.
+**Implemented Changes:** We introduced the `_ItemVariables` class, which acts as
+a container for the decision variables associated with the knapsack items. This
+class not only creates these variables but also offers several utility methods
+to interact with them, improving the clarity and maintainability of the code.
 
 ```python
 from ortools.sat.python import cp_model
@@ -2464,13 +2462,12 @@ this can be more expensive that just creating a vector with all variables, when
 in the end most variables are needed anyway, but it can save a lot of memory and
 computation time if only a small subset is actually used.
 
-**Implemented Changes:**
-We have introduced the new class `_CombiVariables` that manges auxiliary
-variables indicating that a pair of items were packed, allowing to give
-additional bonuses for packing certain items together. Theoretically, there is a
-square number of possible combinations, but there will probably only be a
-handful of them that are actually used. By creating the variables only when they
-are accessed, we can reduce memory usage and computational overhead.
+**Implemented Changes:** We have introduced the new class `_CombiVariables` that
+manges auxiliary variables indicating that a pair of items were packed, allowing
+to give additional bonuses for packing certain items together. Theoretically,
+there is a square number of possible combinations, but there will probably only
+be a handful of them that are actually used. By creating the variables only when
+they are accessed, we can reduce memory usage and computational overhead.
 
 ```python
 from ortools.sat.python import cp_model
