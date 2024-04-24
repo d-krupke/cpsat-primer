@@ -2480,9 +2480,10 @@ used.
 
 #### Implemented Changes:
 
-We have introduced two new classes, `_BonusVariables` for managing bonus-related
-variables, and `KnapsackSolver` that incorporates these concepts, allowing for
-more dynamic and efficient handling of the model:
+We have introduced the new class `_BonusVariables` for managing bonus-related
+variables, and creating them only when accessed. This lazy construction ensures
+that only necessary variables are generated, reducing memory usage and
+computational overhead.
 
 ```python
 from ortools.sat.python import cp_model
