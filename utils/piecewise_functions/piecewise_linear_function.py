@@ -266,11 +266,11 @@ def remove_redundant_convex_segments(
     """
     if len(fs) < 2:
         return fs
-    redunant = []
+    redundant = []
     for i, f in enumerate(fs):
         if i in [0, len(fs) - 1]:
             continue
-        if i - 1 in redunant:
+        if i - 1 in redundant:
             # if the previous segment was redundant, this segments is required
             continue
         if f.xs[0] != f.xs[-1] - 1:
@@ -280,9 +280,9 @@ def remove_redundant_convex_segments(
             assert fs[i - 1].ys[-1] == f.ys[0]
             assert fs[i + 1].ys[0] == f.ys[-1]
             # redundant segment. Both values are already bound by the other segments
-            redunant.append(i)
+            redundant.append(i)
             continue
-    return [f for i, f in enumerate(fs) if i not in redunant]
+    return [f for i, f in enumerate(fs) if i not in redundant]
 
 
 def split_into_segments(f: PiecewiseLinearFunction) -> List[PiecewiseLinearFunction]:

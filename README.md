@@ -79,13 +79,13 @@ awaits you in this primer:
    constraints. The constraints make the most important part.
 4. [Parameters](#parameters): How to specify CP-SATs behavior, if needed.
    Timelimits, hints, assumptions, parallelization, ...
-5. [Coding Patterns](#Coding-Patterns-for-Optimization-Problems): Basic design patterns
-    for creating maintainable algorithms.
-5. [How does it work?](#how-does-it-work): After we know what we can do with
+5. [Coding Patterns](#Coding-Patterns-for-Optimization-Problems): Basic design
+   patterns for creating maintainable algorithms.
+6. [How does it work?](#how-does-it-work): After we know what we can do with
    CP-SAT, we look into how CP-SAT will do all these things.
-6. [Benchmarking your Model](#benchmarking-your-model): How to benchmark your
+7. [Benchmarking your Model](#benchmarking-your-model): How to benchmark your
    model and how to interpret the results.
-7. [Large Neighborhood Search](#Using-CP-SAT-for-Bigger-Problems-with-Large-Neighborhood-Search):
+8. [Large Neighborhood Search](#Using-CP-SAT-for-Bigger-Problems-with-Large-Neighborhood-Search):
    The use of CP-SAT to create more powerful heuristics.
 
 > **Target audience:** People (especially my students at TU Braunschweig) with
@@ -303,7 +303,7 @@ variables. That is, they are placeholders that will only be assigned specific
 values during the solving phase. To illustrate this more clearly, let us explore
 an example within the Python shell:
 
-```python
+```IDLE
 >>> model = cp_model.CpModel()
 >>> x = model.NewIntVar(0, 100, "x")
 >>> x
@@ -939,19 +939,35 @@ length, and end variables.
 ```python
 from ortools.sat.python import cp_model
 
-start_var = model.NewIntVar(0, 100, 'start')
-length_var = model.NewIntVar(10, 20, 'length')
-end_var = model.NewIntVar(0, 100, 'end')
-is_present_var = model.NewBoolVar('is_present')
+start_var = model.NewIntVar(0, 100, "start")
+length_var = model.NewIntVar(10, 20, "length")
+end_var = model.NewIntVar(0, 100, "end")
+is_present_var = model.NewBoolVar("is_present")
 
 # creating an interval of fixed length
-fixed_interval = model.NewFixedSizeIntervalVar(start=start_var, size=10, end=end_var, name='fixed_interval')
+fixed_interval = model.NewFixedSizeIntervalVar(
+    start=start_var, size=10, end=end_var, name="fixed_interval"
+)
 # creating an interval whose length can be influenced by a variable (more expensive)
-flexible_interval = model.NewIntervalVar(start=start_var, size=length_var, end=end_var, name='flexible_interval')
+flexible_interval = model.NewIntervalVar(
+    start=start_var, size=length_var, end=end_var, name="flexible_interval"
+)
 # creating an interval that can be present or not
-optional_fixed_interval = model.NewOptionalFixedSizeIntervalVar(start=start_var, size=10, end=end_var, is_present=is_present_var, name='optional_fixed_interval')
+optional_fixed_interval = model.NewOptionalFixedSizeIntervalVar(
+    start=start_var,
+    size=10,
+    end=end_var,
+    is_present=is_present_var,
+    name="optional_fixed_interval",
+)
 # creating an interval that can be present or not and whose length can be influenced by a variable (most expensive)
-optional_interval = model.NewOptionalIntervalVar(start=start_var, size=length_var, end=end_var, is_present=is_present_var, name='optional_interval')
+optional_interval = model.NewOptionalIntervalVar(
+    start=start_var,
+    size=length_var,
+    end=end_var,
+    is_present=is_present_var,
+    name="optional_interval",
+)
 ```
 
 There are now the two no-overlap constraints for 1D and 2D that can be used to
@@ -1168,7 +1184,6 @@ class RectangleKnapsackWithRotationsModel:
         self.upper_bound = solver.BestObjectiveBound()
         self.objective_value = solver.ObjectiveValue()
         return self.status
-
 ```
 
 |                       ![./images/dense_packing.png](https://github.com/d-krupke/cpsat-primer/blob/main/images/dense_packing.png)                       |
@@ -1300,14 +1315,14 @@ model.AddAtMostOne(segment_active)  # enforce one segment to be active
 
 # Segment 1
 # if 0<=x<=3, then y >= 0.5*x + 0.5
-model.Add(2*y >= x + 1).OnlyEnforceIf(segment_active[0])
-model.Add(x>=0).OnlyEnforceIf(segment_active[0])
-model.Add(x<=3).OnlyEnforceIf(segment_active[0])
+model.Add(2 * y >= x + 1).OnlyEnforceIf(segment_active[0])
+model.Add(x >= 0).OnlyEnforceIf(segment_active[0])
+model.Add(x <= 3).OnlyEnforceIf(segment_active[0])
 
 # Segment 2
 model.Add(_SLIGHTLY_MORE_COMPLEX_INEQUALITY_).OnlyEnforceIf(segment_active[1])
-model.Add(x>=3).OnlyEnforceIf(segment_active[1])
-model.Add(x<=7).OnlyEnforceIf(segment_active[1])
+model.Add(x >= 3).OnlyEnforceIf(segment_active[1])
+model.Add(x <= 7).OnlyEnforceIf(segment_active[1])
 
 model.Minimize(y)
 # if we were to maximize y, we would have used <= instead of >=
@@ -1355,12 +1370,12 @@ requirements_2 = (2, 1, 3)
 from ortools.sat.python import cp_model
 
 model = cp_model.CpModel()
-buy_1 = model.NewIntVar(0, 1_500, 'buy_1')
-buy_2 = model.NewIntVar(0, 1_500, 'buy_2')
-buy_3 = model.NewIntVar(0, 1_500, 'buy_3')
+buy_1 = model.NewIntVar(0, 1_500, "buy_1")
+buy_2 = model.NewIntVar(0, 1_500, "buy_2")
+buy_3 = model.NewIntVar(0, 1_500, "buy_3")
 
-produce_1 = model.NewIntVar(0, 300, 'produce_1')
-produce_2 = model.NewIntVar(0, 300, 'produce_2')
+produce_1 = model.NewIntVar(0, 300, "produce_1")
+produce_2 = model.NewIntVar(0, 300, "produce_2")
 
 model.Add(produce_1 * requirements_1[0] + produce_2 * requirements_2[0] <= buy_1)
 model.Add(produce_1 * requirements_1[1] + produce_2 * requirements_2[1] <= buy_2)
@@ -1374,24 +1389,30 @@ costs_1 = [(0, 0), (1000, 400), (1500, 1300)]
 costs_2 = [(0, 0), (300, 300), (700, 500), (1200, 600), (1500, 1100)]
 costs_3 = [(0, 0), (200, 400), (500, 700), (1000, 900), (1500, 1500)]
 # PiecewiseLinearFunction is a pydantic model and can be serialized easily!
-f_costs_1 = PiecewiseLinearFunction(xs=[x for x,y in costs_1], ys=[y for x,y in costs_1])
-f_costs_2 = PiecewiseLinearFunction(xs=[x for x,y in costs_2], ys=[y for x,y in costs_2])
-f_costs_3 = PiecewiseLinearFunction(xs=[x for x,y in costs_3], ys=[y for x,y in costs_3])
+f_costs_1 = PiecewiseLinearFunction(
+    xs=[x for x, y in costs_1], ys=[y for x, y in costs_1]
+)
+f_costs_2 = PiecewiseLinearFunction(
+    xs=[x for x, y in costs_2], ys=[y for x, y in costs_2]
+)
+f_costs_3 = PiecewiseLinearFunction(
+    xs=[x for x, y in costs_3], ys=[y for x, y in costs_3]
+)
 
 # Define the functions for the gain
-gain_1 = [(0,0), (100, 800), (200, 1600), (300, 2_000)]
-gain_2 = [(0,0), (80, 1_000), (150, 1_300), (200, 1_400), (300, 1_500)]
-f_gain_1 = PiecewiseLinearFunction(xs=[x for x,y in gain_1], ys=[y for x,y in gain_1])
-f_gain_2 = PiecewiseLinearFunction(xs=[x for x,y in gain_2], ys=[y for x,y in gain_2])
+gain_1 = [(0, 0), (100, 800), (200, 1600), (300, 2_000)]
+gain_2 = [(0, 0), (80, 1_000), (150, 1_300), (200, 1_400), (300, 1_500)]
+f_gain_1 = PiecewiseLinearFunction(xs=[x for x, y in gain_1], ys=[y for x, y in gain_1])
+f_gain_2 = PiecewiseLinearFunction(xs=[x for x, y in gain_2], ys=[y for x, y in gain_2])
 
 # Create y>=f(x) constraints for the costs
-x_costs_1 = PiecewiseLinearConstraint(model,buy_1, f_costs_1, upper_bound=False)
-x_costs_2 = PiecewiseLinearConstraint(model,buy_2, f_costs_2, upper_bound=False)
-x_costs_3 = PiecewiseLinearConstraint(model,buy_3, f_costs_3, upper_bound=False)
+x_costs_1 = PiecewiseLinearConstraint(model, buy_1, f_costs_1, upper_bound=False)
+x_costs_2 = PiecewiseLinearConstraint(model, buy_2, f_costs_2, upper_bound=False)
+x_costs_3 = PiecewiseLinearConstraint(model, buy_3, f_costs_3, upper_bound=False)
 
 # Create y<=f(x) constraints for the gain
-x_gain_1 = PiecewiseLinearConstraint(model,produce_1, f_gain_1, upper_bound=True)
-x_gain_2 = PiecewiseLinearConstraint(model,produce_2, f_gain_2, upper_bound=True)
+x_gain_1 = PiecewiseLinearConstraint(model, produce_1, f_gain_1, upper_bound=True)
+x_gain_2 = PiecewiseLinearConstraint(model, produce_2, f_gain_2, upper_bound=True)
 
 # Maximize the gain minus the costs
 model.Maximize(x_gain_1.y + x_gain_2.y - (x_costs_1.y + x_costs_2.y + x_costs_3.y))
@@ -1947,77 +1968,134 @@ some conflicts.
 
 ## Coding Patterns for Optimization Problems
 
-In this section, I will show you some coding patterns that are useful for
-optimization problems. I will not show you how to model specific problems, but
-rather how to structure your code to make it more readable and maintainable.
+In this section, we will explore various coding patterns that are essential for
+structuring solutions to optimization problems using CP-SAT. While we will not
+delve into the modeling of specific problems, our focus will be on demonstrating
+how to organize your code to enhance its readability and maintainability. These
+practices are crucial for developing robust and scalable optimization solutions
+that can be easily understood, modified, and extended by other developers.
 
 ### Simple Function
 
-For very simple problems, you can just write a function that creates the model
-and solves it. It is only recommended for very simple problems and is not
-very flexible. Parameters to the solver can be passed via keyword arguments with
-default parameters.
+For straightforward optimization problems, encapsulating the model creation and
+solving within a single function is a practical approach. This method is best
+suited for simpler cases due to its straightforward nature but lacks flexibility
+for more complex scenarios. Parameters such as the time limit and optimality
+tolerance can be customized via keyword arguments with default values.
+
+The following Python function demonstrates how to solve a simple knapsack
+problem using CP-SAT:
 
 ```python
 from ortools.sat.python import cp_model
 from typing import List
 
+
 def solve_knapsack(
-    # instance
-    weights: List[int], values: List[int], capacity: int
-    # parameters
-    , *, time_limit: int = 900, opt_tol: float = 0.01
-  ) -> List[int]:
+    weights: List[int],
+    values: List[int],
+    capacity: int,
+    *,
+    time_limit: int = 900,
+    opt_tol: float = 0.01,
+) -> List[int]:
     model = cp_model.CpModel()
-    n = len(weights)
-    x = [model.NewBoolVar(f"x_{i}") for i in range(n)]
-    model.Add(sum(weights[i] * x[i] for i in range(n)) <= capacity)
-    model.Maximize(sum(values[i] * x[i] for i in range(n)))
+    n = len(weights)  # Number of items
+    x = [model.NewBoolVar(f"x_{i}") for i in range(n)]  # Decision variables for items
+    model.Add(
+        sum(weights[i] * x[i] for i in range(n)) <= capacity
+    )  # Capacity constraint
+    model.Maximize(
+        sum(values[i] * x[i] for i in range(n))
+    )  # Objective function to maximize value
     solver = cp_model.CpSolver()
-    solver.parameters.max_time_in_seconds = time_limit
-    solver.parameters.relative_gap_limit = opt_tol
+    solver.parameters.max_time_in_seconds = time_limit  # Solver time limit
+    solver.parameters.relative_gap_limit = opt_tol  # Solver optimality tolerance
     status = solver.Solve(model)
-    if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
-        return [i for i in range(n) if solver.Value(x[i])]
-    return []
+    return (
+        [i for i in range(n) if solver.Value(x[i])]
+        if status in [cp_model.OPTIMAL, cp_model.FEASIBLE]
+        else []
+    )  # Return indices of selected items
 ```
+
+In this function:
+
+- **Model Initialization:** We initiate a CP-SAT model.
+- **Decision Variables:** Boolean variables are created for each item to
+  represent whether it is selected.
+- **Constraints:** We add a capacity constraint to ensure the total weight of
+  selected items does not exceed the knapsack's limit.
+- **Objective Function:** We define an objective to maximize the total value of
+  the selected items.
+- **Solver Configuration:** The solver's parameters for time limits and
+  optimality tolerance are set.
+- **Solution Extraction:** The model is solved, and the indices of the items
+  included in the knapsack are returned if an optimal or feasible solution is
+  found.
+
+This approach allows quick development and testing of solutions for
+uncomplicated problems.
 
 ### Custom Data Classes for Instances, Configurations, and Solutions
 
-Using serializable data classes for instances, configurations, and solutions
-can make your code more readable and maintainable. It also makes it easier to
-document and test your code, ensure data consistency, and use it in larger
-projects were you may have to exchange data with other parts of the code.
+Incorporating serializable data classes for managing instances, configurations,
+and solutions can greatly enhance the readability and maintainability of your
+code. These classes also simplify the documentation process, testing, and ensure
+data consistency across larger projects where data exchange among different
+components is necessary.
 
-We did the following changes:
-* We created Pydantic data classes for the instance, configuration, and solution.
+#### Implemented Changes:
+
+We have introduced data classes using Pydantic, a popular Python library that
+supports data validation and settings management through Python type
+annotations. The changes include:
+
+- **Instance Class**: Defines the knapsack problem with attributes for weights,
+  values, and capacity. It includes a validation method to ensure that the
+  number of weights matches the number of values, enhancing data integrity.
+- **Configuration Class**: Manages solver settings such as time limits and
+  optimality tolerance, allowing easy adjustments and fine-tuning of the
+  solver's performance. Default values ensure backward compatibility, allowing
+  older configurations to be loaded and integrated seamlessly with new
+  parameters.
+- **Solution Class**: Captures the outcome of the optimization process,
+  including which items were selected, the objective value, and the upper bound
+  of the solution. This class has been enhanced to include additional
+  information such as the bounds, providing a more comprehensive view of the
+  solution's quality and constraints.
 
 ```python
 from ortools.sat.python import cp_model
-from pydantic import BaseModel, PositiveInt, List, PositiveFloat, NonNegativeFloat
+from pydantic import BaseModel, PositiveInt, List, NonNegativeFloat
+
 
 class KnapsackInstance(BaseModel):
     weights: List[PositiveInt]  # the weight of each item
     values: List[PositiveInt]  # the value of each item
     capacity: PositiveInt  # the capacity of the knapsack
 
-    # ensure that the number of weights and values is the same
     @model_validator(mode="after")
     def check_lengths(cls, v):
         if len(v.weights) != len(v.values):
-            raise ValueError("The number of weights and values must be the same.")
+            raise ValueError("Mismatch in number of weights and values.")
         return v
 
+
 class KnapsackSolverConfig(BaseModel):
-    time_limit: PositiveInt = 900  # the time limit for the solver in seconds
-    opt_tol: NonNegativeFloat = 0.01  # the optimality tolerance for the solver. 0.01 means 1% optimality gap is allowed.
+    time_limit: PositiveInt = 900  # Solver time limit in seconds
+    opt_tol: NonNegativeFloat = 0.01  # Optimality tolerance (1% gap allowed)
+
 
 class KnapsackSolution(BaseModel):
-    selected_items: List[int]  # the indices of the selected items
-    objective: int  # the objective value of the solution
-    upper_bound: float  # the upper bound of the solution
+    selected_items: List[int]  # Indices of the selected items
+    objective: int  # Objective value of the solution
+    upper_bound: float  # Upper bound of the solution
 
-def solve_knapsack(instance: KnapsackInstance, config: KnapsackSolverConfig) -> KnapsackSolution:
+
+def solve_knapsack(
+    instance: KnapsackInstance, config: KnapsackSolverConfig
+) -> KnapsackSolution:
     model = cp_model.CpModel()
     n = len(instance.weights)
     x = [model.NewBoolVar(f"x_{i}") for i in range(n)]
@@ -2027,59 +2105,77 @@ def solve_knapsack(instance: KnapsackInstance, config: KnapsackSolverConfig) -> 
     solver.parameters.max_time_in_seconds = config.time_limit
     solver.parameters.relative_gap_limit = config.opt_tol
     status = solver.Solve(model)
-    if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
+    if status in [cp_model.OPTIMAL, cp_model.FEASIBLE]:
         return KnapsackSolution(
             selected_items=[i for i in range(n) if solver.Value(x[i])],
             objective=solver.ObjectiveValue(),
-            upper_bound=solver.BestObjectiveBound()
+            upper_bound=solver.BestObjectiveBound(),
         )
     return KnapsackSolution(selected_items=[], objective=0, upper_bound=0)
-  
 ```
 
-Once you have implemented a first version with Pydantic, you can easily serialize a
-few instances, configurations, and solutions to JSON and use them as test cases
-to ensure that further changes to your code do not break the expected behavior.
+**Benefits of This Approach:**
+
+- **Structured Data Handling**: By defining explicit structures for each aspect
+  of the problem, we ensure that the data handling is robust and errors are
+  minimized.
+- **Easy Serialization**: Pydantic models can be easily converted to and from
+  JSON, facilitating the storage and transmission of configurations and results.
+- **Enhanced Testing and Documentation**: With clear definitions and
+  constraints, it becomes easier to generate documentation and write tests that
+  validate the behavior of the model and solver.
+- **Backward Compatibility**: The use of default values in data classes allows
+  for the seamless integration of older configurations with newer versions of
+  the software, automatically accommodating added parameters without disrupting
+  existing setups.
+
+These changes lay a solid foundation for building scalable and maintainable
+optimization solutions. This approach not only streamlines development but also
+simplifies the integration and debugging of complex systems.
 
 ### Solver Class
 
-For many optimization problems, you may have to iterate on the model and
-the solution. In the real world, some constraints will be only known after
-you have shown a solution to a user. For example, if your solver is used
-to schedule shifts, you may want to have the option to add constraints
-after seeing the solution and compute a new solution. It not necessarily has
-to be a person at the other end, but it could also be a higher-level algorithm
-that needs to iterate on a model. In this case, it is useful to have a class
-that encapsulates the model and the solver.
+In many real-world optimization scenarios, problems may require iterative
+refinement of the model and solution. For instance, new constraints might only
+become apparent after presenting an initial solution to a user or another
+algorithm. In such cases, flexibility is crucial, making it beneficial to
+encapsulate both the model and the solver within a single class. This setup
+facilitates the dynamic addition of constraints and subsequent re-solving
+without needing to rebuild the entire model.
 
-We did the following changes:
-* We created a `KnapsackSolver` class that encapsulates the model and the solver.
+#### Implemented Changes:
+
+We introduced the `KnapsackSolver` class, which encapsulates the entire setup
+and solving process of the knapsack problem:
 
 ```python
 from ortools.sat.python import cp_model
-from pydantic import BaseModel, PositiveInt, List, PositiveFloat, NonNegativeFloat
+from pydantic import BaseModel, PositiveInt, List, NonNegativeFloat
+
 
 class KnapsackInstance(BaseModel):
     weights: List[PositiveInt]  # the weight of each item
     values: List[PositiveInt]  # the value of each item
     capacity: PositiveInt  # the capacity of the knapsack
 
-    # ensure that the number of weights and values is the same
     @model_validator(mode="after")
     def check_lengths(cls, v):
         if len(v.weights) != len(v.values):
-            raise ValueError("The number of weights and values must be the same.")
+            raise ValueError("Weights and values count mismatch.")
         return v
 
+
 class KnapsackSolverConfig(BaseModel):
-    time_limit: PositiveInt = 900  # the time limit for the solver in seconds
-    opt_tol: NonNegativeFloat = 0.01  # the optimality tolerance for the solver. 0.01 means 1% optimality gap is allowed.
-    log_search_progress: bool = False  # whether to log the search progress
+    time_limit: PositiveInt = 900
+    opt_tol: NonNegativeFloat = 0.01
+    log_search_progress: bool = False  # Option to log the search progress for debugging
+
 
 class KnapsackSolution(BaseModel):
-    selected_items: List[int]  # the indices of the selected items
-    objective: int  # the objective value of the solution
-    upper_bound: float  # the upper bound of the solution
+    selected_items: List[int]
+    objective: int
+    upper_bound: float
+
 
 class KnapsackSolver:
     def __init__(self, instance: KnapsackInstance, config: KnapsackSolverConfig):
@@ -2092,39 +2188,40 @@ class KnapsackSolver:
         self.solver = cp_model.CpSolver()
 
     def _add_constraints(self):
-        # you can use auxiliary variables to separate mathematical elements and make
-        # the constraints more readable
-        used_weight = sum(weight * x_i for weight, x_i in zip(self.instance.weights, self.x))
+        used_weight = sum(
+            weight * x_i for weight, x_i in zip(self.instance.weights, self.x)
+        )
         self.model.Add(used_weight <= self.instance.capacity)
-      
+
     def _add_objective(self):
-        # constraints and objectives can become complex, so it is useful to separate
-        # them into different functions for better readability.
-        self.model.Maximize(sum(value*x_i for value, x_i in zip(self.instance.values, self.x)))
+        self.model.Maximize(
+            sum(value * x_i for value, x_i in zip(self.instance.values, self.x))
+        )
 
     def _build_model(self):
         self._add_constraints()
         self._add_objective()
 
     def solve(self) -> KnapsackSolution:
-        # the configuration may change between iterations
         self.solver.parameters.max_time_in_seconds = self.config.time_limit
         self.solver.parameters.relative_gap_limit = self.config.opt_tol
         self.solver.parameters.log_search_progress = self.config.log_search_progress
         status = self.solver.Solve(self.model)
-        if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
+        if status in [cp_model.OPTIMAL, cp_model.FEASIBLE]:
             return KnapsackSolution(
-                selected_items=[i for i in range(self.n) if self.solver.Value(self.x[i])],
+                selected_items=[
+                    i for i in range(self.n) if self.solver.Value(self.x[i])
+                ],
                 objective=self.solver.ObjectiveValue(),
-                upper_bound=self.solver.BestObjectiveBound()
+                upper_bound=self.solver.BestObjectiveBound(),
             )
-        return KnapsackSolution(selected_items=[], objective=0, upper_bound=float('inf'))
+        return KnapsackSolution(
+            selected_items=[], objective=0, upper_bound=float("inf")
+        )
 
     def prohibit_combination(self, item_a: int, item_b: int):
-        """
-        Prohibit the combination of two items.
-        """
         self.model.Add(self.x[item_a] + self.x[item_b] <= 1)
+
 
 if __name__ == "__main__":
     instance = KnapsackInstance(weights=[1, 2, 3], values=[4, 5, 6], capacity=3)
@@ -2132,51 +2229,75 @@ if __name__ == "__main__":
     solver = KnapsackSolver(instance, config)
     solution = solver.solve()
     print(solution)
-    # Iterate on the solution by adding constraints
     solver.prohibit_combination(0, 1)
-    # No need to rebuild the model, just solve it again
     solution = solver.solve()
     print(solution)
 ```
 
+**Explanation of Changes:**
+
+- **Initialization**: The solver class initializes the CP model, creates
+  decision variables, and builds the initial model configuration based on the
+  provided instance and solver settings.
+- **Model Construction**: Separate methods for adding constraints and objectives
+  improve code readability and maintainability.
+- **Dynamic Adaptation**: Functions like `prohibit_combination` allow for the
+  dynamic addition of constraints based on external inputs or iterative
+  feedback, demonstrating the class's flexibility to adapt the model without a
+  complete rebuild.
+- **Re-solving**: The class structure supports multiple invocations of the
+  `solve` method, enabling users to refine the solution iteratively by modifying
+  constraints and re-solving the problem seamlessly.
+
+This class structure is especially useful in scenarios where the optimization
+process is part of a larger system or requires interaction with users or other
+computational elements that influence the constraints and objectives
+dynamically.
+
 ### Variable Containers
 
-Modularization is key to writing maintainable code.
-One way to modularize your code is to separate the variables from the model.
-By creating a variable container, you can easily create the variables and
-provide handy methods to access them.
+Modularization is crucial in software engineering for maintaining and scaling
+complex codebases. In the context of optimization models, modularizing by
+separating variables from the core model logic is a strategic approach. This
+separation facilitates easier management of variables and provides methods for
+more structured interactions with them.
 
-We did the following changes:
-* We created a `_ItemVariables` class that creates the variables for the items and provides methods to access them.
-* We added a `prohibit_combination` method that adds a constraint to the model that prohibits two items from being packed together.
+#### Implemented Changes:
+
+We introduced the `_ItemVariables` class, which acts as a container for the
+decision variables associated with the knapsack items. This class not only
+creates these variables but also offers several utility methods to interact with
+them, improving the clarity and maintainability of the code.
 
 ```python
-
 from ortools.sat.python import cp_model
-from pydantic import BaseModel, PositiveInt, List, PositiveFloat, NonNegativeFloat
+from pydantic import BaseModel, PositiveInt, List, NonNegativeFloat
 from typing import Generator, Tuple
 
-class KnapsackInstance(BaseModel):
-    weights: List[PositiveInt]  # the weight of each item
-    values: List[PositiveInt]  # the value of each item
-    capacity: PositiveInt  # the capacity of the knapsack
 
-    # ensure that the number of weights and values is the same
+class KnapsackInstance(BaseModel):
+    weights: List[PositiveInt]
+    values: List[PositiveInt]
+    capacity: PositiveInt
+
     @model_validator(mode="after")
     def check_lengths(cls, v):
         if len(v.weights) != len(v.values):
-            raise ValueError("The number of weights and values must be the same.")
+            raise ValueError("Mismatch in the number of weights and values.")
         return v
 
+
 class KnapsackSolverConfig(BaseModel):
-    time_limit: PositiveInt = 900  # the time limit for the solver in seconds
-    opt_tol: NonNegativeFloat = 0.01  # the optimality tolerance for the solver. 0.01 means 1% optimality gap is allowed.
-    log_search_progress: bool = False  # whether to log the search progress
+    time_limit: PositiveInt = 900
+    opt_tol: NonNegativeFloat = 0.01
+    log_search_progress: bool = False
+
 
 class KnapsackSolution(BaseModel):
-    selected_items: List[int]  # the indices of the selected items
-    objective: int  # the objective value of the solution
-    upper_bound: float  # the upper bound of the solution
+    selected_items: List[int]
+    objective: int
+    upper_bound: float
+
 
 class _ItemVariables:
     def __init__(self, instance: KnapsackInstance, model: cp_model.CpModel):
@@ -2196,13 +2317,20 @@ class _ItemVariables:
         return sum(value * x_i for value, x_i in zip(self.instance.values, self.x))
 
     def iter_items(
-      self, weight_lb: float = 0.0, weight_ub: float = float('inf'),
-       value_lb: float = 0.0, value_ub: float = float('inf')
-      ) -> Generator[Tuple[int, cp_model.BoolVar], None, None]:
+        self,
+        weight_lb: float = 0.0,
+        weight_ub: float = float("inf"),
+        value_lb: float = 0.0,
+        value_ub: float = float("inf"),
+    ) -> Generator[Tuple[int, cp_model.BoolVar], None, None]:
         for i, (weight, x_i) in enumerate(zip(self.instance.weights, self.x)):
-            if weight_lb <= weight <= weight_ub and value_lb <= self.instance.values[i] <= value_ub:
+            if (
+                weight_lb <= weight <= weight_ub
+                and value_lb <= self.instance.values[i] <= value_ub
+            ):
                 yield i, x_i
-    
+
+
 class KnapsackSolver:
     def __init__(self, instance: KnapsackInstance, config: KnapsackSolverConfig):
         self.instance = instance
@@ -2214,9 +2342,6 @@ class KnapsackSolver:
 
     def _add_constraints(self):
         self.model.Add(self._item_vars.used_weight() <= self.instance.capacity)
-        # prohibit more than one very heavy item to be packed
-        num_of_heavy_items_packed = sum(x for _, x in self._item_vars.iter_items(weight_lb=100))
-        self.model.Add(num_of_heavy_items_packed <= 1)
 
     def _add_objective(self):
         self.model.Maximize(self._item_vars.packed_value())
@@ -2224,114 +2349,183 @@ class KnapsackSolver:
     def _build_model(self):
         self._add_constraints()
         self._add_objective()
-    
+
     def solve(self) -> KnapsackSolution:
         self.solver.parameters.max_time_in_seconds = self.config.time_limit
         self.solver.parameters.relative_gap_limit = self.config.opt_tol
         self.solver.parameters.log_search_progress = self.config.log_search_progress
         status = self.solver.Solve(self.model)
-        if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
+        if status in [cp_model.OPTIMAL, cp_model.FEASIBLE]:
             return KnapsackSolution(
                 selected_items=self._item_vars.extract_packed_items(self.solver),
                 objective=self.solver.ObjectiveValue(),
-                upper_bound=self.solver.BestObjectiveBound()
+                upper_bound=self.solver.BestObjectiveBound(),
             )
-        return KnapsackSolution(selected_items=[], objective=0, upper_bound=float('inf'))
+        return KnapsackSolution(
+            selected_items=[], objective=0, upper_bound=float("inf")
+        )
 
     def prohibit_combination(self, item_a: int, item_b: int):
         self.model.Add(self._item_vars[item_a] + self._item_vars[item_b] <= 1)
-
 ```
+
+**Explanation of Changes:**
+
+- **Variable Container Creation**: The `_ItemVariables` class abstracts the
+  creation and management of decision variables, making the main solver class
+  cleaner and more focused on solving logic.
+- **Utility Methods**: Methods such as `extract_packed_items`, `used_weight`,
+  and `packed_value` provide easy access to common operations related to
+  variables, improving code readability and reusability.
+
+This approach enhances the modularity of the optimization model, making the
+codebase easier to manage and extend.
 
 ### Submodels
 
-When your model becomes more complex, you may want to split it into submodels that only communicate via some shared variables, but hide their details, such as auxiliary variables.
+As optimization models increase in complexity, it may be beneficial to divide
+the overall model into smaller, more manageable submodels. These submodels can
+encapsulate specific parts of the problem, communicating with the main model via
+shared variables but hiding internal details like auxiliary variables.
 
-An example for such a submodule has already been seen for the piecewise linear function.
-Here, we create for every piecewise linear function an object that communicates via the `x` and `y` variables to the main model,
-but internally creates auxiliary variables to model the piecewise linear function.
-As the logic is the same for every piecewise linear function, we can create a class that encapsulates this logic and make it reusable.
-The next pattern (Lazy Variable Construction) will also separate some of its logic into a separate class.
+For instance, piecewise linear functions can be modeled as submodels, as done
+for `PiecewiseLinearConstraint` in
+[./utils/piecewise_functions/piecewise_linear_function.py](./utils/piecewise_functions/piecewise_linear_function.py).
+Each submodel handles a piecewise linear function independently, interfacing
+with the main model through shared `x` and `y` variables. By encapsulating the
+logic for each piecewise function in a dedicated class, we standardize and reuse
+the logic across multiple instances, enhancing modularity and maintainability.
+
+```python
+requirements_1 = (3, 5, 2)
+requirements_2 = (2, 1, 3)
+
+from ortools.sat.python import cp_model
+
+model = cp_model.CpModel()
+buy_1 = model.NewIntVar(0, 1_500, "buy_1")
+buy_2 = model.NewIntVar(0, 1_500, "buy_2")
+buy_3 = model.NewIntVar(0, 1_500, "buy_3")
+
+produce_1 = model.NewIntVar(0, 300, "produce_1")
+produce_2 = model.NewIntVar(0, 300, "produce_2")
+
+model.Add(produce_1 * requirements_1[0] + produce_2 * requirements_2[0] <= buy_1)
+model.Add(produce_1 * requirements_1[1] + produce_2 * requirements_2[1] <= buy_2)
+model.Add(produce_1 * requirements_1[2] + produce_2 * requirements_2[2] <= buy_3)
+
+# You can find this code it ./utils!
+from piecewise_functions import PiecewiseLinearFunction, PiecewiseLinearConstraint
+
+# Define the functions for the costs
+costs_1 = [(0, 0), (1000, 400), (1500, 1300)]
+costs_2 = [(0, 0), (300, 300), (700, 500), (1200, 600), (1500, 1100)]
+costs_3 = [(0, 0), (200, 400), (500, 700), (1000, 900), (1500, 1500)]
+# PiecewiseLinearFunction is a pydantic model and can be serialized easily!
+f_costs_1 = PiecewiseLinearFunction(
+    xs=[x for x, y in costs_1], ys=[y for x, y in costs_1]
+)
+f_costs_2 = PiecewiseLinearFunction(
+    xs=[x for x, y in costs_2], ys=[y for x, y in costs_2]
+)
+f_costs_3 = PiecewiseLinearFunction(
+    xs=[x for x, y in costs_3], ys=[y for x, y in costs_3]
+)
+
+# Define the functions for the gain
+gain_1 = [(0, 0), (100, 800), (200, 1600), (300, 2_000)]
+gain_2 = [(0, 0), (80, 1_000), (150, 1_300), (200, 1_400), (300, 1_500)]
+f_gain_1 = PiecewiseLinearFunction(xs=[x for x, y in gain_1], ys=[y for x, y in gain_1])
+f_gain_2 = PiecewiseLinearFunction(xs=[x for x, y in gain_2], ys=[y for x, y in gain_2])
+
+# Create y>=f(x) constraints for the costs
+x_costs_1 = PiecewiseLinearConstraint(model, buy_1, f_costs_1, upper_bound=False)
+x_costs_2 = PiecewiseLinearConstraint(model, buy_2, f_costs_2, upper_bound=False)
+x_costs_3 = PiecewiseLinearConstraint(model, buy_3, f_costs_3, upper_bound=False)
+
+# Create y<=f(x) constraints for the gain
+x_gain_1 = PiecewiseLinearConstraint(model, produce_1, f_gain_1, upper_bound=True)
+x_gain_2 = PiecewiseLinearConstraint(model, produce_2, f_gain_2, upper_bound=True)
+
+# Maximize the gain minus the costs
+model.Maximize(x_gain_1.y + x_gain_2.y - (x_costs_1.y + x_costs_2.y + x_costs_3.y))
+```
+
+**Key Benefits:**
+
+- **Modularity**: Submodels allow for the encapsulation of complex logic into
+  smaller, more manageable components, enhancing code organization and
+  readability.
+- **Reusability**: By defining submodels for common functions or constraints,
+  you can reuse these components across multiple instances of the main model,
+  promoting code reuse and reducing redundancy.
+- **Abstraction**: Submodels abstract the internal details of specific
+  functions, enabling users to interact with them at a higher level without
+  needing to understand the underlying implementation.
 
 ### Lazy Variable Construction
 
-Especially for models with many auxiliary variables, it turns out that only a subset of them is actually used in the constraints.
-For example, let us consider a variant of the Knapsack problem where we get a bonus if we pack certain items together.
-Here, it makes sense to create auxiliary variables indicating whether a pair of items is packed together.
-However, not every pair of items will actually result in a bonus, so we can create a variable container that lazily constructs the auxiliary variables only when they are needed.
+In models with numerous auxiliary variables, often only a subset is needed for
+any given solution. Constructing all possible variables upfront can be
+inefficient, especially in complex scenarios like a variant of the Knapsack
+problem where bonuses are awarded for packing certain items together.
 
-We did the following changes:
-* We added a `_BonusVariables` class that lazily constructs the bonus variables when they are accessed. This way, only variables that are actually used are created.
-* We added an `add_bonus` method that adds a bonus for packing two items together. This method can be called after the model has been built.
-* We add the objective in the `solve` method, as it may change when we add bonuses.
+#### Implemented Changes:
+
+We've introduced two new classes, `_BonusVariables` for managing bonus-related
+variables, and `KnapsackSolver` that incorporates these concepts, allowing for
+more dynamic and efficient handling of the model:
 
 ```python
 from ortools.sat.python import cp_model
-from pydantic import BaseModel, PositiveInt, List, PositiveFloat, NonNegativeFloat
-from typing import Generator, Tuple
+from pydantic import BaseModel, PositiveInt, List, NonNegativeFloat
+
 
 class KnapsackInstance(BaseModel):
-    weights: List[PositiveInt]  # the weight of each item
-    values: List[PositiveInt]  # the value of each item
-    capacity: PositiveInt  # the capacity of the knapsack
+    weights: List[PositiveInt]
+    values: List[PositiveInt]
+    capacity: PositiveInt
 
-    # ensure that the number of weights and values is the same
-    @model_validator(mode="after")
-    def check_lengths(cls, v):
-        if len(v.weights) != len(v.values):
-            raise ValueError("The number of weights and values must be the same.")
-        return v
 
 class KnapsackSolverConfig(BaseModel):
-    time_limit: PositiveInt = 900  # the time limit for the solver in seconds
-    opt_tol: NonNegativeFloat = 0.01  # the optimality tolerance for the solver. 0.01 means 1% optimality gap is allowed.
-    log_search_progress: bool = False  # whether to log the search progress
+    time_limit: PositiveInt = 900
+    opt_tol: NonNegativeFloat = 0.01
+    log_search_progress: bool = False
+
 
 class KnapsackSolution(BaseModel):
-    selected_items: List[int]  # the indices of the selected items
-    objective: int  # the objective value of the solution
-    upper_bound: float  # the upper bound of the solution
+    selected_items: List[int]
+    objective: int
+    upper_bound: float
+
 
 class _ItemVariables:
     def __init__(self, instance: KnapsackInstance, model: cp_model.CpModel):
         self.instance = instance
         self.x = [model.NewBoolVar(f"x_{i}") for i in range(len(instance.weights))]
 
-    def __getitem__(self, i):
-        return self.x[i]
-
-    def extract_packed_items(self, solver: cp_model.CpSolver) -> List[int]:
-        return [i for i, x_i in enumerate(self.x) if solver.Value(x_i)]
-
-    def used_weight(self) -> cp_model.LinearExpr:
-        return sum(weight * x_i for weight, x_i in zip(self.instance.weights, self.x))
-
-    def packed_value(self) -> cp_model.LinearExpr:
-        return sum(value * x_i for value, x_i in zip(self.instance.values, self.x))
-
-    def iter_items(
-      self, weight_lb: float = 0.0, weight_ub: float = float('inf'),
-       value_lb: float = 0.0, value_ub: float = float('inf')
-      ) -> Generator[Tuple[int, cp_model.BoolVar], None, None]:
-        for i, (weight, x_i) in enumerate(zip(self.instance.weights, self.x)):
-            if weight_lb <= weight <= weight_ub and value_lb <= self.instance.values[i] <= value_ub:
-                yield i, x_i
 
 class _BonusVariables:
-    def __init__(self, instance: KnapsackInstance, model: cp_model.CpModel, item_vars: _ItemVariables):
+    def __init__(
+        self,
+        instance: KnapsackInstance,
+        model: cp_model.CpModel,
+        item_vars: _ItemVariables,
+    ):
         self.instance = instance
         self.model = model
         self.item_vars = item_vars
         self.bonus = {}
-    
+
     def __getitem__(self, i, j):
-        # i,j and j,i are the same pair. We do not want to have separate variables for them.
         i, j = min(i, j), max(i, j)
         if (i, j) not in self.bonus:
-            # Add variable and constraint
-            self.bonus[(i, j)] = model.NewBoolVar(f"bonus_{i}_{j}")
-            self.model.Add(self.item_vars[i] + self.item_vars[j] >= 2*self.bonus[(i, j)])
+            self.bonus[(i, j)] = self.model.NewBoolVar(f"bonus_{i}_{j}")
+            self.model.Add(
+                self.item_vars[i] + self.item_vars[j] >= 2 * self.bonus[(i, j)]
+            )
         return self.bonus[(i, j)]
+
 
 class KnapsackSolver:
     def __init__(self, instance: KnapsackInstance, config: KnapsackSolverConfig):
@@ -2339,47 +2533,38 @@ class KnapsackSolver:
         self.config = config
         self.model = cp_model.CpModel()
         self._item_vars = _ItemVariables(instance, self.model)
-        self._bonus_vars = _BonusVariables(instance, self.model)
-        self._build_model()
-        self._objective = self._item_vars.packed_value()
+        self._bonus_vars = _BonusVariables(instance, self.model, self._item_vars)
+        self._objective = self._item_vars.packed_value()  # Initial objective setup
         self.solver = cp_model.CpSolver()
 
-    def _add_constraints(self):
-        self.model.Add(self._item_vars.used_weight() <= self.instance.capacity)
-        # prohibit more than one very heavy item to be packed
-        num_of_heavy_items_packed = sum(x for _, x in self._item_vars.iter_items(weight_lb=100))
-        self.model.Add(num_of_heavy_items_packed <= 1)
-        # add bonus constraints
-        for i, j in self._bonus_vars.bonus.keys():
-            self.model.Add(self._item_vars[i] + self._item_vars[j] <= 1 + self._bonus_vars[i, j])
-
-    def _build_model(self):
-        self._add_constraints()
-
     def solve(self) -> KnapsackSolution:
-        self.solver.parameters.max_time_in_seconds = self.config.time_limit
-        self.solver.parameters.relative_gap_limit = self.config.opt_tol
-        self.solver.parameters.log_search_progress = self.config.log_search_progress
         self.model.Maximize(self._objective)
         status = self.solver.Solve(self.model)
-        if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
+        if status in [cp_model.OPTIMAL, cp_model.FEASIBLE]:
             return KnapsackSolution(
                 selected_items=self._item_vars.extract_packed_items(self.solver),
                 objective=self.solver.ObjectiveValue(),
-                upper_bound=self.solver.BestObjectiveBound()
+                upper_bound=self.solver.BestObjectiveBound(),
             )
-        return KnapsackSolution(selected_items=[], objective=0, upper_bound=float('inf'))
-
-    def prohibit_combination(self, item_a: int, item_b: int):
-        self.model.Add(self._item_vars[item_a] + self._item_vars[item_b] <= 1)
+        return KnapsackSolution(
+            selected_items=[], objective=0, upper_bound=float("inf")
+        )
 
     def add_bonus(self, item_a: int, item_b: int, bonus: int):
         self._objective += bonus * self._bonus_vars[item_a, item_b]
-
 ```
 
+**Key Benefits:**
 
-      
+- **Efficiency**: Lazy construction of bonus variables ensures that only
+  necessary variables are created, reducing memory usage and computational
+  overhead.
+- **Modularity**: The separation of bonus variables into a dedicated class
+  enhances code organization and readability, promoting maintainability and
+  extensibility.
+- **Simplicity**: By just creating the bonus variables when accessed, we do not
+  need any logic to decide which variables are needed upfront, simplifying the
+  model construction process.
 
 ---
 
