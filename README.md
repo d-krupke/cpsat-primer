@@ -2,14 +2,6 @@
 
 _By [Dominik Krupke](https://krupke.cc), TU Braunschweig_
 
-**This tutorial is under
-[CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/). Smaller parts can be
-copied without any acknowledgement for non-commercial, educational purposes.
-Contributions are very welcome, even if it is just spell-checking.**
-
-> :warning: **You are reading a draft! Expect lots of mistakes (and please
-> report them either as an issue or pull request :) )**
-
 Many [combinatorially difficult](https://en.wikipedia.org/wiki/NP-hardness)
 optimization problems can, despite their proven theoretical hardness, be solved
 reasonably well in practice. The most successful approach is to use
@@ -97,13 +89,25 @@ awaits you in this primer:
 > to make it understandable for anyone interested in
 > [combinatorial optimization](https://en.wikipedia.org/wiki/Combinatorial_optimization).
 
-> **About the (main) author:** > [Dr. Dominik Krupke](https://krupke.cc) is a
+> **About the (main) author:** [Dr. Dominik Krupke](https://krupke.cc) is a
 > postdoctoral researcher at the
 > [Algorithms Group](https://www.ibr.cs.tu-bs.de/alg) at TU Braunschweig, where
 > he researches and teaches on how to solve NP-hard problems in practice. He
 > started writing this primer as course material for his students, but continued
 > and extended it (mostly in his spare time) to make it available to a wider
 > audience.
+
+> **Found a mistake?** Please open an issue or a pull request. You can also just
+> write me a quick mail to `krupked@gmail.com`.
+
+> **Want to contribute?** Open an issue or write me a mail with a short
+> description of what you want to do and then we can discuss it. I am happy
+> about any help and very open for further content.
+
+> **Want to use/share this content?** This tutorial can be freely used under
+> [CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/). Smaller parts can
+> even be copied without any acknowledgement for non-commercial, educational
+> purposes.
 
 ## Installation
 
@@ -303,7 +307,7 @@ variables. That is, they are placeholders that will only be assigned specific
 values during the solving phase. To illustrate this more clearly, let us explore
 an example within the Python shell:
 
-```IDLE
+```pycon
 >>> model = cp_model.CpModel()
 >>> x = model.NewIntVar(0, 100, "x")
 >>> x
@@ -2466,17 +2470,16 @@ model.Maximize(x_gain_1.y + x_gain_2.y - (x_costs_1.y + x_costs_2.y + x_costs_3.
 ### Lazy Variable Construction
 
 In models with numerous auxiliary variables, often only a subset is actually
-used by the constraints. You can now try to only create the variables that
-may actually be needed later on, but this can require some complex code to
-ensure that exactly the right variables are created. If the model is extended
-later on, things can get even more complicated as you may not know which
-variables are needed upfront. This is where lazy variable construction comes
-into play. Here, we create variables only when they are accessed, ensuring that
-only necessary variables are generated, reducing memory usage and computational
-overhead. While this can be more expensive that just creating a vector with
-all variables, when in the end most variables are needed anyway, but it can
-save a lot of memory and computation time if only a small subset is actually
-used.
+used by the constraints. You can now try to only create the variables that may
+actually be needed later on, but this can require some complex code to ensure
+that exactly the right variables are created. If the model is extended later on,
+things can get even more complicated as you may not know which variables are
+needed upfront. This is where lazy variable construction comes into play. Here,
+we create variables only when they are accessed, ensuring that only necessary
+variables are generated, reducing memory usage and computational overhead. While
+this can be more expensive that just creating a vector with all variables, when
+in the end most variables are needed anyway, but it can save a lot of memory and
+computation time if only a small subset is actually used.
 
 #### Implemented Changes:
 
