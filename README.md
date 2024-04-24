@@ -2038,9 +2038,6 @@ In this function:
   included in the knapsack are returned if an optimal or feasible solution is
   found.
 
-This approach allows quick development and testing of solutions for
-uncomplicated problems.
-
 ### Custom Data Classes for Instances, Configurations, and Solutions
 
 Incorporating serializable data classes for managing instances, configurations,
@@ -2049,8 +2046,7 @@ code. These classes also simplify the documentation process, testing, and ensure
 data consistency across larger projects where data exchange among different
 components is necessary.
 
-#### Implemented Changes:
-
+**Implemented Changes:**
 We have introduced data classes using Pydantic, a popular Python library that
 supports data validation and settings management through Python type
 annotations. The changes include:
@@ -2122,7 +2118,8 @@ def solve_knapsack(
 
 - **Structured Data Handling**: By defining explicit structures for each aspect
   of the problem, we ensure that the data handling is robust and errors are
-  minimized.
+  minimized. This allows an easier integration into a larger system and exposition
+  in APIs.
 - **Easy Serialization**: Pydantic models can be easily converted to and from
   JSON, facilitating the storage and transmission of configurations and results.
 - **Enhanced Testing and Documentation**: With clear definitions and
@@ -2132,10 +2129,6 @@ def solve_knapsack(
   for the seamless integration of older configurations with newer versions of
   the software, automatically accommodating added parameters without disrupting
   existing setups.
-
-These changes lay a solid foundation for building scalable and maintainable
-optimization solutions. This approach not only streamlines development but also
-simplifies the integration and debugging of complex systems.
 
 ### Solver Class
 
@@ -2147,9 +2140,7 @@ encapsulate both the model and the solver within a single class. This setup
 facilitates the dynamic addition of constraints and subsequent re-solving
 without needing to rebuild the entire model.
 
-#### Implemented Changes:
-
-We introduced the `KnapsackSolver` class, which encapsulates the entire setup
+**Implemented Changes:** We introduced the `KnapsackSolver` class, which encapsulates the entire setup
 and solving process of the knapsack problem:
 
 ```python
@@ -2253,11 +2244,6 @@ if __name__ == "__main__":
   operations or debugging purposes. The function-based approach did not expose
   these elements, limiting the flexibility of the solution.
 
-This class structure is especially useful in scenarios where the optimization
-process is part of a larger system or requires interaction with users or other
-computational elements that influence the constraints and objectives
-dynamically.
-
 ### Variable Containers
 
 Modularization is crucial in software engineering for maintaining and scaling
@@ -2266,8 +2252,7 @@ separating variables from the core model logic is a strategic approach. This
 separation facilitates easier management of variables and provides methods for
 more structured interactions with them.
 
-#### Implemented Changes:
-
+**Implemented Changes:**
 We introduced the `_ItemVariables` class, which acts as a container for the
 decision variables associated with the knapsack items. This class not only
 creates these variables but also offers several utility methods to interact with
@@ -2479,8 +2464,7 @@ this can be more expensive that just creating a vector with all variables, when
 in the end most variables are needed anyway, but it can save a lot of memory and
 computation time if only a small subset is actually used.
 
-#### Implemented Changes:
-
+**Implemented Changes:**
 We have introduced the new class `_CombiVariables` that manges auxiliary
 variables indicating that a pair of items were packed, allowing to give
 additional bonuses for packing certain items together. Theoretically, there is a
