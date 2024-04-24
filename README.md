@@ -1,4 +1,4 @@
-# Using and Understanding ortools' CP-SAT: A Primer and Cheat Sheet
+# Using and Understanding OR-Tools' CP-SAT: A Primer and Cheat Sheet
 
 _By [Dominik Krupke](https://krupke.cc), TU Braunschweig_
 
@@ -25,7 +25,7 @@ hundreds of thousands of variables and constraints, the classical CP-solvers
 often struggle with problems with more than a few thousand variables and
 constraints. However, the relatively new
 [CP-SAT](https://developers.google.com/optimization/cp/cp_solver) of Google's
-[ortools](https://github.com/google/or-tools/) suite shows to overcome many of
+[OR-Tools](https://github.com/google/or-tools/) suite shows to overcome many of
 the weaknesses and provides a viable alternative to MIP-solvers, being
 competitive for many problems and sometimes even superior.
 
@@ -119,7 +119,7 @@ notation (allowing you to spot mathematical errors much faster). Only for huge
 models, you may need to use a compiled language such as C++ due to performance
 issues. For smaller models, you will not notice any performance difference.
 
-The installation of CP-SAT, which is part of the ortools package, is very easy
+The installation of CP-SAT, which is part of the OR-Tools package, is very easy
 and can be done via Python's package manager
 [pip](https://pip.pypa.io/en/stable/).
 
@@ -127,7 +127,7 @@ and can be done via Python's package manager
 pip3 install -U ortools
 ```
 
-This command will also update an existing installation of ortools. As this tool
+This command will also update an existing installation of OR-Tools. As this tool
 is in active development, it is recommended to update it frequently. We actually
 encountered wrong behavior, i.e., bugs, in earlier versions that then have been
 fixed by updates (this was on some more advanced features, don't worry about
@@ -757,7 +757,7 @@ or Hamiltonicity Problem are important and difficult problems that occur as
 subproblem in many contexts. For solving the classical TSP, you should use the
 extremely powerful solver
 [Concorde](https://www.math.uwaterloo.ca/tsp/concorde.html). There is also a
-separate [part in ortools](https://developers.google.com/optimization/routing)
+separate [part in OR-Tools](https://developers.google.com/optimization/routing)
 dedicated to routing. If it is just a subproblem, you can add a simple
 constraint by encoding the allowed edges as triples of start vertex index,
 target vertex index, and literal/variable. Note that this is using directed
