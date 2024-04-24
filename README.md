@@ -2548,6 +2548,9 @@ class KnapsackSolver:
 
     def solve(self) -> KnapsackSolution:
         self.model.Maximize(self._objective)
+        self.solver.parameters.max_time_in_seconds = self.config.time_limit
+        self.solver.parameters.relative_gap_limit = self.config.opt_tol
+        self.solver.parameters.log_search_progress = self.config.log_search_progress
         status = self.solver.Solve(self.model)
         if status in [cp_model.OPTIMAL, cp_model.FEASIBLE]:
             return KnapsackSolution(
