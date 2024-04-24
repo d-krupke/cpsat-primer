@@ -2465,14 +2465,22 @@ model.Maximize(x_gain_1.y + x_gain_2.y - (x_costs_1.y + x_costs_2.y + x_costs_3.
 
 ### Lazy Variable Construction
 
-In models with numerous auxiliary variables, often only a subset is needed for
-any given solution. Constructing all possible variables upfront can be
-inefficient, especially in complex scenarios like a variant of the Knapsack
-problem where bonuses are awarded for packing certain items together.
+In models with numerous auxiliary variables, often only a subset is actually
+used by the constraints. You can now try to only create the variables that
+may actually be needed later on, but this can require some complex code to
+ensure that exactly the right variables are created. If the model is extended
+later on, things can get even more complicated as you may not know which
+variables are needed upfront. This is where lazy variable construction comes
+into play. Here, we create variables only when they are accessed, ensuring that
+only necessary variables are generated, reducing memory usage and computational
+overhead. While this can be more expensive that just creating a vector with
+all variables, when in the end most variables are needed anyway, but it can
+save a lot of memory and computation time if only a small subset is actually
+used.
 
 #### Implemented Changes:
 
-We've introduced two new classes, `_BonusVariables` for managing bonus-related
+We have introduced two new classes, `_BonusVariables` for managing bonus-related
 variables, and `KnapsackSolver` that incorporates these concepts, allowing for
 more dynamic and efficient handling of the model:
 
