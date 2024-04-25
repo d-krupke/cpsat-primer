@@ -100,9 +100,11 @@ awaits you in this primer:
 > **Found a mistake?** Please open an issue or a pull request. You can also just
 > write me a quick mail to `krupked@gmail.com`.
 
-> **Want to contribute?** Open an issue or write me a mail with a short
-> description of what you want to do and then we can discuss it. I am happy
-> about any help and very open for further content.
+> **Want to Contribute?** If you're interested in contributing, please open an
+> issue or send me an email with a brief description of your proposal. We can
+> then discuss the details. I welcome all assistance and am open to expanding
+> the content. Contributors to any section or similar input will be recognized
+> as co-authors.
 
 > **Want to use/share this content?** This tutorial can be freely used under
 > [CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/). Smaller parts can
@@ -982,9 +984,11 @@ dimensions, e.g., time and resources or for packing rectangles.
 
 ```python
 # 1D no-overlap constraint
-model.AddNoOverlap([... interval vars...])
+model.AddNoOverlap([__INTERVAL_VARS__])
 # 2D no-overlap constraint. The two lists need to have the same length.
-model.AddNoOverlap2D([... interval vars first dimension...], [... interval vars second dimension...])
+model.AddNoOverlap2D(
+    [__INTERVAL_VARS_FIRST_DIMENSION__], [__INTERVAL_VARS_SECOND_DIMENSION__]
+)
 ```
 
 Let us take a quick look on how we can use this to check if we can pack a set of
@@ -2015,13 +2019,9 @@ def solve_knapsack(
     # Decision variables for items
     x = [model.NewBoolVar(f"x_{i}") for i in range(n)]
     # Capacity constraint
-    model.Add(
-        sum(weights[i] * x[i] for i in range(n)) <= capacity
-    )
+    model.Add(sum(weights[i] * x[i] for i in range(n)) <= capacity)
     # Objective function to maximize value
-    model.Maximize(
-        sum(values[i] * x[i] for i in range(n))
-    )
+    model.Maximize(sum(values[i] * x[i] for i in range(n)))
     # Solve the model
     solver = cp_model.CpSolver()
     solver.parameters.max_time_in_seconds = time_limit  # Solver time limit
@@ -2029,7 +2029,7 @@ def solve_knapsack(
     status = solver.Solve(model)
     # Extract solution
     return (
-      # Return indices of selected items
+        # Return indices of selected items
         [i for i in range(n) if solver.Value(x[i])]
         if status in [cp_model.OPTIMAL, cp_model.FEASIBLE]
         else []
@@ -2060,6 +2060,7 @@ from typing import List
 
 _logger = logging.getLogger(__name__)  # get a logger for the current module
 
+
 def solve_knapsack(
     weights: List[int],
     values: List[int],
@@ -2074,25 +2075,30 @@ def solve_knapsack(
     n = len(weights)  # Number of items
     _logger.debug("Number of items: %d", n)
     if n > 0:
-      _logger.debug("Min/Mean/Max weight: %d/%.2f/%d", min(weights), sum(weights) / n, max(weights))
-      _logger.debug("Min/Mean/Max value: %d/%.2f/%d", min(values), sum(values) / n, max(values))
+        _logger.debug(
+            "Min/Mean/Max weight: %d/%.2f/%d",
+            min(weights),
+            sum(weights) / n,
+            max(weights),
+        )
+        _logger.debug(
+            "Min/Mean/Max value: %d/%.2f/%d", min(values), sum(values) / n, max(values)
+        )
     # Decision variables for items
     x = [model.NewBoolVar(f"x_{i}") for i in range(n)]
     # Capacity constraint
-    model.Add(
-        sum(weights[i] * x[i] for i in range(n)) <= capacity
-    )
+    model.Add(sum(weights[i] * x[i] for i in range(n)) <= capacity)
     # Objective function to maximize value
-    model.Maximize(
-        sum(values[i] * x[i] for i in range(n))
-    )
+    model.Maximize(sum(values[i] * x[i] for i in range(n)))
     # Log the model
     _logger.debug("Model created with %d items", n)
     # Solve the model
     solver = cp_model.CpSolver()
     solver.parameters.max_time_in_seconds = time_limit  # Solver time limit
     solver.parameters.relative_gap_limit = opt_tol  # Solver optimality tolerance
-    _logger.debug("Starting the solution process with time limit %d seconds", time_limit)
+    _logger.debug(
+        "Starting the solution process with time limit %d seconds", time_limit
+    )
     status = solver.Solve(model)
     # Extract solution
     selected_items = (
@@ -2102,7 +2108,6 @@ def solve_knapsack(
     )
     _logger.debug("Selected items: %s", selected_items)
     return selected_items
-
 ```
 
 We will not use logging in the following examples to save space, but you should
@@ -2307,6 +2312,7 @@ to interact with them, improving the clarity and maintainability of the code.
 
 ```python
 from typing import Generator, Tuple
+
 
 class _ItemVariables:
     def __init__(self, instance: KnapsackInstance, model: cp_model.CpModel):
@@ -2523,6 +2529,7 @@ class _ItemVariables:
                 and value_lb <= self.instance.values[i] <= value_ub
             ):
                 yield i, x_i
+
 
 class _CombiVariables:
     def __init__(
