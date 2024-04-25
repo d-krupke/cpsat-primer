@@ -2214,6 +2214,18 @@ def solve_knapsack(
   integration of older configurations with new software versions, accommodating
   new parameters without disrupting existing setups.
 
+One challenge I often face is designing data classes to be as generic as
+possible so that they can be used with multiple solvers and remain compatible
+throughout various stages of the optimization process. For instance, a graph
+might be represented as an edge list, an adjacency matrix, or an adjacency list,
+each with its own pros and cons, complicating the decision of which format is
+optimal for all stages. However, converting between different data class formats
+is typically straightforward, often requiring only a few lines of code and
+having a negligible impact compared to the optimization process itself.
+Therefore, I recommend focusing on functionality with your current solver
+without overcomplicating this aspect. There is little harm in having to call
+a few convert functions because you created separate specialized data classes.
+
 ### Solver Class
 
 In many real-world optimization scenarios, problems may require iterative
