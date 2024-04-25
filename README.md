@@ -2036,6 +2036,85 @@ def solve_knapsack(
     )
 ```
 
+### Logging the Model Building
+
+When working with more complex optimization problems, logging the model-building
+process can be essential to find and fix issues. Often, the problem lies not
+within the solver but in the model itself.
+
+In the following example, we add some basic logging to the solver function to
+give us some insights into the model-building process. This logging can be
+easily activated or deactivated by the logging framework, allowing us to use it
+not only during development but also in production.
+
+If you do not know about the logging framework of Python, this is an excellent
+moment to learn about it. I consider it an essential skill for production code
+and this and similar frameworks are used for most production code in any
+language. The official Python documentation contains a
+[good tutorial](https://docs.python.org/3/howto/logging.html).
+
+```python
+import logging
+from ortools.sat.python import cp_model
+from typing import List
+
+_logger = logging.getLogger(__name__)  # get a logger for the current module
+
+def solve_knapsack(
+    weights: List[int],
+    values: List[int],
+    capacity: int,
+    *,
+    time_limit: int = 900,
+    opt_tol: float = 0.01,
+) -> List[int]:
+    _logger.debug("Building the knapsack model")
+    # initialize the model
+    model = cp_model.CpModel()
+    n = len(weights)  # Number of items
+    _logger.debug("Number of items: %d", n)
+    if n > 0:
+      _logger.debug("Min/Mean/Max weight: %d/%.2f/%d", min(weights), sum(weights) / n, max(weights))
+      _logger.debug("Min/Mean/Max value: %d/%.2f/%d", min(values), sum(values) / n, max(values))
+    # Decision variables for items
+    x = [model.NewBoolVar(f"x_{i}") for i in range(n)]
+    # Capacity constraint
+    model.Add(
+        sum(weights[i] * x[i] for i in range(n)) <= capacity
+    )
+    # Objective function to maximize value
+    model.Maximize(
+        sum(values[i] * x[i] for i in range(n))
+    )
+    # Log the model
+    _logger.debug("Model created with %d items", n)
+    # Solve the model
+    solver = cp_model.CpSolver()
+    solver.parameters.max_time_in_seconds = time_limit  # Solver time limit
+    solver.parameters.relative_gap_limit = opt_tol  # Solver optimality tolerance
+    _logger.debug("Starting the solution process with time limit %d seconds", time_limit)
+    status = solver.Solve(model)
+    # Extract solution
+    selected_items = (
+        [i for i in range(n) if solver.Value(x[i])]
+        if status in [cp_model.OPTIMAL, cp_model.FEASIBLE]
+        else []
+    )
+    _logger.debug("Selected items: %s", selected_items)
+    return selected_items
+
+```
+
+We will not use logging in the following examples to save space, but you should
+consider adding it to your code.
+
+> A great hack you can do with the logging framework is that you can easily hook
+> into your code and do analysis beyond the simple logging. You can simply write
+> a handler that, e.g., waits for the tag `"Selected items: %s"` and then can
+> directly access the selected items, as the actual object is passed to the
+> handler (and not just the string). This can be very useful to gather
+> statistics or to visualize the search process.
+
 ### Custom Data Classes for Instances, Configurations, and Solutions
 
 Incorporating serializable data classes to manage instances, configurations, and
@@ -2221,7 +2300,7 @@ separating variables from the core model logic is a strategic approach. This
 separation facilitates easier management of variables and provides methods for
 more structured interactions with them.
 
-**Implemented Changes:** We introduced the `_ItemVariables` class, which acts as
+**Implemented Changes:** We introduce the `_ItemVariables` class, which acts as
 a container for the decision variables associated with the knapsack items. This
 class not only creates these variables but also offers several utility methods
 to interact with them, improving the clarity and maintainability of the code.
@@ -2405,12 +2484,13 @@ this can be more expensive that just creating a vector with all variables, when
 in the end most variables are needed anyway, but it can save a lot of memory and
 computation time if only a small subset is actually used.
 
-**Implemented Changes:** We have introduced the new class `_CombiVariables` that
-manges auxiliary variables indicating that a pair of items were packed, allowing
-to give additional bonuses for packing certain items together. Theoretically,
-there is a square number of possible combinations, but there will probably only
-be a handful of them that are actually used. By creating the variables only when
-they are accessed, we can reduce memory usage and computational overhead.
+**Implemented Changes:** We introduce the new class `_CombiVariables` that
+manages auxiliary variables indicating that a pair of items were packed,
+allowing to give additional bonuses for packing certain items together.
+Theoretically, there is a square number of possible combinations, but there will
+probably only be a handful of them that are actually used. By creating the
+variables only when they are accessed, we can reduce memory usage and
+computational overhead.
 
 ```python
 class _ItemVariables:
