@@ -19,11 +19,11 @@ struggle with some optimization problems, especially if the problem contains a
 lot of logical constraints that a solution has to satisfy. In this case, the
 [Constraint Programming](https://en.wikipedia.org/wiki/Constraint_programming)
 (CP) approach may be more successful. For Constraint Programming, there are many
-open source solvers, but they are often not as powerful as the commercial
-MIP-solvers. While MIP-solvers are frequently able to solve problems with
-hundreds of thousands of variables and constraints, the classical CP-solvers
-often struggle with problems with more than a few thousand variables and
-constraints. However, the relatively new
+open source solvers, but they usually do not scale as well as MIP-solvers and
+are worse in optimizing objective functions. While MIP-solvers are frequently
+able to optimize problems with hundreds of thousands of variables and
+constraints, the classical CP-solvers often struggle with problems with more
+than a few thousand variables and constraints. However, the relatively new
 [CP-SAT](https://developers.google.com/optimization/cp/cp_solver) of Google's
 [OR-Tools](https://github.com/google/or-tools/) suite shows to overcome many of
 the weaknesses and provides a viable alternative to MIP-solvers, being
@@ -80,6 +80,8 @@ awaits you in this primer:
 8. [Large Neighborhood Search](#Using-CP-SAT-for-Bigger-Problems-with-Large-Neighborhood-Search):
    The use of CP-SAT to create more powerful heuristics.
 
+---
+
 > **Target audience:** People (especially my students at TU Braunschweig) with
 > some background in
 > [integer programming](https://en.wikipedia.org/wiki/Integer_programming)
@@ -89,18 +91,19 @@ awaits you in this primer:
 > to make it understandable for anyone interested in
 > [combinatorial optimization](https://en.wikipedia.org/wiki/Combinatorial_optimization).
 
-> **About the (main) author:** [Dr. Dominik Krupke](https://krupke.cc) is a
-> postdoctoral researcher at the
-> [Algorithms Group](https://www.ibr.cs.tu-bs.de/alg) at TU Braunschweig, where
-> he researches and teaches on how to solve NP-hard problems in practice. He
-> started writing this primer as course material for his students, but continued
-> and extended it (mostly in his spare time) to make it available to a wider
+> **About the Main Author:** [Dr. Dominik Krupke](https://krupke.cc) is a
+> postdoctoral researcher with the
+> [Algorithms Group](https://www.ibr.cs.tu-bs.de/alg) at TU Braunschweig. He
+> specializes in practical solutions to NP-hard problems. Initially focused on
+> theoretical computer science, he now applies his expertise to solve what was
+> once deemed impossible. This primer, first developed as course material for
+> his students, has been extended in his spare time to cater to a wider
 > audience.
 
 > **Found a mistake?** Please open an issue or a pull request. You can also just
 > write me a quick mail to `krupked@gmail.com`.
 
-> **Want to Contribute?** If you're interested in contributing, please open an
+> **Want to Contribute?** If you are interested in contributing, please open an
 > issue or send me an email with a brief description of your proposal. We can
 > then discuss the details. I welcome all assistance and am open to expanding
 > the content. Contributors to any section or similar input will be recognized
@@ -110,6 +113,8 @@ awaits you in this primer:
 > [CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/). Smaller parts can
 > even be copied without any acknowledgement for non-commercial, educational
 > purposes.
+
+---
 
 ## Installation
 
@@ -140,8 +145,8 @@ experimenting with CP-SAT.
 
 ### What hardware do I need?
 
-It's important to note that for CP-SAT usage, you don't need the capabilities of
-a supercomputer. A standard laptop is often sufficient for solving many
+It is important to note that for CP-SAT usage, you don't need the capabilities
+of a supercomputer. A standard laptop is often sufficient for solving many
 problems. The primary requirements are CPU power and memory bandwidth, with a
 GPU being unnecessary.
 
@@ -149,7 +154,7 @@ In terms of CPU power, the key is balancing the number of cores with the
 performance of each individual core. CP-SAT leverages all available cores,
 implementing different strategies on each.
 [Depending on the number of cores, CP-SAT will behave differently](https://github.com/google/or-tools/blob/main/ortools/sat/docs/troubleshooting.md#improving-performance-with-multiple-workers).
-However, the effectiveness of these strategies can vary, and it's usually not
+However, the effectiveness of these strategies can vary, and it is usually not
 apparent which one will be most effective. A higher single-core performance
 means that your primary strategy will operate more swiftly. I recommend a
 minimum of 4 cores and 16GB of RAM.
@@ -206,8 +211,9 @@ handle more and more 'bad' problem models effectively with every year.
 > [Math Programming Modelling Basics](https://www.gurobi.com/resources/math-programming-modeling-basics/).
 
 Our first problem has no deeper meaning, except of showing the basic workflow of
-creating the variables (x and y), adding the constraint x+y<=30 on them, setting
-the objective function (maximize 30*x + 50*y), and obtaining a solution:
+creating the variables (x and y), adding the constraint $x+y<=30$ on them,
+setting the objective function (maximize $30*x + 50*y$), and obtaining a
+solution:
 
 ```python
 from ortools.sat.python import cp_model
@@ -414,6 +420,12 @@ Resources on mathematical modelling (not CP-SAT specific):
 - [Model Building in Mathematical Programming by H. Paul Williams](https://www.wiley.com/en-us/Model+Building+in+Mathematical+Programming%2C+5th+Edition-p-9781118443330):
   A complete book on mathematical modelling.
 
+> :warning: CP-SAT 9.9 recently changed its API to be more consistent with the
+> commonly used Python style. Instead of `NewIntVar`, you can now also use
+> `new_int_var`. This primer still uses the old style, but will be updated in
+> the future. I observed cases where certain methods were not available in one
+> or the other style, so you may need to switch between them for some versions.
+
 ### Variables
 
 There are two important types of variables in CP-SAT: Booleans and Integers
@@ -472,8 +484,8 @@ solver specialized on boolean variables by using a SAT-solver as a base, such as
 CP-SAT, thus, is quite sensible. The resolution of coefficients (in combination
 with boolean variables) is less critical than for variables.
 
-You might question the need for naming variables in your model. While it's true
-that CP-SAT wouldn't need named variables to work (as it could just give them
+You might question the need for naming variables in your model. While it is true
+that CP-SAT would not need named variables to work (as it could just give them
 automatically generated names), assigning names is incredibly useful for
 debugging purposes. Solver APIs often create an internal representation of your
 model, which is subsequently used by the solver. There are instances where you
@@ -483,10 +495,6 @@ enhance the clarity of the internal representation, making your debugging
 process much more manageable.
 
 #### Domain Variables
-
-_This section is especially for those with a constraint programming background,
-who may be tempted to use domain variables instead of sticking to boolean and
-integer variables. Everyone else can probably skip this section._
 
 When dealing with integer variables that you know will only need to take certain
 values, or when you wish to limit their possible values, domain variables can
@@ -715,7 +723,8 @@ penalty in the future, but for now, you have to be aware of this. See also
 Two often occurring and important operators are absolute values as well as
 minimum and maximum values. You cannot use operators directly in the
 constraints, but you can use them via an auxiliary variable and a dedicated
-constraint. These constraints are reasonably efficient in my experience.
+constraint. These constraints are more efficient than comparable constraints in
+classical MIP-solvers, but you should still not overuse them.
 
 ```python
 # abs_xz == |x+z|
@@ -729,7 +738,42 @@ min_xyz = model.NewIntVar(-100, 100, " min(x,y, z)")
 model.AddMinEquality(min_xyz, [x, y, z])
 ```
 
-### Multiplication and Modulo
+Also note that surprisingly often, you can replace these constraints with more
+efficient linear constraints. Here is one example for the max equality:
+
+```python
+x = model.NewIntVar(0, 100, "x")
+y = model.NewIntVar(0, 100, "y")
+z = model.NewIntVar(0, 100, "z")
+
+# enforce that max_xyz has to be at least the maximum of x, y, z
+max_xyz = model.NewIntVar(0, 100, "max_xyz")
+model.Add(max_xyz >= x)
+model.Add(max_xyz >= y)
+model.Add(max_xyz >= z)
+
+# as we minimized max_xyz, it has to be the maximum of x, y, z
+model.Minimize(max_xyz)
+```
+
+This example illustrates that enforcing the exact maximum value is not always
+necessary; a lower bound suffices. By minimizing the variable, the model itself
+enforces tightness. Although this approach requires more constraints, it
+utilizes constraints that are significantly more efficient than the
+`AddMaxEquality` constraint, typically resulting in faster solving times.
+
+Additional techniques exist for managing minimum and absolute values, as well as
+for complex scenarios where the objective function does not directly enforce
+equality. Experienced optimizers can often swiftly identify opportunities to
+replace standard constraints with more efficient alternatives. However,
+employing these advanced techniques should follow the acquisition of sufficient
+experience or the use of a verified base model for comparison. From my
+consulting experience with optimization models, I have found that resolving
+issues from improperly applied optimizations frequently requires more time than
+applying these techniques initially to a model that uses the less efficient
+constraints.
+
+### Multiplication, Division, and Modulo
 
 A big nono in linear optimization (the most successful optimization area) are
 multiplication of variables (because this would no longer be linear, right...).
@@ -745,11 +789,24 @@ need them and cannot find a way around them.
 xyz = model.NewIntVar(-100 * 100 * 100, 100**3, "x*y*z")
 model.AddMultiplicationEquality(xyz, [x, y, z])  # xyz = x*y*z
 model.AddModuloEquality(x, y, 3)  # x = y % 3
+model.AddDivisionEquality(x, y, z)  # x = y // z
 ```
+
+You can very often approximate these constraints with significantly more
+efficient linear constraints, even if it may require some additional variables
+or reification. Doing a piecewise linear approximation can be an option even for
+more complex functions, though they too are not necessarily efficient.
+
+Certain quadratic constraints, e.g., second-order cones, can be efficiently
+handled by interior point methods, as utilized by the Gurobi solver. However,
+CP-SAT currently lacks this capability and needs to do significantly more work
+to handle these constraints. Long story short, if you can avoid these
+constraints, you should do so, even if you have to give up on modelling the
+exact function you had in mind.
 
 > :warning: The documentation indicates that multiplication of more than two
 > variables is supported, but I got an error when trying it out. I have not
-> investigated this further, as I would expect it to be slow anyway.
+> investigated this further, as I would expect it to be painfully slow anyway.
 
 ### Circuit/Tour-Constraints
 
@@ -767,7 +824,7 @@ edges/arcs. By adding a triple (v,v,var), you can allow CP-SAT to skip the
 vertex v.
 
 > If the tour-problem is the fundamental part of your problem, you may be better
-> served with using a Mixed Integer Programming solver. Don't expect to solve
+> served with using a Mixed Integer Programming solver. Do not expect to solve
 > tours much larger than 250 vertices with CP-SAT.
 
 ```python
@@ -2223,8 +2280,8 @@ optimal for all stages. However, converting between different data class formats
 is typically straightforward, often requiring only a few lines of code and
 having a negligible impact compared to the optimization process itself.
 Therefore, I recommend focusing on functionality with your current solver
-without overcomplicating this aspect. There is little harm in having to call
-a few convert functions because you created separate specialized data classes.
+without overcomplicating this aspect. There is little harm in having to call a
+few convert functions because you created separate specialized data classes.
 
 ### Solver Class
 
