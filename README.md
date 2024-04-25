@@ -1973,11 +1973,14 @@ some conflicts.
 ## Coding Patterns for Optimization Problems
 
 In this section, we will explore various coding patterns that are essential for
-structuring solutions to optimization problems using CP-SAT. While we will not
-delve into the modeling of specific problems, our focus will be on demonstrating
-how to organize your code to enhance its readability and maintainability. These
-practices are crucial for developing robust and scalable optimization solutions
-that can be easily understood, modified, and extended by other developers.
+structuring implementations for optimization problems using CP-SAT. While we
+will not delve into the modeling of specific problems, our focus will be on
+demonstrating how to organize your code to enhance its readability and
+maintainability. These practices are crucial for developing robust and scalable
+optimization solutions that can be easily understood, modified, and extended by
+other developers. We will concentrate on basic patterns, as more complex
+patterns are better understood within the context of larger problems and are
+beyond the scope of this primer.
 
 ### Simple Function
 
@@ -1987,8 +1990,11 @@ suited for simpler cases due to its straightforward nature but lacks flexibility
 for more complex scenarios. Parameters such as the time limit and optimality
 tolerance can be customized via keyword arguments with default values.
 
-The following Python function demonstrates how to solve a simple knapsack
-problem using CP-SAT:
+The following Python function demonstrates solving a simple knapsack problem
+using CP-SAT. To recap, in the knapsack problem, we select items - each with a
+specific weight and value - to maximize total value without exceeding a
+predefined weight limit. Given its simplicity, involving only one constraint,
+the knapsack problem serves as an ideal model for introductory examples.
 
 ```python
 from ortools.sat.python import cp_model
@@ -2003,66 +2009,62 @@ def solve_knapsack(
     time_limit: int = 900,
     opt_tol: float = 0.01,
 ) -> List[int]:
+    # initialize the model
     model = cp_model.CpModel()
     n = len(weights)  # Number of items
-    x = [model.NewBoolVar(f"x_{i}") for i in range(n)]  # Decision variables for items
+    # Decision variables for items
+    x = [model.NewBoolVar(f"x_{i}") for i in range(n)]
+    # Capacity constraint
     model.Add(
         sum(weights[i] * x[i] for i in range(n)) <= capacity
-    )  # Capacity constraint
+    )
+    # Objective function to maximize value
     model.Maximize(
         sum(values[i] * x[i] for i in range(n))
-    )  # Objective function to maximize value
+    )
+    # Solve the model
     solver = cp_model.CpSolver()
     solver.parameters.max_time_in_seconds = time_limit  # Solver time limit
     solver.parameters.relative_gap_limit = opt_tol  # Solver optimality tolerance
     status = solver.Solve(model)
+    # Extract solution
     return (
+      # Return indices of selected items
         [i for i in range(n) if solver.Value(x[i])]
         if status in [cp_model.OPTIMAL, cp_model.FEASIBLE]
         else []
-    )  # Return indices of selected items
+    )
 ```
-
-In this function:
-
-- **Model Initialization:** We initiate a CP-SAT model.
-- **Decision Variables:** Boolean variables are created for each item to
-  represent whether it is selected.
-- **Constraints:** We add a capacity constraint to ensure the total weight of
-  selected items does not exceed the knapsack's limit.
-- **Objective Function:** We define an objective to maximize the total value of
-  the selected items.
-- **Solver Configuration:** The solver's parameters for time limits and
-  optimality tolerance are set.
-- **Solution Extraction:** The model is solved, and the indices of the items
-  included in the knapsack are returned if an optimal or feasible solution is
-  found.
 
 ### Custom Data Classes for Instances, Configurations, and Solutions
 
-Incorporating serializable data classes for managing instances, configurations,
-and solutions can greatly enhance the readability and maintainability of your
-code. These classes also simplify the documentation process, testing, and ensure
-data consistency across larger projects where data exchange among different
-components is necessary.
+Incorporating serializable data classes to manage instances, configurations, and
+solutions significantly enhances the readability and maintainability of your
+code. These classes also facilitate the documentation process, testing, and
+ensure data consistency across larger projects where data exchange among
+different components is necessary.
 
-**Implemented Changes:** We have introduced data classes using Pydantic, a
-popular Python library that supports data validation and settings management
-through Python type annotations. The changes include:
+**Implemented Changes:** We introduce data classes using
+[Pydantic](https://docs.pydantic.dev/latest/), a popular Python library that
+supports data validation and settings management through Python type
+annotations. The changes include:
 
 - **Instance Class**: Defines the knapsack problem with attributes for weights,
   values, and capacity. It includes a validation method to ensure that the
-  number of weights matches the number of values, enhancing data integrity.
+  number of weights matches the number of values, thereby enhancing data
+  integrity.
 - **Configuration Class**: Manages solver settings such as time limits and
-  optimality tolerance, allowing easy adjustments and fine-tuning of the
-  solver's performance. Default values ensure backward compatibility, allowing
-  older configurations to be loaded and integrated seamlessly with new
+  optimality tolerance, allowing for easy adjustments and fine-tuning of the
+  solver’s performance. Default values ensure backward compatibility,
+  facilitating the seamless integration of older configurations with new
   parameters.
 - **Solution Class**: Captures the outcome of the optimization process,
   including which items were selected, the objective value, and the upper bound
-  of the solution. This class has been enhanced to include additional
-  information such as the bounds, providing a more comprehensive view of the
-  solution's quality and constraints.
+  of the solution. This class allows us to add additional information, instead
+  of just returning the pure solution. It also allows us to later extend the
+  attached information without breaking the API, by just making the new entries
+  optional or providing a default value. For example, you may be interested in
+  the solution time that was required to find the solution.
 
 ```python
 from ortools.sat.python import cp_model
@@ -2115,19 +2117,18 @@ def solve_knapsack(
 
 **Key Benefits:**
 
-- **Structured Data Handling**: By defining explicit structures for each aspect
-  of the problem, we ensure that the data handling is robust and errors are
-  minimized. This allows an easier integration into a larger system and
-  exposition in APIs.
-- **Easy Serialization**: Pydantic models can be easily converted to and from
-  JSON, facilitating the storage and transmission of configurations and results.
-- **Enhanced Testing and Documentation**: With clear definitions and
-  constraints, it becomes easier to generate documentation and write tests that
-  validate the behavior of the model and solver.
-- **Backward Compatibility**: The use of default values in data classes allows
-  for the seamless integration of older configurations with newer versions of
-  the software, automatically accommodating added parameters without disrupting
-  existing setups.
+- **Structured Data Handling**: Defining explicit structures for each aspect of
+  the problem ensures robust data handling and minimizes errors, facilitating
+  easier integration and API exposition.
+- **Easy Serialization**: Pydantic models support straightforward conversion to
+  and from JSON, simplifying the storage and transmission of configurations and
+  results.
+- **Enhanced Testing and Documentation**: Clear data definitions make it easier
+  to generate documentation and conduct tests that confirm the model and
+  solver's behavior.
+- **Backward Compatibility**: Default values in data classes enable seamless
+  integration of older configurations with new software versions, accommodating
+  new parameters without disrupting existing setups.
 
 ### Solver Class
 
@@ -2139,38 +2140,10 @@ encapsulate both the model and the solver within a single class. This setup
 facilitates the dynamic addition of constraints and subsequent re-solving
 without needing to rebuild the entire model.
 
-**Implemented Changes:** We introduced the `KnapsackSolver` class, which
+**Implemented Changes:** We introduce the `KnapsackSolver` class, which
 encapsulates the entire setup and solving process of the knapsack problem:
 
 ```python
-from ortools.sat.python import cp_model
-from pydantic import BaseModel, PositiveInt, List, NonNegativeFloat
-
-
-class KnapsackInstance(BaseModel):
-    weights: List[PositiveInt]  # the weight of each item
-    values: List[PositiveInt]  # the value of each item
-    capacity: PositiveInt  # the capacity of the knapsack
-
-    @model_validator(mode="after")
-    def check_lengths(cls, v):
-        if len(v.weights) != len(v.values):
-            raise ValueError("Weights and values count mismatch.")
-        return v
-
-
-class KnapsackSolverConfig(BaseModel):
-    time_limit: PositiveInt = 900
-    opt_tol: NonNegativeFloat = 0.01
-    log_search_progress: bool = False  # Option to log the search progress for debugging
-
-
-class KnapsackSolution(BaseModel):
-    selected_items: List[int]
-    objective: int
-    upper_bound: float
-
-
 class KnapsackSolver:
     def __init__(self, instance: KnapsackInstance, config: KnapsackSolverConfig):
         self.instance = instance
@@ -2230,18 +2203,15 @@ if __name__ == "__main__":
 
 **Key Benefits:**
 
-- **Incremental Model Building**: The class structure allows for the dynamic
-  addition of constraints and objectives, enabling users to modify the model
-  iteratively without rebuilding it from scratch.
-- **Re-solving**: The class structure supports multiple invocations of the
-  `solve` method, enabling users to refine the solution iteratively by modifying
-  constraints and re-solving the problem seamlessly. You can also use this to
-  try to solve the model again with modified solver parameters, such as a longer
-  time limit or a stricter optimality tolerance.
-- **Access to Model and Solver**: The class provides direct access to the model
-  and solver, allowing users to interact with them directly for more advanced
-  operations or debugging purposes. The function-based approach did not expose
-  these elements, limiting the flexibility of the solution.
+- **Incremental Model Building and Re-solving**: The class structure not only
+  facilitates incremental additions of constraints for iterative model
+  modifications without starting from scratch but also supports multiple
+  invocations of the `solve` method. This allows for iterative refinement of the
+  solution by adjusting constraints or solver parameters such as time limits and
+  optimality tolerance.
+- **Direct Model and Solver Access**: Provides direct access to the model and
+  solver, enhancing flexibility for advanced operations and debugging, a
+  capability not exposed in the function-based approach.
 
 ### Variable Containers
 
@@ -2257,34 +2227,7 @@ class not only creates these variables but also offers several utility methods
 to interact with them, improving the clarity and maintainability of the code.
 
 ```python
-from ortools.sat.python import cp_model
-from pydantic import BaseModel, PositiveInt, List, NonNegativeFloat
 from typing import Generator, Tuple
-
-
-class KnapsackInstance(BaseModel):
-    weights: List[PositiveInt]
-    values: List[PositiveInt]
-    capacity: PositiveInt
-
-    @model_validator(mode="after")
-    def check_lengths(cls, v):
-        if len(v.weights) != len(v.values):
-            raise ValueError("Mismatch in the number of weights and values.")
-        return v
-
-
-class KnapsackSolverConfig(BaseModel):
-    time_limit: PositiveInt = 900
-    opt_tol: NonNegativeFloat = 0.01
-    log_search_progress: bool = False
-
-
-class KnapsackSolution(BaseModel):
-    selected_items: List[int]
-    objective: int
-    upper_bound: float
-
 
 class _ItemVariables:
     def __init__(self, instance: KnapsackInstance, model: cp_model.CpModel):
@@ -2470,28 +2413,6 @@ be a handful of them that are actually used. By creating the variables only when
 they are accessed, we can reduce memory usage and computational overhead.
 
 ```python
-from ortools.sat.python import cp_model
-from pydantic import BaseModel, PositiveInt, List, NonNegativeFloat
-
-
-class KnapsackInstance(BaseModel):
-    weights: List[PositiveInt]
-    values: List[PositiveInt]
-    capacity: PositiveInt
-
-
-class KnapsackSolverConfig(BaseModel):
-    time_limit: PositiveInt = 900
-    opt_tol: NonNegativeFloat = 0.01
-    log_search_progress: bool = False
-
-
-class KnapsackSolution(BaseModel):
-    selected_items: List[int]
-    objective: int
-    upper_bound: float
-
-
 class _ItemVariables:
     def __init__(self, instance: KnapsackInstance, model: cp_model.CpModel):
         self.instance = instance
