@@ -3310,22 +3310,18 @@ Many traditional methods generate several "neighbor" options around an existing
 solution and pick the best one. However, making each neighbor solution takes
 time, limiting how many you can examine.
 
-Enter Large Neighborhood Search (LNS). Instead of making individual neighbor
-solutions one by one, LNS sets up a "mini-problem". This mini-problem allows us
-to tweak some parts of the existing solution. Often, this involves randomly
-selecting some variables and resetting them. Then the mini-problem aims to find
-the best new values for these reset variables, given the rest of the current
-solution. To do this, we can use CP-SAT, which efficiently finds the optimal new
-values for us. This process of wiping out and reassigning values is sometimes
-called "destroy and repair."
+Large Neighborhood Search (LNS) offers a more efficient approach. Instead of
+generating neighbors one by one, LNS formulates a "mini-problem" that modifies
+parts of the current solution. This often involves randomly selecting some
+variables, resetting them, and using CP-SAT (or a similar tool) to find the optimal new values
+within the context of the remaining solution. This method, known as "destroy and
+repair," allows for a broader exploration of neighbor solutions without
+constructing each one individually.
 
-The advantage? LNS can explore a much bigger range of neighbor solutions without
-having to make them one at a time.
-
-What's more, LNS can easily be mixed with other methods like genetic algorithms.
+Moreover, LNS can easily be mixed with other methods like genetic algorithms.
 If you are already using a genetic algorithm, you could supercharge it by
 applying CP-SAT to find the best possible crossover of two or more existing
-solutions. It's like genetic engineering, but without any ethical worries!
+solutions. It is like genetic engineering, but without any ethical worries!
 
 When looking into the logs of CP-SAT, you may notice that it uses LNS itself to
 find better solutions.
