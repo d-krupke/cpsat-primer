@@ -3261,7 +3261,7 @@ can be hard to set up and might not even give you good results.
 
 Sometimes you will see new algorithms with cool-sounding names in scientific
 papers. While tempting, these are often just small twists on older methods and
-might leave out key details that make them work. If you're interested, there's a
+might leave out key details that make them work. If you are interested, there is a
 discussion about this issue in a paper by Sörensen, called
 ["Metaheuristics – The Metaphor Exposed"](http://onlinelibrary.wiley.com/doi/10.1111/itor.12001/).
 
@@ -3289,10 +3289,10 @@ called "destroy and repair."
 The advantage? LNS can explore a much bigger range of neighbor solutions without
 having to make them one at a time.
 
-What's more, LNS can easily be mixed with other methods like genetic algorithms.
+What is more, LNS can easily be mixed with other methods like genetic algorithms.
 If you are already using a genetic algorithm, you could supercharge it by
 applying CP-SAT to find the best possible crossover of two or more existing
-solutions. It's like genetic engineering, but without any ethical worries!
+solutions. It is like genetic engineering, but without any ethical worries!
 
 When looking into the logs of CP-SAT, you may notice that it uses LNS itself to
 find better solutions.
