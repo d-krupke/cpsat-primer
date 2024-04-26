@@ -2043,6 +2043,17 @@ other developers. We will concentrate on basic patterns, as more complex
 patterns are better understood within the context of larger problems and are
 beyond the scope of this primer.
 
+> :warning: The naming conventions for patterns in optimization problems are not
+> standardized. There is no comprehensive guide on coding patterns for
+> optimization issues, and my insights are primarily based on personal
+> experience. Most online examples tend to focus solely on the model, often
+> presented as Jupyter notebooks or sequential scripts. The
+> [gurobi-optimods](https://github.com/Gurobi/gurobi-optimods) provide the
+> closest examples to production-ready code that I am aware of, yet they offer
+> limited guidance on code structuring. I aim to address this gap, which many
+> find challenging, though it is important to note that my approach is **highly
+> opinionated**.
+
 ### Simple Function
 
 For straightforward optimization problems, encapsulating the model creation and
