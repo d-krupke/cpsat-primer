@@ -2535,6 +2535,29 @@ model.Maximize(x_gain_1.y + x_gain_2.y - (x_costs_1.y + x_costs_2.y + x_costs_3.
 
 **Key Benefits:**
 
+- **Testing**: Testing complex optimization models is often very difficult as
+  the outputs are often sensitive to small changes in the model. Even if you
+  have a good test case with predictable results, detected errors may be very
+  difficult to track down. If you extracted elements into submodels, you can
+  test these submodels independently, ensuring that they work correctly before
+  integrating them into the main model.
+  ```python
+  def test_piecewise_linear_upper_bound_constraint():
+      model = cp_model.CpModel()
+      # Defining the input. Note that for some problems it may be
+      # easier to fix variables to a specific value and then just
+      # test feasibility.
+      x = model.NewIntVar(0, 20, "x")
+      f = PiecewiseLinearFunction(xs=[0, 10, 20], ys=[0, 10, 5])
+      # Using the submodel
+      c = PiecewiseLinearConstraint(model, x, f, upper_bound=True)
+      model.Maximize(c.y)
+      # Checking its behavior
+      solver = cp_model.CpSolver()
+      assert solver.Solve(model) == cp_model.OPTIMAL
+      assert solver.Value(c.y) == 10
+      assert solver.Value(x) == 10
+  ```
 - **Modularity**: Submodels allow for the encapsulation of complex logic into
   smaller, more manageable components, enhancing code organization and
   readability.
@@ -2654,12 +2677,11 @@ class KnapsackSolver:
 
 **Key Benefits:**
 
-- **Efficiency**: Lazy construction of variables ensures that only
-  necessary variables are created, reducing memory usage and computational
-  overhead.
-- **Simplicity**: By just creating the variables when accessed, we do not
-  need any logic to decide which variables are needed upfront, simplifying the
-  model construction process.
+- **Efficiency**: Lazy construction of variables ensures that only necessary
+  variables are created, reducing memory usage and computational overhead.
+- **Simplicity**: By just creating the variables when accessed, we do not need
+  any logic to decide which variables are needed upfront, simplifying the model
+  construction process.
 
 ---
 
