@@ -2654,10 +2654,10 @@ class KnapsackSolver:
 
 **Key Benefits:**
 
-- **Efficiency**: Lazy construction of bonus variables ensures that only
+- **Efficiency**: Lazy construction of variables ensures that only
   necessary variables are created, reducing memory usage and computational
   overhead.
-- **Simplicity**: By just creating the bonus variables when accessed, we do not
+- **Simplicity**: By just creating the variables when accessed, we do not
   need any logic to decide which variables are needed upfront, simplifying the
   model construction process.
 
