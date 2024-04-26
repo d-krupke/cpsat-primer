@@ -2043,6 +2043,17 @@ other developers. We will concentrate on basic patterns, as more complex
 patterns are better understood within the context of larger problems and are
 beyond the scope of this primer.
 
+> :warning: The naming conventions for patterns in optimization problems are not
+> standardized. There is no comprehensive guide on coding patterns for
+> optimization issues, and my insights are primarily based on personal
+> experience. Most online examples tend to focus solely on the model, often
+> presented as Jupyter notebooks or sequential scripts. The
+> [gurobi-optimods](https://github.com/Gurobi/gurobi-optimods) provide the
+> closest examples to production-ready code that I am aware of, yet they offer
+> limited guidance on code structuring. I aim to address this gap, which many
+> find challenging, though it is important to note that my approach is **highly
+> opinionated**.
+
 ### Simple Function
 
 For straightforward optimization problems, encapsulating the model creation and
@@ -2535,6 +2546,29 @@ model.Maximize(x_gain_1.y + x_gain_2.y - (x_costs_1.y + x_costs_2.y + x_costs_3.
 
 **Key Benefits:**
 
+- **Testing**: Testing complex optimization models is often very difficult as
+  the outputs are often sensitive to small changes in the model. Even if you
+  have a good test case with predictable results, detected errors may be very
+  difficult to track down. If you extracted elements into submodels, you can
+  test these submodels independently, ensuring that they work correctly before
+  integrating them into the main model.
+  ```python
+  def test_piecewise_linear_upper_bound_constraint():
+      model = cp_model.CpModel()
+      # Defining the input. Note that for some problems it may be
+      # easier to fix variables to a specific value and then just
+      # test feasibility.
+      x = model.NewIntVar(0, 20, "x")
+      f = PiecewiseLinearFunction(xs=[0, 10, 20], ys=[0, 10, 5])
+      # Using the submodel
+      c = PiecewiseLinearConstraint(model, x, f, upper_bound=True)
+      model.Maximize(c.y)
+      # Checking its behavior
+      solver = cp_model.CpSolver()
+      assert solver.Solve(model) == cp_model.OPTIMAL
+      assert solver.Value(c.y) == 10
+      assert solver.Value(x) == 10
+  ```
 - **Modularity**: Submodels allow for the encapsulation of complex logic into
   smaller, more manageable components, enhancing code organization and
   readability.
@@ -2654,12 +2688,11 @@ class KnapsackSolver:
 
 **Key Benefits:**
 
-- **Efficiency**: Lazy construction of bonus variables ensures that only
-  necessary variables are created, reducing memory usage and computational
-  overhead.
-- **Simplicity**: By just creating the bonus variables when accessed, we do not
-  need any logic to decide which variables are needed upfront, simplifying the
-  model construction process.
+- **Efficiency**: Lazy construction of variables ensures that only necessary
+  variables are created, reducing memory usage and computational overhead.
+- **Simplicity**: By just creating the variables when accessed, we do not need
+  any logic to decide which variables are needed upfront, simplifying the model
+  construction process.
 
 ---
 
