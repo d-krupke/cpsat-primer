@@ -139,7 +139,7 @@ pip3 install -U ortools
 This command will also update an existing installation of OR-Tools. As this tool
 is in active development, it is recommended to update it frequently. We actually
 encountered wrong behavior, i.e., bugs, in earlier versions that then have been
-fixed by updates (this was on some more advanced features, don't worry about
+fixed by updates (this was on some more advanced features, do not worry about
 correctness with basic usage).
 
 I personally like to use [Jupyter Notebooks](https://jupyter.org/) for
@@ -147,7 +147,7 @@ experimenting with CP-SAT.
 
 ### What hardware do I need?
 
-It is important to note that for CP-SAT usage, you don't need the capabilities
+It is important to note that for CP-SAT usage, you do not need the capabilities
 of a supercomputer. A standard laptop is often sufficient for solving many
 problems. The primary requirements are CPU power and memory bandwidth, with a
 GPU being unnecessary.
@@ -266,7 +266,7 @@ print(solver.ResponseStats())
 
 Pretty easy, right? For solving a generic problem, not just one specific
 instance, you would of course create a dictionary or list of variables and use
-something like `model.Add(sum(vars)<=n)`, because you don't want to create the
+something like `model.Add(sum(vars)<=n)`, because you do not want to create the
 model by hand for larger instances.
 
 The output you get may differ from the one above, because CP-SAT actually uses a
@@ -683,7 +683,7 @@ variables needed.
 However, CP-SAT employs a lazy creation strategy for these boolean variables.
 This means it only generates them as needed, based on the solver's
 decision-making process. Therefore, an integer variable with a wide range - say,
-from 0 to 100 - won't immediately result in 200 boolean variables. It might lead
+from 0 to 100 - will not immediately result in 200 boolean variables. It might lead
 to the creation of only a few, depending on the solver's requirements.
 
 Limiting the domain of a variable can have drawbacks. Firstly, defining a domain
@@ -783,7 +783,7 @@ operations.
 model.Add(10 * x + 15 * y <= 10)
 model.Add(x + z == 2 * y)
 
-# This one actually isn't linear but still works.
+# This one actually is not linear but still works.
 model.Add(x + y != z)
 
 # For <, > you can simply use <= and -1 because we are working on integers.
@@ -1244,7 +1244,7 @@ class RectanglePackingWithoutRotationsModel:
         ]
 
         # Interval variables are actually more like constraint containers, that are then passed to the no overlap constraint
-        # Note that we could also make size and end variables, but we don't need them here
+        # Note that we could also make size and end variables, but we do not need them here
         x_interval_vars = [
             self.model.NewFixedSizeIntervalVar(
                 start=self.x_vars[i],  # the x value of the bottom left corner
@@ -1359,7 +1359,7 @@ class RectangleKnapsackWithRotationsModel:
         ]
 
         # Interval variables are actually more like constraint containers, that are then passed to the no overlap constraint
-        # Note that we could also make size and end variables, but we don't need them here
+        # Note that we could also make size and end variables, but we do not need them here
         self.x_interval_vars = [
             self.model.NewOptionalIntervalVar(
                 start=self.bottom_left_x_vars[i],
@@ -1706,7 +1706,7 @@ I will give you the most important right below.
 
 If we have a huge model, CP-SAT may not be able to solve it to optimality (if
 the constraints are not too difficult, there is a good chance we still get a
-good solution). Of course, we don't want CP-SAT to run endlessly for hours
+good solution). Of course, we do not want CP-SAT to run endlessly for hours
 (years, decades,...) but simply abort after a fixed time and return us the best
 solution so far. If you are now asking yourself why you should use a tool that
 may run forever: There are simply no provably faster algorithms and considering
@@ -1723,7 +1723,7 @@ we run the solver:
 solver.parameters.max_time_in_seconds = 60  # 60s timelimit
 ```
 
-We now of course have the problem, that maybe we won't have an optimal solution,
+We now of course have the problem, that maybe we will not have an optimal solution,
 or a solution at all, we can continue on. Thus, we need to check the status of
 the solver.
 
@@ -1761,7 +1761,7 @@ $abs(O - B) / max(1, abs(O))$ of the bound (B). To stop as soon as we are within
 solver.parameters.relative_gap_limit = 0.05
 ```
 
-Now we may want to stop after we didn't make progress for some time or whatever.
+Now we may want to stop after we did not make progress for some time or whatever.
 In this case, we can make use of the solution callbacks.
 
 > For those familiar with Gurobi: Unfortunately, we can only abort the solution
@@ -1907,7 +1907,7 @@ etc.). In this case it may be useful, to tell CP-SAT about it, so it can
 incorporate this knowledge into its search. For Mixed Integer Programming
 Solver, this often yields a visible boost, even with mediocre heuristic
 solutions. For CP-SAT I actually also encountered downgrades of the performance
-if the hints weren't great (but this may depend on the problem).
+if the hints were not great (but this may depend on the problem).
 
 ```python
 model.AddHint(x, 1)  # Tell CP-SAT that x will probably be 1
@@ -3048,8 +3048,8 @@ looking for better solvers.
 
 ## Benchmarking your Model
 
-Benchmarking is an essential step if your model isn't yet meeting the
-performance standards of your application or if you're aiming for an academic
+Benchmarking is an essential step if your model is not yet meeting the
+performance standards of your application or if you are aiming for an academic
 publication. This process involves analyzing your model's performance,
 especially important if your model has adjustable parameters. Running your model
 on a set of predefined instances (a benchmark) allows you to fine-tune these
@@ -3253,7 +3253,7 @@ and research questions. Here are some strategies to keep things organized:
   extendable, allowing for easy resumption or modification. This is especially
   important for exploratory studies, where you may need to make frequent
   adjustments. However, if your workhorse study takes a long time to run, you
-  don't want to repeat it from scratch if you want to add a further solver.
+  do not want to repeat it from scratch if you want to add a further solver.
 - **Utilizing Technology**: Employ tools like slurm for efficient distribution
   of experiments across computing clusters, saving time and resources. The
   faster you have your results, the faster you can act on them.
@@ -3463,7 +3463,7 @@ can be hard to set up and might not even give you good results.
 
 Sometimes you will see new algorithms with cool-sounding names in scientific
 papers. While tempting, these are often just small twists on older methods and
-might leave out key details that make them work. If you are interested, there is a
+might leave out key details that make them work. If you are interested, there's a
 discussion about this issue in a paper by Sörensen, called
 ["Metaheuristics – The Metaphor Exposed"](http://onlinelibrary.wiley.com/doi/10.1111/itor.12001/).
 
@@ -3479,22 +3479,18 @@ Many traditional methods generate several "neighbor" options around an existing
 solution and pick the best one. However, making each neighbor solution takes
 time, limiting how many you can examine.
 
-Enter Large Neighborhood Search (LNS). Instead of making individual neighbor
-solutions one by one, LNS sets up a "mini-problem". This mini-problem allows us
-to tweak some parts of the existing solution. Often, this involves randomly
-selecting some variables and resetting them. Then the mini-problem aims to find
-the best new values for these reset variables, given the rest of the current
-solution. To do this, we can use CP-SAT, which efficiently finds the optimal new
-values for us. This process of wiping out and reassigning values is sometimes
-called "destroy and repair."
+Large Neighborhood Search (LNS) offers a more efficient approach. Instead of
+generating neighbors one by one, LNS formulates a "mini-problem" that modifies
+parts of the current solution. This often involves randomly selecting some
+variables, resetting them, and using CP-SAT (or a similar tool) to find the
+optimal new values within the context of the remaining solution. This method,
+known as "destroy and repair," allows for a broader exploration of neighbor
+solutions without constructing each one individually.
 
-The advantage? LNS can explore a much bigger range of neighbor solutions without
-having to make them one at a time.
-
-What's more, LNS can easily be mixed with other methods like genetic algorithms.
-If you are already using a genetic algorithm, you could supercharge it by
-applying CP-SAT to find the best possible crossover of two or more existing
-solutions. It's like genetic engineering, but without any ethical worries!
+Moreover, LNS can easily be mixed with other methods like genetic algorithms. If
+you are already using a genetic algorithm, you could supercharge it by applying
+CP-SAT to find the best possible crossover of two or more existing solutions. It
+is like genetic engineering, but without any ethical worries!
 
 When looking into the logs of CP-SAT, you may notice that it uses LNS itself to
 find better solutions.
@@ -3653,8 +3649,8 @@ solutions and CP-SAT ability to prune large parts of the search space.
 
 #### Example 2: Different Neighborhoods for the Traveling Salesman Problem
 
-Simply removing a portion of the solution and then trying to fix it isn't the
-most effective approach. In this section, we'll explore various neighborhoods
+Simply removing a portion of the solution and then trying to fix it is nott the
+most effective approach. In this section, we will explore various neighborhoods
 for the Traveling Salesman Problem (TSP). The geometry of TSP not only permits
 advantageous neighborhoods but also offers visually appealing representations.
 When you have several neighborhood strategies, they can be dynamically
@@ -3676,13 +3672,13 @@ being chosen again.
 How can you determine the appropriate size of a region to select? You have two
 main options: conduct preliminary experiments or adjust the size adaptively
 during the search. Simply allocate a time limit for each iteration. If the
-solver doesn't optimize within that timeframe, decrease the region size.
+solver does nott optimize within that timeframe, decrease the region size.
 Conversely, if it does, increase the size. Utilizing exponential factors will
 help the size swiftly converge to its optimal dimension. However, it's essential
 to note that this method assumes subproblems are of comparable difficulty and
 may necessitate additional conditions.
 
-For the Euclidean TSP, as opposed to a mesh, optimizing regions isn't
+For the Euclidean TSP, as opposed to a mesh, optimizing regions is not
 straightforward. Multiple effective strategies exist, such as employing a
 segment from the previous tour rather than a geometric region. By implementing
 various neighborhoods and evaluating their success rates, you can allocate a
@@ -3701,7 +3697,7 @@ Having multiple strategies for each iteration of your LNS available is great,
 but how do you decide which one to use? You could just pick one randomly, but
 this is not very efficient as it is unlikely to select the best one. You could
 also use the strategy that worked best in the past, but maybe there is a better
-one you haven't tried yet. This is the so-called exploration vs. exploitation
+one you have not tried yet. This is the so-called exploration vs. exploitation
 dilemma. You want to exploit the strategies that worked well in the past, but
 you also want to explore new strategies to find even better ones. Luckily, this
 problem has been studied extensively as the
