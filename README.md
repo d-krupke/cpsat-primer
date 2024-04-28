@@ -1564,7 +1564,7 @@ model.Minimize(y)
 
 This can be quite tedious, but luckily, I wrote a small helper class that will
 do this automatically for you. You can find it in
-[./utils/piecewise_functions](./utils/piecewise_functions/). Simply copy it into
+[./utils/piecewise_functions](https://github.com/d-krupke/cpsat-primer/blob/main/utils/piecewise_functions/). Simply copy it into
 your code.
 
 This code does some further optimizations:
@@ -2652,7 +2652,7 @@ shared variables but hiding internal details like auxiliary variables.
 
 For instance, piecewise linear functions can be modeled as submodels, as done
 for `PiecewiseLinearConstraint` in
-[./utils/piecewise_functions/piecewise_linear_function.py](./utils/piecewise_functions/piecewise_linear_function.py).
+[./utils/piecewise_functions/piecewise_linear_function.py](https://github.com/d-krupke/cpsat-primer/blob/main/utils/piecewise_functions/piecewise_linear_function.py).
 Each submodel handles a piecewise linear function independently, interfacing
 with the main model through shared `x` and `y` variables. By encapsulating the
 logic for each piecewise function in a dedicated class, we standardize and reuse
