@@ -376,52 +376,52 @@ very good at that).
 
 <a name="section-alternatives"></a>
 
-## Alternatives: CP-SAT's place in the world of optimization
+## Alternatives: CP-SAT's Place in the World of Optimization
 
-If you start looking into optimization, you will quickly find out that there are
-many tools, techniques, and communities. There is a good chance that you will
-quickly get confused because while they share many similarities, they also have
-many differences. Even worse, they may use the same terms for different things
-or use different terms and notations for the same things. To my astonishment,
-there seem to be only very few experts that are able to navigate through all
-these different communities and techniques. Even professors are often focused on
-one specific technique or community, and are not aware that another community
-may already have a highly efficient approach to solve a specific problem.
+When you begin exploring optimization, you will encounter a plethora of tools,
+techniques, and communities. It can be overwhelming, as these groups, while
+sharing many similarities, also differ significantly. They might use the same
+terminology for different concepts or different terms for the same concepts,
+adding to the confusion. Surprisingly, only a handful of experts can effectively
+navigate these varied communities and techniques. Often, even specialists,
+including professors, concentrate on a singular technique or community,
+remaining unaware of potentially more efficient methods developed in other
+circles.
 
-If you are interested in seeing how the different communities are related, you
-may want to watch the talk
+If you are interested in understanding the connections between different
+optimization concepts, consider watching the talk
 [Logic, Optimization, and Constraint Programming: A Fruitful Collaboration](https://simons.berkeley.edu/talks/john-hooker-carnegie-mellon-university-2023-04-19)
-by John Hooker. Be warned that this is a rather academic talk and requires some
-familiarity with theoretical computer science.
+by John Hooker. Please note that this is an academic presentation and assumes
+some familiarity with theoretical computer science.
 
-Let us now look on which alternatives there are to CP-SAT:
+Let us now explore the various tools and techniques available, and see how they
+compare to CP-SAT. Please note that this overview is high-level and not
+exhaustive. If you have any significant additions, feel free to open an issue,
+and I will consider including them.
 
-- **Mixed Integer (Linear) Programming (MIP):** This is a very powerful approach
-  to solve many optimization problems. It has less expressive constraints than
-  CP-SAT, namely only linear constraints, but if your model fits these linear
-  constraints, it is often the best choice. Especially network problems, such as
-  flow or tour problems, are often best solved with MIP-solvers. However, CP-SAT
-  actually utilizes techniques from MIP-solvers, so it can be considered a
-  generalization of MIP-solvers, with two major restrictions: No continuous
-  variables and no incremental modeling. As pure MIP-solvers are more
-  specialized, you can also expect them to be more efficient for specific
-  problems. Popular MIP-solvers are:
-  - [Gurobi](https://www.gurobi.com/): A commercial solver (with free academic
-    licenses) that I personally consider the state of the art for MIP-solvers.
-    It is very mature, has a very good performance, and is very user-friendly.
-    The documentation and the frequent expert webinars are also amazing. I am
-    often blown away by how huge problems it can still handle.
-  - [SCIP](https://www.scipopt.org/): SCIP is an open source solver that also
-    offers a Python interface. It is not as efficient or user-friendly as
-    Gurobi, but it allows an enormous amount of customization and is very good
-    for research purposes. If you are an expert in optimization that needs
-    absolute control and the ability to implement complex decomposition
-    techniques, SCIP is the way to go.
-  - [HiGHS](https://highs.dev/): HiGHS is a relatively new solver under the
-    permissive MIT license that may be and interesting alternative to SCIP,
-    though it may not be as customizable. However, it seems to be slightly
-    faster and the interface looks more user-friendly to me.
-    [You can find a benchmark here](https://plato.asu.edu/ftp/milp.html).
+- **Mixed Integer (Linear) Programming (MIP):** MIP is a highly effective method
+  for solving a variety of optimization problems, particularly those involving
+  networks like flow or tour problems. While MIP only supports linear
+  constraints, making it less expressive than CP-SAT, it is often the best
+  choice if your model is compatible with these constraints. CP-SAT incorporates
+  techniques from MIP, but with limitations, including the absence of continuous
+  variables and incremental modeling. Consequently, pure MIP-solvers, being more
+  specialized, tend to offer greater efficiency for certain applications.
+  Notable MIP-solvers include:
+  - [Gurobi](https://www.gurobi.com/): A commercial solver known for its
+    state-of-the-art capabilities in MIP-solving. It offers free academic
+    licenses, exceptional performance, user-friendliness, and comprehensive
+    support through documentation and expert-led webinars. Gurobi is
+    particularly impressive in handling complex, large-scale problems.
+  - [SCIP](https://www.scipopt.org/): An open-source solver that provides a
+    Python interface. Although not as efficient or user-friendly as Gurobi, SCIP
+    allows extensive customization and is ideal for research and development,
+    especially for experts needing to implement advanced decomposition
+    techniques.
+  - [HiGHS](https://highs.dev/): A newer solver licensed under MIT, presenting
+    an interesting alternative to SCIP. It is possibly faster and features a
+    more user-friendly interface, but is less versatile. For performance
+    benchmarks, see [here](https://plato.asu.edu/ftp/milp.html).
 - **Constraint Programming (CP):** Constraint Programming is a more general
   approach to optimization problems than MIP. As the name suggests, it focuses
   on constraints and solvers usually come with a lot of advanced constraints
