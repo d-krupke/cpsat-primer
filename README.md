@@ -3649,7 +3649,7 @@ solutions and CP-SAT ability to prune large parts of the search space.
 
 #### Example 2: Different Neighborhoods for the Traveling Salesman Problem
 
-Simply removing a portion of the solution and then trying to fix it is nott the
+Simply removing a portion of the solution and then trying to fix it is not the
 most effective approach. In this section, we will explore various neighborhoods
 for the Traveling Salesman Problem (TSP). The geometry of TSP not only permits
 advantageous neighborhoods but also offers visually appealing representations.
@@ -3672,7 +3672,7 @@ being chosen again.
 How can you determine the appropriate size of a region to select? You have two
 main options: conduct preliminary experiments or adjust the size adaptively
 during the search. Simply allocate a time limit for each iteration. If the
-solver does nott optimize within that timeframe, decrease the region size.
+solver does not optimize within that timeframe, decrease the region size.
 Conversely, if it does, increase the size. Utilizing exponential factors will
 help the size swiftly converge to its optimal dimension. However, it's essential
 to note that this method assumes subproblems are of comparable difficulty and
