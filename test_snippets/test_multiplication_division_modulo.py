@@ -15,4 +15,4 @@ def test_multiplication_division_modulo():
     solver = cp_model.CpSolver()
     status = solver.Solve(model)
     assert status in (cp_model.OPTIMAL, cp_model.FEASIBLE), \
-    "cpsat cannot find a solution for the given model or the model is infeasible"
+    "the interface may change or get restricted or the model is infeasible."
