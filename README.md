@@ -69,17 +69,17 @@ awaits you in this primer:
 2. [Example](#example): A short example, showing the usage of CP-SAT.
 3. [Alternatives](#section-alternatives): An overview of the different
    optimization techniques and tools available. Putting CP-SAT into context.
-3. [Modelling](#modelling): An overview of variables, objectives, and
+4. [Modelling](#modelling): An overview of variables, objectives, and
    constraints. The constraints make the most important part.
-4. [Parameters](#parameters): How to specify CP-SATs behavior, if needed.
+5. [Parameters](#parameters): How to specify CP-SATs behavior, if needed.
    Timelimits, hints, assumptions, parallelization, ...
-5. [Coding Patterns](#Coding-Patterns-for-Optimization-Problems): Basic design
+6. [Coding Patterns](#Coding-Patterns-for-Optimization-Problems): Basic design
    patterns for creating maintainable algorithms.
-6. [How does it work?](#how-does-it-work): After we know what we can do with
+7. [How does it work?](#how-does-it-work): After we know what we can do with
    CP-SAT, we look into how CP-SAT will do all these things.
-7. [Benchmarking your Model](#benchmarking-your-model): How to benchmark your
+8. [Benchmarking your Model](#benchmarking-your-model): How to benchmark your
    model and how to interpret the results.
-8. [Large Neighborhood Search](#Using-CP-SAT-for-Bigger-Problems-with-Large-Neighborhood-Search):
+9. [Large Neighborhood Search](#Using-CP-SAT-for-Bigger-Problems-with-Large-Neighborhood-Search):
    The use of CP-SAT to create more powerful heuristics.
 
 ---
@@ -381,142 +381,163 @@ very good at that).
 If you start looking into optimization, you will quickly find out that there are
 many tools, techniques, and communities. There is a good chance that you will
 quickly get confused because while they share many similarities, they also have
-many differences. Even worse, they may use the same terms for different things or
-use different terms and notations for the same things. To my astonishment, there
-seem to be only very few experts that are able to navigate through all these
-different communities and techniques. Even professors are often focused on one
-specific technique or community, and are not aware that another community may
-already have a highly efficient approach to solve a specific problem.
+many differences. Even worse, they may use the same terms for different things
+or use different terms and notations for the same things. To my astonishment,
+there seem to be only very few experts that are able to navigate through all
+these different communities and techniques. Even professors are often focused on
+one specific technique or community, and are not aware that another community
+may already have a highly efficient approach to solve a specific problem.
 
 If you are interested in seeing how the different communities are related, you
-may want to watch the talk [Logic, Optimization, and Constraint Programming: A Fruitful Collaboration](https://simons.berkeley.edu/talks/john-hooker-carnegie-mellon-university-2023-04-19) by John Hooker. Be warned
-that this is a rather academic talk and requires some familiarity with
-theoretical computer science.
+may want to watch the talk
+[Logic, Optimization, and Constraint Programming: A Fruitful Collaboration](https://simons.berkeley.edu/talks/john-hooker-carnegie-mellon-university-2023-04-19)
+by John Hooker. Be warned that this is a rather academic talk and requires some
+familiarity with theoretical computer science.
 
 Let us now look on which alternatives there are to CP-SAT:
 
 - **Mixed Integer (Linear) Programming (MIP):** This is a very powerful approach
   to solve many optimization problems. It has less expressive constraints than
   CP-SAT, namely only linear constraints, but if your model fits these linear
-  constraints, it is often the best choice. Especially network problems, such
-  as flow or tour problems, are often best solved with MIP-solvers. However,
-  CP-SAT actually utilizes techniques from MIP-solvers, so it can be considered
-  a generalization of MIP-solvers, with two major restrictions: No continuous
-  variables and no incremental modeling. As pure MIP-solvers are more specialized,
-  you can also expect them to be more efficient for specific problems. Popular
-  MIP-solvers are:
-    - [Gurobi](https://www.gurobi.com/): A commercial solver (with free academic licenses)
-    that I personally consider the state of the art for MIP-solvers. It is very mature,
-    has a very good performance, and is very user-friendly. The documentation and the frequent
-    expert webinars are also amazing. I am often blown away by how huge problems it can
-    still handle.
-    - [SCIP](https://www.scipopt.org/): SCIP is an open source solver that also offers
-    a Python interface. It is not as efficient or user-friendly as Gurobi, but it allows
-    an enormous amount of customization and is very good for research purposes. If you
-    are an expert in optimization that needs absolute control and the ability to implement
-    complex decomposition techniques, SCIP is the way to go.
-    - [HiGHS](https://highs.dev/): HiGHS is a relatively new solver under the permissive MIT
-    license that may be and interesting alternative to SCIP, though it may not be as customizable.
-    However, it seems to be slightly faster and the interface looks more user-friendly to me.
+  constraints, it is often the best choice. Especially network problems, such as
+  flow or tour problems, are often best solved with MIP-solvers. However, CP-SAT
+  actually utilizes techniques from MIP-solvers, so it can be considered a
+  generalization of MIP-solvers, with two major restrictions: No continuous
+  variables and no incremental modeling. As pure MIP-solvers are more
+  specialized, you can also expect them to be more efficient for specific
+  problems. Popular MIP-solvers are:
+  - [Gurobi](https://www.gurobi.com/): A commercial solver (with free academic
+    licenses) that I personally consider the state of the art for MIP-solvers.
+    It is very mature, has a very good performance, and is very user-friendly.
+    The documentation and the frequent expert webinars are also amazing. I am
+    often blown away by how huge problems it can still handle.
+  - [SCIP](https://www.scipopt.org/): SCIP is an open source solver that also
+    offers a Python interface. It is not as efficient or user-friendly as
+    Gurobi, but it allows an enormous amount of customization and is very good
+    for research purposes. If you are an expert in optimization that needs
+    absolute control and the ability to implement complex decomposition
+    techniques, SCIP is the way to go.
+  - [HiGHS](https://highs.dev/): HiGHS is a relatively new solver under the
+    permissive MIT license that may be and interesting alternative to SCIP,
+    though it may not be as customizable. However, it seems to be slightly
+    faster and the interface looks more user-friendly to me.
     [You can find a benchmark here](https://plato.asu.edu/ftp/milp.html).
-- **Constraint Programming (CP):** Constraint Programming is a more general approach
-  to optimization problems than MIP. As the name suggests, it focuses on constraints
-  and solvers usually come with a lot of advanced constraints that can be used to
-  describe your problem more naturally. A classical example is the `AllDifferent`-constraint,
-  which is very hard to model in MIP, but would allow, e.g., to trivially model a Sudoku
-  problem. Constraint Programming has been very successful for example in solving scheduling
-  problems, where you have a lot of constraints that are hard to model with linear constraints.
-  The internal techniques of CP-solvers are often more logic-based and less linear algebra-based
-  than MIP-solvers. Popular CP-solvers are:
-  - [OR-Tools' CP-SAT](https://github.com/google/or-tools/): This is the solver we are
-  talking about in this primer. It internally uses a lot of different techniques, including
-  techniques from MIP-solvers, but its primary technique is Lazy Clause Generation, which
-  internally translates the problem into a SAT-formula and then uses a SAT-solver to solve it.
-  - [Choco](https://choco-solver.org/): Choco is a classical constraint programming solver
-  in Java. It is under BSD 4-Clause license and comes with a lot of features. It is probably
-  not as efficient or modern as CP-SAT, but it has some nice features such as the ability to
-  add your own propagators.
-- **Logic Programming:** Having mentioned constraint programming, we should also mention logic
-  programming. Logic programming is a more generic approach to constraint programming, actually
-  being a full turing-complete programming language. A popular logic programming language is
-  [Prolog](https://en.wikipedia.org/wiki/Prolog). While they may be the final solution for
-  solving combinatorial optimization problems, they are not smart enough, yet, and you should
-  go for the less expressive constraint programming for now.
-- **SAT-Solvers:** If your problem is actually just a SAT-problem, you may want to use a SAT-solver.
-  SAT-solvers are surprisingly efficient and can often handle problems with millions of variables.
-  If you are clever, you can also do some optimization problems with SAT-solvers, as CP-SAT actually
-  does. Most SAT-solvers support incremental modelling, and some support cardinality constraints.
-  However, they are pretty low-level and CP-SAT actually can achieve similar performance for many
-  problems. A popular library for SAT-solvers is:
-  - [PySAT](https://pysathq.github.io/): PySAT is a Python library under MIT license that provides a nice interface
-  to many SAT-solvers. It is very easy to use and allows you to switch between different solvers
-  without changing your code. It is a good choice if you want to experiment with SAT-solvers.
-  - There are many solvers popping up every year and many of them are open source. Check out
-  the [SAT Competition](http://www.satcompetition.org/) to see the current state of the art.
-  Most of the solvers are written in C or C++ and do not provide much documentation. However,
-  as SAT-formulas are very simple and the solvers usually do not have complex dependencies, they
-  can still be reasonably easy to use.
-- **Satisfiability modulo theories (SMT):** A level above SAT-solvers are SMT-solvers whose goal
-  is to check mathematical formulas for satisfiability. They essentially extend the propositional
-  logic of SAT-solvers with theories, such as linear arithmetic, bit-vectors, arrays, quantors, and more.
-  For example, you can ask an SMT-solver to check if a formula is satisfiable under the assumption
-  that all variables are integers and satisfy some linear constraints. This is very useful for
-  verification tasks, but also for optimization problems. A SMT-solver is:
-  - [Z3](https://github.com/z3prover/z3): Z3 is an SMT solver by Microsoft under MIT license. It has
-  a nice Python interface and a good documentation.
-- **Nonlinear Programming (NLP):** Many MIP-solvers can actually handle some nonlinear constraints,
-  as people noticed that some techniques are actually more general than just for linear
-  constraints, e.g., interior points methods can also solve second-order cone problems. However,
-  you will notice serious performance downgrades. If your constraints and objectives get too
-  complex, they may also no longer be a viable option. If you have smaller optimization problems
-  of (nearly) any kind, you may want to look into:
-    - [SciPy](https://docs.scipy.org/doc/scipy/reference/optimize.html): SciPy is a Python library
-    that offers a wide range of optimization algorithms. Do not expect it to get anywhere near
-    the performance of a specialized solver, but it gives you a bunch of different options to
-    solve a multitude of problems.
-- **Modelling Languages:** As you have seen, there are many solvers and techniques to
-  solve optimization problems. However, many optimization problems in the real world are actually
-  pretty small and easily solvable, but the primary challenge is to model them correctly and quickly.
-  Another issue is that some optimization problems have to be solved repeatedly over a long period,
-  and you do not want to be dependent on a specific solver, as better solvers come out frequently,
-  the licenses may change, or your business experts simply should be able to focus on the pure
-  modelling and should not need to know about the internals of the solver. For these reasons,
-  there are modelling languages that allow you to model your problem in a very high-level way and
-  then let the system decide which solver to use and how to solve it. For example, the solver can
-  use CP-SAT or Gurobi, without you needing to change your model. A disadvantage of these modelling
-  languages is that you give up a lot of control and flexibility, in the favor of generality and
-  ease of use.
-  The most popular modelling
-  languages are: 
-    - [AMPL](https://ampl.com/): AMPL is possibly the most popular modelling language. It has
-    free and commercial solvers. There is not only extensive documentation, but even a book on
-    how to use it.
-    - [GAMS](https://www.gams.com/): This is a commercial system which supports many solvers and also has gotten a Python-interface.
-      I actually know the guys from GAMS as they have a location in Braunschweig. They have a lot of experience in optimization, but I have never used their
-    software myself.
-    - [pyomo](http://www.pyomo.org/): Pyomo is a Python library that allows you to model your
-    optimization problem in Python and then let it solve by different solvers. It is not as
-    high-level as AMPL or GAMS, but it is free and open source. It is also very flexible and
-    allows you to use Python to model your problem, which is a huge advantage if you are already
-    familiar with Python. It actually has support for CP-SAT and could be an option if you just
-    want to have a quick solution.
-    - [OR-Tools' MathOpt](https://developers.google.com/optimization/math_opt): A very new
-    competitor and sibling of CP-SAT. It only supports a few solvers, but may be still interesting.
-- **Specialized Algorithms:** For many optimization problems, there are specialized algorithms that
-can be much more efficient than general-purpose solvers. Examples are:
-  - [Concorde](http://www.math.uwaterloo.ca/tsp/concorde.html): Concorde is a solver for the
-  Traveling Salesman Problem that despite its age is still blazingly fast for many instances.
-  - [OR-Tools' Routing Solver](https://developers.google.com/optimization/routing): OR-Tools also
-  comes with a dedicated solver for routing problems.
-  - [OR-Tools' Network Flows](https://developers.google.com/optimization/flow): OR-Tools also
-  comes with a dedicated solver for network flow problems.
+- **Constraint Programming (CP):** Constraint Programming is a more general
+  approach to optimization problems than MIP. As the name suggests, it focuses
+  on constraints and solvers usually come with a lot of advanced constraints
+  that can be used to describe your problem more naturally. A classical example
+  is the `AllDifferent`-constraint, which is very hard to model in MIP, but
+  would allow, e.g., to trivially model a Sudoku problem. Constraint Programming
+  has been very successful for example in solving scheduling problems, where you
+  have a lot of constraints that are hard to model with linear constraints. The
+  internal techniques of CP-solvers are often more logic-based and less linear
+  algebra-based than MIP-solvers. Popular CP-solvers are:
+  - [OR-Tools' CP-SAT](https://github.com/google/or-tools/): This is the solver
+    we are talking about in this primer. It internally uses a lot of different
+    techniques, including techniques from MIP-solvers, but its primary technique
+    is Lazy Clause Generation, which internally translates the problem into a
+    SAT-formula and then uses a SAT-solver to solve it.
+  - [Choco](https://choco-solver.org/): Choco is a classical constraint
+    programming solver in Java. It is under BSD 4-Clause license and comes with
+    a lot of features. It is probably not as efficient or modern as CP-SAT, but
+    it has some nice features such as the ability to add your own propagators.
+- **Logic Programming:** Having mentioned constraint programming, we should also
+  mention logic programming. Logic programming is a more generic approach to
+  constraint programming, actually being a full turing-complete programming
+  language. A popular logic programming language is
+  [Prolog](https://en.wikipedia.org/wiki/Prolog). While they may be the final
+  solution for solving combinatorial optimization problems, they are not smart
+  enough, yet, and you should go for the less expressive constraint programming
+  for now.
+- **SAT-Solvers:** If your problem is actually just a SAT-problem, you may want
+  to use a SAT-solver. SAT-solvers are surprisingly efficient and can often
+  handle problems with millions of variables. If you are clever, you can also do
+  some optimization problems with SAT-solvers, as CP-SAT actually does. Most
+  SAT-solvers support incremental modelling, and some support cardinality
+  constraints. However, they are pretty low-level and CP-SAT actually can
+  achieve similar performance for many problems. A popular library for
+  SAT-solvers is:
+  - [PySAT](https://pysathq.github.io/): PySAT is a Python library under MIT
+    license that provides a nice interface to many SAT-solvers. It is very easy
+    to use and allows you to switch between different solvers without changing
+    your code. It is a good choice if you want to experiment with SAT-solvers.
+  - There are many solvers popping up every year and many of them are open
+    source. Check out the [SAT Competition](http://www.satcompetition.org/) to
+    see the current state of the art. Most of the solvers are written in C or
+    C++ and do not provide much documentation. However, as SAT-formulas are very
+    simple and the solvers usually do not have complex dependencies, they can
+    still be reasonably easy to use.
+- **Satisfiability modulo theories (SMT):** A level above SAT-solvers are
+  SMT-solvers whose goal is to check mathematical formulas for satisfiability.
+  They essentially extend the propositional logic of SAT-solvers with theories,
+  such as linear arithmetic, bit-vectors, arrays, quantors, and more. For
+  example, you can ask an SMT-solver to check if a formula is satisfiable under
+  the assumption that all variables are integers and satisfy some linear
+  constraints. They are often used for automated theorem proofing or
+  verification. A popular SMT-solver is:
+  - [Z3](https://github.com/z3prover/z3): Z3 is an SMT solver by Microsoft under
+    MIT license. It has a nice Python interface and a good documentation.
+- **Nonlinear Programming (NLP):** Many MIP-solvers can actually handle some
+  nonlinear constraints, as people noticed that some techniques are actually
+  more general than just for linear constraints, e.g., interior points methods
+  can also solve second-order cone problems. However, you will notice serious
+  performance downgrades. If your constraints and objectives get too complex,
+  they may also no longer be a viable option. If you have smaller optimization
+  problems of (nearly) any kind, you may want to look into:
+  - [SciPy](https://docs.scipy.org/doc/scipy/reference/optimize.html): SciPy is
+    a Python library that offers a wide range of optimization algorithms. Do not
+    expect it to get anywhere near the performance of a specialized solver, but
+    it gives you a bunch of different options to solve a multitude of problems.
+- **Modelling Languages:** As you have seen, there are many solvers and
+  techniques to solve optimization problems. However, many optimization problems
+  in the real world are actually pretty small and easily solvable, but the
+  primary challenge is to model them correctly and quickly. Another issue is
+  that some optimization problems have to be solved repeatedly over a long
+  period, and you do not want to be dependent on a specific solver, as better
+  solvers come out frequently, the licenses may change, or your business experts
+  simply should be able to focus on the pure modelling and should not need to
+  know about the internals of the solver. For these reasons, there are modelling
+  languages that allow you to model your problem in a very high-level way and
+  then let the system decide which solver to use and how to solve it. For
+  example, the solver can use CP-SAT or Gurobi, without you needing to change
+  your model. A disadvantage of these modelling languages is that you give up a
+  lot of control and flexibility, in the favor of generality and ease of use.
+  The most popular modelling languages are:
+  - [AMPL](https://ampl.com/): AMPL is possibly the most popular modelling
+    language. It has free and commercial solvers. There is not only extensive
+    documentation, but even a book on how to use it.
+  - [GAMS](https://www.gams.com/): This is a commercial system which supports
+    many solvers and also has gotten a Python-interface. I actually know the
+    guys from GAMS as they have a location in Braunschweig. They have a lot of
+    experience in optimization, but I have never used their software myself.
+  - [pyomo](http://www.pyomo.org/): Pyomo is a Python library that allows you to
+    model your optimization problem in Python and then let it solve by different
+    solvers. It is not as high-level as AMPL or GAMS, but it is free and open
+    source. It is also very flexible and allows you to use Python to model your
+    problem, which is a huge advantage if you are already familiar with Python.
+    It actually has support for CP-SAT and could be an option if you just want
+    to have a quick solution.
+  - [OR-Tools' MathOpt](https://developers.google.com/optimization/math_opt): A
+    very new competitor and sibling of CP-SAT. It only supports a few solvers,
+    but may be still interesting.
+- **Specialized Algorithms:** For many optimization problems, there are
+  specialized algorithms that can be much more efficient than general-purpose
+  solvers. Examples are:
+  - [Concorde](http://www.math.uwaterloo.ca/tsp/concorde.html): Concorde is a
+    solver for the Traveling Salesman Problem that despite its age is still
+    blazingly fast for many instances.
+  - [OR-Tools' Routing Solver](https://developers.google.com/optimization/routing):
+    OR-Tools also comes with a dedicated solver for routing problems.
+  - [OR-Tools' Network Flows](https://developers.google.com/optimization/flow):
+    OR-Tools also comes with a dedicated solver for network flow problems.
   - ...
 
-As you can see, there are many tools and techniques to solve optimization problems.
-CP-SAT is one of the more general approaches and a great option for many problems.
-If you frequently have to deal with combinatorial optimization problems, you should
-definitely get familiar with CP-SAT. It is good enough for most problems, and
-superior for some, which is amazing for a free and open-source tool.
+As you can see, there are many tools and techniques to solve optimization
+problems. CP-SAT is one of the more general approaches and a great option for
+many problems. If you frequently have to deal with combinatorial optimization
+problems, you should definitely get familiar with CP-SAT. It is good enough for
+most problems, and superior for some, which is amazing for a free and
+open-source tool.
 
 ---
 
@@ -3461,15 +3482,15 @@ time, limiting how many you can examine.
 Large Neighborhood Search (LNS) offers a more efficient approach. Instead of
 generating neighbors one by one, LNS formulates a "mini-problem" that modifies
 parts of the current solution. This often involves randomly selecting some
-variables, resetting them, and using CP-SAT (or a similar tool) to find the optimal new values
-within the context of the remaining solution. This method, known as "destroy and
-repair," allows for a broader exploration of neighbor solutions without
-constructing each one individually.
+variables, resetting them, and using CP-SAT (or a similar tool) to find the
+optimal new values within the context of the remaining solution. This method,
+known as "destroy and repair," allows for a broader exploration of neighbor
+solutions without constructing each one individually.
 
-Moreover, LNS can easily be mixed with other methods like genetic algorithms.
-If you are already using a genetic algorithm, you could supercharge it by
-applying CP-SAT to find the best possible crossover of two or more existing
-solutions. It is like genetic engineering, but without any ethical worries!
+Moreover, LNS can easily be mixed with other methods like genetic algorithms. If
+you are already using a genetic algorithm, you could supercharge it by applying
+CP-SAT to find the best possible crossover of two or more existing solutions. It
+is like genetic engineering, but without any ethical worries!
 
 When looking into the logs of CP-SAT, you may notice that it uses LNS itself to
 find better solutions.
