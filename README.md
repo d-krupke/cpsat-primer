@@ -3072,7 +3072,7 @@ looking for better solvers.
 <!-- EDIT THIS PART VIA 08_benchmarking.md -->
 
 ## Benchmarking your Model
-<a name="08-benchmarking.md"></a>
+<a name="08-benchmarking"></a>
 
 Benchmarking is an essential step if your model is not yet meeting the
 performance standards of your application or if you are aiming for an academic
