@@ -1,3 +1,5 @@
+<!-- EDIT THIS PART VIA 00_intro.md -->
+
 # Using and Understanding OR-Tools' CP-SAT: A Primer and Cheat Sheet
 
 _By [Dominik Krupke](https://krupke.cc), TU Braunschweig_
@@ -65,21 +67,21 @@ awaits you in this primer:
 
 **Content:**
 
-1. [Installation](#installation): Quick installation guide.
-2. [Example](#example): A short example, showing the usage of CP-SAT.
-3. [Alternatives](#section-alternatives): An overview of the different
+1. [Installation](#01-installation): Quick installation guide.
+2. [Example](#02-example): A short example, showing the usage of CP-SAT.
+3. [Alternatives](#03-big-picture): An overview of the different
    optimization techniques and tools available. Putting CP-SAT into context.
-4. [Modelling](#modelling): An overview of variables, objectives, and
+4. [Modelling](#04-modelling): An overview of variables, objectives, and
    constraints. The constraints make the most important part.
-5. [Parameters](#parameters): How to specify CP-SATs behavior, if needed.
+5. [Parameters](#05-parameters): How to specify CP-SATs behavior, if needed.
    Timelimits, hints, assumptions, parallelization, ...
-6. [Coding Patterns](#Coding-Patterns-for-Optimization-Problems): Basic design
+6. [Coding Patterns](#06-coding-patterns): Basic design
    patterns for creating maintainable algorithms.
-7. [How does it work?](#how-does-it-work): After we know what we can do with
+7. [How does it work?](#07-under-the-hood): After we know what we can do with
    CP-SAT, we look into how CP-SAT will do all these things.
-8. [Benchmarking your Model](#benchmarking-your-model): How to benchmark your
+8. [Benchmarking your Model](#08-benchmarking): How to benchmark your
    model and how to interpret the results.
-9. [Large Neighborhood Search](#Using-CP-SAT-for-Bigger-Problems-with-Large-Neighborhood-Search):
+9. [Large Neighborhood Search](#09-lns):
    The use of CP-SAT to create more powerful heuristics.
 
 ---
@@ -106,10 +108,10 @@ awaits you in this primer:
 > write me a quick mail to `krupked@gmail.com`.
 
 > **Want to Contribute?** If you are interested in contributing, please open an
-> issue or send me an email with a brief description of your proposal. We can
+> issue or email me with a brief description of your proposal. We can
 > then discuss the details. I welcome all assistance and am open to expanding
 > the content. Contributors to any section or similar input will be recognized
-> as co-authors.
+> as coauthors.
 
 > **Want to use/share this content?** This tutorial can be freely used under
 > [CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/). Smaller parts can
@@ -118,7 +120,10 @@ awaits you in this primer:
 
 ---
 
+<!-- EDIT THIS PART VIA 01_installation.md -->
+
 ## Installation
+<a name="01-installation"></a>
 
 We are using Python 3 in this primer and assume that you have a working Python 3
 installation as well as the basic knowledge to use it. There are also interfaces
@@ -145,7 +150,7 @@ correctness with basic usage).
 I personally like to use [Jupyter Notebooks](https://jupyter.org/) for
 experimenting with CP-SAT.
 
-### What hardware do I need?
+### What hardware do you need?
 
 It is important to note that for CP-SAT usage, you do not need the capabilities
 of a supercomputer. A standard laptop is often sufficient for solving many
@@ -180,7 +185,11 @@ For further guidance, consider the
 which are likely to be similar. Since we frequently use Gurobi in addition to
 CP-SAT, our hardware choices were also influenced by their recommendations.
 
+
+<!-- EDIT THIS PART VIA 02_example.md -->
+
 ## Example
+<a name="02-example"></a>
 
 Before we dive into any internals, let us take a quick look at a simple
 application of CP-SAT. This example is so simple that you could solve it by
@@ -374,9 +383,11 @@ very good at that).
 
 ---
 
+<!-- EDIT THIS PART VIA 03_big_picture.md -->
 <a name="section-alternatives"></a>
 
 ## Alternatives: CP-SAT's Place in the World of Optimization
+<a name="03-big-picture"></a>
 
 When you begin exploring optimization, you will encounter a plethora of tools,
 techniques, and communities. It can be overwhelming, as these groups, while
@@ -541,7 +552,9 @@ open-source tool.
 
 ---
 
+<!--EDIT THIS PART VIA 04_modelling.md -->
 ## Modelling
+<a name="04-modelling"></a>
 
 CP-SAT provides us with much more modelling options than the classical
 MIP-solver. Instead of just the classical linear constraints (<=, ==, >=), we
@@ -1686,7 +1699,11 @@ If you need more, you can check out the
 
 ---
 
+
+<!-- EDIT THIS PART VIA 05_parameters.md -->
+
 ## Parameters
+<a name="05-parameters"></a>
 
 The CP-SAT solver has a lot of parameters to control its behavior. They are
 implemented via
@@ -2200,7 +2217,10 @@ some conflicts.
 
 ---
 
+
+<!-- EDIT THIS PART VIA 06_coding_patterns.md -->
 ## Coding Patterns for Optimization Problems
+<a name="06-coding-patterns"></a>
 
 In this section, we will explore various coding patterns that are essential for
 structuring implementations for optimization problems using CP-SAT. While we
@@ -2865,7 +2885,10 @@ class KnapsackSolver:
 
 ---
 
+<!-- EDIT THIS PART VIA 07_under_the_hood.md -->
+
 ## How does it work?
+<a name="07-under-the-hood"></a>
 
 CP-SAT is a versatile _portfolio_ solver, centered around a _Lazy Clause
 Generation (LCG)_ based Constraint Programming Solver, although it encompasses a
@@ -3046,7 +3069,10 @@ At times, NP-hard problems inherently pose formidable challenges, leaving us
 with no alternative but to seek more manageable modeling approaches instead of
 looking for better solvers.
 
+<!-- EDIT THIS PART VIA 08_benchmarking.md -->
+
 ## Benchmarking your Model
+<a name="08-benchmarking.md"></a>
 
 Benchmarking is an essential step if your model is not yet meeting the
 performance standards of your application or if you are aiming for an academic
@@ -3453,7 +3479,10 @@ and nice plots on which we can base our decisions.
 > [Algorithm Selection](https://en.wikipedia.org/wiki/Algorithm_selection)
 > problem and can be surprisingly complex, too.
 
+<!-- EDIT THIS PART VIA 08_lns.md -->
+
 ## Using CP-SAT for Bigger Problems with Large Neighborhood Search
+<a name="09-lns"></a>
 
 CP-SAT is great at solving small and medium-sized problems. But what if you have
 a really big problem on your hands? One option might be to use a special kind of
@@ -3725,3 +3754,5 @@ aware of the exploration vs. exploitation dilemma and that many smart people
 have already thought about it.
 
 > TODO: Continue...
+
+
