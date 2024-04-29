@@ -3550,11 +3550,17 @@ various items $I$ you can put into it. Each item $i\in I$ has a weight $w_i$ and
 a value $v_i$. The goal is to pick items to maximize the total value while
 staying within the weight limit.
 
-$$\max \sum_{i \in I} v_i x_i$$
+```math
+\max \sum_{i \in I} v_i x_i
+```
 
-$$\text{s.t.} \sum_{i \in I} w_i x_i \leq C$$
+```math
+\text{s.t.} \sum_{i \in I} w_i x_i \leq C
+```
 
-$$x_i \in \\{0,1\\}$$
+```math
+x_i \in \\{0,1\\}
+```
 
 This is one of the simplest NP-hard problems and can be solved with a dynamic
 programming approach in pseudo-polynomial time. CP-SAT is also able to solve
