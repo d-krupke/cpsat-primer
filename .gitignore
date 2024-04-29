@@ -131,3 +131,5 @@ dmypy.json
 examples/tsp_evaluation/PRIVATE_DATA/full_experiment_data
 evaluations/tsp/2023-11-18_random_euclidean/PRIVATE_DATA
 evaluations/tsp/2023-11-18_tsplib/PRIVATE_DATA
+.mdbook/book
+.mdbook/https:

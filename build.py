@@ -36,7 +36,7 @@ if __name__ == "__main__":
                 content = current_file.read()
                 f.write(content)
                 f.write("\n\n")
-                Path("./mdbook/src").mkdir(parents=True, exist_ok=True)
-                with open(Path("./mdbook/src")/file, "w") as book_file:
+                Path("./.mdbook/src").mkdir(parents=True, exist_ok=True)
+                with open(Path("./.mdbook/src")/file, "w") as book_file:
                     book_file.write(convert_for_mdbook(content))
     
