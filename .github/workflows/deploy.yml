@@ -28,7 +28,7 @@ jobs:
           # Just add a `cd` here if you need to change to another directory.
           python3 build.py
           cd .mdbook
-          ../mdbook build
+          mdbook build
       - name: Setup Pages
         uses: actions/configure-pages@v4
       - name: Upload artifact
