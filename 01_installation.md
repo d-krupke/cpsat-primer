@@ -1,7 +1,8 @@
 <!-- EDIT THIS PART VIA 01_installation.md -->
 
-## Installation
 <a name="01-installation"></a>
+
+## Installation
 
 We are using Python 3 in this primer and assume that you have a working Python 3
 installation as well as the basic knowledge to use it. There are also interfaces

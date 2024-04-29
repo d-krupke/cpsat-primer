@@ -1,7 +1,8 @@
 <!-- EDIT THIS PART VIA 07_under_the_hood.md -->
 
-## How does it work?
 <a name="07-under-the-hood"></a>
+
+## How does it work?
 
 CP-SAT is a versatile _portfolio_ solver, centered around a _Lazy Clause
 Generation (LCG)_ based Constraint Programming Solver, although it encompasses a

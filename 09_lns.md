@@ -1,7 +1,8 @@
 <!-- EDIT THIS PART VIA 08_lns.md -->
 
-## Using CP-SAT for Bigger Problems with Large Neighborhood Search
 <a name="09-lns"></a>
+
+## Using CP-SAT for Bigger Problems with Large Neighborhood Search
 
 CP-SAT is great at solving small and medium-sized problems. But what if you have
 a really big problem on your hands? One option might be to use a special kind of
@@ -11,8 +12,8 @@ can be hard to set up and might not even give you good results.
 
 Sometimes you will see new algorithms with cool-sounding names in scientific
 papers. While tempting, these are often just small twists on older methods and
-might leave out key details that make them work. If you are interested, there's a
-discussion about this issue in a paper by Sörensen, called
+might leave out key details that make them work. If you are interested, there's
+a discussion about this issue in a paper by Sörensen, called
 ["Metaheuristics – The Metaphor Exposed"](http://onlinelibrary.wiley.com/doi/10.1111/itor.12001/).
 
 The good news? You do not have to implement an algorithm that simulates the

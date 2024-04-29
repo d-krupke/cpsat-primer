@@ -1,6 +1,8 @@
 <!--EDIT THIS PART VIA 04_modelling.md -->
-## Modelling
+
 <a name="04-modelling"></a>
+
+## Modelling
 
 CP-SAT provides us with much more modelling options than the classical
 MIP-solver. Instead of just the classical linear constraints (<=, ==, >=), we
@@ -142,8 +144,8 @@ variables needed.
 However, CP-SAT employs a lazy creation strategy for these boolean variables.
 This means it only generates them as needed, based on the solver's
 decision-making process. Therefore, an integer variable with a wide range - say,
-from 0 to 100 - will not immediately result in 200 boolean variables. It might lead
-to the creation of only a few, depending on the solver's requirements.
+from 0 to 100 - will not immediately result in 200 boolean variables. It might
+lead to the creation of only a few, depending on the solver's requirements.
 
 Limiting the domain of a variable can have drawbacks. Firstly, defining a domain
 explicitly can be computationally costly and increase the model size drastically
@@ -1023,8 +1025,8 @@ model.Minimize(y)
 
 This can be quite tedious, but luckily, I wrote a small helper class that will
 do this automatically for you. You can find it in
-[./utils/piecewise_functions](https://github.com/d-krupke/cpsat-primer/blob/main/utils/piecewise_functions/). Simply copy it into
-your code.
+[./utils/piecewise_functions](https://github.com/d-krupke/cpsat-primer/blob/main/utils/piecewise_functions/).
+Simply copy it into your code.
 
 This code does some further optimizations:
 

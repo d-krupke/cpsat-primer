@@ -1,7 +1,8 @@
 <!-- EDIT THIS PART VIA 08_benchmarking.md -->
 
-## Benchmarking your Model
 <a name="08-benchmarking"></a>
+
+## Benchmarking your Model
 
 Benchmarking is an essential step if your model is not yet meeting the
 performance standards of your application or if you are aiming for an academic
@@ -207,8 +208,8 @@ and research questions. Here are some strategies to keep things organized:
 - **Experiment Flexibility**: Design experiments to be interruptible and
   extendable, allowing for easy resumption or modification. This is especially
   important for exploratory studies, where you may need to make frequent
-  adjustments. However, if your workhorse study takes a long time to run, you
-  do not want to repeat it from scratch if you want to add a further solver.
+  adjustments. However, if your workhorse study takes a long time to run, you do
+  not want to repeat it from scratch if you want to add a further solver.
 - **Utilizing Technology**: Employ tools like slurm for efficient distribution
   of experiments across computing clusters, saving time and resources. The
   faster you have your results, the faster you can act on them.

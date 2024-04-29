@@ -1,7 +1,8 @@
 <!-- EDIT THIS PART VIA 02_example.md -->
 
-## Example
 <a name="02-example"></a>
+
+## Example
 
 Before we dive into any internals, let us take a quick look at a simple
 application of CP-SAT. This example is so simple that you could solve it by

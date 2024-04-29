@@ -1,7 +1,8 @@
 <!-- EDIT THIS PART VIA 05_parameters.md -->
 
-## Parameters
 <a name="05-parameters"></a>
+
+## Parameters
 
 The CP-SAT solver has a lot of parameters to control its behavior. They are
 implemented via
@@ -38,9 +39,9 @@ we run the solver:
 solver.parameters.max_time_in_seconds = 60  # 60s timelimit
 ```
 
-We now of course have the problem, that maybe we will not have an optimal solution,
-or a solution at all, we can continue on. Thus, we need to check the status of
-the solver.
+We now of course have the problem, that maybe we will not have an optimal
+solution, or a solution at all, we can continue on. Thus, we need to check the
+status of the solver.
 
 ```python
 status = solver.Solve(model)
@@ -76,8 +77,8 @@ $abs(O - B) / max(1, abs(O))$ of the bound (B). To stop as soon as we are within
 solver.parameters.relative_gap_limit = 0.05
 ```
 
-Now we may want to stop after we did not make progress for some time or whatever.
-In this case, we can make use of the solution callbacks.
+Now we may want to stop after we did not make progress for some time or
+whatever. In this case, we can make use of the solution callbacks.
 
 > For those familiar with Gurobi: Unfortunately, we can only abort the solution
 > progress and not add lazy constraints or similar. For those not familiar with

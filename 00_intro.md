@@ -69,20 +69,20 @@ awaits you in this primer:
 
 1. [Installation](#01-installation): Quick installation guide.
 2. [Example](#02-example): A short example, showing the usage of CP-SAT.
-3. [Alternatives](#03-big-picture): An overview of the different
-   optimization techniques and tools available. Putting CP-SAT into context.
+3. [Alternatives](#03-big-picture): An overview of the different optimization
+   techniques and tools available. Putting CP-SAT into context.
 4. [Modelling](#04-modelling): An overview of variables, objectives, and
    constraints. The constraints make the most important part.
 5. [Parameters](#05-parameters): How to specify CP-SATs behavior, if needed.
    Timelimits, hints, assumptions, parallelization, ...
-6. [Coding Patterns](#06-coding-patterns): Basic design
-   patterns for creating maintainable algorithms.
+6. [Coding Patterns](#06-coding-patterns): Basic design patterns for creating
+   maintainable algorithms.
 7. [How does it work?](#07-under-the-hood): After we know what we can do with
    CP-SAT, we look into how CP-SAT will do all these things.
-8. [Benchmarking your Model](#08-benchmarking): How to benchmark your
-   model and how to interpret the results.
-9. [Large Neighborhood Search](#09-lns):
-   The use of CP-SAT to create more powerful heuristics.
+8. [Benchmarking your Model](#08-benchmarking): How to benchmark your model and
+   how to interpret the results.
+9. [Large Neighborhood Search](#09-lns): The use of CP-SAT to create more
+   powerful heuristics.
 
 ---
 
@@ -108,10 +108,10 @@ awaits you in this primer:
 > write me a quick mail to `krupked@gmail.com`.
 
 > **Want to Contribute?** If you are interested in contributing, please open an
-> issue or email me with a brief description of your proposal. We can
-> then discuss the details. I welcome all assistance and am open to expanding
-> the content. Contributors to any section or similar input will be recognized
-> as coauthors.
+> issue or email me with a brief description of your proposal. We can then
+> discuss the details. I welcome all assistance and am open to expanding the
+> content. Contributors to any section or similar input will be recognized as
+> coauthors.
 
 > **Want to use/share this content?** This tutorial can be freely used under
 > [CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/). Smaller parts can

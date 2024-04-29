@@ -1,7 +1,8 @@
-
 <!-- EDIT THIS PART VIA 06_coding_patterns.md -->
-## Coding Patterns for Optimization Problems
+
 <a name="06-coding-patterns"></a>
+
+## Coding Patterns for Optimization Problems
 
 In this section, we will explore various coding patterns that are essential for
 structuring implementations for optimization problems using CP-SAT. While we

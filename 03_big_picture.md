@@ -1,8 +1,8 @@
 <!-- EDIT THIS PART VIA 03_big_picture.md -->
-<a name="section-alternatives"></a>
+
+<a name="section-alternatives"></a> <a name="03-big-picture"></a>
 
 ## Alternatives: CP-SAT's Place in the World of Optimization
-<a name="03-big-picture"></a>
 
 When you begin exploring optimization, you will encounter a plethora of tools,
 techniques, and communities. It can be overwhelming, as these groups, while
