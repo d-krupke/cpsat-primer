@@ -77,7 +77,7 @@ if __name__ == "__main__":
             with open(file, "r") as current_file:
                 content = current_file.read()
                 f.write(disclaimer)
-                f.write(f"<!-- {file}" + " -->\n")
+                f.write(f"<!-- {file} -->\n")
                 f.write(content)
                 f.write("\n\n")
                 Path("./.mdbook/").mkdir(parents=True, exist_ok=True)
