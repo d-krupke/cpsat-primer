@@ -357,7 +357,7 @@ but work heuristically. Notable strategies are large neighborhood search (LNS)
 and feasibility pumps. The first one tries to find a better solution by changing
 only a few variables, the second one tries to make infeasible/incomplete
 solutions feasible. If you want to use more workers heuristically searching for
-good solutions, you can specify `solver.parameters.min_num_lns_workers`
+good solutions, you can specify `solver.parameters.min_num_lns_workers`.
 
 **First solution subsolvers** are strategies that try to find a first solution
 as fast as possible. They are often used to warm up the solver and to get a
