@@ -122,7 +122,8 @@ values mean will be discussed later.
 
 ### Parallelization
 
-*CP-SAT has changed over the versions and has now a significantly more extensive portfolio than described here. I will try to update this section soon.*
+_CP-SAT has changed over the versions and has now a significantly more extensive
+portfolio than described here. I will try to update this section soon._
 
 CP-SAT has some basic parallelization. It can be considered a portfolio-strategy
 with some minimal data exchange between the threads. The basic idea is to use
@@ -190,6 +191,162 @@ solver may struggle with (use a linear programming solver, like Gurobi, for
 this).
 
 [CP-SAT also has different parallelization tiers based on the number of workers](https://github.com/google/or-tools/blob/main/ortools/sat/docs/troubleshooting.md#improving-performance-with-multiple-workers).
+
+#### Portfolio for CP-SAT 9.9
+
+Here the solvers used by CP-SAT 9.9 on different parallelization levels for an
+optimization problem and no additional specifications (e.g., decision
+strategies). Note that some parameters can change the parallelization strategy.
+
+- `solver.parameters.num_search_workers = 1`: Single-threaded search with
+  `[default_lp]`.
+  - 1 full problem subsolver: [default_lp]
+- `solver.parameters.num_search_workers = 2`: Additional use of heuristics to
+  support the `default_lp` search.
+  - 1 full problem subsolver: [default_lp]
+  - 13 incomplete subsolvers: [feasibility_pump, graph_arc_lns, graph_cst_lns,
+    graph_dec_lns, graph_var_lns, packing_precedences_lns,
+    packing_rectangles_lns, packing_slice_lns, rins/rens, rnd_cst_lns,
+    rnd_var_lns, scheduling_precedences_lns, violation_ls]
+  - 3 helper subsolvers: [neighborhood_helper, synchronization_agent,
+    update_gap_integral]
+- `solver.parameters.num_search_workers = 3`: Using a second full problem solver
+  that does not try to linearize the model.
+  - 2 full problem subsolvers: [default_lp, no_lp]
+  - 13 incomplete subsolvers: [feasibility_pump, graph_arc_lns, graph_cst_lns,
+    graph_dec_lns, graph_var_lns, packing_precedences_lns,
+    packing_rectangles_lns, packing_slice_lns, rins/rens, rnd_cst_lns,
+    rnd_var_lns, scheduling_precedences_lns, violation_ls]
+  - 3 helper subsolvers: [neighborhood_helper, synchronization_agent,
+    update_gap_integral]
+- `solver.parameters.num_search_workers = 4`: Additionally using a third full
+  problem solver that tries to linearize the model as much as possible.
+  - 3 full problem subsolvers: [default_lp, max_lp, no_lp]
+  - 13 incomplete subsolvers: [feasibility_pump, graph_arc_lns, graph_cst_lns,
+    graph_dec_lns, graph_var_lns, packing_precedences_lns,
+    packing_rectangles_lns, packing_slice_lns, rins/rens, rnd_cst_lns,
+    rnd_var_lns, scheduling_precedences_lns, violation_ls]
+  - 3 helper subsolvers: [neighborhood_helper, synchronization_agent,
+    update_gap_integral]
+- `solver.parameters.num_search_workers = 5`: Additionally using a first
+  solution subsolver.
+  - 3 full problem subsolvers: [default_lp, max_lp, no_lp]
+  - 1 first solution subsolver: [fj_short_default]
+  - 13 incomplete subsolvers: [feasibility_pump, graph_arc_lns, graph_cst_lns,
+    graph_dec_lns, graph_var_lns, packing_precedences_lns,
+    packing_rectangles_lns, packing_slice_lns, rins/rens, rnd_cst_lns,
+    rnd_var_lns, scheduling_precedences_lns, violation_ls]
+  - 3 helper subsolvers: [neighborhood_helper, synchronization_agent,
+    update_gap_integral]
+- `solver.parameters.num_search_workers = 6`: Using a fourth full problem solver
+  `quick_restart` that does more "probing".
+  - 4 full problem subsolvers: [default_lp, max_lp, no_lp, quick_restart]
+  - 1 first solution subsolver: [fj_short_default]
+  - 13 incomplete subsolvers: [feasibility_pump, graph_arc_lns, graph_cst_lns,
+    graph_dec_lns, graph_var_lns, packing_precedences_lns,
+    packing_rectangles_lns, packing_slice_lns, rins/rens, rnd_cst_lns,
+    rnd_var_lns, scheduling_precedences_lns, violation_ls]
+  - 3 helper subsolvers: [neighborhood_helper, synchronization_agent,
+    update_gap_integral]
+- `solver.parameters.num_search_workers = 7`:
+  - 5 full problem subsolvers: [default_lp, max_lp, no_lp, quick_restart,
+    reduced_costs]
+  - 1 first solution subsolver: [fj_short_default]
+  - 13 incomplete subsolvers: [feasibility_pump, graph_arc_lns, graph_cst_lns,
+    graph_dec_lns, graph_var_lns, packing_precedences_lns,
+    packing_rectangles_lns, packing_slice_lns, rins/rens, rnd_cst_lns,
+    rnd_var_lns, scheduling_precedences_lns, violation_ls]
+  - 3 helper subsolvers: [neighborhood_helper, synchronization_agent,
+    update_gap_integral]
+- `solver.parameters.num_search_workers = 8`:
+  - 6 full problem subsolvers: [default_lp, max_lp, no_lp, quick_restart,
+    quick_restart_no_lp, reduced_costs]
+  - 1 first solution subsolver: [fj_short_default]
+  - 13 incomplete subsolvers: [feasibility_pump, graph_arc_lns, graph_cst_lns,
+    graph_dec_lns, graph_var_lns, packing_precedences_lns,
+    packing_rectangles_lns, packing_slice_lns, rins/rens, rnd_cst_lns,
+    rnd_var_lns, scheduling_precedences_lns, violation_ls]
+  - 3 helper subsolvers: [neighborhood_helper, synchronization_agent,
+    update_gap_integral]
+- `solver.parameters.num_search_workers = 12`:
+  - 8 full problem subsolvers: [default_lp, lb_tree_search, max_lp, no_lp,
+    pseudo_costs, quick_restart, quick_restart_no_lp, reduced_costs]
+  - 3 first solution subsolvers: [fj_long_default, fj_short_default, fs_random]
+  - 13 incomplete subsolvers: [feasibility_pump, graph_arc_lns, graph_cst_lns,
+    graph_dec_lns, graph_var_lns, packing_precedences_lns,
+    packing_rectangles_lns, packing_slice_lns, rins/rens, rnd_cst_lns,
+    rnd_var_lns, scheduling_precedences_lns, violation_ls]
+  - 3 helper subsolvers: [neighborhood_helper, synchronization_agent,
+    update_gap_integral]
+- `solver.parameters.num_search_workers = 16`:
+  - 11 full problem subsolvers: [default_lp, lb_tree_search, max_lp, no_lp,
+    objective_lb_search, objective_shaving_search_no_lp, probing, pseudo_costs,
+    quick_restart, quick_restart_no_lp, reduced_costs]
+  - 4 first solution subsolvers: [fj_long_default, fj_short_default, fs_random,
+    fs_random_quick_restart]
+  - 13 incomplete subsolvers: [feasibility_pump, graph_arc_lns, graph_cst_lns,
+    graph_dec_lns, graph_var_lns, packing_precedences_lns,
+    packing_rectangles_lns, packing_slice_lns, rins/rens, rnd_cst_lns,
+    rnd_var_lns, scheduling_precedences_lns, violation_ls]
+  - 3 helper subsolvers: [neighborhood_helper, synchronization_agent,
+    update_gap_integral]
+- `solver.parameters.num_search_workers = 20`:
+  - 13 full problem subsolvers: [default_lp, lb_tree_search, max_lp, no_lp,
+    objective_lb_search, objective_shaving_search_max_lp,
+    objective_shaving_search_no_lp, probing, probing_max_lp, pseudo_costs,
+    quick_restart, quick_restart_no_lp, reduced_costs]
+  - 5 first solution subsolvers: [fj_long_default, fj_short_default,
+    fj_short_lin_default, fs_random, fs_random_quick_restart]
+  - 13 incomplete subsolvers: [feasibility_pump, graph_arc_lns, graph_cst_lns,
+    graph_dec_lns, graph_var_lns, packing_precedences_lns,
+    packing_rectangles_lns, packing_slice_lns, rins/rens, rnd_cst_lns,
+    rnd_var_lns, scheduling_precedences_lns, violation_ls]
+  - 3 helper subsolvers: [neighborhood_helper, synchronization_agent,
+    update_gap_integral]
+- `solver.parameters.num_search_workers = 32`:
+  - 15 full problem subsolvers: [default_lp, lb_tree_search, max_lp, no_lp,
+    objective_lb_search, objective_lb_search_max_lp, objective_lb_search_no_lp,
+    objective_shaving_search_max_lp, objective_shaving_search_no_lp, probing,
+    probing_max_lp, pseudo_costs, quick_restart, quick_restart_no_lp,
+    reduced_costs]
+  - 15 first solution subsolvers: [fj_long_default, fj_long_lin_default,
+    fj_long_lin_random, fj_long_random, fj_short_default, fj_short_lin_default,
+    fj_short_lin_random, fj_short_random, fs_random(2), fs_random_no_lp(2),
+    fs_random_quick_restart(2), fs_random_quick_restart_no_lp]
+  - 15 incomplete subsolvers: [feasibility_pump, graph_arc_lns, graph_cst_lns,
+    graph_dec_lns, graph_var_lns, packing_precedences_lns,
+    packing_rectangles_lns, packing_slice_lns, rins/rens, rnd_cst_lns,
+    rnd_var_lns, scheduling_precedences_lns, violation_ls(3)]
+  - 3 helper subsolvers: [neighborhood_helper, synchronization_agent,
+    update_gap_integral]
+- `solver.parameters.num_search_workers = 64`:
+  - 15 full problem subsolvers: [default_lp, lb_tree_search, max_lp, no_lp,
+    objective_lb_search, objective_lb_search_max_lp, objective_lb_search_no_lp,
+    objective_shaving_search_max_lp, objective_shaving_search_no_lp, probing,
+    probing_max_lp, pseudo_costs, quick_restart, quick_restart_no_lp,
+    reduced_costs]
+  - 47 first solution subsolvers: [fj_long_default(2), fj_long_lin_default(2),
+    fj_long_lin_perturb(2), fj_long_lin_random(2), fj_long_perturb(2),
+    fj_long_random(2), fj_short_default(2), fj_short_lin_default(2),
+    fj_short_lin_perturb(2), fj_short_lin_random(2), fj_short_perturb(2),
+    fj_short_random(2), fs_random(6), fs_random_no_lp(6),
+    fs_random_quick_restart(6), fs_random_quick_restart_no_lp(5)]
+  - 19 incomplete subsolvers: [feasibility_pump, graph_arc_lns, graph_cst_lns,
+    graph_dec_lns, graph_var_lns, packing_precedences_lns,
+    packing_rectangles_lns, packing_slice_lns, rins/rens, rnd_cst_lns,
+    rnd_var_lns, scheduling_precedences_lns, violation_ls(7)]
+  - 3 helper subsolvers: [neighborhood_helper, synchronization_agent,
+    update_gap_integral]
+
+Important steps:
+
+- With a single worker, only the default subsolver is used.
+- With two workers or more, CP-SAT starts using incomplete subsolvers, i.e.,
+  heuristics such as LNS.
+- With five workers, CP-SAT will also have a first solution subsolver.
+- With 23 workers, all 15 full problem subsolvers are used.
+- For more than 32 workers, primarily the number of first solution subsolvers is
+  increased.
 
 ### Assumptions
 
