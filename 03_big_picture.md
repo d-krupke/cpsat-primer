@@ -58,31 +58,22 @@ and I will consider including them.
   have a lot of constraints that are hard to model with linear constraints. The
   internal techniques of CP-solvers are often more logic-based and less linear
   algebra-based than MIP-solvers. Popular CP-solvers are:
-  - [OR-Tools' CP-SAT](https://github.com/google/or-tools/): This is the solver
-    we are talking about in this primer. It internally uses a lot of different
-    techniques, including techniques from MIP-solvers, but its primary technique
-    is Lazy Clause Generation, which internally translates the problem into a
-    SAT-formula and then uses a SAT-solver to solve it.
-  - [Choco](https://choco-solver.org/): Choco is a classical constraint
-    programming solver in Java. It is under BSD 4-Clause license and comes with
-    a lot of features. It is probably not as efficient or modern as CP-SAT, but
-    it has some nice features such as the ability to add your own propagators.
-- **Logic Programming:** Having mentioned constraint programming, we should also
-  mention logic programming. Logic programming is a more generic approach to
-  constraint programming, actually being a full turing-complete programming
-  language. A popular logic programming language is
-  [Prolog](https://en.wikipedia.org/wiki/Prolog). While they may be the final
-  solution for solving combinatorial optimization problems, they are not smart
-  enough, yet, and you should go for the less expressive constraint programming
-  for now.
-- **SAT-Solvers:** If your problem is actually just a SAT-problem, you may want
-  to use a SAT-solver. SAT-solvers are surprisingly efficient and can often
-  handle problems with millions of variables. If you are clever, you can also do
-  some optimization problems with SAT-solvers, as CP-SAT actually does. Most
-  SAT-solvers support incremental modelling, and some support cardinality
-  constraints. However, they are pretty low-level and CP-SAT actually can
-  achieve similar performance for many problems. A popular library for
-  SAT-solvers is:
+  - [OR-Tools' CP-SAT](https://github.com/google/or-tools/): Discussed in this
+    primer, CP-SAT combines various optimization techniques, including those
+    from MIP solvers, but its primary technique is Lazy Clause Generation. This
+    approach translates problems into (Max-)SAT formulas for resolution.
+  - [Choco](https://choco-solver.org/): A traditional CP solver developed in
+    Java, licensed under the BSD 4-Clause. While it may not match CP-SAT in
+    efficiency or modernity, Choco offers significant flexibility, including the
+    option to integrate custom propagators.
+- **SAT-Solvers:** If your problem is actually just to find a feasible solution
+  for some boolean variables, you may want to use a SAT-solver. SAT-solvers are
+  surprisingly efficient and can often handle problems with millions of
+  variables. If you are clever, you can also do some optimization problems with
+  SAT-solvers, as CP-SAT actually does. Most SAT-solvers support incremental
+  modelling, and some support cardinality constraints. However, they are pretty
+  low-level and CP-SAT actually can achieve similar performance for many
+  problems. A popular library for SAT-solvers is:
   - [PySAT](https://pysathq.github.io/): PySAT is a Python library under MIT
     license that provides a nice interface to many SAT-solvers. It is very easy
     to use and allows you to switch between different solvers without changing
@@ -93,16 +84,20 @@ and I will consider including them.
     C++ and do not provide much documentation. However, as SAT-formulas are very
     simple and the solvers usually do not have complex dependencies, they can
     still be reasonably easy to use.
-- **Satisfiability modulo theories (SMT):** A level above SAT-solvers are
-  SMT-solvers whose goal is to check mathematical formulas for satisfiability.
-  They essentially extend the propositional logic of SAT-solvers with theories,
-  such as linear arithmetic, bit-vectors, arrays, quantors, and more. For
-  example, you can ask an SMT-solver to check if a formula is satisfiable under
-  the assumption that all variables are integers and satisfy some linear
-  constraints. They are often used for automated theorem proofing or
-  verification. A popular SMT-solver is:
-  - [Z3](https://github.com/z3prover/z3): Z3 is an SMT solver by Microsoft under
-    MIT license. It has a nice Python interface and a good documentation.
+- **Satisfiability modulo theories (SMT):** SMT-solvers represent an advanced
+  tier above traditional SAT-solvers. They aim to check the satisfiability of
+  mathematical formulas by extending propositional logic with additional
+  theories like linear arithmetic, bit-vectors, arrays, and quantifiers. For
+  instance, an SMT-solver can determine if a formula is satisfiable under
+  conditions where all variables are integers that meet specific linear
+  constraints. Similar to the Lazy Clause Generation utilized by CP-SAT,
+  SMT-solvers usually use a SAT-solver in the backend, extended by complex
+  encodings and additional propagators to handle an extensive portfolio of
+  expressions. These solvers are commonly used in automated theorem proving and
+  system verification. A popular SMT-solver is:
+  - [Z3](https://github.com/z3prover/z3): Developed by Microsoft and available
+    under the MIT license, Z3 offers a robust Python interface and comprehensive
+    documentation, making it accessible for a variety of applications.
 - **Nonlinear Programming (NLP):** Many MIP-solvers can actually handle some
   nonlinear constraints, as people noticed that some techniques are actually
   more general than just for linear constraints, e.g., interior points methods
@@ -158,11 +153,11 @@ and I will consider including them.
     OR-Tools also comes with a dedicated solver for network flow problems.
   - ...
 
-As you can see, there are many tools and techniques to solve optimization
-problems. CP-SAT is one of the more general approaches and a great option for
-many problems. If you frequently have to deal with combinatorial optimization
-problems, you should definitely get familiar with CP-SAT. It is good enough for
-most problems, and superior for some, which is amazing for a free and
-open-source tool.
+As evident, there exists a diverse array of tools and techniques for solving
+optimization problems. CP-SAT stands out as a versatile approach, particularly
+well-suited for combinatorial optimization challenges. If you frequently
+encounter these types of problems, becoming proficient with CP-SAT is highly
+recommended. Its effectiveness across a broad spectrum of scenarios - excelling
+in many - is remarkable for a tool that is both free and open-source.
 
 ---
