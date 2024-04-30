@@ -2068,6 +2068,63 @@ dealing with difficult problems to get a better understanding of which parts a
 solver may struggle with (use a linear programming solver, like Gurobi, for
 this).
 
+You can evaluate the performance of the different strategies by looking at the
+`Solutions` and `Objective bounds` blocks in the log. Here an example:
+
+```
+Solutions (7)             Num   Rank
+                'no_lp':    3  [1,7]
+        'quick_restart':    1  [3,3]
+  'quick_restart_no_lp':    3  [2,5]
+
+Objective bounds                     Num
+                  'initial_domain':    1
+             'objective_lb_search':    2
+       'objective_lb_search_no_lp':    4
+  'objective_shaving_search_no_lp':    1
+```
+
+For solutions, the first number is the number of solutions found by the
+strategy, the second number is the range of the ranks of the solutions. The
+value `[1,7]` indicates that the solutions found by the strategy have ranks
+between 1 and 7. In this case, it means that the strategy `no_lp` found the best
+and the worst solution.
+
+For objective bounds, the number indicates how often the strategy contributed to
+the best bound. For this example, it seems that the `no_lp` strategies are the
+most successful. Note that for both cases, it is more interesting, which
+strategies do not appear in the list.
+
+In the search log, you can also see at which time which subsolver contributed
+something. This log also includes the incomplete and first solution subsolvers.
+
+```
+#1       0.01s best:43    next:[6,42]     no_lp (fixed_bools=0/155)
+#Bound   0.01s best:43    next:[7,42]     objective_shaving_search_no_lp (vars=73 csts=120)
+#2       0.01s best:33    next:[7,32]     quick_restart_no_lp (fixed_bools=0/143)
+#3       0.01s best:31    next:[7,30]     quick_restart (fixed_bools=0/123)
+#4       0.01s best:17    next:[7,16]     quick_restart_no_lp (fixed_bools=2/143)
+#5       0.01s best:16    next:[7,15]     quick_restart_no_lp (fixed_bools=22/147)
+#Bound   0.01s best:16    next:[8,15]     objective_lb_search_no_lp
+#6       0.01s best:15    next:[8,14]     no_lp (fixed_bools=41/164)
+#7       0.01s best:14    next:[8,13]     no_lp (fixed_bools=42/164)
+#Bound   0.01s best:14    next:[9,13]     objective_lb_search
+#Bound   0.02s best:14    next:[10,13]    objective_lb_search_no_lp
+#Bound   0.04s best:14    next:[11,13]    objective_lb_search_no_lp
+#Bound   0.06s best:14    next:[12,13]    objective_lb_search
+#Bound   0.25s best:14    next:[13,13]    objective_lb_search_no_lp
+#Model   0.26s var:125/126 constraints:162/162
+#Model   2.24s var:124/126 constraints:160/162
+#Model   2.58s var:123/126 constraints:158/162
+#Model   2.91s var:121/126 constraints:157/162
+#Model   2.95s var:120/126 constraints:155/162
+#Model   2.97s var:109/126 constraints:140/162
+#Model   2.98s var:103/126 constraints:135/162
+#Done    2.98s objective_lb_search_no_lp
+#Done    2.98s quick_restart_no_lp
+#Model   2.98s var:66/126 constraints:91/162
+```
+
 **Incomplete subsolvers** are solvers that do not search the full problem space,
 but work heuristically. Notable strategies are large neighborhood search (LNS)
 and feasibility pumps. The first one tries to find a better solution by changing
