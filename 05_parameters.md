@@ -122,81 +122,27 @@ values mean will be discussed later.
 
 ### Parallelization
 
-_CP-SAT has changed over the versions and has now a significantly more extensive
-portfolio than described here. I will try to update this section soon._
+CP-SAT is a portfolio-solver that uses different techniques to solve the
+problem. There is some information exchange between the different workers, but
+it does not split the solution space into different parts, thus, it does not
+parallelize the branch-and-bound algorithm as MIP-solvers do. This can lead to
+some redundancy in the search, but running different techniques in parallel will
+also increase the chance of running the right technique. Predicting which
+technique will be the best for a specific problem is often hard, thus, this
+parallelization can be quite useful.
 
-CP-SAT has some basic parallelization. It can be considered a portfolio-strategy
-with some minimal data exchange between the threads. The basic idea is to use
-different techniques and may the best fitting one win (as an experienced
-optimizer, it can actually be very enlightening to see which technique
-contributed how much at which phase as visible in the logs).
-
-1. The first thread performs the default search: The optimization problem is
-   converted into a Boolean satisfiability problem and solved with a Variable
-   State Independent Decaying Sum (VSIDS) algorithm. A search heuristic
-   introduces additional literals for branching when needed, by selecting an
-   integer variable, a value and a branching direction. The model also gets
-   linearized to some degree, and the corresponding LP gets (partially) solved
-   with the (dual) Simplex-algorithm to support the satisfiability model.
-2. The second thread uses a fixed search if a decision strategy has been
-   specified. Otherwise, it tries to follow the LP-branching on the linearized
-   model.
-3. The third thread uses Pseudo-Cost branching. This is a technique from mixed
-   integer programming, where we branch on the variable that had the highest
-   influence on the objective in prior branches. Of course, this only provides
-   useful values after we have already performed some branches on the variable.
-4. The fourth thread is like the first thread but without linear relaxation.
-5. The fifth thread does the opposite and uses the default search but with
-   maximal linear relaxation, i.e., also constraints that are more expensive to
-   linearize are linearized. This can be computationally expensive but provides
-   good lower bounds for some models.
-6. The sixth thread performs a core based search from the SAT- community. This
-   approach extracts unsatisfiable cores of the formula and is good for finding
-   lower bounds.
-7. All further threads perform a Large Neighborhood Search (LNS) for obtaining
-   good solutions.
-
-Note that this information may no longer be completely accurate (if it ever
-was). To set the number of used cores/workers, simply do:
+You can control the parallelization of CP-SAT by setting the number of search
+workers.
 
 ```python
 solver.parameters.num_search_workers = 8  # use 8 cores
 ```
 
-If you want to use more LNS-worker, you can specify
-`solver.parameters.min_num_lns_workers` (default 2). You can also specify how
-the different cores should be used by configuring/reordering.
-
-```
-# make sure list is empty
-while solver.parameters.subsolvers:
-   solver.parameters.subsolvers.pop()
-# set new list
-solver.parameters.subsolvers.extend(["default_lp", "fixed", "less_encoding", "no_lp", "max_lp", "pseudo_costs", "reduced_costs", "quick_restart", "quick_restart_no_lp", "lb_tree_search", "probing"])
-```
-
-This can be interesting, e.g., if you are using CP-SAT especially because the
-linear relaxation is not useful (and the BnB-algorithm performing badly). There
-are even more options, but for these you can simply look into the
-[documentation](https://github.com/google/or-tools/blob/49b6301e1e1e231d654d79b6032e79809868a70e/ortools/sat/sat_parameters.proto#L513).
-Be aware that fine-tuning such a solver is not a simple task, and often you do
-more harm than good by tinkering around. However, I noticed that decreasing the
-number of search workers can actually improve the runtime for some problems.
-This indicates that at least selecting the right subsolvers that are best fitted
-for your problem can be worth a shot. For example `max_lp` is probably a waste
-of resources if you know that your model has a terrible linear relaxation. In
-this context I want to recommend having a look on some relaxed solutions when
-dealing with difficult problems to get a better understanding of which parts a
-solver may struggle with (use a linear programming solver, like Gurobi, for
-this).
-
-[CP-SAT also has different parallelization tiers based on the number of workers](https://github.com/google/or-tools/blob/main/ortools/sat/docs/troubleshooting.md#improving-performance-with-multiple-workers).
-
-#### Portfolio for CP-SAT 9.9
-
 Here the solvers used by CP-SAT 9.9 on different parallelization levels for an
 optimization problem and no additional specifications (e.g., decision
-strategies). Note that some parameters can change the parallelization strategy.
+strategies). Note that some parameters/constraints/objectives can change the
+parallelization strategy Also check
+[the official documentation](https://github.com/google/or-tools/blob/main/ortools/sat/docs/troubleshooting.md#improving-performance-with-multiple-workers).
 
 - `solver.parameters.num_search_workers = 1`: Single-threaded search with
   `[default_lp]`.
@@ -347,6 +293,75 @@ Important steps:
 - With 23 workers, all 15 full problem subsolvers are used.
 - For more than 32 workers, primarily the number of first solution subsolvers is
   increased.
+
+**Full problem subsolvers** are solvers that search the full problem space,
+e.g., by a branch-and-bound algorithm. Available full problem subsolvers are:
+
+- `default_lp`: LCG-based search with default linearization of the model.
+  - `max_lp`: Same as `default_lp` but with maximal linearization.
+  - `no_lp`: Same as `default_lp` but without linearization.
+- `lb_tree_search`: This solver is focussed on improving the proven bound, not
+  on finding better solutions. By disproving the feasibility of the cheapest
+  nodes in the search tree, it incrementally improves the bound, but has only
+  little chances to find better solutions.
+- `objective_lb_search`: Also focussed on improving the bound by disproving the
+  feasibility of the current lower bound.
+  - `objective_lb_search_max_lp`: With maximal linearization.
+  - `objective_lb_search_no_lp`: Without linearization.
+  - `objective_shaving_search_max_lp`: Should be quite similar to
+    `objective_lb_search_max_lp`.
+  - `objective_shaving_search_no_lp`: Should be quite similar to
+    `objective_lb_search_no_lp`.
+- `probing`: Fixing variables and seeing what happens.
+  - `probing_max_lp`: Same as probing but with maximal linearization.
+- `pseudo_costs`: Uses pseudo costs for branching, which are computed from
+  historical changes in objective bounds following certain branching decisions.
+- `quick_restart`: Restarts the search more eagerly. Restarts rebuild the search
+  tree from scratch, but keep learned clauses. This allows to recover from bad
+  decisions, and lead to smaller search trees by learning from the mistakes of
+  the past.
+  - `quick_restart_no_lp`: Same as `quick_restart` but without linearization.
+- `reduced_costs`: Uses the reduced costs of the linear relaxation for
+  branching.
+- `core`: A strategy from the SAT-community that extracts unsatisfiable cores of
+  the formula.
+- `fixed`: User-specified search strategy.
+
+You can specify the used full problem subsolvers manually by
+
+```
+# make sure list is empty
+while solver.parameters.subsolvers:
+   solver.parameters.subsolvers.pop()
+# set new list
+solver.parameters.subsolvers.extend(["default_lp", "fixed", "less_encoding", "no_lp", "max_lp", "pseudo_costs", "reduced_costs", "quick_restart", "quick_restart_no_lp", "lb_tree_search", "probing"])
+```
+
+This can be interesting, e.g., if you are using CP-SAT especially because the
+linear relaxation is not useful (and the BnB-algorithm performing badly). There
+are even more options, but for these you can simply look into the
+[documentation](https://github.com/google/or-tools/blob/49b6301e1e1e231d654d79b6032e79809868a70e/ortools/sat/sat_parameters.proto#L513).
+Be aware that fine-tuning such a solver is not a simple task, and often you do
+more harm than good by tinkering around. However, I noticed that decreasing the
+number of search workers can actually improve the runtime for some problems.
+This indicates that at least selecting the right subsolvers that are best fitted
+for your problem can be worth a shot. For example `max_lp` is probably a waste
+of resources if you know that your model has a terrible linear relaxation. In
+this context I want to recommend having a look on some relaxed solutions when
+dealing with difficult problems to get a better understanding of which parts a
+solver may struggle with (use a linear programming solver, like Gurobi, for
+this).
+
+**Incomplete subsolvers** are solvers that do not search the full problem space,
+but work heuristically. Notable strategies are large neighborhood search (LNS)
+and feasibility pumps. The first one tries to find a better solution by changing
+only a few variables, the second one tries to make infeasible/incomplete
+solutions feasible. If you want to use more workers heuristically searching for
+good solutions, you can specify `solver.parameters.min_num_lns_workers`
+
+**First solution subsolvers** are strategies that try to find a first solution
+as fast as possible. They are often used to warm up the solver and to get a
+first impression of the problem.
 
 ### Assumptions
 
