@@ -2079,6 +2079,9 @@ good solutions, you can specify `solver.parameters.min_num_lns_workers`.
 as fast as possible. They are often used to warm up the solver and to get a
 first impression of the problem.
 
+> :warning: This section could need some help as there is the possibility that
+> I am mixing up some of the strategies, or am drawing wrong connections.
+
 ### Assumptions
 
 Quite often you want to find out what happens if you force some variables to a
