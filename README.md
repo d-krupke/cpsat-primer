@@ -1838,6 +1838,8 @@ values mean will be discussed later.
 
 ### Parallelization
 
+*CP-SAT has changed over the versions and has now a significantly more extensive portfolio than described here. I will try to update this section soon.*
+
 CP-SAT has some basic parallelization. It can be considered a portfolio-strategy
 with some minimal data exchange between the threads. The basic idea is to use
 different techniques and may the best fitting one win (as an experienced
