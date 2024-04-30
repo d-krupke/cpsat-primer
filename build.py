@@ -12,7 +12,7 @@ from pathlib import Path
 def convert_for_mdbook(content):
     footer = """
 ---
-*The CP-SAT Primer is authored by [Dr. Dominik Krupke](https://github.com/d-krupke) at [TU Braunschweig, Algorithms Division](https://www.ibr.cs.tu-bs.de/alg/index.html). It is licensed under the [CC-BY-4.0 license](https://creativecommons.org/licenses/by/4.0/).*
+*The CP-SAT Primer is authored by [Dominik Krupke](https://github.com/d-krupke) at [TU Braunschweig, Algorithms Division](https://www.ibr.cs.tu-bs.de/alg/index.html). It is licensed under the [CC-BY-4.0 license](https://creativecommons.org/licenses/by/4.0/).*
 
 *The primer is written for educational purposes and does not claim to be complete or correct. If you find this primer helpful, please star the [GitHub repository](https://github.com/d-krupke/cpsat-primer/). As an academic, I also enjoy hearing about how you use CP-SAT to solve real-world problems.*
     """
