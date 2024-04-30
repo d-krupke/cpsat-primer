@@ -2079,8 +2079,32 @@ good solutions, you can specify `solver.parameters.min_num_lns_workers`.
 as fast as possible. They are often used to warm up the solver and to get a
 first impression of the problem.
 
-> :warning: This section could need some help as there is the possibility that
-> I am mixing up some of the strategies, or am drawing wrong connections.
+> :warning: This section could need some help as there is the possibility that I
+> am mixing up some of the strategies, or am drawing wrong connections.
+
+#### Importing/Exporting Models for Comparison on Different Hardware
+
+If you want to compare the performance of different parallelization levels or
+different hardware, you can use the following code snippets to export a model.
+Instead of having to rebuild the model or share any code, you can then simply
+load the model on a different machine and run the solver.
+
+```python
+from ortools.sat.python import cp_model
+from google.protobuf import text_format
+
+
+def export_model(model: cp_model.CpModel, filename: str):
+    with open(filename, "w") as file:
+        file.write(text_format.MessageToString(model.Proto()))
+
+
+def import_model(filename: str) -> cp_model.CpModel:
+    model = cp_model.CpModel()
+    with open(filename, "r") as file:
+        text_format.Parse(file.read(), model.Proto())
+    return model
+```
 
 ### Assumptions
 
