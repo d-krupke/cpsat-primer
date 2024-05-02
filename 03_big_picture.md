@@ -109,21 +109,16 @@ and I will consider including them.
     a Python library that offers a wide range of optimization algorithms. Do not
     expect it to get anywhere near the performance of a specialized solver, but
     it gives you a bunch of different options to solve a multitude of problems.
-- **Modelling Languages:** As you have seen, there are many solvers and
-  techniques to solve optimization problems. However, many optimization problems
-  in the real world are actually pretty small and easily solvable, but the
-  primary challenge is to model them correctly and quickly. Another issue is
-  that some optimization problems have to be solved repeatedly over a long
-  period, and you do not want to be dependent on a specific solver, as better
-  solvers come out frequently, the licenses may change, or your business experts
-  simply should be able to focus on the pure modelling and should not need to
-  know about the internals of the solver. For these reasons, there are modelling
-  languages that allow you to model your problem in a very high-level way and
-  then let the system decide which solver to use and how to solve it. For
-  example, the solver can use CP-SAT or Gurobi, without you needing to change
-  your model. A disadvantage of these modelling languages is that you give up a
-  lot of control and flexibility, in the favor of generality and ease of use.
-  The most popular modelling languages are:
+- **Modeling Languages:** Modeling languages provide a high-level, user-friendly
+  interface for formulating optimization problems, focusing on the challenges of
+  developing and maintaining models that accurately reflect real-world
+  scenarios. These languages are solver-agnostic, allowing easy switching
+  between different solvers - such as from the free SCIP solver to the
+  commercial Gurobi - without modifying the underlying model. They also
+  facilitate the use of diverse techniques, like transitioning between
+  constraint programming and mixed integer programming. However, the trade-off
+  is a potential loss of control and performance for the sake of generality and
+  simplicity. Some of the most popular modeling languages include:
   - [AMPL](https://ampl.com/): AMPL is possibly the most popular modelling
     language. It has free and commercial solvers. There is not only extensive
     documentation, but even a book on how to use it.
