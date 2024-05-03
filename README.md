@@ -3251,6 +3251,7 @@ following learning path:
      (source)
    - [The complete source code](https://github.com/google/or-tools/tree/stable/ortools/sat)
      (source)
+   - [A recent talk by the developers of CP-SAT](https://www.youtube.com/live/vvUxusrUcpU?si=qVsXMq0xSOsfghTM) (video)
    - [A talk by the developers of CP-SAT](https://youtu.be/lmy1ddn4cyw) (video)
 
 If you already have a background in Mixed Integer Programming, you may directly
