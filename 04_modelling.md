@@ -56,6 +56,21 @@ Resources on mathematical modelling (not CP-SAT specific):
 > the future. I observed cases where certain methods were not available in one
 > or the other style, so you may need to switch between them for some versions.
 
+- [Variables](#04-modelling-variables)
+    - [Domain Variables](#04-modelling-domain-variables)
+- [Objectives](#04-modelling-objectives)
+- [Linear Constraints](#04-modelling-linear-constraints)
+- [Logical Constraints (Propositional Logic)](#04-modelling-logic-constraints)
+- [Conditional Constraints (Channeling, Reification)](#04-modelling-conditional-constraints)
+- [AllDifferent](#04-modelling-alldifferent)
+- [Absolute Values and Max/Min](#04-modelling-absmaxmin)
+- [Multiplication, Division, and Modulo](#04-modelling-multdivmod)
+- [Circuit/Tour-Constraints](#04-modelling-circuit)
+- [Interval/Packing/Scheduling Constraints](#04-modelling-intervals)
+- [Piecewise Linear Constraints](#04-modelling-pwl)
+
+<a name="04-modelling-variables"></a>
+
 ### Variables
 
 There are two important types of variables in CP-SAT: Booleans and Integers
@@ -124,6 +139,8 @@ infeasibility. In such scenarios, having named variables can significantly
 enhance the clarity of the internal representation, making your debugging
 process much more manageable.
 
+<a name="04-modelling-domain-variables"></a>
+
 #### Domain Variables
 
 When dealing with integer variables that you know will only need to take certain
@@ -173,6 +190,8 @@ This example illustrates the process of creating a domain variable `x` that can
 only take on the values specified in `domain`. This method is particularly
 useful when you are working with variables that only have a meaningful range of
 possible values within your problem's context.
+
+<a name="04-modelling-objectives"></a>
 
 ### Objectives
 
@@ -232,6 +251,8 @@ model.Minimize(abs_x)
 
 The available constraints are discussed next.
 
+<a name="04-modelling-linear-constraints"></a>
+
 ### Linear Constraints
 
 These are the classical constraints also used in linear optimization. Remember
@@ -264,6 +285,8 @@ use the explicit `!=` constraints.
 > of floating point arithmetic. In CP-SAT, you have to make sure that values can
 > match exactly.
 
+<a name="04-modelling-logic-constraints"></a>
+
 ### Logical Constraints (Propositional Logic)
 
 You can actually model logical constraints also as linear constraints, but it
@@ -283,6 +306,8 @@ model.AddImplication(b1, b2)  # b1 -> b2
 In this context you could also mention `AddAtLeastOne`, `AddAtMostOne`, and
 `AddExactlyOne`, but these can also be modelled as linear constraints.
 
+<a name="04-modelling-conditional-constraints"></a>
+
 ### Conditional Constraints (Channeling, Reification)
 
 Linear constraints (Add), BoolOr, and BoolAnd support being activated by a
@@ -298,6 +323,8 @@ variable.
 model.Add(x + z == 2 * y).OnlyEnforceIf(b1)
 model.Add(x + z == 10).OnlyEnforceIf([b2, b3.Not()])  # only enforce if b2 AND NOT b3
 ```
+
+<a name="04-modelling-alldifferent"></a>
 
 ### AllDifferent
 
@@ -347,6 +374,8 @@ properly on large sets, or use `!=` constraints and let CP-SAT infer the
 Maybe CP-SAT will allow you to use `AllDifferent` without any performance
 penalty in the future, but for now, you have to be aware of this. See also
 [the optimization parameter documentation](https://github.com/google/or-tools/blob/1d696f9108a0ebfd99feb73b9211e2f5a6b0812b/ortools/sat/sat_parameters.proto#L542).
+
+<a name="04-modelling-absmaxmin"></a>
 
 ### Absolute Values and Max/Min
 
@@ -403,6 +432,8 @@ issues from improperly applied optimizations frequently requires more time than
 applying these techniques initially to a model that uses the less efficient
 constraints.
 
+<a name="04-modelling-multdivmod"></a>
+
 ### Multiplication, Division, and Modulo
 
 A big nono in linear optimization (the most successful optimization area) are
@@ -437,6 +468,8 @@ exact function you had in mind.
 > :warning: The documentation indicates that multiplication of more than two
 > variables is supported, but I got an error when trying it out. I have not
 > investigated this further, as I would expect it to be painfully slow anyway.
+
+<a name="04-modelling-circuit"></a>
 
 ### Circuit/Tour-Constraints
 
@@ -598,6 +631,8 @@ eucl. distance) from the TSPLIB with a time limit of 90 seconds.
 | lin318   |     318 |   92.43 |       41915 |     52025 |      19% |
 | pr439    |     439 |   94.22 |      105610 |    163452 |      35% |
 
+<a name="04-modelling-array"></a>
+
 ### Array operations
 
 You can even go completely bonkers and work with arrays in your model. The
@@ -616,6 +651,8 @@ model.AddElement(index=i, variables=[x, y, z], target=ai)
 
 model.AddInverse([x, y, z], [z, y, x])
 ```
+
+<a name="04-modelling-intervals"></a>
 
 ### Interval Variables and No-Overlap Constraints
 
@@ -939,6 +976,8 @@ solver.parameters.use_pairwise_reasoning_in_no_overlap_2d = True
 
 With the latest version of CP-SAT, I did not notice a significant difference in
 performance when using these parameters.
+
+<a name="04-modelling-pwl"></a>
 
 ### Non-Linear Constraints/Piecewise Linear Functions
 
