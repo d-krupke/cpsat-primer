@@ -615,8 +615,12 @@ Resources on mathematical modelling (not CP-SAT specific):
 > the future. I observed cases where certain methods were not available in one
 > or the other style, so you may need to switch between them for some versions.
 
+---
+
+**Elements:**
+
 - [Variables](#04-modelling-variables)
-    - [Domain Variables](#04-modelling-domain-variables)
+  - [Domain Variables](#04-modelling-domain-variables)
 - [Objectives](#04-modelling-objectives)
 - [Linear Constraints](#04-modelling-linear-constraints)
 - [Logical Constraints (Propositional Logic)](#04-modelling-logic-constraints)
@@ -627,6 +631,8 @@ Resources on mathematical modelling (not CP-SAT specific):
 - [Circuit/Tour-Constraints](#04-modelling-circuit)
 - [Interval/Packing/Scheduling Constraints](#04-modelling-intervals)
 - [Piecewise Linear Constraints](#04-modelling-pwl)
+
+---
 
 <a name="04-modelling-variables"></a>
 
@@ -3290,7 +3296,8 @@ following learning path:
      (source)
    - [The complete source code](https://github.com/google/or-tools/tree/stable/ortools/sat)
      (source)
-   - [A recent talk by the developers of CP-SAT](https://www.youtube.com/live/vvUxusrUcpU?si=qVsXMq0xSOsfghTM) (video)
+   - [A recent talk by the developers of CP-SAT](https://www.youtube.com/live/vvUxusrUcpU?si=qVsXMq0xSOsfghTM)
+     (video)
    - [A talk by the developers of CP-SAT](https://youtu.be/lmy1ddn4cyw) (video)
 
 If you already have a background in Mixed Integer Programming, you may directly

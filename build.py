@@ -28,6 +28,7 @@ def convert_for_mdbook(content):
     content = re.sub(r"```math(.*?)```", r"\\\\[ \1 \\\\]", content, flags=re.DOTALL)
     # replace all `:warning:` with the unicode character for a warning sign.
     content = content.replace(":warning:", "⚠️")
+
     # replace all anchor links `(#01-installation)` by `(./01_installation.md)`.
     # you have to replace the `#` with `./` and `-` with `_`, and attach `.md` at the end.
     def replace_relative(match):
@@ -35,6 +36,7 @@ def convert_for_mdbook(content):
         if Path(md_path).exists():
             return f"(./{md_path})"
         return f"(#{match.group(1)})"
+
     content = re.sub(
         r"\(#(.*?)\)",
         replace_relative,

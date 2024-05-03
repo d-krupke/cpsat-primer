@@ -56,8 +56,12 @@ Resources on mathematical modelling (not CP-SAT specific):
 > the future. I observed cases where certain methods were not available in one
 > or the other style, so you may need to switch between them for some versions.
 
+---
+
+**Elements:**
+
 - [Variables](#04-modelling-variables)
-    - [Domain Variables](#04-modelling-domain-variables)
+  - [Domain Variables](#04-modelling-domain-variables)
 - [Objectives](#04-modelling-objectives)
 - [Linear Constraints](#04-modelling-linear-constraints)
 - [Logical Constraints (Propositional Logic)](#04-modelling-logic-constraints)
@@ -68,6 +72,8 @@ Resources on mathematical modelling (not CP-SAT specific):
 - [Circuit/Tour-Constraints](#04-modelling-circuit)
 - [Interval/Packing/Scheduling Constraints](#04-modelling-intervals)
 - [Piecewise Linear Constraints](#04-modelling-pwl)
+
+---
 
 <a name="04-modelling-variables"></a>
 
