@@ -4,7 +4,7 @@
 
 ## Parameters
 
-![Cover Image Parameters](./images/logo_3.webp)
+![Cover Image Parameters](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/logo_3.webp)
 
 The CP-SAT solver has a lot of parameters to control its behavior. They are
 implemented via

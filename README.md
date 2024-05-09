@@ -4,7 +4,7 @@
 
 # Using and Understanding OR-Tools' CP-SAT: A Primer and Cheat Sheet
 
-![Cover Image](./images/logo_1.webp)
+![Cover Image](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/logo_1.webp)
 
 _By [Dominik Krupke](https://krupke.cc), TU Braunschweig_
 
@@ -572,7 +572,7 @@ in many - is remarkable for a tool that is both free and open-source.
 
 ## Modelling
 
-![Cover Image Modelling](./images/logo_2.webp)
+![Cover Image Modelling](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/logo_2.webp)
 
 CP-SAT provides us with much more modelling options than the classical
 MIP-solver. Instead of just the classical linear constraints (<=, ==, >=), we
@@ -1772,7 +1772,7 @@ If you need more, you can check out the
 
 ## Parameters
 
-![Cover Image Parameters](./images/logo_3.webp)
+![Cover Image Parameters](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/logo_3.webp)
 
 The CP-SAT solver has a lot of parameters to control its behavior. They are
 implemented via

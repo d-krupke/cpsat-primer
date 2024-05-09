@@ -4,7 +4,7 @@
 
 ## Modelling
 
-![Cover Image Modelling](./images/logo_2.webp)
+![Cover Image Modelling](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/logo_2.webp)
 
 CP-SAT provides us with much more modelling options than the classical
 MIP-solver. Instead of just the classical linear constraints (<=, ==, >=), we
