@@ -4,6 +4,8 @@
 
 ## Parameters
 
+![Cover Image Parameters](./images/logo_3.webp)
+
 The CP-SAT solver has a lot of parameters to control its behavior. They are
 implemented via
 [Protocol Buffer](https://developers.google.com/protocol-buffers) and can be

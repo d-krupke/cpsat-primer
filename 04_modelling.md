@@ -4,6 +4,8 @@
 
 ## Modelling
 
+![Cover Image Modelling](./images/logo_2.webp)
+
 CP-SAT provides us with much more modelling options than the classical
 MIP-solver. Instead of just the classical linear constraints (<=, ==, >=), we
 have various advanced constraints such as `AllDifferent` or

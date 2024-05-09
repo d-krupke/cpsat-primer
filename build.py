@@ -33,9 +33,7 @@ def convert_for_mdbook(content):
     # you have to replace the `#` with `./` and `-` with `_`, and attach `.md` at the end.
     def replace_relative(match):
         md_path = match.group(1).replace("-", "_") + ".md"
-        if Path(md_path).exists():
-            return f"(./{md_path})"
-        return f"(#{match.group(1)})"
+        return f"(./{md_path})" if Path(md_path).exists() else f"(#{match.group(1)})"
 
     content = re.sub(
         r"\(#(.*?)\)",
@@ -61,6 +59,14 @@ def convert_for_mdbook(content):
     )
     content = re.sub(
         r"\((.*?\.jpg)\)",
+        lambda match: match.group(0).replace(
+            "https://github.com/d-krupke/cpsat-primer/blob/main/",
+            "https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/",
+        ),
+        content,
+    )
+    content = re.sub(
+        r"\((.*?\.webp)\)",
         lambda match: match.group(0).replace(
             "https://github.com/d-krupke/cpsat-primer/blob/main/",
             "https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/",
