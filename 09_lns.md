@@ -4,6 +4,8 @@
 
 ## Using CP-SAT for Bigger Problems with Large Neighborhood Search
 
+![Cover Image LNS](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/logo_6.webp)
+
 CP-SAT is great at solving small and medium-sized problems. But what if you have
 a really big problem on your hands? One option might be to use a special kind of
 algorithm known as a "meta-heuristic", like a
