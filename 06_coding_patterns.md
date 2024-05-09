@@ -4,6 +4,8 @@
 
 ## Coding Patterns for Optimization Problems
 
+![Cover Image Patterns](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/logo_4.webp)
+
 In this section, we will explore various coding patterns that are essential for
 structuring implementations for optimization problems using CP-SAT. While we
 will not delve into the modeling of specific problems, our focus will be on

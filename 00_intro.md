@@ -120,4 +120,13 @@ awaits you in this primer:
 > even be copied without any acknowledgement for non-commercial, educational
 > purposes.
 
+> **Why are there so many platypuses in the text?** I enjoy incorporating
+> elements in my texts that add a light-hearted touch. The choice of the
+> platypus is intentional: much like CP-SAT integrates diverse elements from
+> various domains, the platypus combines traits from different animals. It is a
+> unique mammal that lays eggs, possesses a beak, and is venomous. The platypus
+> also symbolizes Australia, home to the development of a key technique in
+> CP-SAT - Lazy Clause Generation (LCG) by Peter Stuckey at Monarch. Also, I
+> like platypuses, and hope to see a real one someday.
+
 ---
