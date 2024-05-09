@@ -167,28 +167,14 @@ make it easier to identify and correct errors in the modeling process.
 
 ### More examples
 
-Here are some further examples, if you are not yet satisfied:
+If you are not yet satisfied,
+[this folder contains many Jupyter Notebooks with examples from the developers](https://github.com/google/or-tools/tree/stable/examples/notebook/sat).
 
-- [N-queens](https://developers.google.com/optimization/cp/queens) (this one
-  also gives you a quick introduction to constraint programming, but it may be
-  misleading because CP-SAT is no classical
-  [FD(Finite Domain)-solver](http://www.gameaipro.com/GameAIPro2/GameAIPro2_Chapter26_Rolling_Your_Own_Finite-Domain_Constraint_Solver.pdf).
-  This example probably has been modified from the previous generation, which is
-  also explained at the end.)
-- [Employee Scheduling](https://developers.google.com/optimization/scheduling/employee_scheduling)
-- [Job Shop Problem](https://developers.google.com/optimization/scheduling/job_shop)
-- More examples can be found in
-  [the official repository](https://github.com/google/or-tools/tree/stable/ortools/sat/samples)
-  for multiple languages (yes, CP-SAT does support more than just Python). As
-  the Python-examples are named in
-  [snake-case](https://en.wikipedia.org/wiki/Snake_case), they are at the end of
-  the list.
-
-Ok. Now that you have seen a minimal model, let us look on what options we have
-to model a problem. Note that an experienced optimizer may be able to model most
-problems with just the elements shown above, but showing your intentions may
-help CP-SAT optimize your problem better. Contrary to Mixed Integer Programming,
-you also do not need to fine-tune any
+Ok. Now that you have seen a minimal model, let us next look on what options we
+have to model a problem. Note that an experienced optimizer may be able to model
+most problems with just the elements shown above, but showing your intentions
+may help CP-SAT optimize your problem better. Contrary to Mixed Integer
+Programming, you also do not need to fine-tune any
 [Big-Ms](https://en.wikipedia.org/wiki/Big_M_method) (a reason to model
 higher-level constraints, such as conditional constraints that are only enforced
 if some variable is set to true, in MIPs yourself, because the computer is not

@@ -4,6 +4,8 @@
 
 ## How does it work?
 
+![Cover Image How](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/logo_7.webp)
+
 CP-SAT is a versatile _portfolio_ solver, centered around a _Lazy Clause
 Generation (LCG)_ based Constraint Programming Solver, although it encompasses a
 broader spectrum of technologies.

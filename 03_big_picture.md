@@ -4,6 +4,8 @@
 
 ## Alternatives: CP-SAT's Place in the World of Optimization
 
+![Cover Image World of Optimization](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/logo_8.webp)
+
 When you begin exploring optimization, you will encounter a plethora of tools,
 techniques, and communities. It can be overwhelming, as these groups, while
 sharing many similarities, also differ significantly. They might use the same
