@@ -516,6 +516,13 @@ and I will consider including them.
   constraint programming and mixed integer programming. However, the trade-off
   is a potential loss of control and performance for the sake of generality and
   simplicity. Some of the most popular modeling languages include:
+  - [MiniZinc](https://www.minizinc.org/): Very well-documented and free
+    modelling language that seems to have a high reputation especially in the
+    academic community. The
+    [amazing course on constraint programming by Pierre Flener](https://user.it.uu.se/~pierref/courses/COCP/slides/)
+    also uses MiniZinc. It supports many backends and there are the
+    [MiniZinc Challenges](https://www.minizinc.org/challenge/), where CP-SAT won
+    quite a lot of medals.
   - [AMPL](https://ampl.com/): AMPL is possibly the most popular modelling
     language. It has free and commercial solvers. There is not only extensive
     documentation, but even a book on how to use it.
@@ -2170,14 +2177,24 @@ but work heuristically. Notable strategies are large neighborhood search (LNS)
 and feasibility pumps. The first one tries to find a better solution by changing
 only a few variables, the second one tries to make infeasible/incomplete
 solutions feasible. If you want to use more workers heuristically searching for
-good solutions, you can specify `solver.parameters.min_num_lns_workers`.
-You can also run only the incomplete subsolvers by setting
-`solver.parameters.use_lns_only = True`, but this need to be combined with
-a time limit, as the incomplete subsolvers do not know when to stop.
+good solutions, you can specify `solver.parameters.min_num_lns_workers`. You can
+also run only the incomplete subsolvers by setting
+`solver.parameters.use_lns_only = True`, but this need to be combined with a
+time limit, as the incomplete subsolvers do not know when to stop.
 
 **First solution subsolvers** are strategies that try to find a first solution
 as fast as possible. They are often used to warm up the solver and to get a
 first impression of the problem.
+
+<!-- Source on Parallelization in Gurobi and general opportunities -->
+
+If you are interested in how Gurobi parallelizes its search, you can find a
+great video [here](https://www.youtube.com/watch?v=FJz1UxaMWRQ). Ed Rothberg
+also explains the general opportunities and challenges of parallelizing a
+solver, making it also interesting for understanding the parallelization of
+CP-SAT.
+
+<!-- Give a disclaimer -->
 
 > :warning: This section could need some help as there is the possibility that I
 > am mixing up some of the strategies, or am drawing wrong connections.
@@ -3322,7 +3339,11 @@ What actually happens when you execute `solver.Solve(model)`?
 1. The model is read.
 2. The model is verified.
 3. Preprocessing (multiple iterations):
-   1. Presolve (domain reduction)
+   1. Presolve (domain reduction) - Check
+      [this video for SAT preprocessing](https://www.youtube.com/watch?v=ez9ArInp8w4),
+      [this video for MaxSAT preprocessing](https://www.youtube.com/watch?v=xLg4hbM8ooM),
+      and
+      [this paper for MIP presolving](https://opus4.kobv.de/opus4-zib/frontdoor/index/index/docId/6037).
    2. Expanding higher-level constraints to lower-level constraints. See also
       the analogous
       [FlatZinc and Flattening](https://www.minizinc.org/doc-2.5.5/en/flattening.html).

@@ -112,7 +112,11 @@ What actually happens when you execute `solver.Solve(model)`?
 1. The model is read.
 2. The model is verified.
 3. Preprocessing (multiple iterations):
-   1. Presolve (domain reduction)
+   1. Presolve (domain reduction) - Check
+      [this video for SAT preprocessing](https://www.youtube.com/watch?v=ez9ArInp8w4),
+      [this video for MaxSAT preprocessing](https://www.youtube.com/watch?v=xLg4hbM8ooM),
+      and
+      [this paper for MIP presolving](https://opus4.kobv.de/opus4-zib/frontdoor/index/index/docId/6037).
    2. Expanding higher-level constraints to lower-level constraints. See also
       the analogous
       [FlatZinc and Flattening](https://www.minizinc.org/doc-2.5.5/en/flattening.html).

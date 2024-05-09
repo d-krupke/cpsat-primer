@@ -414,14 +414,24 @@ but work heuristically. Notable strategies are large neighborhood search (LNS)
 and feasibility pumps. The first one tries to find a better solution by changing
 only a few variables, the second one tries to make infeasible/incomplete
 solutions feasible. If you want to use more workers heuristically searching for
-good solutions, you can specify `solver.parameters.min_num_lns_workers`.
-You can also run only the incomplete subsolvers by setting
-`solver.parameters.use_lns_only = True`, but this need to be combined with
-a time limit, as the incomplete subsolvers do not know when to stop.
+good solutions, you can specify `solver.parameters.min_num_lns_workers`. You can
+also run only the incomplete subsolvers by setting
+`solver.parameters.use_lns_only = True`, but this need to be combined with a
+time limit, as the incomplete subsolvers do not know when to stop.
 
 **First solution subsolvers** are strategies that try to find a first solution
 as fast as possible. They are often used to warm up the solver and to get a
 first impression of the problem.
+
+<!-- Source on Parallelization in Gurobi and general opportunities -->
+
+If you are interested in how Gurobi parallelizes its search, you can find a
+great video [here](https://www.youtube.com/watch?v=FJz1UxaMWRQ). Ed Rothberg
+also explains the general opportunities and challenges of parallelizing a
+solver, making it also interesting for understanding the parallelization of
+CP-SAT.
+
+<!-- Give a disclaimer -->
 
 > :warning: This section could need some help as there is the possibility that I
 > am mixing up some of the strategies, or am drawing wrong connections.

@@ -133,3 +133,13 @@ evaluations/tsp/2023-11-18_random_euclidean/PRIVATE_DATA
 evaluations/tsp/2023-11-18_tsplib/PRIVATE_DATA
 .mdbook/book
 .mdbook/https:
+.mdbook/00_intro.md
+.mdbook/01_installation.md
+.mdbook/02_example.md
+.mdbook/03_big_picture.md
+.mdbook/04_modelling.md
+.mdbook/05_parameters.md
+.mdbook/06_coding_patterns.md
+.mdbook/07_under_the_hood.md
+.mdbook/08_benchmarking.md
+.mdbook/09_lns.md

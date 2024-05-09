@@ -119,6 +119,13 @@ and I will consider including them.
   constraint programming and mixed integer programming. However, the trade-off
   is a potential loss of control and performance for the sake of generality and
   simplicity. Some of the most popular modeling languages include:
+  - [MiniZinc](https://www.minizinc.org/): Very well-documented and free
+    modelling language that seems to have a high reputation especially in the
+    academic community. The
+    [amazing course on constraint programming by Pierre Flener](https://user.it.uu.se/~pierref/courses/COCP/slides/)
+    also uses MiniZinc. It supports many backends and there are the
+    [MiniZinc Challenges](https://www.minizinc.org/challenge/), where CP-SAT won
+    quite a lot of medals.
   - [AMPL](https://ampl.com/): AMPL is possibly the most popular modelling
     language. It has free and commercial solvers. There is not only extensive
     documentation, but even a book on how to use it.
