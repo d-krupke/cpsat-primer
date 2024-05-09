@@ -305,6 +305,7 @@ b3 = model.NewBoolVar("b3")
 
 model.AddBoolOr(b1, b2, b3)  # b1 or b2 or b3 (at least one)
 model.AddBoolAnd(b1, b2.Not(), b3.Not())  # b1 and not b2 and not b3 (all)
+model.AddBoolAnd(b1, ~b2, ~b3)  # Alternative notation for `Not()`
 model.AddBoolXOr(b1, b2, b3)  # b1 xor b2 xor b3
 model.AddImplication(b1, b2)  # b1 -> b2
 ```
