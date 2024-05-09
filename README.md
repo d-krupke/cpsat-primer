@@ -1883,6 +1883,32 @@ itself, and the best known bound, you can also find out about internals such as
 `NumBooleans(self)`, `NumConflicts(self)`, `NumBranches(self)`. What those
 values mean will be discussed later.
 
+With version 9.10, CP-SAT also supports bound callbacks. These are called when
+CP-SAT is able to improve the proven bound. As the solution callback is only
+called when a new solution is found, you may want to additionally use the bound
+callback when you want to abort the search as soon as the bound is good enough.
+
+```python
+solver = cp_model.CpSolver()
+
+
+def bound_callback(bound):
+    print(f"New bound: {bound}")
+    if bound > 100:
+        solver.StopSearch()
+
+
+solver.best_bound_callback = bound_callback
+```
+
+You can also try to directly hook into the log output of CP-SAT, which should be
+called for new solutions, new bounds, and other important events. This can be
+done by setting the `log_callback` parameter.
+
+```python
+solver.log_callback = lambda msg: print("LOG:", msg)  # (str)->None
+```
+
 ### Parallelization
 
 CP-SAT is a portfolio-solver that uses different techniques to solve the
