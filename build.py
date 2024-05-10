@@ -67,6 +67,8 @@ def replace_warning_boxes(content):
             collect_warning = True
             warning_msg += line[len("> [!WARNING]") :] + "\n"
         elif collect_warning:
+            if line == ">":
+                continue
             if line.startswith("> "):
                 warning_msg += line[len("> ") :] + "\n"
             else:
@@ -93,8 +95,11 @@ def replace_tip_boxes(content):
             collect_tip = True
             tip_msg += line[len("> [!TIP]") :] + "\n"
         elif collect_tip:
+            if line == ">":
+                continue
             if line.startswith("> "):
                 tip_msg += line[len("> ") :] + "\n"
+
             else:
                 new_content += _create_tip_box(tip_msg)
                 new_content += "\n"
@@ -126,7 +131,6 @@ def convert_for_mdbook(content):
     content = replace_warning_boxes(content)
     content = replace_tip_boxes(content)
     # replace all `:warning:` with the unicode character for a warning sign.
-    content = content.replace("> :warning:", "> [!WARNING]\n>")
     content = content.replace(":warning:", "⚠️")
 
     # replace all anchor links `(#01-installation)` by `(./01_installation.md)`.
