@@ -9,6 +9,103 @@ import re
 from pathlib import Path
 
 
+def _create_pretty_warning_box(msg):
+    return f"""
+<table style="width: 100%; border: 1px solid black;">
+  <tr>
+    <td>
+<div style="display: flex; justify-content: space-between; align-items: center;">
+  <div style="width: 10%;">
+    <img src="https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/warning_platypus.webp" alt="Description of image" style="width: 100%;">
+  </div>
+  <div style="width: 90%;">
+
+{msg}
+
+  </div>
+</div>
+    </td>
+  </tr>
+</table>
+    """
+
+
+def _create_tip_box(msg):
+    return f"""
+<table style="width: 100%; border: 1px solid black;">
+  <tr>
+    <td>
+<div style="display: flex; justify-content: space-between; align-items: center;">
+  <div style="width: 10%;">
+    <img src="https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/info_platypus.webp" alt="Description of image" style="width: 100%;">
+  </div>
+  <div style="width: 90%;">
+
+{msg}
+
+  </div>
+</div>
+    </td>
+  </tr>
+</table>
+    """
+
+
+def replace_warning_boxes(content):
+    """
+    A warning box starts with `> :warning:` and ends with a line that does not start with `>`.
+    """
+    lines = content.split("\n")
+    new_content = ""
+    collect_warning = False
+    warning_msg = ""
+    for line in lines:
+        if line.startswith("> :warning:"):
+            collect_warning = True
+            warning_msg += line[len("> :warning:") :] + "\n"
+        elif line.startswith("> [!WARNING]"):
+            collect_warning = True
+            warning_msg += line[len("> [!WARNING]") :] + "\n"
+        elif collect_warning:
+            if line.startswith("> "):
+                warning_msg += line[len("> ") :] + "\n"
+            else:
+                new_content += _create_pretty_warning_box(warning_msg)
+                new_content += "\n"
+                collect_warning = False
+                warning_msg = ""
+                new_content += line + "\n"
+        else:
+            new_content += line + "\n"
+    return new_content
+
+
+def replace_tip_boxes(content):
+    """
+    A tip box starts with `> [!TIP]` and ends with a line that does not start with `>`.
+    """
+    lines = content.split("\n")
+    new_content = ""
+    collect_tip = False
+    tip_msg = ""
+    for line in lines:
+        if line.startswith("> [!TIP]"):
+            collect_tip = True
+            tip_msg += line[len("> [!TIP]") :] + "\n"
+        elif collect_tip:
+            if line.startswith("> "):
+                tip_msg += line[len("> ") :] + "\n"
+            else:
+                new_content += _create_tip_box(tip_msg)
+                new_content += "\n"
+                collect_tip = False
+                tip_msg = ""
+                new_content += line + "\n"
+        else:
+            new_content += line + "\n"
+    return new_content
+
+
 def convert_for_mdbook(content):
     footer = """
 ---
@@ -26,7 +123,10 @@ def convert_for_mdbook(content):
     # replace all math modes "```math ... ```" with `\\[ ... \\]` using regex.
     # always use the smallest possible match for the `...` part.
     content = re.sub(r"```math(.*?)```", r"\\\\[ \1 \\\\]", content, flags=re.DOTALL)
+    content = replace_warning_boxes(content)
+    content = replace_tip_boxes(content)
     # replace all `:warning:` with the unicode character for a warning sign.
+    content = content.replace("> :warning:", "> [!WARNING]\n>")
     content = content.replace(":warning:", "⚠️")
 
     # replace all anchor links `(#01-installation)` by `(./01_installation.md)`.

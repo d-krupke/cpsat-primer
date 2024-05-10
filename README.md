@@ -581,13 +581,13 @@ efficient. The most efficient constraints are linear or boolean constraints.
 Constraints such as `AddMultiplicationEquality` can be significantly(!!!) more
 expensive.
 
-> **If you are coming from the MIP-world, you should not overgeneralize your
-> experience** to CP-SAT as the underlying techniques are different. It does not
-> rely on the linear relaxation as much as MIP-solvers do. Thus, you can often
-> use modelling techniques that are not efficient in MIP-solvers, but perform
-> reasonably well in CP-SAT. For example, I had a model that required multiple
-> absolute values and performed significantly better in CP-SAT than in Gurobi
-> (despite a manual implementation with relatively tight big-M values).
+> [!TIP] > **If you are coming from the MIP-world, you should not overgeneralize
+> your experience** to CP-SAT as the underlying techniques are different. It
+> does not rely on the linear relaxation as much as MIP-solvers do. Thus, you
+> can often use modelling techniques that are not efficient in MIP-solvers, but
+> perform reasonably well in CP-SAT. For example, I had a model that required
+> multiple absolute values and performed significantly better in CP-SAT than in
+> Gurobi (despite a manual implementation with relatively tight big-M values).
 
 This primer does not have the space to teach about building good models. In the
 following, we will primarily look onto a selection of useful constraints. If you
@@ -662,10 +662,10 @@ b = model.NewBoolVar("b")
 not_b = b.Not()  # will be 1 if b is 0 and 0 if b is 1
 ```
 
-> Having tight bounds on the integer variables can make a huge impact on the
-> performance. It may be useful to run some optimization heuristics beforehand
-> to get some bounds. Reducing it by a few percent can already pay off for some
-> problems.
+> [!TIP] Having tight bounds on the integer variables can make a huge impact on
+> the performance. It may be useful to run some optimization heuristics
+> beforehand to get some bounds. Reducing it by a few percent can already pay
+> off for some problems.
 
 There are no continuous/floating point variables (or even constants) in CP-SAT:
 If you need floating point numbers, you have to approximate them with integers
