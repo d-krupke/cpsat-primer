@@ -16,7 +16,9 @@ other developers. We will concentrate on basic patterns, as more complex
 patterns are better understood within the context of larger problems and are
 beyond the scope of this primer.
 
-> :warning: The naming conventions for patterns in optimization problems are not
+> [!WARNING]
+>
+> The naming conventions for patterns in optimization problems are not
 > standardized. There is no comprehensive guide on coding patterns for
 > optimization issues, and my insights are primarily based on personal
 > experience. Most online examples tend to focus solely on the model, often
@@ -154,6 +156,8 @@ def solve_knapsack(
 We will not use logging in the following examples to save space, but you should
 consider adding it to your code.
 
+> [!TIP]
+>
 > A great hack you can do with the logging framework is that you can easily hook
 > into your code and do analysis beyond the simple logging. You can simply write
 > a handler that, e.g., waits for the tag `"Selected items: %s"` and then can

@@ -513,6 +513,8 @@ target vertex index, and literal/variable. Note that this is using directed
 edges/arcs. By adding a triple (v,v,var), you can allow CP-SAT to skip the
 vertex v.
 
+> [!TIP]
+>
 > If the tour-problem is the fundamental part of your problem, you may be better
 > served with using a Mixed Integer Programming solver. Do not expect to solve
 > tours much larger than 250 vertices with CP-SAT.
@@ -617,6 +619,8 @@ This tells you to use a MIP-solver for problems dominated by the tour
 constraint, and if you have to use CP-SAT, you should definitely use the
 `AddCircuit` constraint.
 
+> [!WARNING]
+>
 > These are all naive implementations, and the benchmark is not very rigorous.
 > These values are only meant to give you a rough idea of the performance.
 > Additionally, this benchmark was regarding proving _optimality_. The

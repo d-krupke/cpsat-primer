@@ -1078,6 +1078,8 @@ target vertex index, and literal/variable. Note that this is using directed
 edges/arcs. By adding a triple (v,v,var), you can allow CP-SAT to skip the
 vertex v.
 
+> [!TIP]
+>
 > If the tour-problem is the fundamental part of your problem, you may be better
 > served with using a Mixed Integer Programming solver. Do not expect to solve
 > tours much larger than 250 vertices with CP-SAT.
@@ -1182,6 +1184,8 @@ This tells you to use a MIP-solver for problems dominated by the tour
 constraint, and if you have to use CP-SAT, you should definitely use the
 `AddCircuit` constraint.
 
+> [!WARNING]
+>
 > These are all naive implementations, and the benchmark is not very rigorous.
 > These values are only meant to give you a rough idea of the performance.
 > Additionally, this benchmark was regarding proving _optimality_. The
@@ -2619,7 +2623,9 @@ other developers. We will concentrate on basic patterns, as more complex
 patterns are better understood within the context of larger problems and are
 beyond the scope of this primer.
 
-> :warning: The naming conventions for patterns in optimization problems are not
+> [!WARNING]
+>
+> The naming conventions for patterns in optimization problems are not
 > standardized. There is no comprehensive guide on coding patterns for
 > optimization issues, and my insights are primarily based on personal
 > experience. Most online examples tend to focus solely on the model, often
@@ -2757,6 +2763,8 @@ def solve_knapsack(
 We will not use logging in the following examples to save space, but you should
 consider adding it to your code.
 
+> [!TIP]
+>
 > A great hack you can do with the logging framework is that you can easily hook
 > into your code and do analysis beyond the simple logging. You can simply write
 > a handler that, e.g., waits for the tag `"Selected items: %s"` and then can
