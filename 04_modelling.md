@@ -189,6 +189,8 @@ from ortools.sat.python import cp_model
 
 # Define a domain with selected values
 domain = cp_model.Domain.FromValues([2, 5, 8, 10, 20, 50, 90])
+# cam also be done via intervals
+domain_2 = cp_model.Domain.FromIntervals([(8, 12), (14, 20)])
 
 # Create a domain variable within this defined domain
 x = model.NewIntVarFromDomain(domain, "x")
@@ -331,6 +333,12 @@ variable.
 ```python
 model.Add(x + z == 2 * y).OnlyEnforceIf(b1)
 model.Add(x + z == 10).OnlyEnforceIf([b2, b3.Not()])  # only enforce if b2 AND NOT b3
+
+# Restrict domain of linear expression on condition
+x_b = model.NewBoolVar("x_b")
+x_i = model.NEwIntVar(0, 100, "x_i")
+domain = model.Domain.FromValues([0, 10, 20, 30, 40, 50])
+model.AddLinearExpressionInDomain(x_i, domain).OnlyEnforceIf(x_b)
 ```
 
 <a name="04-modelling-alldifferent"></a>
