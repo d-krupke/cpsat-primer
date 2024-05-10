@@ -617,24 +617,11 @@ Resources on mathematical modelling (not CP-SAT specific):
 - [Model Building in Mathematical Programming by H. Paul Williams](https://www.wiley.com/en-us/Model+Building+in+Mathematical+Programming%2C+5th+Edition-p-9781118443330):
   A complete book on mathematical modelling.
 
-<table style="width: 100%; border: 1px solid black;">
-  <tr>
-    <td>
-<div style="display: flex; justify-content: space-between; align-items: center;">
-  <div style="width: 10%;">
-    <img src="https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/warning_platypus.webp" alt="Description of image" style="width: 100%;">
-  </div>
-  <div style="width: 90%;">
-    <p>CP-SAT 9.9 recently changed its API to be more consistent with the
- commonly used Python style. Instead of `NewIntVar`, you can now also use
-`new_int_var`. This primer still uses the old style, but will be updated in
-the future. I observed cases where certain methods were not available in one
-or the other style, so you may need to switch between them for some versions.</p>
-  </div>
-</div>
-    </td>
-  </tr>
-</table>
+> :warning: CP-SAT 9.9 recently changed its API to be more consistent with the
+> commonly used Python style. Instead of `NewIntVar`, you can now also use
+> `new_int_var`. This primer still uses the old style, but will be updated in
+> the future. I observed cases where certain methods were not available in one
+> or the other style, so you may need to switch between them for some versions.
 
 ---
 
@@ -675,25 +662,10 @@ b = model.NewBoolVar("b")
 not_b = b.Not()  # will be 1 if b is 0 and 0 if b is 1
 ```
 
-<table style="width: 100%; border: 1px solid black;">
-  <tr>
-    <td>
-<div style="display: flex; justify-content: space-between; align-items: center;">
-  <div style="width: 10%;">
-    <img src="https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/info_platypus.webp" alt="Description of image" style="width: 100%;">
-  </div>
-  <div style="width: 90%;">
-    <p>
-Having tight bounds on the integer variables can make a huge impact on the
-performance. It may be useful to run some optimization heuristics beforehand
-to get some bounds. Reducing it by a few percent can already pay off for some
-problems.
-</p>
-  </div>
-</div>
-    </td>
-  </tr>
-</table>
+> Having tight bounds on the integer variables can make a huge impact on the
+> performance. It may be useful to run some optimization heuristics beforehand
+> to get some bounds. Reducing it by a few percent can already pay off for some
+> problems.
 
 There are no continuous/floating point variables (or even constants) in CP-SAT:
 If you need floating point numbers, you have to approximate them with integers
