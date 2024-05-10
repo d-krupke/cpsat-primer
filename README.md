@@ -128,8 +128,8 @@ awaits you in this primer:
 > various domains, the platypus combines traits from different animals. It is a
 > unique mammal that lays eggs, possesses a beak, and is venomous. The platypus
 > also symbolizes Australia, home to the development of a key technique in
-> CP-SAT - Lazy Clause Generation (LCG) by Peter Stuckey at Monarch. Also, I
-> like platypuses, and hope to see a real one someday.
+> CP-SAT - Lazy Clause Generation (LCG). Also, I like platypuses, and hope to
+> see a real one someday.
 
 ---
 
