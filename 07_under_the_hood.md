@@ -93,6 +93,8 @@ following learning path:
      (source)
    - [A recent talk by the developers of CP-SAT](https://www.youtube.com/live/vvUxusrUcpU?si=qVsXMq0xSOsfghTM)
      (video)
+   - [Another recent talk by the developers of CP-SAT](http://egon.cheme.cmu.edu/ewo/video/CP_SAT_LP_google.mp4)
+     (video)
    - [A talk by the developers of CP-SAT](https://youtu.be/lmy1ddn4cyw) (video)
 
 If you already have a background in Mixed Integer Programming, you may directly
