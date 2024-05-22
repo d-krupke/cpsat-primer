@@ -29,6 +29,7 @@ jobs:
           python3 build.py
           cd .mdbook
           mdbook build
+          cp googlef189f87bd09b0f17.html book/
       - name: Setup Pages
         uses: actions/configure-pages@v4
       - name: Upload artifact
