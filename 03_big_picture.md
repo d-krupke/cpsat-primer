@@ -10,11 +10,10 @@ When you begin exploring optimization, you will encounter a plethora of tools,
 techniques, and communities. It can be overwhelming, as these groups, while
 sharing many similarities, also differ significantly. They might use the same
 terminology for different concepts or different terms for the same concepts,
-adding to the confusion. Surprisingly, only a handful of experts can effectively
-navigate these varied communities and techniques. Often, even specialists,
-including professors, concentrate on a singular technique or community,
-remaining unaware of potentially more efficient methods developed in other
-circles.
+adding to the confusion. Not too many experts can effectively navigate these
+varied communities and techniques. Often, even specialists, including
+professors, concentrate on a singular technique or community, remaining unaware
+of potentially more efficient methods developed in other circles.
 
 If you are interested in understanding the connections between different
 optimization concepts, consider watching the talk

@@ -137,6 +137,11 @@ def convert_for_mdbook(content):
     # you have to replace the `#` with `./` and `-` with `_`, and attach `.md` at the end.
     def replace_relative(match):
         md_path = match.group(1).replace("-", "_") + ".md"
+        all_md_files = [f for f in os.listdir() if f.endswith(".md")]
+        for file in all_md_files:
+            if file.endswith(md_path):
+                md_path = file
+                break
         return f"(./{md_path})" if Path(md_path).exists() else f"(#{match.group(1)})"
 
     content = re.sub(
@@ -184,8 +189,19 @@ def convert_for_mdbook(content):
 
 if __name__ == "__main__":
     # get all markdown files that start with a number
-    markdown_files = [f for f in os.listdir() if f.endswith(".md") and f[0].isdigit()]
-    markdown_files.sort()
+    # [f for f in os.listdir() if f.endswith(".md") and f[0].isdigit()]
+    markdown_files = [
+        "00_intro.md",
+        "01_installation.md",
+        "02_example.md",
+        "04_modelling.md",
+        "05_parameters.md",
+        "06_coding_patterns.md",
+        "07_under_the_hood.md",
+        "03_big_picture.md",
+        "08_benchmarking.md",
+        "09_lns.md",
+    ]
 
     # concat them and write them to `README.md`
     with open("README.md", "w") as f:
