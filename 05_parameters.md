@@ -163,7 +163,7 @@ You can control the parallelization of CP-SAT by setting the number of search
 workers.
 
 ```python
-solver.parameters.num_search_workers = 8  # use 8 cores
+solver.parameters.num_workers = 8  # use 8 cores
 ```
 
 Here the solvers used by CP-SAT 9.9 on different parallelization levels for an
@@ -172,11 +172,11 @@ strategies). Note that some parameters/constraints/objectives can change the
 parallelization strategy Also check
 [the official documentation](https://github.com/google/or-tools/blob/main/ortools/sat/docs/troubleshooting.md#improving-performance-with-multiple-workers).
 
-- `solver.parameters.num_search_workers = 1`: Single-threaded search with
+- `solver.parameters.num_workers = 1`: Single-threaded search with
   `[default_lp]`.
   - 1 full problem subsolver: [default_lp]
-- `solver.parameters.num_search_workers = 2`: Additional use of heuristics to
-  support the `default_lp` search.
+- `solver.parameters.num_workers = 2`: Additional use of heuristics to support
+  the `default_lp` search.
   - 1 full problem subsolver: [default_lp]
   - 13 incomplete subsolvers: [feasibility_pump, graph_arc_lns, graph_cst_lns,
     graph_dec_lns, graph_var_lns, packing_precedences_lns,
@@ -184,8 +184,8 @@ parallelization strategy Also check
     rnd_var_lns, scheduling_precedences_lns, violation_ls]
   - 3 helper subsolvers: [neighborhood_helper, synchronization_agent,
     update_gap_integral]
-- `solver.parameters.num_search_workers = 3`: Using a second full problem solver
-  that does not try to linearize the model.
+- `solver.parameters.num_workers = 3`: Using a second full problem solver that
+  does not try to linearize the model.
   - 2 full problem subsolvers: [default_lp, no_lp]
   - 13 incomplete subsolvers: [feasibility_pump, graph_arc_lns, graph_cst_lns,
     graph_dec_lns, graph_var_lns, packing_precedences_lns,
@@ -193,8 +193,8 @@ parallelization strategy Also check
     rnd_var_lns, scheduling_precedences_lns, violation_ls]
   - 3 helper subsolvers: [neighborhood_helper, synchronization_agent,
     update_gap_integral]
-- `solver.parameters.num_search_workers = 4`: Additionally using a third full
-  problem solver that tries to linearize the model as much as possible.
+- `solver.parameters.num_workers = 4`: Additionally using a third full problem
+  solver that tries to linearize the model as much as possible.
   - 3 full problem subsolvers: [default_lp, max_lp, no_lp]
   - 13 incomplete subsolvers: [feasibility_pump, graph_arc_lns, graph_cst_lns,
     graph_dec_lns, graph_var_lns, packing_precedences_lns,
@@ -202,8 +202,8 @@ parallelization strategy Also check
     rnd_var_lns, scheduling_precedences_lns, violation_ls]
   - 3 helper subsolvers: [neighborhood_helper, synchronization_agent,
     update_gap_integral]
-- `solver.parameters.num_search_workers = 5`: Additionally using a first
-  solution subsolver.
+- `solver.parameters.num_workers = 5`: Additionally using a first solution
+  subsolver.
   - 3 full problem subsolvers: [default_lp, max_lp, no_lp]
   - 1 first solution subsolver: [fj_short_default]
   - 13 incomplete subsolvers: [feasibility_pump, graph_arc_lns, graph_cst_lns,
@@ -212,7 +212,7 @@ parallelization strategy Also check
     rnd_var_lns, scheduling_precedences_lns, violation_ls]
   - 3 helper subsolvers: [neighborhood_helper, synchronization_agent,
     update_gap_integral]
-- `solver.parameters.num_search_workers = 6`: Using a fourth full problem solver
+- `solver.parameters.num_workers = 6`: Using a fourth full problem solver
   `quick_restart` that does more "probing".
   - 4 full problem subsolvers: [default_lp, max_lp, no_lp, quick_restart]
   - 1 first solution subsolver: [fj_short_default]
@@ -222,7 +222,7 @@ parallelization strategy Also check
     rnd_var_lns, scheduling_precedences_lns, violation_ls]
   - 3 helper subsolvers: [neighborhood_helper, synchronization_agent,
     update_gap_integral]
-- `solver.parameters.num_search_workers = 7`:
+- `solver.parameters.num_workers = 7`:
   - 5 full problem subsolvers: [default_lp, max_lp, no_lp, quick_restart,
     reduced_costs]
   - 1 first solution subsolver: [fj_short_default]
@@ -232,7 +232,7 @@ parallelization strategy Also check
     rnd_var_lns, scheduling_precedences_lns, violation_ls]
   - 3 helper subsolvers: [neighborhood_helper, synchronization_agent,
     update_gap_integral]
-- `solver.parameters.num_search_workers = 8`:
+- `solver.parameters.num_workers = 8`:
   - 6 full problem subsolvers: [default_lp, max_lp, no_lp, quick_restart,
     quick_restart_no_lp, reduced_costs]
   - 1 first solution subsolver: [fj_short_default]
@@ -242,7 +242,7 @@ parallelization strategy Also check
     rnd_var_lns, scheduling_precedences_lns, violation_ls]
   - 3 helper subsolvers: [neighborhood_helper, synchronization_agent,
     update_gap_integral]
-- `solver.parameters.num_search_workers = 12`:
+- `solver.parameters.num_workers = 12`:
   - 8 full problem subsolvers: [default_lp, lb_tree_search, max_lp, no_lp,
     pseudo_costs, quick_restart, quick_restart_no_lp, reduced_costs]
   - 3 first solution subsolvers: [fj_long_default, fj_short_default, fs_random]
@@ -252,7 +252,7 @@ parallelization strategy Also check
     rnd_var_lns, scheduling_precedences_lns, violation_ls]
   - 3 helper subsolvers: [neighborhood_helper, synchronization_agent,
     update_gap_integral]
-- `solver.parameters.num_search_workers = 16`:
+- `solver.parameters.num_workers = 16`:
   - 11 full problem subsolvers: [default_lp, lb_tree_search, max_lp, no_lp,
     objective_lb_search, objective_shaving_search_no_lp, probing, pseudo_costs,
     quick_restart, quick_restart_no_lp, reduced_costs]
@@ -264,7 +264,7 @@ parallelization strategy Also check
     rnd_var_lns, scheduling_precedences_lns, violation_ls]
   - 3 helper subsolvers: [neighborhood_helper, synchronization_agent,
     update_gap_integral]
-- `solver.parameters.num_search_workers = 20`:
+- `solver.parameters.num_workers = 20`:
   - 13 full problem subsolvers: [default_lp, lb_tree_search, max_lp, no_lp,
     objective_lb_search, objective_shaving_search_max_lp,
     objective_shaving_search_no_lp, probing, probing_max_lp, pseudo_costs,
@@ -277,7 +277,7 @@ parallelization strategy Also check
     rnd_var_lns, scheduling_precedences_lns, violation_ls]
   - 3 helper subsolvers: [neighborhood_helper, synchronization_agent,
     update_gap_integral]
-- `solver.parameters.num_search_workers = 32`:
+- `solver.parameters.num_workers = 32`:
   - 15 full problem subsolvers: [default_lp, lb_tree_search, max_lp, no_lp,
     objective_lb_search, objective_lb_search_max_lp, objective_lb_search_no_lp,
     objective_shaving_search_max_lp, objective_shaving_search_no_lp, probing,
@@ -293,7 +293,7 @@ parallelization strategy Also check
     rnd_var_lns, scheduling_precedences_lns, violation_ls(3)]
   - 3 helper subsolvers: [neighborhood_helper, synchronization_agent,
     update_gap_integral]
-- `solver.parameters.num_search_workers = 64`:
+- `solver.parameters.num_workers = 64`:
   - 15 full problem subsolvers: [default_lp, lb_tree_search, max_lp, no_lp,
     objective_lb_search, objective_lb_search_max_lp, objective_lb_search_no_lp,
     objective_shaving_search_max_lp, objective_shaving_search_no_lp, probing,
@@ -441,10 +441,8 @@ something. This log also includes the incomplete and first solution subsolvers.
 but work heuristically. Notable strategies are large neighborhood search (LNS)
 and feasibility pumps. The first one tries to find a better solution by changing
 only a few variables, the second one tries to make infeasible/incomplete
-solutions feasible. If you want to use more workers heuristically searching for
-good solutions, you can specify `solver.parameters.min_num_lns_workers`. You can
-also run only the incomplete subsolvers by setting
-`solver.parameters.use_lns_only = True`, but this need to be combined with a
+solutions feasible. You can also run only the incomplete subsolvers by setting
+`solver.parameters.use_lns_only = True`, but this needs to be combined with a
 time limit, as the incomplete subsolvers do not know when to stop.
 
 **First solution subsolvers** are strategies that try to find a first solution
