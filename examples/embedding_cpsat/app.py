@@ -15,11 +15,11 @@ can overload the system. For a production system, you would have to extract
 the solver to a separate service which can queue and manage the requests.
 """
 import streamlit as st
-import numpy as np
 import matplotlib.pyplot as plt
 import time
 from tsp_solver import generate_random_geometric_graph
 from solver_process import TspSolverProcess
+
 
 def plot_instance(points):
     """
@@ -37,6 +37,7 @@ def plot_instance(points):
     ax.set_xlabel("X Coordinate")
     ax.set_ylabel("Y Coordinate")
     return fig
+
 
 def plot_solution(points, tour):
     """
@@ -59,6 +60,7 @@ def plot_solution(points, tour):
     ax.set_title("TSP Solution")
     return fig
 
+
 def calculate_progress(lower_bound, upper_bound):
     """
     Calculate progress as a percentage based on lower and upper bounds.
@@ -70,9 +72,10 @@ def calculate_progress(lower_bound, upper_bound):
     Returns:
         float: Progress percentage.
     """
-    if lower_bound == float('-inf') or upper_bound == float('inf'):
+    if lower_bound == float("-inf") or upper_bound == float("inf"):
         return 0.0
     return max(0.0, min(1.0, (lower_bound / upper_bound) if upper_bound != 0 else 0.0))
+
 
 # Title of the app
 st.title("TSP Solving with CP-SAT")
@@ -123,7 +126,9 @@ if generate_button:
 
         lower_bound = solver_process.get_current_bound()
         upper_bound = solver_process.get_current_objective_value()
-        st.session_state.lb_ub = f"**Lower bound: {lower_bound}, Upper bound: {upper_bound}**"
+        st.session_state.lb_ub = (
+            f"**Lower bound: {lower_bound}, Upper bound: {upper_bound}**"
+        )
         lb_ub_placeholder.markdown(st.session_state.lb_ub)
 
         logs = solver_process.get_log()

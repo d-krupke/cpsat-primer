@@ -20,6 +20,7 @@ class WeightedDirectedGraph(BaseModel):
         num_vertices (int): The number of vertices in the graph.
         edges (Dict[Tuple[int, int], int]): A dictionary of edges with weights.
     """
+
     num_vertices: int
     edges: Dict[Tuple[int, int], int]
 
@@ -31,6 +32,7 @@ class Tour(BaseModel):
     Attributes:
         sequence (List[int]): The sequence of vertices in the tour.
     """
+
     sequence: List[int]
 
 
@@ -44,7 +46,12 @@ def generate_random_graph(num_vertices: int) -> WeightedDirectedGraph:
     Returns:
         WeightedDirectedGraph: The generated random graph.
     """
-    edges = {(u, v): random.randint(0, 100) for u in range(num_vertices) for v in range(num_vertices) if u != v}
+    edges = {
+        (u, v): random.randint(0, 100)
+        for u in range(num_vertices)
+        for v in range(num_vertices)
+        if u != v
+    }
     return WeightedDirectedGraph(num_vertices=num_vertices, edges=edges)
 
 
@@ -62,7 +69,12 @@ def generate_random_geometric_graph(
         Tuple[WeightedDirectedGraph, List[Tuple[int, int]]]: The generated graph and the list of vertices.
     """
     random.seed(seed)
-    vertices = list(set((random.randint(0, 1000), random.randint(0, 1000)) for _ in range(num_vertices)))
+    vertices = list(
+        set(
+            (random.randint(0, 1000), random.randint(0, 1000))
+            for _ in range(num_vertices)
+        )
+    )
     num_vertices = len(vertices)
     edges = {}
     for u in range(num_vertices):
@@ -75,7 +87,9 @@ def generate_random_geometric_graph(
     return WeightedDirectedGraph(num_vertices=num_vertices, edges=edges), vertices
 
 
-def resolve_tour_sequence(tour_edges: List[Tuple[int, int]], start_vertex: int) -> List[int]:
+def resolve_tour_sequence(
+    tour_edges: List[Tuple[int, int]], start_vertex: int
+) -> List[int]:
     """
     Resolve the sequence of vertices in the tour from a list of tour edges.
 
@@ -109,7 +123,9 @@ class EdgeVariables:
             edges (Dict[Tuple[int, int], int]): The edges with weights.
             model (cp_model.CpModel): The CP-SAT model.
         """
-        self.vars = {(u, v): model.NewBoolVar(f"edge_{u}_{v}") for (u, v) in edges.keys()}
+        self.vars = {
+            (u, v): model.NewBoolVar(f"edge_{u}_{v}") for (u, v) in edges.keys()
+        }
 
     def __getitem__(self, key: Tuple[int, int]):
         return self.vars[key]
