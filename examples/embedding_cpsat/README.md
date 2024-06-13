@@ -1,0 +1,5 @@
+# Embedding CP-SAT in an Application
+
+If you want to embed CP-SAT in your application for potentially long-running optimization tasks, you can utilize callbacks to provide users with progress updates and potentially interrupt the process early. However, one issue is that the application can only react during the callback. Since the callback is not always called frequently, this may lead to problematic delays, making it unsuitable for graphical user interfaces (GUIs) or application programming interfaces (APIs).
+
+An alternative is to let the solver run in a separate process and communicate with it using a pipe. This approach allows the solver to be interrupted at any time, enabling the application to react immediately. Python's multiprocessing module provides reasonably simple tools to achieve this. The following example showcases such an approach.
