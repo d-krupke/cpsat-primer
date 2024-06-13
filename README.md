@@ -369,7 +369,7 @@ handle most problems using just the elements previously discussed, clearly
 expressing your intentions can help CP-SAT optimize your problem more
 effectively.
 
-> ![TIP]
+> [!TIP]
 >
 > If you are transitioning from Mixed Integer Programming (MIP), you may be
 > accustomed to manually implementing higher-level constraints to optimize your
