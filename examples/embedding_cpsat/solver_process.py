@@ -170,5 +170,7 @@ class TspSolverProcess:
         """Cleans up the process when the object is deleted."""
         if self.process.is_alive():
             self.interrupt()
-            self.process.join()
+            self.process.join(timeout=1)
+            if self.process.is_alive():
+                self.process.terminate()
             self.process.close()

@@ -691,4 +691,8 @@ actually have to build a task queues where the solver is run by workers. Using
 multiprocessing can still be useful for the worker to remain responsive for stop
 signals while the solver is running.
 
+| ![Interactive Solver with Streamlit using multiprocessing](https://github.com/d-krupke/cpsat-primer/blob/main/images/streamlit_solver.gif) |
+| :----------------------------------------------------------------------------------------------------------------------------------------: |
+|                                _Using multiprocessing, one can build a responsive interface for a solver._                                 |
+
 ---
