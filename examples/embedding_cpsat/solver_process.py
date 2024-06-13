@@ -89,16 +89,17 @@ def _entry_point_solver_process(
         ).model_dump(),
     )
 
-    # Solve the problem with the specified maximum time and callback
-    status, solution = solver.solve(max_time, callback=callback)
+    try:
+        # Solve the problem with the specified maximum time and callback
+        status, solution = solver.solve(max_time, callback=callback)
 
-    # If a solution is found, send the final solution through the solution pipe
-    if solution is not None:
-        solution_conn.send(solution.model_dump())
-
-    # Close the communication pipes
-    log_conn.close()
-    solution_conn.close()
+        # If a solution is found, send the final solution through the solution pipe
+        if solution is not None:
+            solution_conn.send(solution.model_dump())
+    finally:
+        # Close the communication pipes
+        log_conn.close()
+        solution_conn.close()
 
 
 class TspSolverProcess:
