@@ -80,7 +80,7 @@ class TspSolverProcess:
         solver = TspSolver(graph)
         solver.solver.parameters.log_search_progress = True
         solver.solver.parameters.log_to_stdout = False
-        solver.solver.log_callback = lambda msg: log_conn.send([msg])
+        solver.solver.log_callback = lambda msg: log_conn.send([str(msg)])
 
         def update_lower_bound(x):
             lower_bound.value = x
@@ -138,5 +138,12 @@ class TspSolverProcess:
     def get_log(self):
         logs = []
         while self._log_pipe[0].poll():
-            logs.extend(self._log_pipe[0].recv())
+            new_log_entries = self._log_pipe[0].recv()
+            logs += new_log_entries
         return logs
+    
+    def __del__(self):
+        if self.process.is_alive():
+            self.interrupt()
+            self.process.join()
+            self.process.close()

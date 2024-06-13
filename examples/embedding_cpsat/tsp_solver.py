@@ -35,6 +35,7 @@ def generate_random_geometric_graph(
     vertices = list(
         set((random.randint(0, 1000), random.randint(0, 1000)) for _ in range(n))
     )
+    n = len(vertices)
     for u in range(n):
         for v in range(n):
             if u != v:
