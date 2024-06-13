@@ -369,16 +369,6 @@ handle most problems using just the elements previously discussed, clearly
 expressing your intentions can help CP-SAT optimize your problem more
 effectively.
 
-> [!TIP]
->
-> If you are transitioning from Mixed Integer Programming (MIP), you may be
-> accustomed to manually implementing higher-level constraints to optimize your
-> [Big-Ms](https://en.wikipedia.org/wiki/Big_M_method) for better performance,
-> instead of relying on the modeling interface. With CP-SAT, these manual
-> adjustments are generally unnecessary. CP-SAT relies less on linear relaxation
-> compared to MIP solvers and can usually efficiently manage logical constraints
-> thanks to its underlying SAT-solver. Dare to use the higher-level constraints!
-
 ---
 
 
@@ -404,13 +394,14 @@ expensive.
 
 > [!TIP]
 >
-> **If you are coming from the MIP-world, you should not overgeneralize your
-> experience** to CP-SAT as the underlying techniques are different. It does not
-> rely on the linear relaxation as much as MIP-solvers do. Thus, you can often
-> use modelling techniques that are not efficient in MIP-solvers, but perform
-> reasonably well in CP-SAT. For example, I had a model that required multiple
-> absolute values and performed significantly better in CP-SAT than in Gurobi
-> (despite a manual implementation with relatively tight big-M values).
+> If you are transitioning from Mixed Integer Programming (MIP), you may be
+> accustomed to manually implementing higher-level constraints to optimize your
+> Big-Ms for better performance, rather than relying on the modeling interface.
+> With CP-SAT, these manual adjustments are generally unnecessary. CP-SAT relies
+> less on linear relaxation compared to MIP solvers and can efficiently manage
+> logical constraints due to its underlying SAT-solver. Dare to use the
+> higher-level constraints - they may be more efficient than you thought as
+> CP-SAT works differently than typical MIP-solvers!
 
 This primer does not have the space to teach about building good models. In the
 following, we will primarily look onto a selection of useful constraints. If you

@@ -162,14 +162,4 @@ handle most problems using just the elements previously discussed, clearly
 expressing your intentions can help CP-SAT optimize your problem more
 effectively.
 
-> [!TIP]
->
-> If you are transitioning from Mixed Integer Programming (MIP), you may be
-> accustomed to manually implementing higher-level constraints to optimize your
-> [Big-Ms](https://en.wikipedia.org/wiki/Big_M_method) for better performance,
-> instead of relying on the modeling interface. With CP-SAT, these manual
-> adjustments are generally unnecessary. CP-SAT relies less on linear relaxation
-> compared to MIP solvers and can usually efficiently manage logical constraints
-> thanks to its underlying SAT-solver. Dare to use the higher-level constraints!
-
 ---
