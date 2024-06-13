@@ -57,7 +57,7 @@ Additionally, the article
 [Mathematical Programming](https://www.gurobi.com/resources/math-programming-modeling-basics/)
 by CP-SAT's competitor Gurobi offers an insightful introduction to mathematical
 programming and modeling. In this context, the term "Programming" does not refer
-to coding; rather, it originates from an earlier usage of the word "program,"
+to coding; rather, it originates from an earlier usage of the word "program",
 which denoted a plan of action or a schedule. If this distinction is new to you,
 it is a strong indication that you would benefit from reading this article.
 

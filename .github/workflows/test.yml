@@ -1,0 +1,25 @@
+name: Run Pytest to autoamtically check for changes in CP-SAT's behavior
+
+on:
+  schedule:
+    - cron: "0 0 * * FRI"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.12
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install ortools pytest
+
+      - name: Run tests
+        run: pytest tests/

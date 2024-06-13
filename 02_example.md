@@ -45,63 +45,39 @@ from ortools.sat.python import cp_model
 model = cp_model.CpModel()
 
 # Variables
-x = model.NewIntVar(0, 100, "x")  # you always need to specify an upper bound.
-y = model.NewIntVar(0, 100, "y")
-# there are also no continuous variables: You have to decide for a resolution and then work on integers.
+x = model.new_int_var(0, 100, "x")
+y = model.new_int_var(0, 100, "y")
 
 # Constraints
-model.Add(x + y <= 30)
+model.add(x + y <= 30)
 
 # Objective
-model.Maximize(30 * x + 50 * y)
+model.maximize(30 * x + 50 * y)
 
 # Solve
-solver = cp_model.CpSolver()  # Contrary to Gurobi, model and solver are separated.
-status = solver.Solve(model)
-assert (
-    status == cp_model.OPTIMAL
-)  # The status tells us if we were able to compute a solution.
-print(f"x={solver.Value(x)},  y={solver.Value(y)}")
-print("=====Stats:======")
-print(solver.SolutionInfo())
-print(solver.ResponseStats())
+solver = cp_model.CpSolver()
+status = solver.solve(model)
+
+# The status tells us if we were able to compute an optimal solution.
+assert status == cp_model.OPTIMAL, "Could not find optimal solution."
+
+# Print the optimal solution.
+print(f"x={solver.value(x)},  y={solver.value(y)}")
 ```
 
     x=0,  y=30
-    =====Stats:======
-    default_lp
-    CpSolverResponse summary:
-    status: OPTIMAL
-    objective: 1500
-    best_bound: 1500
-    booleans: 1
-    conflicts: 0
-    branches: 1
-    propagations: 0
-    integer_propagations: 2
-    restarts: 1
-    lp_iterations: 0
-    walltime: 0.00289923
-    usertime: 0.00289951
-    deterministic_time: 8e-08
-    gap_integral: 5.11888e-07
 
 Pretty easy, right? For solving a generic problem, not just one specific
 instance, you would of course create a dictionary or list of variables and use
-something like `model.Add(sum(vars)<=n)`, because you do not want to create the
+something like `model.add(sum(vars)<=n)`, because you do not want to create the
 model by hand for larger instances.
 
-The output you get may differ from the one above, because CP-SAT actually uses a
-set of different strategies in parallel, and just returns the best one (which
-can differ slightly between multiple runs due to additional randomness). This is
-called a portfolio strategy and is a common technique in combinatorial
-optimization, if you cannot predict which strategy will perform best.
-
-In a later section, we will explore how to review and interpret the CP-SAT
-solver's log. Analyzing the log is vital, especially when the solver's
-performance is suboptimal. An expert can often pinpoint the cause of any issues
-within seconds by examining the log, which is key to optimizing solver
-efficiency.
+For larger models, CP-SAT will unfortunately not always able to compute an
+optimal solution. However, the good news is that the solver will likely still
+find a satisfactory solution and provide a bound on the optimal solution. Once
+you reach this point, understanding how to interpret the solver's log becomes
+crucial for analyzing the solver's performance. We will learn more about this
+later.
 
 ### Mathematical Model
 
@@ -141,7 +117,7 @@ an example within the Python shell:
 
 ```pycon
 >>> model = cp_model.CpModel()
->>> x = model.NewIntVar(0, 100, "x")
+>>> x = model.new_int_var(0, 100, "x")
 >>> x
 x(0..100)
 >>> type(x)
@@ -169,6 +145,16 @@ make it easier to identify and correct errors in the modeling process.
 
 If you are not yet satisfied,
 [this folder contains many Jupyter Notebooks with examples from the developers](https://github.com/google/or-tools/tree/stable/examples/notebook/sat).
+For example
+
+- [multiple_knapsack_sat.ipynb](https://github.com/google/or-tools/blob/stable/examples/notebook/sat/multiple_knapsack_sat.ipynb)
+  shows how to solve a multiple knapsack problem.
+- [nurses_sat.ipynb](https://github.com/google/or-tools/blob/stable/examples/notebook/sat/nurses_sat.ipynb)
+  shows how to schedule the shifts of nurses.
+- [bin_packing_sat.ipynb](https://github.com/google/or-tools/blob/stable/examples/notebook/sat/bin_packing_sat.ipynb)
+  shows how to solve a bin packing problem.
+- ... (if you know more good examples I should mention here, please let me
+  know!)
 
 Ok. Now that you have seen a minimal model, let us next look on what options we
 have to model a problem. Note that an experienced optimizer may be able to model

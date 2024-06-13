@@ -53,31 +53,6 @@ repos:
         args: ["--fix", "--show-fixes"]
       - id: ruff-format
 
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.3.0
-    hooks:
-      - id: mypy
-        files: ^(src|tests)
-        args: []
-        additional_dependencies:
-          - build
-          - cattrs
-          - cmake
-          - exceptiongroup
-          - hatch-fancy-pypi-readme
-          - importlib-metadata>=6.6.0
-          - importlib-resources
-          - ninja
-          - packaging
-          - pyproject_metadata
-          - pytest
-          - rich
-          - setuptools-scm
-          - tomli
-          - types-setuptools>=67.8
-          - types-PyYAML
-          - pandas-stubs
-
   - repo: https://github.com/codespell-project/codespell
     rev: v2.2.4
     hooks:
