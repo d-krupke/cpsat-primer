@@ -41,33 +41,35 @@ especially if you are coming from the
 -community, as it may prove useful in cases where Branch and Bound performs
 poorly.
 
-If you are relatively new to combinatorial optimization, I suggest you to read
-the relatively short book
+If you are new to combinatorial optimization, I recommend starting with the free
+course on Coursera,
+[Discrete Optimization](https://www.coursera.org/learn/discrete-optimization)
+taught by Pascal Van Hentenryck and Carleton Coffrin. This course provides a
+comprehensive introduction in a concise format.
+
+For an engaging exploration of a classic problem within this domain,
 [In Pursuit of the Traveling Salesman by Bill Cook](https://press.princeton.edu/books/paperback/9780691163529/in-pursuit-of-the-traveling-salesman)
-first. It tells you a lot about the history and techniques to deal with
-combinatorial optimization problems, on the example of the famous
-[Traveling Salesman Problem](https://en.wikipedia.org/wiki/Travelling_salesman_problem).
-The Traveling Salesman Problem seems to be intractable already for small
-instances, but it is actually possible to solve instances with thousands of
-cities in practice. It is a very light read and you can skip the more technical
-parts if you want to. As an alternative, you can also read this
-[free chapter, coauthored by the same author](https://www.math.uwaterloo.ca/~bico/papers/comp_chapter1.pdf)
-and watch this very amusing
-[YouTube Video (1hour)](https://www.youtube.com/watch?v=5VjphFYQKj8). If you are
-short on time, at least watch the video, it is really worth it. While CP-SAT
-follows a slightly different approach than the one described in the
-book/chapter/video, it is still important to see why it is possible to do the
-seemingly impossible and solve such problems in practice, despite their
-theoretical hardness. Additionally, you will have learned the concept of
-[Mathematical Programming](https://www.gurobi.com/resources/math-programming-modeling-basics/),
-and know that the term "Programming" has nothing to do with programming in the
-sense of writing code (otherwise, additionally read the just given reference).
-The course
-[Discrete Optimization on Coursera with Pascal Van Hentenryck and Carleton Coffrin](https://www.coursera.org/learn/discrete-optimization)
-is also highly recommendable and gives you an intense crash course on nearly all
-important topics in applied combinatorial optimization. After that (or if you
-are already familiar with combinatorial optimization), the following content
-awaits you in this primer:
+is highly recommended. This book, along with this
+[YouTube talk](https://www.youtube.com/watch?v=5VjphFYQKj8) by the author that
+lasts about an hour, offers a practical case study of the well-known Traveling
+Salesman Problem. It not only introduces fundamental techniques but also delves
+into the community and historical context of the field.
+
+Additionally, the article
+[Mathematical Programming](https://www.gurobi.com/resources/math-programming-modeling-basics/)
+by CP-SAT's competitor Gurobi offers an insightful introduction to mathematical
+programming and modeling. In this context, the term "Programming" does not refer
+to coding; rather, it originates from an earlier usage of the word "program,"
+which denoted a plan of action or a schedule. If this distinction is new to you,
+it is a strong indication that you would benefit from reading this article.
+
+For those who prefer a hands-on approach, you can begin with the primer outlined
+below and consult the recommended resources as needed.
+
+Please note, while this primer strives to be self-contained, it is designed for
+students who already have a basic understanding of combinatorial optimization.
+Thus, some prior knowledge in the field might be necessary to fully benefit from
+the content provided.
 
 **Content:**
 
@@ -125,11 +127,9 @@ awaits you in this primer:
 > **Why are there so many platypuses in the text?** I enjoy incorporating
 > elements in my texts that add a light-hearted touch. The choice of the
 > platypus is intentional: much like CP-SAT integrates diverse elements from
-> various domains, the platypus combines traits from different animals. It is a
-> unique mammal that lays eggs, possesses a beak, and is venomous. The platypus
-> also symbolizes Australia, home to the development of a key technique in
-> CP-SAT - Lazy Clause Generation (LCG). Also, I like platypuses, and hope to
-> see a real one someday.
+> various domains, the platypus combines traits from different animals. The
+> platypus also symbolizes Australia, home to the development of a key technique
+> in CP-SAT - Lazy Clause Generation (LCG).
 
 ---
 
