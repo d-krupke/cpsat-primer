@@ -1,3 +1,11 @@
+"""
+This class implements a simple TSP solver using CP-SAT.
+It is just a simple example and not optimized for performance.
+We made sure that we can access the solver and also pass
+a callback to it, as this is needed for embedding it in
+the solver process (for extracting data during the search).
+"""
+
 import random
 import math
 from ortools.sat.python import cp_model

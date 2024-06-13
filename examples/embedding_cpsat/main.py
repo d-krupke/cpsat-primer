@@ -1,3 +1,8 @@
+"""
+This is just a simple main that also shows how to use the solver process.
+For those not comfortable with the Streamlit app, this is a good starting point.
+"""
+
 from solver_process import TspSolverProcess
 from tsp_solver import generate_random_geometric_graph
 import time
