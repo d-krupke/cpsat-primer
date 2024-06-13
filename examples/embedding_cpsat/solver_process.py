@@ -47,6 +47,7 @@ def _entry_point_solver_process(
     on the given graph. It communicates the progress and the solution
     back to the main process through the given pipes.
     """
+
     # === Signal handling ===
     # The interrupt signal is only directed to CP-SAT to interrupt the solver.
     # Ignore the signal while in the Python code, as we don't want to interrupt
@@ -73,6 +74,7 @@ def _entry_point_solver_process(
     # Update the shared lower bound value via a callback
     def update_lower_bound(x):
         lower_bound.value = x
+
     solver.solver.best_bound_callback = update_lower_bound
 
     # === Solution callback ===
@@ -90,6 +92,7 @@ def _entry_point_solver_process(
         solution_conn.send(solution.model_dump())  # Pydantic model's dict method
     log_conn.close()
     solution_conn.close()
+
 
 class TspSolverProcess:
     """
@@ -118,8 +121,6 @@ class TspSolverProcess:
             ),
         )
         self._solution = None
-
-
 
     def start(self):
         """
@@ -167,7 +168,7 @@ class TspSolverProcess:
             new_log_entries = self._log_pipe[0].recv()
             logs += new_log_entries
         return logs
-    
+
     def __del__(self):
         # Clean up the process when the object is deleted
         if self.process.is_alive():

@@ -101,7 +101,7 @@ if generate_button:
 
         logs = solver_process.get_log()
         if logs:
-            st.session_state.log_text += "\n".join(logs)+"\n"
+            st.session_state.log_text += "\n".join(logs) + "\n"
         log_placeholder.text(st.session_state.log_text)
 
         if not solver_process.is_running() or interrupt_button:
