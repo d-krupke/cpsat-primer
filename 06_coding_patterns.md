@@ -685,7 +685,7 @@ An alternative is to let the solver run in a separate process and communicate
 with it using a pipe. This approach allows the solver to be interrupted at any
 time, enabling the application to react immediately. Python's multiprocessing
 module provides reasonably simple ways to achieve this.
-[This example](./examples/embedding_cpsat/) showcases such an approach. However,
+[This example](https://github.com/d-krupke/cpsat-primer/blob/main//examples/embedding_cpsat/) showcases such an approach. However,
 for scaling this approach up, you will actually have to build a task queues
 where the solver is run by workers. Using multiprocessing can still be useful
 for the worker to remain responsive for stop signals while the solver is
