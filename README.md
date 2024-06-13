@@ -363,15 +363,21 @@ For example
 - ... (if you know more good examples I should mention here, please let me
   know!)
 
-Ok. Now that you have seen a minimal model, let us next look on what options we
-have to model a problem. Note that an experienced optimizer may be able to model
-most problems with just the elements shown above, but showing your intentions
-may help CP-SAT optimize your problem better. Contrary to Mixed Integer
-Programming, you also do not need to fine-tune any
-[Big-Ms](https://en.wikipedia.org/wiki/Big_M_method) (a reason to model
-higher-level constraints, such as conditional constraints that are only enforced
-if some variable is set to true, in MIPs yourself, because the computer is not
-very good at that).
+Now that you have seen a minimal model, let us explore the various options
+available for problem modeling. While an experienced optimizer might be able to
+handle most problems using just the elements previously discussed, clearly
+expressing your intentions can help CP-SAT optimize your problem more
+effectively.
+
+> ![TIP]
+>
+> If you are transitioning from Mixed Integer Programming (MIP), you may be
+> accustomed to manually implementing higher-level constraints to optimize your
+> [Big-Ms](https://en.wikipedia.org/wiki/Big_M_method) for better performance,
+> instead of relying on the modeling interface. With CP-SAT, these manual
+> adjustments are generally unnecessary. CP-SAT relies less on linear relaxation
+> compared to MIP solvers and can usually efficiently manage logical constraints
+> thanks to its underlying SAT-solver. Dare to use the higher-level constraints!
 
 ---
 

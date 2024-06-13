@@ -1,3 +1,4 @@
+import pytest
 from ortools.sat.python import cp_model
 
 
@@ -24,3 +25,12 @@ def test_model_solution():
     # The value of the variables in the optimal solution.
     assert solver.value(x) == 0
     assert solver.value(y) == 30
+
+
+def test_not_implemented_error():
+    model = cp_model.CpModel()
+    x = model.NewIntVar(0, 100, "x")
+
+    with pytest.raises(NotImplementedError):
+        if x + 1 <= 1:
+            print("True")
