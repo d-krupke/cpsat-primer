@@ -466,24 +466,31 @@ There are two important types of variables in CP-SAT: Booleans and Integers
 (which are actually converted to Booleans, but more on this later). There are
 also, e.g.,
 [interval variables](https://developers.google.com/optimization/reference/python/sat/python/cp_model#intervalvar),
-but they are not as important and can be modelled easily with integer variables.
-For the integer variables, you have to specify a lower and an upper bound.
+but they are actually rather a combination of integral variables and discussed
+[later](#04-modelling-intervals). For the integer variables, you have to specify
+a lower and an upper bound.
 
 ```python
+model = cp_model.CpModel()
 # integer variable z with bounds -100 <= z <= 100
-z = model.NewIntVar(-100, 100, "z")
+z = model.new_int_var(-100, 100, "z")  # new syntax
+z_ = model.NewIntVar(-100, 100, "z_")  # old syntax
 # boolean variable b
-b = model.NewBoolVar("b")
+b = model.new_bool_var("b")  # new syntax
+b_ = model.NewBoolVar("b_")  # old syntax
 # implicitly available negation of b:
-not_b = b.Not()  # will be 1 if b is 0 and 0 if b is 1
+not_b = ~b  # will be 1 if b is 0 and 0 if b is 1
+not_b_ = b.Not()  # old syntax
 ```
 
 > [!TIP]
 >
-> Having tight bounds on the integer variables can make a huge impact on the
-> performance. It may be useful to run some optimization heuristics beforehand
-> to get some bounds. Reducing it by a few percent can already pay off for some
-> problems.
+> In an older project, I observed that maintaining tight bounds on integer
+> variables can significantly impact performance. Employing a heuristic to find
+> a reasonable initial solution, which then allowed for tighter bounds, proved
+> worthwhile, even though the bounds were just a few percent tighter. Although
+> this project was several years ago and CP-SAT has advanced considerably since
+> then, I still recommend keeping the bounds as tight as possible.
 
 There are no continuous/floating point variables (or even constants) in CP-SAT:
 If you need floating point numbers, you have to approximate them with integers
@@ -492,43 +499,47 @@ a step size of 0.01. A value of 2.35 would then be represented by 235. This
 _could_ probably be implemented in CP-SAT directly, but doing it explicitly is
 not difficult, and it has numerical implications that you should be aware of.
 
-The lack of continuous variables may sound like a serious limitation, especially
-if you have a background in linear optimization (where continuous variables are
-the "easy part"), but as long as they are not a huge part of your problem, you
-can often work around it. I had problems with many continuous variables on which
-I had to apply absolute values and conditional linear constraints, and CP-SAT
-performed much better than Gurobi, which is known to be very good at continuous
-variables. In this case, CP-SAT struggled less with the continuous variables
-(Gurobi's strength), than Gurobi with the logical constraints (CP-SAT's
-strength). In a further analysis, I noted an only logarithmic increase of the
-runtime with the resolution. However, there are also problems for which a higher
-resolution can drastically increase the runtime. The packing problem, which is
-discussed further below, has the following runtime for different resolutions:
-1x: 0.02s, 10x: 0.7s, 100x: 7.6s, 1000x: 75s, 10_000x: >15min. The solution was
-always the same, just scaled, and there was no objective, i.e., only a feasible
-solution had to be found. Note that this is just an example, not a
-representative benchmark. See
-[./examples/add_no_overlap_2d_scaling.ipynb](https://github.com/d-krupke/cpsat-primer/blob/main/examples/add_no_overlap_2d_scaling.ipynb)
-for the code. If you have a problem with a lot of continuous variables, such as
-[network flow problems](https://en.wikipedia.org/wiki/Network_flow_problem), you
-are probably better served with a MIP-solver.
+The absence of continuous variables may appear as a substantial limitation,
+especially for those with a background in linear optimization where continuous
+variables are typically regarded as the simpler component. However, if your
+problem includes only a few continuous variables that must be approximated using
+large integers and involves complex constraints such as absolute values, while
+the majority of the problem is dominated by logical constraints, CP-SAT can
+often outperform mixed-integer programming solvers. It is only when a problem
+contains a substantial number of continuous variables and benefits significantly
+from strong linear relaxation that mixed-integer programming solvers will have a
+distinct advantage, despite CP-SAT having a propagator based on the dual simplex
+method.
 
-In my experience, boolean variables are by far the most important variables in
-many combinatorial optimization problems. Many problems, such as the famous
-Traveling Salesman Problem, only consist of boolean variables. Implementing a
-solver specialized on boolean variables by using a SAT-solver as a base, such as
-CP-SAT, thus, is quite sensible. The resolution of coefficients (in combination
-with boolean variables) is less critical than for variables.
+I analyzed the impact of resolution (i.e., the factor by which floating point
+numbers are multiplied) on the runtime of CP-SAT, finding that the effect varied
+depending on the problem. For one problem, the runtime increased only
+logarithmically with the resolution, allowing the use of a very high resolution
+of 100,000x without significant issues. In contrast, for another problem, the
+runtime increased roughly linearly with the resolution, making high resolutions
+impractical. The runtime for different factors in this case was: 1x: 0.02s, 10x:
+0.7s, 100x: 7.6s, 1000x: 75s, and 10,000x: over 15 minutes, even though the
+solution remained the same, merely scaled. Therefore, while high resolutions may
+be feasible for some problems using CP-SAT, it is essential to verify their
+influence on runtime, as the impact can be considerable.
 
-You might question the need for naming variables in your model. While it is true
-that CP-SAT would not need named variables to work (as it could just give them
-automatically generated names), assigning names is incredibly useful for
-debugging purposes. Solver APIs often create an internal representation of your
-model, which is subsequently used by the solver. There are instances where you
-might need to examine this internal model, such as when debugging issues like
-infeasibility. In such scenarios, having named variables can significantly
-enhance the clarity of the internal representation, making your debugging
-process much more manageable.
+In my experience, boolean variables are crucial in many combinatorial
+optimization problems. For instance, the famous Traveling Salesman Problem
+consists solely of boolean variables. Therefore, implementing a solver that
+specializes in boolean variables using a SAT-solver as a foundation, such as
+CP-SAT, is a sensible approach. CP-SAT leverages the strengths of SAT-solving
+techniques, which are highly effective for problems dominated by boolean
+variables.
+
+You may wonder why it is necessary to explicitly name the variables in CP-SAT.
+While there does not appear to be a technical reason for this requirement,
+naming the variables can be extremely helpful for debugging purposes.
+Understanding the naming scheme of the variables allows you to more easily
+interpret the internal representation of the model, facilitating the
+identification and resolution of issues. To be fair, there have only been a few
+times when I actually needed to take a closer at the internal representation,
+and in most of the cases I would have preferred not to have to name the
+variables.
 
 <a name="04-modelling-domain-variables"></a>
 
@@ -570,10 +581,14 @@ scenarios, here is how to define them:
 ```python
 from ortools.sat.python import cp_model
 
+model = cp_model.CpModel()
 # Define a domain with selected values
-domain = cp_model.Domain.FromValues([2, 5, 8, 10, 20, 50, 90])
+domain = cp_model.Domain.from_values([2, 5, 8, 10, 20, 50, 90])
 # cam also be done via intervals
-domain_2 = cp_model.Domain.FromIntervals([(8, 12), (14, 20)])
+domain_2 = cp_model.Domain.from_intervals([[8, 12], [14, 20]])
+
+# there are also some operations available
+domain_3 = domain.union_with(domain_2)
 
 # Create a domain variable within this defined domain
 x = model.NewIntVarFromDomain(domain, "x")
