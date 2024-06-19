@@ -11,7 +11,3 @@
 - [Alternatives](./03_big_picture.md)
 - [Benchmarking your Model](./08_benchmarking.md)
 - [Large Neighborhood Search](./09_lns.md)
-
----
-
-[Report an issue](https://github.com/d-krupke/cpsat-primer/issues)
