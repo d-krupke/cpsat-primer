@@ -485,6 +485,31 @@ not_b = ~b  # will be 1 if b is 0 and 0 if b is 1
 not_b_ = b.Not()  # old syntax
 ```
 
+Additionally, you can use `model.new_int_var_series` and
+`model.new_bool_var_series` to create multiple variables at once from a pandas
+Index. This is especially useful if your data is given in a pandas DataFrame.
+However, there is no performance benefit in using this method, it is just more
+convenient.
+
+```python
+model = cp_model.CpModel()
+# create an Index from 0 to 9
+index = pd.Index(range(10), name="index")
+# create a pandas Series with 10 integer variables matching the index
+xs = model.new_int_var_series("x", index, 0, 100)
+
+# list of boolean variables
+df = pd.DataFrame(
+    data={"weight": [1 for _ in range(10)], "value": [3 for _ in range(10)]},
+    index=["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"],
+)
+bs = model.new_bool_var_series("b", df.index)  # noqa: F841
+# Using the dot product on the pandas DataFrame is actually a pretty
+# convenient way to create common linear expressions.
+model.Add(bs @ df["weight"] <= 100)
+model.Maximize(bs @ df["value"])
+```
+
 > [!TIP]
 >
 > In an older project, I observed that maintaining tight bounds on integer

@@ -1,5 +1,6 @@
 from ortools.sat.python import cp_model
 import pytest
+import pandas as pd
 
 
 def test_basic_variables():
@@ -13,6 +14,28 @@ def test_basic_variables():
     # implicitly available negation of b:
     not_b = ~b  # will be 1 if b is 0 and 0 if b is 1  # noqa: F841
     not_b_ = b.Not()  # old syntax  # noqa: F841
+
+
+def test_variables_series():
+    model = cp_model.CpModel()
+    # list of integer variables
+    index = pd.Index(range(10), name="index")
+    xs = model.new_int_var_series("x", index, 0, 100)  # noqa: F841
+    assert len(xs) == 10
+    assert isinstance(xs, pd.Series)
+
+    # list of boolean variables
+    df = pd.DataFrame(
+        data={"weight": [1 for _ in range(10)], "value": [3 for _ in range(10)]},
+        index=["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"],
+    )
+    bs = model.new_bool_var_series("b", df.index)  # noqa: F841
+    # bs is a pandas Series with boolean variables, indexed by the index of the DataFrame
+    # this allows us to easily sum over the variables and multiply them with the values in the DataFrame
+    assert len(bs) == 10
+    assert isinstance(bs, pd.Series)
+    model.Add(bs @ df["weight"] <= 100)
+    model.Maximize(bs @ df["value"])
 
 
 def test_domain_variables():
