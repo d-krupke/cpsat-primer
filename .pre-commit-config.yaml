@@ -59,10 +59,11 @@ repos:
       - id: codespell
         exclude: ^(LICENSE$|.*\.ipynb$)
 
-  - repo: https://github.com/shellcheck-py/shellcheck-py
-    rev: v0.9.0.2
-    hooks:
-      - id: shellcheck
+  # Won't run on my new macbook
+  #  - repo: https://github.com/shellcheck-py/shellcheck-py
+  #    rev: v0.9.0.2
+  #    hooks:
+  #      - id: shellcheck
 
   - repo: https://github.com/pre-commit/mirrors-prettier
     rev: "v3.0.0-alpha.9-for-vscode"

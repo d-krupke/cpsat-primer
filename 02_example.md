@@ -156,6 +156,10 @@ For example
 - ... (if you know more good examples I should mention here, please let me
   know!)
 
+Further, you can find an extensive and beginner-friendly example on scheduling
+workers
+[here](https://pganalyze.com/blog/a-practical-introduction-to-constraint-programming-using-cp-sat).
+
 Now that you have seen a minimal model, let us explore the various options
 available for problem modeling. While an experienced optimizer might be able to
 handle most problems using just the elements previously discussed, clearly
