@@ -69,9 +69,13 @@ For those who prefer a hands-on approach, you can begin with the primer outlined
 below and consult the recommended resources as needed.
 
 Please note, while this primer strives to be self-contained, it is designed for
-students who already have a basic understanding of combinatorial optimization.
-Thus, some prior knowledge in the field might be necessary to fully benefit from
-the content provided.
+computer science students who already have a basic understanding of
+combinatorial optimization as well as experience in coding with Python. Thus,
+some prior knowledge in the field might be necessary to fully benefit from the
+content provided. If you are a computer science student **without** prior
+education in combinatorial optimization, you may find
+[this](https://pganalyze.com/blog/a-practical-introduction-to-constraint-programming-using-cp-sat)
+article helpful to get started with CP-SAT.
 
 **Content:**
 
