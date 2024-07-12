@@ -95,7 +95,7 @@ to dive deeper.
 
 ---
 
-> **Target audience:** People (especially my students at TU Braunschweig) with
+> **Target audience:** People (especially my computer science students at TU Braunschweig) with
 > some background in
 > [integer programming](https://en.wikipedia.org/wiki/Integer_programming)
 > /[linear optimization](https://en.wikipedia.org/wiki/Linear_programming), who
