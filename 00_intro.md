@@ -71,8 +71,8 @@ some prior knowledge in the field might be necessary to fully benefit from the
 content provided. If you are a computer science student **without** prior
 knowledge in combinatorial optimization, you may find
 [this hands-on tutorial](https://pganalyze.com/blog/a-practical-introduction-to-constraint-programming-using-cp-sat)
-a little easier to get started with CP-SAT, and come back once you want
-to dive deeper.
+a little easier to get started with CP-SAT, and come back once you want to dive
+deeper.
 
 **Content:**
 
@@ -95,8 +95,8 @@ to dive deeper.
 
 ---
 
-> **Target audience:** People (especially my computer science students at TU Braunschweig) with
-> some background in
+> **Target audience:** People (especially my computer science students at TU
+> Braunschweig) with some background in
 > [integer programming](https://en.wikipedia.org/wiki/Integer_programming)
 > /[linear optimization](https://en.wikipedia.org/wiki/Linear_programming), who
 > would like to know an actual viable alternative to
