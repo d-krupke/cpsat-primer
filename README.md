@@ -922,27 +922,90 @@ model.add_implication(b1, b2)  # If b1 is true, then b2 must also be true
 
 <a name="04-modelling-conditional-constraints"></a>
 
-### Conditional Constraints (Channeling, Reification)
+### Conditional Constraints (Reification)
 
-Linear constraints (Add), BoolOr, and BoolAnd support being activated by a
-condition. This is not only a very helpful constraint for many applications, but
-it is also a constraint that is highly inefficient to model with linear
-optimization ([Big M Method](https://en.wikipedia.org/wiki/Big_M_method)). My
-current experience shows that CP-SAT can work much more efficiently with this
-kind of constraint. Note that you only can use a boolean variable and not
-directly add an expression, i.e., maybe you need to create an auxiliary
-variable.
+In practical applications, scenarios often arise where conditions dictate the
+enforcement of certain constraints. For instance, "if this condition is true,
+then a specific constraint should apply," or "if a constraint is violated, a
+penalty variable is set to true, triggering another constraint." Additionally,
+real-world constraints can sometimes be bypassed with financial or other types
+of concessions, such as renting a more expensive truck to exceed a load limit,
+or allowing a worker to take a day off after a double shift.
+
+> In constraint programming, **reification** involves associating a Boolean
+> variable with a constraint to capture its truth value, thereby turning the
+> satisfaction of the constraint into a variable that can be used in further
+> constraints. Full reification links a Boolean variable such that it is `True`
+> if the constraint is satisfied and `False` otherwise, enabling the variable to
+> be directly used in other decisions or constraints. Conversely,
+> half-reification, or implied constraints, involves a one-way linkage where the
+> Boolean variable being `True` implies the constraint must be satisfied, but
+> its being `False` does not necessarily indicate anything about the
+> constraint's satisfaction. This approach is particularly useful for expressing
+> complex conditional logic and for modeling scenarios where only the
+> satisfaction, and not the violation, of a constraint needs to be explicitly
+> handled.
+
+To effectively manage these conditional scenarios, CP-SAT offers the
+`only_enforce_if`-method for linear and Boolean constraints, which activates a
+constraint only if a specified condition is met. This method is not only
+typically more efficient than traditional methods like the
+[Big-M method](https://en.wikipedia.org/wiki/Big_M_method) but also simplifies
+the model by eliminating the need to determine an appropriate Big-M value.
 
 ```python
-model.Add(x + z == 2 * y).OnlyEnforceIf(b1)
-model.Add(x + z == 10).OnlyEnforceIf([b2, b3.Not()])  # only enforce if b2 AND NOT b3
+# A value representing the load that needs to be transported
+load_value = model.new_int_var(0, 100, "load_value")
 
-# Restrict domain of linear expression on condition
-x_b = model.NewBoolVar("x_b")
-x_i = model.NEwIntVar(0, 100, "x_i")
-domain = model.Domain.FromValues([0, 10, 20, 30, 40, 50])
-model.AddLinearExpressionInDomain(x_i, domain).OnlyEnforceIf(x_b)
+# ... some logic to determine the load value ...
+
+# A variable to decide which truck to rent
+truck_a = model.new_bool_var("truck_a")
+truck_b = model.new_bool_var("truck_b")
+truck_c = model.new_bool_var("truck_c")
+
+# only rent one truck
+model.add_at_most_one([truck_a, truck_b, truck_c])
+
+# Depending on which truck is rented, the load value is limited
+model.add(load_value <= 50).only_enforce_if(truck_a)
+model.add(load_value <= 80).only_enforce_if(truck_b)
+model.add(load_value <= 100).only_enforce_if(truck_c)
+
+# Some additional logic
+driver_has_big_truck_license = model.new_bool_var("driver_has_big_truck_license")
+driver_has_special_license = model.new_bool_var("driver_has_special_license")
+# Only drivers with a big truck license or a special license can rent truck c
+model.add_bool_or(
+    driver_has_big_truck_license, driver_has_special_license
+).only_enforce_if(truck_c)
+
+# Minimize the rent cost
+model.minimize(30 * truck_a + 40 * truck_b + 80 * truck_c)
 ```
+
+You can also use negations in the `only_enforce_if` method.
+
+```python
+model.add(x + y == 10).only_enforce_if(~b1)
+```
+
+You can also pass a list of Boolean variables to `only_enforce_if`, in which
+case the constraint is only enforced if all of the variables in the list are
+true.
+
+```python
+model.add(x + y == 10).only_enforce_if([b1, ~b2])  # only enforce if b1 AND NOT b2
+```
+
+> ![WARNING]
+>
+> While `only_enforce_if` often enhances the efficiency of constraint modeling,
+> it can still impact the performance of CP-SAT significantly. Doing some
+> additional reasoning, you can often find a more efficient way to model your
+> problem without having to use `only_enforce_if`. As `only_enforce_if` is often
+> a more natural way to model your problem, it is still a good idea to use it to
+> get your first prototype running and think about smarter ways later.
 
 <a name="04-modelling-alldifferent"></a>
 
