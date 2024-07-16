@@ -34,8 +34,8 @@ def test_variables_series():
     # this allows us to easily sum over the variables and multiply them with the values in the DataFrame
     assert len(bs) == 10
     assert isinstance(bs, pd.Series)
-    model.Add(bs @ df["weight"] <= 100)
-    model.Maximize(bs @ df["value"])
+    model.add(bs @ df["weight"] <= 100)
+    model.maximize(bs @ df["value"])
 
 
 def test_domain_variables():
@@ -49,7 +49,7 @@ def test_domain_variables():
     domain_3 = domain.union_with(domain_2)  # noqa: F841
 
     # Create a domain variable within this defined domain
-    x = model.NewIntVarFromDomain(domain, "x")  # noqa: F841
+    x = model.new_int_var_from_domain(domain, "x")  # noqa: F841
 
 
 def test_variable_without_name():

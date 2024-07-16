@@ -515,8 +515,8 @@ df = pd.DataFrame(
 bs = model.new_bool_var_series("b", df.index)  # noqa: F841
 # Using the dot product on the pandas DataFrame is actually a pretty
 # convenient way to create common linear expressions.
-model.Add(bs @ df["weight"] <= 100)
-model.Maximize(bs @ df["value"])
+model.add(bs @ df["weight"] <= 100)
+model.maximize(bs @ df["value"])
 ```
 
 > [!TIP]
@@ -526,7 +526,8 @@ model.Maximize(bs @ df["value"])
 > a reasonable initial solution, which then allowed for tighter bounds, proved
 > worthwhile, even though the bounds were just a few percent tighter. Although
 > this project was several years ago and CP-SAT has advanced considerably since
-> then, I still recommend keeping the bounds as tight as possible.
+> then, I still recommend keeping the bounds on the variables' ranges as tight
+> as possible.
 
 There are no continuous/floating point variables (or even constants) in CP-SAT:
 If you need floating point numbers, you have to approximate them with integers
@@ -627,7 +628,7 @@ domain_2 = cp_model.Domain.from_intervals([[8, 12], [14, 20]])
 domain_3 = domain.union_with(domain_2)
 
 # Create a domain variable within this defined domain
-x = model.NewIntVarFromDomain(domain, "x")
+x = model.new_int_var_from_domain(domain, "x")
 ```
 
 This example illustrates the process of creating a domain variable `x` that can
@@ -639,26 +640,36 @@ possible values within your problem's context.
 
 ### Objectives
 
-Not every problem actually has an objective, sometimes you only need to find a
-feasible solution. CP-SAT is pretty good at doing that (MIP-solvers are often
-not). However, CP-SAT can also optimize pretty well (older constraint
-programming solver cannot, at least in my experience). You can minimize or
-maximize a linear expression (use auxiliary variables and constraints to model
-more complicated expressions).
+Not every problem necessitates an objective; sometimes, finding a feasible
+solution is sufficient. CP-SAT excels at finding feasible solutions, a task at
+which mixed-integer programming (MIP) solvers often do not perform as well.
+However, CP-SAT is also capable of effective optimization, which is an area
+where older constraint programming solvers may lag, based on my experience.
 
-You can specify the objective function by calling `model.Minimize` or
-`model.Maximize` with a linear expression.
+CP-SAT allows for the minimization or maximization of a linear expression. You
+can model more complex expressions by using auxiliary variables and additional
+constraints. To specify an objective function, you can use the `model.minimize`
+or `model.maximize` commands with a linear expression. This flexibility makes
+CP-SAT a robust tool for a variety of optimization tasks.
 
 ```python
-model.Maximize(30 * x + 50 * y)
+# Basic model with variables and constraints
+model = cp_model.CpModel()
+x = model.new_int_var(-100, 100, "x")
+y = model.new_int_var(-100, 100, "y")
+model.add(x + 10 * y <= 100)
+
+# Minimize 30x + 50y
+model.maximize(30 * x + 50 * y)
 ```
 
 Let us look on how to model more complicated expressions, using boolean
 variables and generators.
 
 ```python
-x_vars = [model.NewBoolVar(f"x{i}") for i in range(10)]
-model.Minimize(
+model = cp_model.CpModel()
+x_vars = [model.new_bool_var(f"x{i}") for i in range(10)]
+model.minimize(
     sum(i * x_vars[i] if i % 2 == 0 else i * x_vars[i].Not() for i in range(10))
 )
 ```
@@ -674,26 +685,46 @@ To implement a
 you can do multiple rounds and always fix the previous objective as constraint.
 
 ```python
-model.Maximize(30 * x + 50 * y)
+# some basic model
+model = cp_model.CpModel()
+x = model.new_int_var(-100, 100, "x")
+y = model.new_int_var(-100, 100, "y")
+z = model.new_int_var(-100, 100, "z")
+model.add(x + 10 * y - 2 * z <= 100)
 
-# Lexicographic
-solver.Solve(model)
-model.Add(30 * x + 50 * y == int(solver.ObjectiveValue()))  # fix previous objective
-model.Minimize(z)  # optimize for second objective
-solver.Solve(model)
+# Define the objectives
+first_objective = 30 * x + 50 * y
+second_objective = 10 * x + 20 * y + 30 * z
+
+# Optimize for the first objective
+model.maximize(first_objective)
+solver = cp_model.CpSolver()
+solver.solve(model)
+
+# Fix the first objective and optimize for the second
+model.add(first_objective == int(solver.objective_value))  # fix previous objective
+model.minimize(second_objective)  # optimize for second objective
+solver.solve(model)
 ```
 
-To implement non-linear objectives, you can use auxiliary variables and
-constraints. For example, you can create a variable that is the absolute value
-of another variable and then use this variable in the objective.
+To handle non-linear objectives in CP-SAT, you can employ auxiliary variables
+and constraints. For instance, to incorporate the absolute value of a variable
+into your objective, you first create a new variable representing this absolute
+value. Shortly, you will learn more about setting up these types of constraints.
+Below is a Python example demonstrating how to model and minimize the absolute
+value of a variable `x`:
 
 ```python
-abs_x = model.NewIntVar(0, 100, "|x|")
-model.AddAbsEquality(target=abs_x, expr=x)
-model.Minimize(abs_x)
+# Assuming x is already defined in your model
+abs_x = model.new_int_var(
+    0, 100, "|x|"
+)  # Create a variable to represent the absolute value of x
+model.add_abs_equality(target=abs_x, expr=x)  # Define abs_x as the absolute value of x
+model.minimize(abs_x)  # Set the objective to minimize abs_x
 ```
 
-The available constraints are discussed next.
+The constraints available to define your feasible solution space will be
+discussed in the following section.
 
 <a name="04-modelling-linear-constraints"></a>
 
