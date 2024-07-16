@@ -286,6 +286,18 @@ instance, you would of course create a dictionary or list of variables and use
 something like `model.add(sum(vars)<=n)`, because you do not want to create the
 model by hand for larger instances.
 
+> [!TIP]
+>
+> The solver can return five different statuses:
+>
+> | Status          | Code | Description                                                                               |
+> | --------------- | ---- | ----------------------------------------------------------------------------------------- |
+> | `UNKNOWN`       | 0    | The solver has not yet run.                                                               |
+> | `MODEL_INVALID` | 1    | The model is invalid. You will rarely see that status.                                    |
+> | `FEASIBLE`      | 2    | The model has a feasible, but not necessarily optimal, solution.                          |
+> | `INFEASIBLE`    | 3    | The model has no feasible solution. This means that your constraints are too restrictive. |
+> | `OPTIMAL`       | 4    | The model has an optimal solution.                                                        |
+
 For larger models, CP-SAT will unfortunately not always able to compute an
 optimal solution. However, the good news is that the solver will likely still
 find a satisfactory solution and provide a bound on the optimal solution. Once
@@ -354,6 +366,10 @@ Attempting operations like `if x + 1 <= 1: print("True")` will trigger a
 Although this approach to defining models might initially seem perplexing, it
 facilitates a closer alignment with mathematical notation, which in turn can
 make it easier to identify and correct errors in the modeling process.
+
+> [!INFO]
+>
+> The solver can return
 
 ### More examples
 
@@ -737,14 +753,16 @@ anything else than a constant and also not to apply any further mathematical
 operations.
 
 ```python
-model.Add(10 * x + 15 * y <= 10)
-model.Add(x + z == 2 * y)
+model.add(10 * x + 15 * y <= 10)
+model.add(x + z == 2 * y)
 
 # This one actually is not linear but still works.
-model.Add(x + y != z)
+model.add(x + y != z)
 
-# For <, > you can simply use <= and -1 because we are working on integers.
-model.Add(x <= z - 1)  # x < z
+# Because we are working on integers, the true smaller or greater constraints
+# are trivial to implement as x < z is equivalent to x <= z-1
+model.add(x < y + z)
+model.add(y > 300 - 4 * z)
 ```
 
 Note that `!=` can be expected slower than the other (`<=`, `>=`, `==`)
@@ -761,6 +779,40 @@ use the explicit `!=` constraints.
 > 0.763445 == 0.763439 to still be considered equal to counter numerical issues
 > of floating point arithmetic. In CP-SAT, you have to make sure that values can
 > match exactly.
+
+Let us look at the following example with two linear equality constraints:
+
+```math
+\begin{align*}
+x - y &= 0 \\
+4-y &= 2y \\
+x, y &\geq 0
+\end{align*}
+```
+
+You can verify that \(x=4/3\) and \(y=4/3\) is a feasible solution. However,
+coding this in CP-SAT results in an infeasible solution:
+
+```python
+model = cp_model.CpModel()
+x = model.new_int_var(-100, 100, "x")
+y = model.new_int_var(-100, 100, "y")
+
+model.add(x - y == 0)
+model.add(4 - x == 2 * y)
+
+solver = cp_model.CpSolver()
+status = solver.solve(model)
+assert status == cp_model.INFEASIBLE
+```
+
+Even using scaling techniques, such as multiplying integer variables by
+1,000,000 to increase the resolution, would not render the model feasible. While
+common linear programming solvers would handle this model without issue, CP-SAT
+struggles unless modifications are made to eliminate fractions, such as
+multiplying all terms by 3. However, this requires manual intervention, which
+undermines the idea of using a solver. These limitations are important to
+consider, although such scenarios are rare in practical applications.
 
 <a name="04-modelling-logic-constraints"></a>
 

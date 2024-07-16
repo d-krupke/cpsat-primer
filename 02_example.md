@@ -72,6 +72,18 @@ instance, you would of course create a dictionary or list of variables and use
 something like `model.add(sum(vars)<=n)`, because you do not want to create the
 model by hand for larger instances.
 
+> [!TIP]
+>
+> The solver can return five different statuses:
+>
+> | Status          | Code | Description                                                                               |
+> | --------------- | ---- | ----------------------------------------------------------------------------------------- |
+> | `UNKNOWN`       | 0    | The solver has not yet run.                                                               |
+> | `MODEL_INVALID` | 1    | The model is invalid. You will rarely see that status.                                    |
+> | `FEASIBLE`      | 2    | The model has a feasible, but not necessarily optimal, solution.                          |
+> | `INFEASIBLE`    | 3    | The model has no feasible solution. This means that your constraints are too restrictive. |
+> | `OPTIMAL`       | 4    | The model has an optimal solution.                                                        |
+
 For larger models, CP-SAT will unfortunately not always able to compute an
 optimal solution. However, the good news is that the solver will likely still
 find a satisfactory solution and provide a bound on the optimal solution. Once
@@ -140,6 +152,10 @@ Attempting operations like `if x + 1 <= 1: print("True")` will trigger a
 Although this approach to defining models might initially seem perplexing, it
 facilitates a closer alignment with mathematical notation, which in turn can
 make it easier to identify and correct errors in the modeling process.
+
+> [!INFO]
+>
+> The solver can return
 
 ### More examples
 
