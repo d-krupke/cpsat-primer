@@ -783,15 +783,19 @@ use the explicit `!=` constraints.
 Let us look at the following example with two linear equality constraints:
 
 ```math
-\begin{align*}
-x - y &= 0 \\
-4-y &= 2y \\
-x, y &\geq 0
-\end{align*}
+x - y = 0
 ```
 
-You can verify that \(x=4/3\) and \(y=4/3\) is a feasible solution. However,
-coding this in CP-SAT results in an infeasible solution:
+```math
+4-y = 2y
+```
+
+```math
+x, y \geq 0
+```
+
+You can verify that $x=4/3$ and $y=4/3$ is a feasible solution. However, coding
+this in CP-SAT results in an infeasible solution:
 
 ```python
 model = cp_model.CpModel()
