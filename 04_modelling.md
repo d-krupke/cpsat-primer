@@ -432,6 +432,18 @@ b3 = model.new_bool_var("b3")
 These variables, `b1`, `b2`, and `b3`, represent distinct propositions whose
 truth values are to be determined by the model.
 
+You can obtain the negation of a Boolean variable by using `~` or the
+`.Not()`-method. The resulting variable can be used just like the original
+variable:
+
+```python
+not_b1 = ~b1  # Negation of b1
+not_b2 = b2.Not()  # Alternative notation for negation
+```
+
+Note that you can use more than three variables in all of the following
+examples, except for `add_implication` which is only defined for two variables.
+
 #### Adding Logical OR Constraints
 
 The logical OR operation ensures that at least one of the specified conditions
