@@ -367,10 +367,6 @@ Although this approach to defining models might initially seem perplexing, it
 facilitates a closer alignment with mathematical notation, which in turn can
 make it easier to identify and correct errors in the modeling process.
 
-> [!INFO]
->
-> The solver can return
-
 ### More examples
 
 If you are not yet satisfied,
