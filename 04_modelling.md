@@ -444,6 +444,15 @@ not_b2 = b2.Not()  # Alternative notation for negation
 Note that you can use more than three variables in all of the following
 examples, except for `add_implication` which is only defined for two variables.
 
+> [!WARNING]
+>
+> Boolean variables are essentially special integer variables restricted to the
+> domain of 0 and 1. Therefore, you can incorporate them into linear constraints
+> as well. However, it is important to note that integer variables, unlike
+> Boolean variables, cannot be used in Boolean constraints. This is a
+> distinction from some programming languages, like Python, where integers can
+> sometimes substitute for Booleans.
+
 #### Adding Logical OR Constraints
 
 The logical OR operation ensures that at least one of the specified conditions
