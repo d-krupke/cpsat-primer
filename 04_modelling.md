@@ -601,12 +601,13 @@ model.add(x + y == 10).only_enforce_if([b1, ~b2])  # only enforce if b1 AND NOT 
 
 > [!WARNING]
 >
-> While `only_enforce_if` often enhances the efficiency of constraint modeling,
-> it can still impact the performance of CP-SAT significantly. Doing some
-> additional reasoning, you can often find a more efficient way to model your
-> problem without having to use `only_enforce_if`. As `only_enforce_if` is often
-> a more natural way to model your problem, it is still a good idea to use it to
-> get your first prototype running and think about smarter ways later.
+> While `only_enforce_if` in CP-SAT is often more efficient than similar
+> concepts in classical MIP-solvers, it can still impact the performance of
+> CP-SAT significantly. Doing some additional reasoning, you can often find a
+> more efficient way to model your problem without having to use
+> `only_enforce_if`. As `only_enforce_if` is often a more natural way to model
+> your problem, it is still a good idea to use it to get your first prototype
+> running and think about smarter ways later.
 
 <a name="04-modelling-alldifferent"></a>
 
