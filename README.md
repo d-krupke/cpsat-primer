@@ -290,13 +290,13 @@ model by hand for larger instances.
 >
 > The solver can return five different statuses:
 >
-> | Status          | Code | Description                                                                               |
-> | --------------- | ---- | ----------------------------------------------------------------------------------------- |
-> | `UNKNOWN`       | 0    | The solver has not yet run.                                                               |
-> | `MODEL_INVALID` | 1    | The model is invalid. You will rarely see that status.                                    |
-> | `FEASIBLE`      | 2    | The model has a feasible, but not necessarily optimal, solution.                          |
-> | `INFEASIBLE`    | 3    | The model has no feasible solution. This means that your constraints are too restrictive. |
-> | `OPTIMAL`       | 4    | The model has an optimal solution.                                                        |
+> | Status          | Code | Description                                                                                                                                                                           |
+> | --------------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+> | `UNKNOWN`       | 0    | The solver has not yet run.                                                                                                                                                           |
+> | `MODEL_INVALID` | 1    | The model is invalid. You will rarely see that status.                                                                                                                                |
+> | `FEASIBLE`      | 2    | The model has a feasible, but not necessarily optimal, solution. If your model does not have an objective, every feasible model will return `OPTIMAL`, which may be counterintuitive. |
+> | `INFEASIBLE`    | 3    | The model has no feasible solution. This means that your constraints are too restrictive.                                                                                             |
+> | `OPTIMAL`       | 4    | The model has an optimal solution. If your model does not have an objective, `OPTIMAL` is returned instead of `FEASIBLE`.                                                             |
 
 For larger models, CP-SAT will unfortunately not always able to compute an
 optimal solution. However, the good news is that the solver will likely still
@@ -767,7 +767,7 @@ model.add(y > 300 - 4 * z)
 
 Note that `!=` can be expected slower than the other (`<=`, `>=`, `==`)
 constraints, because it is not a linear constraint. If you have a set of
-mutually `!=` variables, it is better to use `AllDifferent` (see below) than to
+mutually `!=` variables, it is better to use `all_different` (see below) than to
 use the explicit `!=` constraints.
 
 > [!WARNING]
@@ -822,23 +822,86 @@ consider, although such scenarios are rare in practical applications.
 
 ### Logical Constraints (Propositional Logic)
 
-You can actually model logical constraints also as linear constraints, but it
-may be advantageous to show your intent:
+Propositional logic allows us to describe relationships between true or false
+statements using logical operators. Consider a simple scenario where we define
+three Boolean variables:
 
 ```python
-b1 = model.NewBoolVar("b1")
-b2 = model.NewBoolVar("b2")
-b3 = model.NewBoolVar("b3")
-
-model.AddBoolOr(b1, b2, b3)  # b1 or b2 or b3 (at least one)
-model.AddBoolAnd(b1, b2.Not(), b3.Not())  # b1 and not b2 and not b3 (all)
-model.AddBoolAnd(b1, ~b2, ~b3)  # Alternative notation for `Not()`
-model.AddBoolXOr(b1, b2, b3)  # b1 xor b2 xor b3
-model.AddImplication(b1, b2)  # b1 -> b2
+b1 = model.new_bool_var("b1")
+b2 = model.new_bool_var("b2")
+b3 = model.new_bool_var("b3")
 ```
 
-In this context you could also mention `AddAtLeastOne`, `AddAtMostOne`, and
-`AddExactlyOne`, but these can also be modelled as linear constraints.
+These variables, `b1`, `b2`, and `b3`, represent distinct propositions whose
+truth values are to be determined by the model.
+
+#### Adding Logical OR Constraints
+
+The logical OR operation ensures that at least one of the specified conditions
+holds true. To model this, you can use:
+
+```python
+model.add_bool_or(b1, b2, b3)  # b1 or b2 or b3 must be true
+model.add_at_least_one([b1, b2, b3])  # Alternative notation
+```
+
+Both lines ensure that at least one of `b1`, `b2`, or `b3` is true.
+
+#### Adding Logical AND Constraints
+
+The logical AND operation specifies that all conditions must be true
+simultaneously. To model conditions where `b1` is true and both `b2` and `b3`
+are false, you can use:
+
+```python
+model.add_bool_and(b1, b2.Not(), b3.Not())  # b1 and not b2 and not b3 must all be true
+model.add_bool_and(b1, ~b2, ~b3)  # Alternative notation using '~' for negation
+```
+
+### Adding Logical XOR Constraints
+
+The logical XOR (exclusive OR) operation ensures that an odd number of operands
+are true. It is crucial to understand this definition, as it has specific
+implications when applied to more than two variables:
+
+- For two variables, such as `b1 XOR b2`, the operation returns true if exactly
+  one of these variables is true, which aligns with the "exactly one" constraint
+  for this specific case.
+- For three or more variables, such as in the expression `b1 XOR b2 XOR b3`, the
+  operation returns true if an odd number of these variables are true. This
+  includes scenarios where one or three variables are true, assuming the total
+  number of variables involved is three.
+
+This characteristic of XOR can be somewhat complex but is crucial for modeling
+scenarios where the number of true conditions needs to be odd:
+
+```python
+model.add_bool_xor(b1, b2)  # Returns true if exactly one of b1 or b2 is true
+model.add_bool_xor(
+    b1, b2, b3
+)  # Returns true if an odd number of b1, b2, b3 are true (i.e., one or three)
+```
+
+#### Specifying Unique Conditions
+
+To enforce that exactly one or at most one of the variables is true, use:
+
+```python
+model.add_exactly_one([b1, b2, b3])  # Exactly one of the variables must be true
+model.add_at_most_one([b1, b2, b3])  # No more than one of the variables should be true
+```
+
+These constraints are useful for scenarios where exclusive choices must be
+modeled.
+
+#### Modeling Implications
+
+Logical implication, denoted as `->`, indicates that if the first condition is
+true, the second must also be true. This can be modeled as:
+
+```python
+model.add_implication(b1, b2)  # If b1 is true, then b2 must also be true
+```
 
 <a name="04-modelling-conditional-constraints"></a>
 
