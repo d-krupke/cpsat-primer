@@ -875,7 +875,7 @@ model.add_bool_and(b1, b2.Not(), b3.Not())  # b1 and not b2 and not b3 must all 
 model.add_bool_and(b1, ~b2, ~b3)  # Alternative notation using '~' for negation
 ```
 
-### Adding Logical XOR Constraints
+#### Adding Logical XOR Constraints
 
 The logical XOR (exclusive OR) operation ensures that an odd number of operands
 are true. It is crucial to understand this definition, as it has specific
