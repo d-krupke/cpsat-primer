@@ -1,5 +1,7 @@
 from ortools.sat.python import cp_model
 
+import pytest
+
 
 def test_bool_constraints():
     model = cp_model.CpModel()
@@ -93,3 +95,19 @@ def test_all_false_xor_infeasible():
     solver = cp_model.CpSolver()
     status = solver.solve(model)
     assert status == cp_model.INFEASIBLE, "Test case for all false variables failed."
+
+
+def test_integer_cannot_be_used_in_boolean_logic():
+    """
+    Integer variables cannot be used in boolean logic constraints, as of CP-SAT 9.9.
+    Check that this is still the case for any future versions.
+    """
+    model = cp_model.CpModel()
+
+    x = model.new_int_var(0, 100, "x")
+    with pytest.raises(TypeError):
+        x.Not()  # This should raise an error because x is an integer variable
+
+    b1 = model.new_bool_var("b1")
+    with pytest.raises(TypeError):
+        model.add_bool_or(x, b1)  # This should also raise an error
