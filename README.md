@@ -1084,40 +1084,87 @@ direct enforcement of equality through the objective function is not feasible.
 
 ### Multiplication, Division, and Modulo
 
-A big nono in linear optimization (the most successful optimization area) are
-multiplication of variables (because this would no longer be linear, right...).
-Often we can linearize the model by some tricks and tools like Gurobi are also
-able to do some non-linear optimization ( in the end, it is most often
-translated to a less efficient linear model again). CP-SAT can also work with
-multiplication and modulo of variables, again as constraint not as operation. So
-far, I have not made good experience with these constraints, i.e., the models
-end up being slow to solve, and would recommend to only use them if you really
-need them and cannot find a way around them.
+Quite often, your problem will require some more complex arithmetic operations
+than just sums. For example, the rental costs of a set of trucks is the number
+of trucks times the number of days times the daily rental cost. Here, the first
+two factors are variables, thus, it would be a quadratic expression. If you
+would try to multiply two variables in CP-SAT, you would get an error because
+`add` will only accept linear expressions, i.e., a sum of variables and only
+multiplication by constants is allowed. However, CP-SAT also support
+multiplication, division, and modulo operations. Analogous to `abs`, `max`, and
+`min`, you have to create an auxiliary variable that represents the result of
+the operation.
 
 ```python
-xyz = model.NewIntVar(-100 * 100 * 100, 100**3, "x*y*z")
-model.AddMultiplicationEquality(xyz, [x, y, z])  # xyz = x*y*z
-model.AddModuloEquality(x, y, 3)  # x = y % 3
-model.AddDivisionEquality(x, y, z)  # x = y // z
+model = cp_model.CpModel()
+x = model.new_int_var(-100, 100, "x")
+y = model.new_int_var(-100, 100, "y")
+z = model.new_int_var(-100, 100, "z")
+
+xyz = model.new_int_var(-(100**3), 100**3, "x*y*z")
+model.add_multiplication_equality(xyz, [x, y, z])  # xyz = x*y*z
+
+model.add_modulo_equality(x, y, 3)  # x = y % 3
+model.add_division_equality(x, y, z)  # x = y // z
 ```
 
-You can very often approximate these constraints with significantly more
-efficient linear constraints, even if it may require some additional variables
-or reification. Doing a piecewise linear approximation can be an option even for
-more complex functions, though they too are not necessarily efficient.
+It is important to note that as soon as you are using any of these operations,
+you usually leave the realm of linear optimization and enter the realm of
+non-linear optimization, which is significantly more difficult to solve.
+Additionally, for division you have to keep in mind that you are working with
+integers, so `5 // 2` will be `2` and not `2.5`.
 
-Certain quadratic constraints, e.g., second-order cones, can be efficiently
-handled by interior point methods, as utilized by the Gurobi solver. However,
-CP-SAT currently lacks this capability and needs to do significantly more work
-to handle these constraints. Long story short, if you can avoid these
-constraints, you should do so, even if you have to give up on modelling the
-exact function you had in mind.
+While many problems are initially formulated with non-linear expressions, you
+can often either reformulate them or approximate them with linear expressions.
+This usually increases the tractability of the problem and can lead to
+significantly faster solving times. While it is important to model your problem
+is close to the real-world problem as possible, you have to find the trade-off
+between accuracy and tractability. An accurate model does not help you at all,
+if the solver cannot optimize it properly. Sometimes it can make sense to
+actually have multiple phases in your optimization process, where you start with
+an inaccurate but easy to solve model and then refine it step by step, until it
+is either accurate enough, or it has reached the limits of tractability.
 
-> [!WARNING]
->
-> The documentation indicates that multiplication of more than two variables is
-> supported, but I got an error when trying it out. I have not investigated this
-> further, as I would expect it to be painfully slow anyway.
+Certain non-linear expressions can theoretically still be handled efficiently if
+they are convex, e.g., second-order cone constraints can be handled in
+polynomial time by interior point methods. Gurobi for example would be able to
+handle these constraints natively. However, while CP-SAT has an LP-propagator,
+it only has Dual Simplex algorithm, which is not capable of handling these and
+needs to rely on much simpler and less efficient methods. On the other hand,
+most open source MIP-solvers will also struggle with these constraints.
+
+In general, it is difficult to say if CP-SAT would be able to handle your
+non-linear expressions efficiently or which other solver you should use. No
+matter which solver you use, non-linear expressions are always a challenge and
+if you can avoid them, you should do so.
+
+This is one of my students' favorite non-linear expressions that can easily be
+avoided. They ten to make it, once I introduced them to the mathematical
+notation like $\sum_{e\ in E} cost(e)\cdot x_e$. If a term depends on the
+combination of two binary variables, they like to use a quadratic expression,
+like
+$\sum_{e,e'\in E} concost(e, e')\cdot x_e\cdot x_{e'}`, but you
+can easily model such cases linearly with an auxiliary variable. (Actually, the
+students are often also convinced that the quadratic term is actually linear, because of the $\sum$.)
+
+```python
+model = cp_model.CpModel()
+
+b1 = model.new_bool_var("b1")
+b2 = model.new_bool_var("b2")
+
+b1b2 = model.new_bool_var("b1b2")
+model.add_implication(~b1, ~b1b2)
+model.add_implication(~b2, ~b1b2)
+model.add_bool_or(
+    ~b1, ~b2, b1b2
+)  # optional, in case of a penalty term that is to be minimized.
+```
+
+There are actually also more complex examples with integer variables that can
+also be turned into linear expressions, but this would be too much for this
+section. We will revisit non-linear expressions in piecewise
+linear-approximations.
 
 <a name="04-modelling-alldifferent"></a>
 
