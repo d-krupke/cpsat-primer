@@ -78,7 +78,7 @@ deeper.
 
 1. [Installation](#01-installation): Quick installation guide.
 2. [Example](#02-example): A short example, showing the usage of CP-SAT.
-3. [Basic Modelling](#04-modelling): An overview of variables, objectives, and
+3. [Basic Modeling](#04-modelling): An overview of variables, objectives, and
    constraints.
 4. [Advanced Modeling](#04B-advanced-modelling): More complex constraints, such
    as circuit constraints and intervals.

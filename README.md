@@ -82,7 +82,7 @@ deeper.
 
 1. [Installation](#01-installation): Quick installation guide.
 2. [Example](#02-example): A short example, showing the usage of CP-SAT.
-3. [Basic Modelling](#04-modelling): An overview of variables, objectives, and
+3. [Basic Modeling](#04-modelling): An overview of variables, objectives, and
    constraints.
 4. [Advanced Modeling](#04B-advanced-modelling): More complex constraints, such
    as circuit constraints and intervals.
@@ -403,66 +403,56 @@ effectively.
 
 <a name="04-modelling"></a>
 
-## Basic Modelling
+## Basic Modeling
 
 ![Cover Image Modelling](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/logo_2.webp)
 
-CP-SAT provides us with much more modelling options than the classical
-MIP-solver. Instead of just the classical linear constraints (<=, ==, >=), we
-have various advanced constraints such as `all_different` or
-`add_multiplication_equality`. This spares you the burden of modelling the logic
-only with linear constraints, but also makes the interface more extensive.
-Additionally, you have to be aware that not all constraints are equally
-efficient. The most efficient constraints are linear or boolean constraints.
-Constraints such as `add_multiplication_equality` can be significantly(!!!) more
-expensive.
+CP-SAT provides a more extensive set of modeling options compared to traditional
+MIP-solvers. It goes beyond the typical linear constraints (<=, ==, >=) by
+offering advanced constraints like `all_different` and
+`add_multiplication_equality`. These advanced features reduce the need for
+modeling complex logic strictly through linear constraints, though they also
+broaden the interface's scope. However, not all constraints are equally
+efficient; linear and boolean constraints are generally most efficient, whereas
+constraints like `add_multiplication_equality` can be significantly more
+resource-intensive.
 
 > [!TIP]
 >
-> If you are transitioning from Mixed Integer Programming (MIP), you may be
-> accustomed to manually implementing higher-level constraints to optimize your
-> Big-Ms for better performance, rather than relying on the modeling interface.
-> With CP-SAT, these manual adjustments are generally unnecessary. CP-SAT relies
-> less on linear relaxation compared to MIP solvers and can efficiently manage
-> logical constraints due to its underlying SAT-solver. Dare to use the
-> higher-level constraints - they may be more efficient than you thought as
-> CP-SAT works differently than typical MIP-solvers!
+> If you are transitioning from Mixed Integer Programming (MIP), you might be
+> used to manually implementing higher-level constraints and optimizing Big-M
+> parameters for better performance. With CP-SAT, such manual adjustments are
+> generally unnecessary. CP-SAT operates differently from typical MIP solvers by
+> relying less on linear relaxation and more on its underlying SAT-solver to
+> efficiently manage logical constraints. Embrace the higher-level
+> constraints—they are often more efficient in CP-SAT environments.
 
-This primer does not have the space to teach about building good models. In the
-following, we will primarily look onto a selection of useful constraints. If you
-want to learn how to build models, you could take a look into the book
-[Model Building in Mathematical Programming by H. Paul Williams](https://www.wiley.com/en-us/Model+Building+in+Mathematical+Programming%2C+5th+Edition-p-9781118443330)
-which covers much more than you probably need, including some actual
-applications. This book is of course not for CP-SAT, but the general techniques
-and ideas carry over. However, it can also suffice to simply look on some other
-models and try some things out. If you are completely new to this area, you may
-want to check out modelling for the MIP-solver Gurobi in this
-[video course](https://www.youtube.com/playlist?list=PLHiHZENG6W8CezJLx_cw9mNqpmviq3lO9).
-Remember that many things are similar to CP-SAT, but not everything (as already
-mentioned, CP-SAT is especially interesting for the cases where a MIP-solver
-fails).
+This primer has been expanded to cover all constraints across two chapters,
+complete with various examples to illustrate the contexts in which they can be
+used. However, mastering modeling involves much more than just an understanding
+of constraints. It requires a deep appreciation of the principles and techniques
+that make models effective and applicable to real-world problems.
 
-The following part does not cover all constraints. You can get a complete
-overview by looking into the
-[official documentation](https://developers.google.com/optimization/reference/python/sat/python/cp_model#cp_model.CpModel).
-Simply go to `CpModel` and check out the `AddXXX` and `NewXXX` methods.
+For a more detailed exploration of modeling, consider "Model Building in
+Mathematical Programming" by H. Paul Williams, which offers extensive insight
+into the subject, including practical applications. While this book is not
+specific to CP-SAT, the foundational techniques and concepts are broadly
+applicable. Additionally, for those new to this area or transitioning from MIP
+solutions, studying Gurobi's modeling approach through this
+[video course](https://www.youtube.com/playlist?list=PLHiHZENG6W8CezJLx_cw9mNqpmviq3lO9)
+might prove helpful. While many principles overlap, some strategies unique to
+CP-SAT can better address cases where traditional MIP-solvers struggle.
 
-Resources on mathematical modelling (not CP-SAT specific):
+Additional resources on mathematical modeling (not CP-SAT specific):
 
 - [Math Programming Modeling Basics by Gurobi](https://www.gurobi.com/resources/math-programming-modeling-basics/):
-  Get the absolute basics.
+  This resource provides a solid introduction to the basics of mathematical
+  modeling.
 - [Modeling with Gurobi Python](https://www.youtube.com/playlist?list=PLHiHZENG6W8CezJLx_cw9mNqpmviq3lO9):
-  A video course on modelling with Gurobi. The concepts carry over to CP-SAT.
+  A comprehensive video course on modeling with Gurobi, highlighting concepts
+  that are also applicable to CP-SAT.
 - [Model Building in Mathematical Programming by H. Paul Williams](https://www.wiley.com/en-us/Model+Building+in+Mathematical+Programming%2C+5th+Edition-p-9781118443330):
-  A complete book on mathematical modelling.
-
-> [!WARNING]
->
-> CP-SAT 9.9 recently changed its API to be more consistent with the commonly
-> used Python style. Instead of `NewIntVar`, you can now also use `new_int_var`.
-> This primer still uses the old style, but will be updated in the future. I
-> observed cases where certain methods were not available in one or the other
-> style, so you may need to switch between them for some versions.
+  An extensive guide to mathematical modeling techniques.
 
 ---
 
@@ -1367,11 +1357,18 @@ model.add_linear_expression_in_domain(linear_expr=10 * x + 5 * y, domain=domain)
 <!-- 04B_advanced_modelling.md -->
 <a name="04B-advanced-modelling"></a>
 
-## Advanced Modelling
+## Advanced Modeling
 
 - [Circuit/Tour-Constraints](#04-modelling-circuit)
 - [Interval/Packing/Scheduling Constraints](#04-modelling-intervals)
 - [Piecewise Linear Constraints](#04-modelling-pwl)
+
+> [!WARNING]
+>
+> CP-SAT 9.9 recently changed its API to be more consistent with the commonly
+> used Python style. Instead of `NewIntVar`, you can now also use `new_int_var`.
+> The following part of the primer still uses the old style and will be updated
+> soon.
 
 <a name="04-modelling-circuit"></a>
 

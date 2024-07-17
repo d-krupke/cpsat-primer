@@ -1,10 +1,17 @@
 <a name="04B-advanced-modelling"></a>
 
-## Advanced Modelling
+## Advanced Modeling
 
 - [Circuit/Tour-Constraints](#04-modelling-circuit)
 - [Interval/Packing/Scheduling Constraints](#04-modelling-intervals)
 - [Piecewise Linear Constraints](#04-modelling-pwl)
+
+> [!WARNING]
+>
+> CP-SAT 9.9 recently changed its API to be more consistent with the commonly
+> used Python style. Instead of `NewIntVar`, you can now also use `new_int_var`.
+> The following part of the primer still uses the old style and will be updated
+> soon.
 
 <a name="04-modelling-circuit"></a>
 
