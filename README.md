@@ -1023,18 +1023,18 @@ model.add(x + y == 10).only_enforce_if([b1, ~b2])  # only enforce if b1 AND NOT 
 
 <a name="04-modelling-alldifferent"></a>
 
-### `add_all_different`
+### `add_all_different` Constraint
 
-There are some scenarios where you want to ensure that all variables have
-different values. These are often assignment problems, like assigning
-frequencies to transmitters, such that no two transmitters in the same area have
-the same frequency, or scheduling problems, where no two tasks can be done at
-the same time, thus, all assigned time slots need to be different. You could
-model such scenarios with a quadratic number of `!=` constraints, or directly
-replace the integer variables with boolean variables and logic, but there is
-also a dedicated constraint for this: `add_all_different`. Using this,
-constraint, you can for example easily solve Sudoku puzzles or the
-[N-queens](https://developers.google.com/optimization/cp/queens) problem.
+In various assignment and scheduling problems, ensuring that all variables hold
+distinct values is crucial. For example, in frequency assignment, no two
+transmitters within the same area should operate on the same frequency, or in
+scheduling, no two tasks should occupy the same time slot. Typically, this
+requirement could be modeled with a quadratic number of inequality (`!=`)
+constraints. However, a more elegant solution involves using the
+`add_all_different` constraint, which directly enforces that all variables in a
+list take unique values. This constraint is particularly useful in solving
+puzzles like Sudoku or the
+[N-queens problem](https://developers.google.com/optimization/cp/queens).
 
 ```python
 model = cp_model.CpModel()
@@ -1042,68 +1042,40 @@ x = model.new_int_var(-100, 100, "x")
 y = model.new_int_var(-100, 100, "y")
 z = model.new_int_var(-100, 100, "z")
 
+# Adding an all-different constraint
 model.add_all_different([x, y, z])
-model.add_all_different(x, y, z)
 
-# fancier usage including transformations
+# Advanced usage with transformations
 vars = [model.new_int_var(0, 10, f"v_{i}") for i in range(10)]
-model.add_all_different(x + i for i, x in enumerate(vars))
+model.add_all_different([x + i for i, x in enumerate(vars)])
 ```
 
-Deciding for using the `add_all_different`-constraint or one of the other
-methods actually requires some insights into the internals of CP-SAT.
+Using `add_all_different` not only simplifies the modeling but also utilizes a
+dedicated domain-based propagator in CP-SAT, enhancing efficiency beyond what is
+achievable with multiple `!=` constraints. However, if your model mixes `!=`
+constraints with `add_all_different`, be cautious, as CP-SAT disables automatic
+inference of `add_all_different` from groups of `!=` constraints, which can lead
+to performance penalties.
 
-- `add_all_different` not only is compact but also has a dedicated domain-based
-  propagator (contrary to most other higher-level constraints that are
-  internally just translated to more basic constraints), which can be more
-  efficient than the quadratic number of `!=` constraints. However, it will also
-  deactivate the inference of `add_all_different` constraints from `!=`
-  constraints, which can be a significant performance penalty if you also use
-  `!=` constraints.
-- Using a set of `!=` constraints can be more efficient if you would otherwise
-  have to mix `add_all_different` with `!=` constraints, but do not want to find
-  cliques of `!=` constraints yourself. Finding such cliques and replacing them
-  by `add_all_different` is an expensive preprocessing step in CP-SAT, but it
-  usually pays off. If you use an `add_all_different`-constraint in your model,
-  CP-SAT will assume that you already did this preprocessing and will not do it
-  again. If you use `add_all_different` trying to improve the performance, you
-  need to make it better than the inference CP-SAT would do itself, as
-  otherwise, you will actually slow down your model.
-- Using Boolean variables for every pair (e.g., you would have a variable for
-  every sensible station-frequency-combination) and `add_at_most_one` or
-  pairwise `add_boolean_or(~b1, ~b2)`, can be also very effective despite the
-  quadratic number of not only constraints but also variables, as Boolean logic
-  can usually be handled very efficiently by CP-SAT and CP-SAT would do a very
-  similar thing under the hood anyway. Usually the actually viable combinations
-  can be strongly filtered in advance by domain knowledge, strongly simplifying
-  the problem. It can also make it easier to add additional constraints or
-  objectives, like "using frequency 5 requires buying an expensive license".
-  Usually, this is my preferred way to model such problems, as the additional
-  filtering can usually be easily done in Python, but there are also downsides:
-  While CP-SAT will actually do something similar internally, CP-SAT will create
-  these variables and constraints lazily and only if needed, while you have to
-  not only create them all but your Python code will probably not be as
-  efficient as the internal C++ code of CP-SAT.
+For a practical demonstration, refer to the
+[graph coloring problem example](https://github.com/d-krupke/cpsat-primer/blob/main/examples/add_all_different.ipynb)
+in our repository. Here, using `!=` constraints solved the problem in seconds,
+whereas `add_all_different` took significantly longer, illustrating the
+importance of choosing the right method based on the problem scale and
+complexity.
 
-Thus, the decision for one of these methods (or maybe a completely different
-approach), is not trivial and there is no general answer. If you are unsure,
-just go with what feels most natural to you and try to optimize later.
+Alternatively, modeling with Boolean variables and constraints like
+`add_at_most_one` or pairwise negations (`add_boolean_or(~b1, ~b2)`) can also be
+effective. This approach benefits from CP-SAT's efficient handling of Boolean
+logic and allows for easy integration of additional constraints or objectives,
+such as licensing costs associated with certain frequencies. Although CP-SAT
+does something similar internally, it creates these constructs lazily and only
+as needed, whereas explicit modeling in Python may not be as efficient.
 
-In
-[./examples/add_all_different.ipynb](https://github.com/d-krupke/cpsat-primer/blob/main/examples/add_all_different.ipynb)
-you can find a quick experiment based on the graph coloring problem. In the
-graph coloring problem, the colors of two adjacent vertices have to be
-different. This can be easily modelled by `!=` or `AllDifferent` constraints on
-every edge. Using `!=`, we can solve the example graph in around 5 seconds. If
-we use `AllDifferent`, it takes more than 5 minutes. If we manually disable the
-`AllDifferent` inference, it also takes more than 5 minutes. Same if we add just
-a single `AllDifferent` constraint. Thus, if you use `AllDifferent` do it
-properly on large sets, or use `!=` constraints and let CP-SAT infer the
-`AllDifferent` constraints for you.
-
-Maybe CP-SAT will allow you to use `AllDifferent` without any performance
-penalty in the future, but for now, you have to be aware of this. See also
-[the optimization parameter documentation](https://github.com/google/or-tools/blob/1d696f9108a0ebfd99feb73b9211e2f5a6b0812b/ortools/sat/sat_parameters.proto#L542).
+The choice between these methods—or potentially another strategy—depends on
+specific model requirements and familiarity with CP-SAT's behavior. When in
+doubt, start with the most intuitive method and refine your approach based on
+performance observations.
 
 <a name="04-modelling-absmaxmin"></a>
 
