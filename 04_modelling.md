@@ -624,60 +624,62 @@ model.add(x + y == 10).only_enforce_if([b1, ~b2])  # only enforce if b1 AND NOT 
 
 <a name="04-modelling-absmaxmin"></a>
 
-### Absolute Values and Max/Min
+### Absolute Values and Maximum/Minimum Functions with Integer Variables
 
-Two often occurring and important operators are absolute values as well as
-minimum and maximum values. You cannot use operators directly in the
-constraints, but you can use them via an auxiliary variable and a dedicated
-constraint. These constraints are more efficient than comparable constraints in
-classical MIP-solvers, but you should still not overuse them.
-
-```python
-# abs_xz == |x+z|
-abs_xz = model.NewIntVar(0, 200, "|x+z|")  # ub = ub(x)+ub(z)
-model.AddAbsEquality(target=abs_xz, expr=x + z)
-# max_xyz = max(x,y,z)
-max_xyz = model.NewIntVar(0, 100, "max(x,y, z)")
-model.AddMaxEquality(max_xyz, [x, y, z])
-# min_xyz = min(x,y,z)
-min_xyz = model.NewIntVar(-100, 100, " min(x,y, z)")
-model.AddMinEquality(min_xyz, [x, y, z])
-```
-
-Also note that surprisingly often, you can replace these constraints with more
-efficient linear constraints. Here is one example for the max equality:
+When working with integer variables in CP-SAT, operations such as computing
+absolute values, maximum, and minimum values cannot be directly expressed using
+basic Python operations like `abs`, `max`, or `min`. Instead, these operations
+must be handled through the use of auxiliary variables and specialized
+constraints that map these variables to the desired values. The auxiliary
+variables can then be used in other constraints, representing the desired
+subexpression.
 
 ```python
-x = model.NewIntVar(0, 100, "x")
-y = model.NewIntVar(0, 100, "y")
-z = model.NewIntVar(0, 100, "z")
+model = cp_model.CpModel()
+x = model.new_int_var(-100, 100, "x")
+y = model.new_int_var(-100, 100, "y")
+z = model.new_int_var(-100, 100, "z")
 
-# enforce that max_xyz has to be at least the maximum of x, y, z
-max_xyz = model.NewIntVar(0, 100, "max_xyz")
-model.Add(max_xyz >= x)
-model.Add(max_xyz >= y)
-model.Add(max_xyz >= z)
+# Create an auxiliary variable for the absolute value of x+z
+abs_xz = model.new_int_var(0, 200, "|x+z|")
+model.add_abs_equality(target=abs_xz, expr=x + z)
 
-# as we minimized max_xyz, it has to be the maximum of x, y, z
-model.Minimize(max_xyz)
+# Create variables to capture the maximum and minimum of x, (y-1), and z
+max_xyz = model.new_int_var(0, 100, "max(x, y, z-1)")
+model.add_max_equality(target=max_xyz, exprs=[x, y - 1, z])
+
+min_xyz = model.new_int_var(-100, 100, "min(x, y, z)")
+model.add_min_equality(target=min_xyz, exprs=[x, y - 1, z])
 ```
 
-This example illustrates that enforcing the exact maximum value is not always
-necessary; a lower bound suffices. By minimizing the variable, the model itself
-enforces tightness. Although this approach requires more constraints, it
-utilizes constraints that are significantly more efficient than the
-`AddMaxEquality` constraint, typically resulting in faster solving times.
+While some practitioners report that these methods are more efficient than those
+available in classical Mixed Integer Programming solvers, such findings are
+predominantly based on empirical evidence and specific use-case scenarios. It is
+also worth noting that, surprisingly often, these constraints can be substituted
+with more efficient linear constraints. Here is an example for achieving maximum
+equality in a more efficient way:
 
-Additional techniques exist for managing minimum and absolute values, as well as
-for complex scenarios where the objective function does not directly enforce
-equality. Experienced optimizers can often swiftly identify opportunities to
-replace standard constraints with more efficient alternatives. However,
-employing these advanced techniques should follow the acquisition of sufficient
-experience or the use of a verified base model for comparison. From my
-consulting experience with optimization models, I have found that resolving
-issues from improperly applied optimizations frequently requires more time than
-applying these techniques initially to a model that uses the less efficient
-constraints.
+```python
+x = model.new_int_var(0, 100, "x")
+y = model.new_int_var(0, 100, "y")
+z = model.new_int_var(0, 100, "z")
+
+# Ensure that max_xyz is at least the maximum of x, y, and z
+max_xyz = model.new_int_var(0, 100, "max_xyz")
+model.add(max_xyz >= x)
+model.add(max_xyz >= y)
+model.add(max_xyz >= z)
+
+# Minimizing max_xyz to ensure it accurately reflects the maximum value
+model.minimize(max_xyz)
+```
+
+This approach takes advantage of the solver's minimization function to tighten
+the bound, accurately reflecting the maximum of `x`, `y`, and `z`. By utilizing
+linear constraints, this method can often achieve faster solving times compared
+to using the `add_max_equality` constraint. Similar techniques also exist for
+managing absolute and minimum values, as well as for complex scenarios where
+direct enforcement of equality through the objective function is not feasible.
 
 <a name="04-modelling-multdivmod"></a>
 
