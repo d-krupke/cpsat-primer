@@ -922,19 +922,13 @@ like setting rules for employee shifts or resource allocations.
 
 > [!INFO]
 >
-> This technique of hardcoding specific combinations into your model serves as
-> an introductory step toward understanding more sophisticated decomposition
-> methods such as the Dantzig-Wolfe decomposition. In Dantzig-Wolfe, a complex
-> optimization problem is effectively simplified by substituting a group of
-> correlated variables with a single composite variable. This composite variable
-> represents a specific configuration or subproblem, which encapsulates
-> potential solutions. By focusing on optimizing these composite variables in
-> the master problem, the approach significantly reduces the model's complexity.
-> This reduction in complexity enhances the manageability and efficiency of
-> solving large-scale optimization problems, making Dantzig-Wolfe an invaluable
-> strategy in the field of mathematical programming. Note that this explanation
-> is overly simplified and only serves as a pointer to familiarize you with the
-> concept.
+> Hardcoding specific combinations in your model is a preliminary step toward
+> advanced decomposition techniques like Dantzig-Wolfe decomposition. In this
+> method, a complex optimization problem is simplified by replacing a group of
+> correlated variables with composite variables. Such a composite variable
+> represents a solution for a subproblem. Optimizing these composite variables
+> in the master problem significantly reduces the model's complexity and
+> improves the efficiency of solving large-scale problems.
 
 A related method for managing linear expressions instead of direct assignments
 is `add_linear_expression_in_domain`. Suppose we know a certain linear
