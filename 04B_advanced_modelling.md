@@ -1,4 +1,12 @@
+<a name="04B-advanced-modelling"></a>
+
 ## Advanced Modelling
+
+- [Circuit/Tour-Constraints](#04-modelling-circuit)
+- [Interval/Packing/Scheduling Constraints](#04-modelling-intervals)
+- [Piecewise Linear Constraints](#04-modelling-pwl)
+
+<a name="04-modelling-circuit"></a>
 
 ### Circuit/Tour-Constraints
 

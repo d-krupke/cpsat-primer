@@ -8,12 +8,12 @@
 
 CP-SAT provides us with much more modelling options than the classical
 MIP-solver. Instead of just the classical linear constraints (<=, ==, >=), we
-have various advanced constraints such as `AllDifferent` or
-`AddMultiplicationEquality`. This spares you the burden of modelling the logic
+have various advanced constraints such as `all_different` or
+`add_multiplication_equality`. This spares you the burden of modelling the logic
 only with linear constraints, but also makes the interface more extensive.
 Additionally, you have to be aware that not all constraints are equally
 efficient. The most efficient constraints are linear or boolean constraints.
-Constraints such as `AddMultiplicationEquality` can be significantly(!!!) more
+Constraints such as `add_multiplication_equality` can be significantly(!!!) more
 expensive.
 
 > [!TIP]
@@ -72,13 +72,11 @@ Resources on mathematical modelling (not CP-SAT specific):
 - [Objectives](#04-modelling-objectives)
 - [Linear Constraints](#04-modelling-linear-constraints)
 - [Logical Constraints (Propositional Logic)](#04-modelling-logic-constraints)
-- [Conditional Constraints (Channeling, Reification)](#04-modelling-conditional-constraints)
+- [Conditional Constraints (Reification)](#04-modelling-conditional-constraints)
 - [Absolute Values and Max/Min](#04-modelling-absmaxmin)
 - [Multiplication, Division, and Modulo](#04-modelling-multdivmod)
 - [AllDifferent](#04-modelling-alldifferent)
-- [Circuit/Tour-Constraints](#04-modelling-circuit)
-- [Interval/Packing/Scheduling Constraints](#04-modelling-intervals)
-- [Piecewise Linear Constraints](#04-modelling-pwl)
+- [Domains and Combinations](04-modelling-table)
 
 ---
 
@@ -846,6 +844,8 @@ specific model requirements and familiarity with CP-SAT's behavior. When in
 doubt, start with the most intuitive method and refine your approach based on
 performance observations.
 
+<a name="04-modelling-table"></a>
+
 ### Domains and Combinations
 
 Next we consider how we can limit the domain of an expression or a list of
@@ -960,5 +960,3 @@ model.add_linear_expression_in_domain(linear_expr=10 * x + 5 * y, domain=domain)
 > prohibits a lot of good solutions. Maybe you just want to add an auxiliary
 > variable with restricted domain and use `<=` or `>=` to get a weaker
 > constraint, with a similar effect.
-
-<a name="04-modelling-circuit"></a>
