@@ -1139,7 +1139,7 @@ Here is one of my students' favorite examples of a non-linear expression that
 can be avoided. Once introduced to mathematical notation like
 $\sum_{e\ in E} cost(e)\cdot x_e$, if a term depends on the combination of two
 binary variables, they might initially opt for a quadratic expression such as
-$\sum*{e,e'\in E} concost(e, e')\cdot x_e\cdot x_{e'}$. However, such cases can
+$\sum_{e,e'\in E} concost(e, e')\cdot x_e\cdot x_{e'}$. However, such cases can
 often be modeled linearly using an auxiliary variable, avoiding the complexities
 of non-linear modeling.
 
