@@ -838,12 +838,12 @@ performance observations.
 
 ### Domains and Combinations
 
-Next we consider how we can limit the domain of an expression or a list of
-variables. This is useful, if the feasible values/combinations are known in
-advance, often given in form of a table.
+When optimizing scenarios with predefined feasible values or combinations of
+variables—often outlined in a table—it is advantageous to directly restrict the
+domain of an expression or set of variables.
 
-Imagine you are optimizing a shift schedule for a team of employees. You have a
-table of feasible combinations of employees for each shift, e.g.,
+Consider an example where you are optimizing a shift schedule for a team of
+employees, and you have a table of feasible combinations for each shift:
 
 | Employee 1 | Employee 2 | Employee 3 | Employee 4 |
 | ---------- | ---------- | ---------- | ---------- |
@@ -852,8 +852,8 @@ table of feasible combinations of employees for each shift, e.g.,
 | 1          | 0          | 0          | 1          |
 | 0          | 1          | 0          | 1          |
 
-CP-SAT allows you an easy way to model this with the
-`add_allowed_assignments`-method.
+In CP-SAT, this can be modeled efficiently using the `add_allowed_assignments`
+method:
 
 ```python
 model = cp_model.CpModel()
@@ -875,8 +875,8 @@ model.add_allowed_assignments(
 )
 ```
 
-Alternatively, you can also do the inverse and define forbidden assignments with
-`add_forbidden_assignments`.
+Alternatively, forbidden combinations can be specified using
+`add_forbidden_assignments`:
 
 ```python
 prohibit_assignments = [
@@ -890,63 +890,68 @@ model.add_forbidden_assignments(
 )
 ```
 
-You can of course also use integer variables and domains with this method.
-
-This constraint is of course rather useless when it spans (nearly) all
-variables, as then you could simply go through all possible combinations and
-just return the best one. However, imagine you have something like this:
+The utility of the `add_allowed_assignments` method becomes more apparent when
+integrated with other constraints within the model, rather than when it spans
+all variables. If the table covered all variables, one could theoretically
+evaluate each row to identify the best solution without the need for
+sophisticated optimization techniques. However, consider this scenario where
+constraints are integrated across multiple shifts:
 
 ```python
 NUM_SHIFTS = 7
 
 model = cp_model.CpModel()
-
 x_employee_1 = [model.new_bool_var(f"x_employee_1_{i}") for i in range(NUM_SHIFTS)]
 x_employee_2 = [model.new_bool_var(f"x_employee_2_{i}") for i in range(NUM_SHIFTS)]
 x_employee_3 = [model.new_bool_var(f"x_employee_3_{i}") for i in range(NUM_SHIFTS)]
 x_employee_4 = [model.new_bool_var(f"x_employee_4_{i}") for i in range(NUM_SHIFTS)]
 
-# Define the allowed assignments
-allowed_assignments = [
-    [1, 0, 1, 0],
-    [0, 1, 1, 0],
-    [1, 0, 0, 1],
-    [0, 1, 0, 1],
-]
 for i in range(NUM_SHIFTS):
     model.add_allowed_assignments(
         [x_employee_1[i], x_employee_2[i], x_employee_3[i], x_employee_4[i]],
         allowed_assignments,
     )
-
-# ... additional constraints on the shifts and an objective ...
 ```
 
-Now the `add_allowed_assignments`-method is very useful, as it allows you to
-kind of hard-code a small part of your model, and combine it with the rest of
-the model. This actually has some strong similarities with the Dantzig-Wolfe
-decomposition.
+The `add_allowed_assignments` method in CP-SAT enables the direct incorporation
+of specific feasible combinations into your optimization model, ensuring that
+only certain configurations of variables are considered within the solution
+space. This method effectively "hard-codes" these configurations, simplifying
+the model by predefining which combinations of variables are permissible, much
+like setting rules for employee shifts or resource allocations.
 
-A related method that focuses on linear expressions instead of tables is
-`add_linear_expression_in_domain`. Let us assume, we know that a certain linear
-expression $10*x+5*y$ has to be either 20, 50, or 100. We can model this by
-creating a domain and then using this domain in the expression.
+> [!INFO]
+>
+> This technique of hardcoding specific combinations into your model serves as
+> an introductory step toward understanding more sophisticated decomposition
+> methods such as the Dantzig-Wolfe decomposition. In Dantzig-Wolfe, a complex
+> optimization problem is effectively simplified by substituting a group of
+> correlated variables with a single composite variable. This composite variable
+> represents a specific configuration or subproblem, which encapsulates
+> potential solutions. By focusing on optimizing these composite variables in
+> the master problem, the approach significantly reduces the model's complexity.
+> This reduction in complexity enhances the manageability and efficiency of
+> solving large-scale optimization problems, making Dantzig-Wolfe an invaluable
+> strategy in the field of mathematical programming. Note that this explanation
+> is overly simplified and only serves as a pointer to familiarize you with the
+> concept.
+
+A related method for managing linear expressions instead of direct assignments
+is `add_linear_expression_in_domain`. Suppose we know a certain linear
+expression, \(10x + 5y\), must equal 20, 50, or 100:
 
 ```python
 model = cp_model.CpModel()
 x = model.new_int_var(-100, 100, "x")
 y = model.new_int_var(-100, 100, "y")
 
-# Define the domain
 domain = cp_model.Domain.from_values([20, 50, 100])
-
-model.add_linear_expression_in_domain(linear_expr=10 * x + 5 * y, domain=domain)
+model.add_linear_expression_in_domain(10 * x + 5 * y, domain)
 ```
 
 > [!WARNING]
 >
-> Make sure you did the math correctly and considered that you are working with
-> integers. Otherwise, you might end up with an infeasible model or one that
-> prohibits a lot of good solutions. Maybe you just want to add an auxiliary
-> variable with restricted domain and use `<=` or `>=` to get a weaker
-> constraint, with a similar effect.
+> Ensure calculations are correct, especially when working with integers, to
+> avoid creating an infeasible or overly restrictive model. Consider using an
+> auxiliary variable with a restricted domain and softer constraints (`<=`,
+> `>=`) to achieve a more flexible and forgiving model setup.
