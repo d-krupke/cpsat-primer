@@ -615,44 +615,80 @@ model.add(x + y == 10).only_enforce_if([b1, ~b2])  # only enforce if b1 AND NOT 
 > concepts in classical MIP-solvers, it can still impact the performance of
 > CP-SAT significantly. Doing some additional reasoning, you can often find a
 > more efficient way to model your problem without having to use
-> `only_enforce_if`. As `only_enforce_if` is often a more natural way to model
-> your problem, it is still a good idea to use it to get your first prototype
-> running and think about smarter ways later.
+> `only_enforce_if`. For logical constraints, there are actually
+> straight-forward methods in
+> [propositional calculus](https://en.wikipedia.org/wiki/Propositional_calculus).
+> As `only_enforce_if` is often a more natural way to model your problem, it is
+> still a good idea to use it to get your first prototype running and think
+> about smarter ways later.
 
 <a name="04-modelling-alldifferent"></a>
 
-### AllDifferent
+### `add_all_different`
 
-A constraint that is often seen in Constraint Programming, but I myself was
-always able to deal without it. Still, you may find it important. It forces all
-(integer) variables to have a different value.
-
-`AllDifferent` is actually the only constraint that may use a domain based
-propagator (if it is not a permutation)
-[[source](https://youtu.be/lmy1ddn4cyw?t=624)]
+There are some scenarios where you want to ensure that all variables have
+different values. These are often assignment problems, like assigning
+frequencies to transmitters, such that no two transmitters in the same area have
+the same frequency, or scheduling problems, where no two tasks can be done at
+the same time, thus, all assigned time slots need to be different. You could
+model such scenarios with a quadratic number of `!=` constraints, or directly
+replace the integer variables with boolean variables and logic, but there is
+also a dedicated constraint for this: `add_all_different`. Using this,
+constraint, you can for example easily solve Sudoku puzzles or the
+[N-queens](https://developers.google.com/optimization/cp/queens) problem.
 
 ```python
-model.AddAllDifferent(x, y, z)
+model = cp_model.CpModel()
+x = model.new_int_var(-100, 100, "x")
+y = model.new_int_var(-100, 100, "y")
+z = model.new_int_var(-100, 100, "z")
 
-# You can also add a constant to the variables.
-vars = [model.NewIntVar(0, 10) for i in range(10)]
-model.AddAllDifferent(x + i for i, x in enumerate(vars))
+model.add_all_different([x, y, z])
+model.add_all_different(x, y, z)
+
+# fancier usage including transformations
+vars = [model.new_int_var(0, 10, f"v_{i}") for i in range(10)]
+model.add_all_different(x + i for i, x in enumerate(vars))
 ```
 
-The [N-queens](https://developers.google.com/optimization/cp/queens) example of
-the official tutorial makes use of this constraint.
+Deciding for using the `add_all_different`-constraint or one of the other
+methods actually requires some insights into the internals of CP-SAT.
 
-There is a big caveat with this constraint: CP-SAT now has a preprocessing step
-that automatically tries to infer large `AllDifferent` constraints from sets of
-mutual `!=` constraints. This inference equals the NP-hard Edge Clique Cover
-problem, thus, is not a trivial task. If you add an `AllDifferent` constraint
-yourself, CP-SAT will assume that you already took care of this inference and
-will skip this step. Thus, adding a single `AllDifferent` constraint can make
-your model significantly slower, if you also use `!=` constraints. If you do not
-use `!=` constraints, you can safely use `AllDifferent` without any performance
-penalty. You may also want to use `!=` instead of `AllDifferent` if you apply it
-to overlapping sets of variables without proper optimization, because then
-CP-SAT will do the inference for you.
+- `add_all_different` not only is compact but also has a dedicated domain-based
+  propagator (contrary to most other higher-level constraints that are
+  internally just translated to more basic constraints), which can be more
+  efficient than the quadratic number of `!=` constraints. However, it will also
+  deactivate the inference of `add_all_different` constraints from `!=`
+  constraints, which can be a significant performance penalty if you also use
+  `!=` constraints.
+- Using a set of `!=` constraints can be more efficient if you would otherwise
+  have to mix `add_all_different` with `!=` constraints, but do not want to find
+  cliques of `!=` constraints yourself. Finding such cliques and replacing them
+  by `add_all_different` is an expensive preprocessing step in CP-SAT, but it
+  usually pays off. If you use an `add_all_different`-constraint in your model,
+  CP-SAT will assume that you already did this preprocessing and will not do it
+  again. If you use `add_all_different` trying to improve the performance, you
+  need to make it better than the inference CP-SAT would do itself, as
+  otherwise, you will actually slow down your model.
+- Using Boolean variables for every pair (e.g., you would have a variable for
+  every sensible station-frequency-combination) and `add_at_most_one` or
+  pairwise `add_boolean_or(~b1, ~b2)`, can be also very effective despite the
+  quadratic number of not only constraints but also variables, as Boolean logic
+  can usually be handled very efficiently by CP-SAT and CP-SAT would do a very
+  similar thing under the hood anyway. Usually the actually viable combinations
+  can be strongly filtered in advance by domain knowledge, strongly simplifying
+  the problem. It can also make it easier to add additional constraints or
+  objectives, like "using frequency 5 requires buying an expensive license".
+  Usually, this is my preferred way to model such problems, as the additional
+  filtering can usually be easily done in Python, but there are also downsides:
+  While CP-SAT will actually do something similar internally, CP-SAT will create
+  these variables and constraints lazily and only if needed, while you have to
+  not only create them all but your Python code will probably not be as
+  efficient as the internal C++ code of CP-SAT.
+
+Thus, the decision for one of these methods (or maybe a completely different
+approach), is not trivial and there is no general answer. If you are unsure,
+just go with what feels most natural to you and try to optimize later.
 
 In
 [./examples/add_all_different.ipynb](https://github.com/d-krupke/cpsat-primer/blob/main/examples/add_all_different.ipynb)
