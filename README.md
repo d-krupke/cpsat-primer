@@ -467,7 +467,7 @@ Additional resources on mathematical modeling (not CP-SAT specific):
 - [Absolute Values and Max/Min](#04-modelling-absmaxmin)
 - [Multiplication, Division, and Modulo](#04-modelling-multdivmod)
 - [AllDifferent](#04-modelling-alldifferent)
-- [Domains and Combinations](04-modelling-table)
+- [Domains and Combinations](#04-modelling-table)
 
 ---
 
@@ -1321,7 +1321,7 @@ space. This method effectively "hard-codes" these configurations, simplifying
 the model by predefining which combinations of variables are permissible, much
 like setting rules for employee shifts or resource allocations.
 
-> [!INFO]
+> [!NOTE]
 >
 > Hardcoding specific combinations in your model is a preliminary step toward
 > advanced decomposition techniques like Dantzig-Wolfe decomposition. In this

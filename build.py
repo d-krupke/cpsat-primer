@@ -134,16 +134,16 @@ def replace_tip_boxes(content):
 
 def replace_info_boxes(content):
     """
-    An info box starts with `> [!INFO]` and ends with a line that does not start with `>`.
+    An info box starts with `> [!NOTE]` and ends with a line that does not start with `>`.
     """
     lines = content.split("\n")
     new_content = ""
     collect_info = False
     info_msg = ""
     for line in lines:
-        if line.startswith("> [!INFO]"):
+        if line.startswith("> [!NOTE]"):
             collect_info = True
-            info_msg += line[len("> [!INFO]") :] + "\n"
+            info_msg += line[len("> [!NOTE]") :] + "\n"
         elif collect_info:
             if line == ">":
                 continue
