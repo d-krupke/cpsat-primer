@@ -875,6 +875,16 @@ model.add_bool_and(b1, b2.Not(), b3.Not())  # b1 and not b2 and not b3 must all 
 model.add_bool_and(b1, ~b2, ~b3)  # Alternative notation using '~' for negation
 ```
 
+The `add_bool_and` method is most effective when used with the `only_enforce_if`
+method. For cases not utilizing `only_enforce_if` a simple AND-clause such as
+$\left( b_1 \land \neg b_2 \land \neg b_3 \right)$ becomes redundant by simply
+substituting $b_1$ with `1` and $b_2`, $b_3` with `0`. In straightforward
+scenarios, consider substituting these variables with their constant values to
+reduce unnecessary complexity, especially in larger models where size and
+manageability are concerns. In smaller or simpler models, CP-SAT efficiently
+handles these redundancies, allowing you to focus on maintaining clarity and
+readability in your model.
+
 #### Adding Logical XOR Constraints
 
 The logical XOR (exclusive OR) operation ensures that an odd number of operands
