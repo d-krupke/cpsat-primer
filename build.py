@@ -61,11 +61,13 @@ def _create_info_box(msg):
                     <img src="https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/info_platypus.webp" alt="Description of image" style="width: 100%;">
                 </div>
                 <div style="width: 90%;">
-                    {msg}
-                </div>
-            </div>
-        </td>
-    </tr>
+
+{msg}
+
+  </div>
+</div>
+    </td>
+  </tr>
 </table>
     """
 
