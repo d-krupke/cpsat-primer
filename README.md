@@ -82,20 +82,22 @@ deeper.
 
 1. [Installation](#01-installation): Quick installation guide.
 2. [Example](#02-example): A short example, showing the usage of CP-SAT.
-3. [Modelling](#04-modelling): An overview of variables, objectives, and
-   constraints. The constraints make the most important part.
-4. [Parameters](#05-parameters): How to specify CP-SATs behavior, if needed.
+3. [Basic Modelling](#04-modelling): An overview of variables, objectives, and
+   constraints.
+4. [Advanced Modeling](#04B-advanced-modelling): More complex constraints, such
+   as circuit constraints and intervals.
+5. [Parameters](#05-parameters): How to specify CP-SATs behavior, if needed.
    Timelimits, hints, assumptions, parallelization, ...
-5. [Coding Patterns](#06-coding-patterns): Basic design patterns for creating
+6. [Coding Patterns](#06-coding-patterns): Basic design patterns for creating
    maintainable algorithms.
-6. [How does it work?](#07-under-the-hood): After we know what we can do with
+7. [How does it work?](#07-under-the-hood): After we know what we can do with
    CP-SAT, we look into how CP-SAT will do all these things.
-7. [Alternatives](#03-big-picture): An overview of the different optimization
+8. [Alternatives](#03-big-picture): An overview of the different optimization
    techniques and tools available. Putting CP-SAT into context.
-8. [Benchmarking your Model](#08-benchmarking): How to benchmark your model and
+9. [Benchmarking your Model](#08-benchmarking): How to benchmark your model and
    how to interpret the results.
-9. [Large Neighborhood Search](#09-lns): The use of CP-SAT to create more
-   powerful heuristics.
+10. [Large Neighborhood Search](#09-lns): The use of CP-SAT to create more
+    powerful heuristics.
 
 ---
 
@@ -401,7 +403,7 @@ effectively.
 
 <a name="04-modelling"></a>
 
-## Modelling
+## Basic Modelling
 
 ![Cover Image Modelling](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/logo_2.webp)
 
@@ -814,6 +816,16 @@ multiplying all terms by 3. However, this requires manual intervention, which
 undermines the idea of using a solver. These limitations are important to
 consider, although such scenarios are rare in practical applications.
 
+If you have a lower and an upper bound for a linear expression, you can also use
+the `add_linear_constraint`-method, which allows you to specify both bounds in
+one go.
+
+```python
+model.add_linear_constraint(linear_expr=10 * x + 15 * y, lb=-100, ub=10)
+```
+
+The similar sounding `AddLinearExpressionInDomain` is discussed later.
+
 <a name="04-modelling-logic-constraints"></a>
 
 ### Logical Constraints (Propositional Logic)
@@ -860,6 +872,7 @@ holds true. To model this, you can use:
 ```python
 model.add_bool_or(b1, b2, b3)  # b1 or b2 or b3 must be true
 model.add_at_least_one([b1, b2, b3])  # Alternative notation
+model.add(b1 + b2 + b3 >= 1)  # Alternative linear notation using '+' for OR
 ```
 
 Both lines ensure that at least one of `b1`, `b2`, or `b3` is true.
@@ -921,6 +934,13 @@ model.add_at_most_one([b1, b2, b3])  # No more than one of the variables should 
 These constraints are useful for scenarios where exclusive choices must be
 modeled.
 
+You could alternatively also use `add`.
+
+```python
+model.add(b1 + b2 + b3 == 1)  # Exactly one of the variables must be true
+model.add(b1 + b2 + b3 <= 1)  # No more than one of the variables should be true
+```
+
 #### Modeling Implications
 
 Logical implication, denoted as `->`, indicates that if the first condition is
@@ -928,6 +948,12 @@ true, the second must also be true. This can be modeled as:
 
 ```python
 model.add_implication(b1, b2)  # If b1 is true, then b2 must also be true
+```
+
+You could also use `add`.
+
+```python
+model.add(b2 >= b1)  # If b1 is true, then b2 must also be true
 ```
 
 <a name="04-modelling-conditional-constraints"></a>
@@ -957,9 +983,9 @@ or allowing a worker to take a day off after a double shift.
 > handled.
 
 To effectively manage these conditional scenarios, CP-SAT offers the
-`only_enforce_if`-method for linear and Boolean constraints, which activates a
-constraint only if a specified condition is met. This method is not only
-typically more efficient than traditional methods like the
+`only_enforce_if`-method for linear and some Boolean constraints, which
+activates a constraint only if a specified condition is met. This method is not
+only typically more efficient than traditional methods like the
 [Big-M method](https://en.wikipedia.org/wiki/Big_M_method) but also simplifies
 the model by eliminating the need to determine an appropriate Big-M value.
 
@@ -1221,7 +1247,127 @@ specific model requirements and familiarity with CP-SAT's behavior. When in
 doubt, start with the most intuitive method and refine your approach based on
 performance observations.
 
+### Domains and Combinations
+
+Next we consider how we can limit the domain of an expression or a list of
+variables. This is useful, if the feasible values/combinations are known in
+advance, often given in form of a table.
+
+Imagine you are optimizing a shift schedule for a team of employees. You have a
+table of feasible combinations of employees for each shift, e.g.,
+
+| Employee 1 | Employee 2 | Employee 3 | Employee 4 |
+| ---------- | ---------- | ---------- | ---------- |
+| 1          | 0          | 1          | 0          |
+| 0          | 1          | 1          | 0          |
+| 1          | 0          | 0          | 1          |
+| 0          | 1          | 0          | 1          |
+
+CP-SAT allows you an easy way to model this with the
+`add_allowed_assignments`-method.
+
+```python
+model = cp_model.CpModel()
+x_employee_1 = model.new_bool_var("x_employee_1")
+x_employee_2 = model.new_bool_var("x_employee_2")
+x_employee_3 = model.new_bool_var("x_employee_3")
+x_employee_4 = model.new_bool_var("x_employee_4")
+
+# Define the allowed assignments
+allowed_assignments = [
+    [1, 0, 1, 0],
+    [0, 1, 1, 0],
+    [1, 0, 0, 1],
+    [0, 1, 0, 1],
+]
+
+model.add_allowed_assignments(
+    [x_employee_1, x_employee_2, x_employee_3, x_employee_4], allowed_assignments
+)
+```
+
+Alternatively, you can also do the inverse and define forbidden assignments with
+`add_forbidden_assignments`.
+
+```python
+prohibit_assignments = [
+    [1, 0, 1, 0],
+    [0, 1, 1, 0],
+    [1, 0, 0, 1],
+    [0, 1, 0, 1],
+]
+model.add_forbidden_assignments(
+    [x_employee_1, x_employee_2, x_employee_3, x_employee_4], prohibit_assignments
+)
+```
+
+You can of course also use integer variables and domains with this method.
+
+This constraint is of course rather useless when it spans (nearly) all
+variables, as then you could simply go through all possible combinations and
+just return the best one. However, imagine you have something like this:
+
+```python
+NUM_SHIFTS = 7
+
+model = cp_model.CpModel()
+
+x_employee_1 = [model.new_bool_var(f"x_employee_1_{i}") for i in range(NUM_SHIFTS)]
+x_employee_2 = [model.new_bool_var(f"x_employee_2_{i}") for i in range(NUM_SHIFTS)]
+x_employee_3 = [model.new_bool_var(f"x_employee_3_{i}") for i in range(NUM_SHIFTS)]
+x_employee_4 = [model.new_bool_var(f"x_employee_4_{i}") for i in range(NUM_SHIFTS)]
+
+# Define the allowed assignments
+allowed_assignments = [
+    [1, 0, 1, 0],
+    [0, 1, 1, 0],
+    [1, 0, 0, 1],
+    [0, 1, 0, 1],
+]
+for i in range(NUM_SHIFTS):
+    model.add_allowed_assignments(
+        [x_employee_1[i], x_employee_2[i], x_employee_3[i], x_employee_4[i]],
+        allowed_assignments,
+    )
+
+# ... additional constraints on the shifts and an objective ...
+```
+
+Now the `add_allowed_assignments`-method is very useful, as it allows you to
+kind of hard-code a small part of your model, and combine it with the rest of
+the model. This actually has some strong similarities with the Dantzig-Wolfe
+decomposition.
+
+A related method that focuses on linear expressions instead of tables is
+`add_linear_expression_in_domain`. Let us assume, we know that a certain linear
+expression $10*x+5*y$ has to be either 20, 50, or 100. We can model this by
+creating a domain and then using this domain in the expression.
+
+```python
+model = cp_model.CpModel()
+x = model.new_int_var(-100, 100, "x")
+y = model.new_int_var(-100, 100, "y")
+
+# Define the domain
+domain = cp_model.Domain.from_values([20, 50, 100])
+
+model.add_linear_expression_in_domain(linear_expr=10 * x + 5 * y, domain=domain)
+```
+
+> [!WARNING]
+>
+> Make sure you did the math correctly and considered that you are working with
+> integers. Otherwise, you might end up with an infeasible model or one that
+> prohibits a lot of good solutions. Maybe you just want to add an auxiliary
+> variable with restricted domain and use `<=` or `>=` to get a weaker
+> constraint, with a similar effect.
+
 <a name="04-modelling-circuit"></a>
+
+
+<!-- This file was generated by the `build.py` script. Do not edit it manually. -->
+<!-- 04B_advanced_modelling.md -->
+## Advanced Modelling
 
 ### Circuit/Tour-Constraints
 
@@ -1333,12 +1479,12 @@ performance of CP-SAT for the TSP.
 
 - **AddCircuit** can solve the Euclidean TSP up to a size of around 110 vertices
   in 10 seconds to optimality.
-- **MTZ (Miller-Tucker-Zemlin)** can solve the eculidean TSP up to a size of
+- **MTZ (Miller-Tucker-Zemlin)** can solve the euclidean TSP up to a size of
   around 50 vertices in 10 seconds to optimality.
-- **Dantzig-Fulkerson-Johnson via iterative solving** can solve the eculidean
+- **Dantzig-Fulkerson-Johnson via iterative solving** can solve the euclidean
   TSP up to a size of around 50 vertices in 10 seconds to optimality.
 - **Dantzig-Fulkerson-Johnson via lazy constraints in Gurobi** can solve the
-  eculidean TSP up to a size of around 225 vertices in 10 seconds to optimality.
+  euclidean TSP up to a size of around 225 vertices in 10 seconds to optimality.
 
 This tells you to use a MIP-solver for problems dominated by the tour
 constraint, and if you have to use CP-SAT, you should definitely use the
@@ -1933,14 +2079,6 @@ Unfortunately, these problems quickly get very complicated to model and solve.
 This is just a proof that, theoretically, you can model such problems in CP-SAT.
 Practically, you can lose a lot of time and sanity with this if you are not an
 expert.
-
-### There is more
-
-CP-SAT has even more constraints, but I think I covered the most important ones.
-If you need more, you can check out the
-[official documentation](https://developers.google.com/optimization/reference/python/sat/python/cp_model#cp_model.CpModel).
-
----
 
 
 <!-- This file was generated by the `build.py` script. Do not edit it manually. -->

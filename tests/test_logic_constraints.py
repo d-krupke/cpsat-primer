@@ -15,7 +15,7 @@ def test_bool_constraints():
     model.add_bool_and(b1, ~b2, ~b3)  # Alternative notation for `Not()`
     model.add_bool_xor(b1, b2, b3)  # b1 xor b2 xor b3
     model.add_exactly_one([b1, b2, b3])  # exactly one of them
-    model.add_implication(b1, b2)  # b1 -> b2
+    model.add_implication(a=b1, b=b2)  # b1 -> b2
     model.add_at_most_one(
         [b1, b2, b3]
     )  # at most one of them. This is actually a more complex constraint.

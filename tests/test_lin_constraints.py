@@ -33,3 +33,11 @@ def test_infeasible_intersection():
     solver = cp_model.CpSolver()
     status = solver.solve(model)
     assert status == cp_model.INFEASIBLE
+
+
+def test_add_linear_constraint():
+    model = cp_model.CpModel()
+    # integer variable z with bounds -100 <= z <= 100
+    x = model.new_int_var(-100, 100, "x")
+    y = model.new_int_var(-100, 100, "y")
+    model.add_linear_constraint(linear_expr=10 * x + 15 * y, lb=-100, ub=10)

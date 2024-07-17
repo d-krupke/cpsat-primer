@@ -4,7 +4,8 @@
 
 - [Installation](./01_installation.md)
 - [Example](./02_example.md)
-- [Modelling](./04_modelling.md)
+- [Basic Modelling](./04_modelling.md)
+- [Advanced Modeling](./04B_advanced_modelling.md)
 - [Parameters](./05_parameters.md)
 - [Coding Patterns](./06_coding_patterns.md)
 - [How does it work?](./07_under_the_hood.md)

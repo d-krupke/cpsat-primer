@@ -78,20 +78,22 @@ deeper.
 
 1. [Installation](#01-installation): Quick installation guide.
 2. [Example](#02-example): A short example, showing the usage of CP-SAT.
-3. [Modelling](#04-modelling): An overview of variables, objectives, and
-   constraints. The constraints make the most important part.
-4. [Parameters](#05-parameters): How to specify CP-SATs behavior, if needed.
+3. [Basic Modelling](#04-modelling): An overview of variables, objectives, and
+   constraints.
+4. [Advanced Modeling](#04B-advanced-modelling): More complex constraints, such
+   as circuit constraints and intervals.
+5. [Parameters](#05-parameters): How to specify CP-SATs behavior, if needed.
    Timelimits, hints, assumptions, parallelization, ...
-5. [Coding Patterns](#06-coding-patterns): Basic design patterns for creating
+6. [Coding Patterns](#06-coding-patterns): Basic design patterns for creating
    maintainable algorithms.
-6. [How does it work?](#07-under-the-hood): After we know what we can do with
+7. [How does it work?](#07-under-the-hood): After we know what we can do with
    CP-SAT, we look into how CP-SAT will do all these things.
-7. [Alternatives](#03-big-picture): An overview of the different optimization
+8. [Alternatives](#03-big-picture): An overview of the different optimization
    techniques and tools available. Putting CP-SAT into context.
-8. [Benchmarking your Model](#08-benchmarking): How to benchmark your model and
+9. [Benchmarking your Model](#08-benchmarking): How to benchmark your model and
    how to interpret the results.
-9. [Large Neighborhood Search](#09-lns): The use of CP-SAT to create more
-   powerful heuristics.
+10. [Large Neighborhood Search](#09-lns): The use of CP-SAT to create more
+    powerful heuristics.
 
 ---
 

@@ -37,7 +37,7 @@ def _create_tip_box(msg):
     <td>
 <div style="display: flex; justify-content: space-between; align-items: center;">
   <div style="width: 10%;">
-    <img src="https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/info_platypus.webp" alt="Description of image" style="width: 100%;">
+    <img src="https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/idea_platypus.webp" alt="Description of image" style="width: 100%;">
   </div>
   <div style="width: 90%;">
 
@@ -47,6 +47,25 @@ def _create_tip_box(msg):
 </div>
     </td>
   </tr>
+</table>
+    """
+
+
+def _create_info_box(msg):
+    return f"""
+<table style="width: 100%; border: 1px solid black;">
+    <tr>
+        <td>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="width: 10%;">
+                    <img src="https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/info_platypus.webp" alt="Description of image" style="width: 100%;">
+                </div>
+                <div style="width: 90%;">
+                    {msg}
+                </div>
+            </div>
+        </td>
+    </tr>
 </table>
     """
 
@@ -111,6 +130,35 @@ def replace_tip_boxes(content):
     return new_content
 
 
+def replace_info_boxes(content):
+    """
+    An info box starts with `> [!INFO]` and ends with a line that does not start with `>`.
+    """
+    lines = content.split("\n")
+    new_content = ""
+    collect_info = False
+    info_msg = ""
+    for line in lines:
+        if line.startswith("> [!INFO]"):
+            collect_info = True
+            info_msg += line[len("> [!INFO]") :] + "\n"
+        elif collect_info:
+            if line == ">":
+                continue
+            if line.startswith("> "):
+                info_msg += line[len("> ") :] + "\n"
+
+            else:
+                new_content += _create_info_box(info_msg)
+                new_content += "\n"
+                collect_info = False
+                info_msg = ""
+                new_content += line + "\n"
+        else:
+            new_content += line + "\n"
+    return new_content
+
+
 def convert_for_mdbook(content):
     footer = """
 ---
@@ -130,6 +178,7 @@ def convert_for_mdbook(content):
     content = re.sub(r"```math(.*?)```", r"\\\\[ \1 \\\\]", content, flags=re.DOTALL)
     content = replace_warning_boxes(content)
     content = replace_tip_boxes(content)
+    content = replace_info_boxes(content)
     # replace all `:warning:` with the unicode character for a warning sign.
     content = content.replace(":warning:", "⚠️")
 
@@ -195,6 +244,7 @@ if __name__ == "__main__":
         "01_installation.md",
         "02_example.md",
         "04_modelling.md",
+        "04B_advanced_modelling.md",
         "05_parameters.md",
         "06_coding_patterns.md",
         "07_under_the_hood.md",
