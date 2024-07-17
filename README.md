@@ -1084,16 +1084,16 @@ direct enforcement of equality through the objective function is not feasible.
 
 ### Multiplication, Division, and Modulo
 
-Quite often, your problem will require some more complex arithmetic operations
-than just sums. For example, the rental costs of a set of trucks is the number
-of trucks times the number of days times the daily rental cost. Here, the first
-two factors are variables, thus, it would be a quadratic expression. If you
-would try to multiply two variables in CP-SAT, you would get an error because
-`add` will only accept linear expressions, i.e., a sum of variables and only
-multiplication by constants is allowed. However, CP-SAT also support
-multiplication, division, and modulo operations. Analogous to `abs`, `max`, and
-`min`, you have to create an auxiliary variable that represents the result of
-the operation.
+In practical problems, you may need to perform more complex arithmetic
+operations than simple additions. Consider the scenario where the rental cost
+for a set of trucks is calculated as the product of the number of trucks, the
+number of days, and the daily rental rate. Here, the first two factors are
+variables, leading to a quadratic expression. Attempting to multiply two
+variables directly in CP-SAT will result in an error because the `add` method
+only accepts linear expressions, which are sums of variables and constants.
+However, CP-SAT supports multiplication, division, and modulo operations.
+Similar to using `abs`, `max`, and `min`, you must create an auxiliary variable
+to represent the result of the operation.
 
 ```python
 model = cp_model.CpModel()
@@ -1108,44 +1108,40 @@ model.add_modulo_equality(x, y, 3)  # x = y % 3
 model.add_division_equality(x, y, z)  # x = y // z
 ```
 
-It is important to note that as soon as you are using any of these operations,
-you usually leave the realm of linear optimization and enter the realm of
-non-linear optimization, which is significantly more difficult to solve.
-Additionally, for division you have to keep in mind that you are working with
-integers, so `5 // 2` will be `2` and not `2.5`.
+When using these operations, you often transition from linear to non-linear
+optimization, which is generally more challenging to solve. In cases of
+division, it is essential to remember that operations are on integers;
+therefore, `5 // 2` results in `2`, not `2.5`.
 
-While many problems are initially formulated with non-linear expressions, you
-can often either reformulate them or approximate them with linear expressions.
-This usually increases the tractability of the problem and can lead to
-significantly faster solving times. While it is important to model your problem
-is close to the real-world problem as possible, you have to find the trade-off
-between accuracy and tractability. An accurate model does not help you at all,
-if the solver cannot optimize it properly. Sometimes it can make sense to
-actually have multiple phases in your optimization process, where you start with
-an inaccurate but easy to solve model and then refine it step by step, until it
-is either accurate enough, or it has reached the limits of tractability.
+Many problems initially involve non-linear expressions that can often be
+reformulated or approximated using linear expressions. This transformation can
+enhance the tractability and speed of solving the problem. Although modeling
+your problem as closely as possible to the real-world scenario is crucial, it is
+equally important to balance accuracy with tractability. A highly accurate model
+is futile if the solver cannot optimize it efficiently. It might be beneficial
+to employ multiple phases in your optimization process, starting with a simpler,
+less accurate model and gradually refining it.
 
-Certain non-linear expressions can theoretically still be handled efficiently if
-they are convex, e.g., second-order cone constraints can be handled in
-polynomial time by interior point methods. Gurobi for example would be able to
-handle these constraints natively. However, while CP-SAT has an LP-propagator,
-it only has Dual Simplex algorithm, which is not capable of handling these and
-needs to rely on much simpler and less efficient methods. On the other hand,
-most open source MIP-solvers will also struggle with these constraints.
+Some non-linear expressions can still be managed efficiently if they are convex.
+For instance, second-order cone constraints can be solved in polynomial time
+using interior point methods. Gurobi, for example, supports these constraints
+natively. CP-SAT includes an LP-propagator but relies on the Dual Simplex
+algorithm, which is not suitable for these constraints and must depend on
+simpler methods. Similarly, most open-source MIP solvers may struggle with these
+constraints.
 
-In general, it is difficult to say if CP-SAT would be able to handle your
-non-linear expressions efficiently or which other solver you should use. No
-matter which solver you use, non-linear expressions are always a challenge and
-if you can avoid them, you should do so.
+It is challenging to determine if CP-SAT can handle non-linear expressions
+efficiently or which solver would be best suited for your problem. Non-linear
+expressions are invariably complex, and avoiding them when possible is
+advisable.
 
-This is one of my students' favorite non-linear expressions that can easily be
-avoided. They ten to make it, once I introduced them to the mathematical
-notation like $\sum_{e\ in E} cost(e)\cdot x_e$. If a term depends on the
-combination of two binary variables, they like to use a quadratic expression,
-like
-$\sum_{e,e'\in E} concost(e, e')\cdot x_e\cdot x_{e'}`, but you
-can easily model such cases linearly with an auxiliary variable. (Actually, the
-students are often also convinced that the quadratic term is actually linear, because of the $\sum$.)
+Here is one of my students' favorite examples of a non-linear expression that
+can be avoided. Once introduced to mathematical notation like
+$\sum_{e\ in E} cost(e)\cdot x_e$, if a term depends on the combination of two
+binary variables, they might initially opt for a quadratic expression such as
+$\sum*{e,e'\in E} concost(e, e')\cdot x_e\cdot x_{e'}$. However, such cases can
+often be modeled linearly using an auxiliary variable, avoiding the complexities
+of non-linear modeling.
 
 ```python
 model = cp_model.CpModel()
@@ -1156,15 +1152,18 @@ b2 = model.new_bool_var("b2")
 b1b2 = model.new_bool_var("b1b2")
 model.add_implication(~b1, ~b1b2)
 model.add_implication(~b2, ~b1b2)
-model.add_bool_or(
-    ~b1, ~b2, b1b2
-)  # optional, in case of a penalty term that is to be minimized.
+model.add_bool_or(~b1, ~b2, b1b2)  # optional, for a penalty term to be minimized.
 ```
 
-There are actually also more complex examples with integer variables that can
-also be turned into linear expressions, but this would be too much for this
-section. We will revisit non-linear expressions in piecewise
-linear-approximations.
+There are numerous further instances where non-linear expressions can be
+simplified by using auxiliary variables or by shifting the non-linear components
+into constants. However, exploring these techniques is most beneficial when you
+encounter specific challenges related to non-linear expressions in your models.
+
+We will revisit further discussions on non-linear expressions and their
+conversion to piecewise linear approximations in a subsequent section. This will
+provide a foundational understanding necessary for addressing more complex
+modeling scenarios effectively.
 
 <a name="04-modelling-alldifferent"></a>
 
