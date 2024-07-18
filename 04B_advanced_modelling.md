@@ -66,8 +66,8 @@ reading the book
 > [OR-Tools Routing](https://developers.google.com/optimization/routing) if
 > routing constitutes a significant aspect of your problem. However, for
 > scenarios where variants of the TSP are merely a component of a larger
-> problem, utilizing the `add_circuit` or `add_multiple_circuit` constraints can
-> be very beneficial.
+> problem, utilizing CP-SAT with the `add_circuit` or `add_multiple_circuit`
+> constraints can be very beneficial.
 
 |                                                                                                                                                        ![TSP BnB Example](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/tsp_bnb_improved.png)                                                                                                                                                         |
 | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
@@ -179,7 +179,7 @@ If all tours share a common depot (vertex 0), the `add_multiple_circuit`
 constraint is an alternative. However, this constraint does not allow you to
 specify the number of tours, nor can it determine to which tour a particular
 edge belongs. Therefore, the `add_circuit` constraint is often a superior
-choice. Although the parameters for both constraints are identical, vertex 0
+choice. Although the arguments for both constraints are identical, vertex 0
 serves a unique role as the depot where all tours commence and conclude.
 
 #### Performance of `add_circuit` for the TSP
@@ -237,7 +237,7 @@ offering a substantial advantage in solving the TSP.
 
 <a name="04-modelling-intervals"></a>
 
-### Interval Variables and No-Overlap Constraints
+### Scheduling and Packing with Intervals
 
 A special case of variables are the interval variables, that allow to model
 intervals, i.e., a span of some length with a start and an end. There are fixed
@@ -249,54 +249,322 @@ overlaps between intervals. These variables are special because they are
 actually not a variable, but a container that bounds separately defined start,
 length, and end variables.
 
+There are four types of interval variables: `new_interval_var`,
+`new_fixed_size_interval_var`, `new_optional_interval_var`, and
+`new_optional_fixed_size_interval_var`. The `new_optional_interval_var` is the
+most expressive but also the most expensive, while `new_fixed_size_interval_var`
+is the least expressive and the easiest to optimize. All four types take a
+`start=` variable. Intervals with `fixed_size` in their name require a constant
+`size=` argument defining the interval length. Otherwise, the `size=` argument
+can be a variable in combination with an `end=` variable, which complicates the
+solution. Intervals with `optional` in their name include an `is_present=`
+argument, a boolean indicating if the interval is present. The no-overlap
+constraints, discussed later, apply only to intervals that are present, allowing
+for modeling problems with multiple resources or optional tasks. Instead of a
+pure integer variable, all arguments also accept an affine expression, e.g.,
+`start=5*start_var+3`.
+
 ```python
-from ortools.sat.python import cp_model
+model = cp_model.CpModel()
 
-start_var = model.NewIntVar(0, 100, "start")
-length_var = model.NewIntVar(10, 20, "length")
-end_var = model.NewIntVar(0, 100, "end")
-is_present_var = model.NewBoolVar("is_present")
+start_var = model.new_int_var(0, 100, "start")
+length_var = model.new_int_var(10, 20, "length")
+end_var = model.new_int_var(0, 100, "end")
+is_present_var = model.new_bool_var("is_present")
 
-# creating an interval of fixed length
-fixed_interval = model.NewFixedSizeIntervalVar(
-    start=start_var, size=10, end=end_var, name="fixed_interval"
-)
 # creating an interval whose length can be influenced by a variable (more expensive)
-flexible_interval = model.NewIntervalVar(
+flexible_interval = model.new_interval_var(
     start=start_var, size=length_var, end=end_var, name="flexible_interval"
 )
-# creating an interval that can be present or not
-optional_fixed_interval = model.NewOptionalFixedSizeIntervalVar(
+
+# creating an interval of fixed length
+fixed_interval = model.new_fixed_size_interval_var(
     start=start_var,
-    size=10,
-    end=end_var,
-    is_present=is_present_var,
-    name="optional_fixed_interval",
+    size=10,  # needs to be a constant
+    name="fixed_interval",
 )
+
 # creating an interval that can be present or not and whose length can be influenced by a variable (most expensive)
-optional_interval = model.NewOptionalIntervalVar(
+optional_interval = model.new_optional_interval_var(
     start=start_var,
     size=length_var,
     end=end_var,
     is_present=is_present_var,
     name="optional_interval",
 )
-```
 
-There are now the two no-overlap constraints for 1D and 2D that can be used to
-prevent overlaps between intervals. The 1D no-overlap constraint is used to
-prevent overlaps between intervals on a single dimension, e.g., time. The 2D
-no-overlap constraint is used to prevent overlaps between intervals on two
-dimensions, e.g., time and resources or for packing rectangles.
-
-```python
-# 1D no-overlap constraint
-model.AddNoOverlap([__INTERVAL_VARS__])
-# 2D no-overlap constraint. The two lists need to have the same length.
-model.AddNoOverlap2D(
-    [__INTERVAL_VARS_FIRST_DIMENSION__], [__INTERVAL_VARS_SECOND_DIMENSION__]
+# creating an interval that can be present or not
+optional_fixed_interval = model.new_optional_fixed_size_interval_var(
+    start=start_var,
+    size=10,  # needs to be a constant
+    is_present=is_present_var,
+    name="optional_fixed_interval",
 )
 ```
+
+These interval variables are not useful on their own, as we could have easily
+achieved the same with a simple linear constraint. However, CP-SAT provides
+special constraints for these interval variables, that would actually be much
+harder to model by hand and are also much more efficient.
+
+CP-SAT offers the following three constraints for intervals:
+`add_no_overlap`,`add_no_overlap_2d`, `add_cumulative`. `add_no_overlap` is used
+to prevent overlaps between intervals on a single dimension, e.g., time.
+`add_no_overlap_2d` is used to prevent overlaps between intervals on two
+dimensions, e.g., for packing rectangles. `add_cumulative` is used to model a
+resource constraint, where the sum of the demands of the overlapping intervals
+must not exceed the capacity of the resource.
+
+```python
+optional_interval = model.new_optional_interval_var(
+    start=start_var,
+    size=length_var,
+    end=end_var,
+    is_present=is_present_var,
+    name="optional_interval",
+)
+
+# creating an interval that can be present or not
+optional_fixed_interval = model.new_optional_fixed_size_interval_var(
+    start=start_var,
+    size=10,  # needs to be a constant
+    is_present=is_present_var,
+    name="optional_fixed_interval",
+)
+
+model.add_no_overlap(
+    interval_vars=[
+        flexible_interval,
+        fixed_interval,
+        optional_interval,
+        optional_fixed_interval,
+    ]
+)
+model.add_no_overlap_2d(
+    x_intervals=[
+        flexible_interval,
+        fixed_interval,
+        optional_interval,
+        optional_fixed_interval,
+    ],
+    y_intervals=[
+        flexible_interval,
+        fixed_interval,
+        optional_interval,
+        optional_fixed_interval,
+    ],
+)
+
+demand_vars = [model.new_int_var(1, 10, f"demand_{i}") for i in range(4)]
+capacity_var = model.new_int_var(1, 100, "capacity")
+model.add_cumulative(
+    intervals=[
+        flexible_interval,
+        fixed_interval,
+        optional_interval,
+        optional_fixed_interval,
+    ],
+    demands=demand_vars,
+    capacity=capacity_var,
+)
+```
+
+Let us take a look on a few examples on how we could use these constraints.
+
+#### Scheduling for a Conference Room with Intervals
+
+Let us assume we have a conference room and we have to schedule some meetings.
+Each meeting has a certain length and a certain ranges of possible start times.
+The time slots are in 5 minute intervals starting at 8:00 and going until 18:00.
+Thus, we have 10\*12=120 time slots, and can use a simple integer variable to
+model the start time. Assuming the lengths of the meetings are fixed, we can use
+the simple `new_fixed_size_interval_var` to model the intervals. We can then use
+the `add_no_overlap` constraint to ensure that no two meetings overlap. By using
+domains for the start time, we can also model ranges of possible start times.
+
+```python
+# Convert time to index and back
+def t_to_idx(hour, minute):
+    return (hour - 8) * 12 + minute // 5
+
+
+def idx_to_t(timepoint):
+    hour = 8 + timepoint // 12
+    minute = (timepoint % 12) * 5
+    return f"{hour}:{minute:02d}"
+
+
+# Define meeting information using namedtuples
+MeetingInfo = namedtuple("MeetingInfo", ["start_times", "duration"])
+
+# Meeting definitions
+meetings = {
+    "meeting_a": MeetingInfo(
+        start_times=[
+            [t_to_idx(hour=8, minute=0), t_to_idx(hour=12, minute=0)],
+            [t_to_idx(hour=16, minute=0), t_to_idx(hour=17, minute=0)],
+        ],
+        duration=24,  # 2 hours
+    ),
+    "meeting_b": MeetingInfo(
+        start_times=[
+            [t_to_idx(hour=10, minute=0), t_to_idx(hour=12, minute=0)],
+        ],
+        duration=6,  # 30 minutes
+    ),
+    "meeting_c": MeetingInfo(
+        start_times=[
+            [t_to_idx(hour=16, minute=0), t_to_idx(hour=17, minute=0)],
+        ],
+        duration=3,  # 15 minutes
+    ),
+    "meeting_d": MeetingInfo(
+        start_times=[
+            [t_to_idx(hour=8, minute=0), t_to_idx(hour=10, minute=0)],
+            [t_to_idx(hour=12, minute=0), t_to_idx(hour=14, minute=0)],
+        ],
+        duration=12,  # 1 hour
+    ),
+}
+
+# Create a new CP-SAT model
+model = cp_model.CpModel()
+
+# Create start time variables for each meeting
+start_time_vars = {
+    meeting_name: model.new_int_var_from_domain(
+        cp_model.Domain.from_intervals(meeting_info.start_times),
+        f"start_{meeting_name}",
+    )
+    for meeting_name, meeting_info in meetings.items()
+}
+
+# Create interval variables for each meeting
+interval_vars = {
+    meeting_name: model.new_fixed_size_interval_var(
+        start=start_time_vars[meeting_name],
+        size=meeting_info.duration,
+        name=f"interval_{meeting_name}",
+    )
+    for meeting_name, meeting_info in meetings.items()
+}
+
+# Add the no-overlap constraint to the model
+model.add_no_overlap(list(interval_vars.values()))
+
+# Solve the model
+solver = cp_model.CpSolver()
+status = solver.solve(model)
+
+# Extract and print the solution
+scheduled_times = {}
+if status in (cp_model.OPTIMAL, cp_model.FEASIBLE):
+    for meeting_name in meetings:
+        start_time = solver.value(start_time_vars[meeting_name])
+        scheduled_times[meeting_name] = start_time
+        print(f"{meeting_name} starts at {idx_to_t(start_time)}")
+else:
+    print("No feasible solution found.")
+```
+
+This will result in a solution like this:
+
+|              ![Schedule](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/scheduling_example.png)              |
+| :-------------------------------------------------------------------------------------------------------------------------------: |
+| A possible non-overlapping schedule for above example. The instance is quite simple, but you could try adding some more meetings. |
+
+#### Scheduling for multiple resources with optional intervals
+
+Now imagine, we have multiple resources, e.g., multiple conference rooms, and we
+have to schedule the meetings such that no two meetings overlap in the same
+room. This can be modeled with optional intervals, where the intervals are only
+present if the meeting is scheduled in the room. We can then use the
+`add_no_overlap` constraint to ensure that no two meetings overlap in the same
+room.
+
+```python
+# Define meeting information
+MeetingInfo = namedtuple("MeetingInfo", ["start_times", "duration"])
+
+# Meeting definitions
+meetings = {
+    "meeting_a": MeetingInfo(
+        start_times=[
+            [t_to_idx(8, 0), t_to_idx(12, 0)],
+            [t_to_idx(16, 0), t_to_idx(16, 0)],
+        ],
+        duration=24,
+    ),
+    "meeting_b": MeetingInfo(
+        start_times=[[t_to_idx(10, 0), t_to_idx(12, 0)]], duration=48
+    ),
+    "meeting_c": MeetingInfo(
+        start_times=[[t_to_idx(16, 0), t_to_idx(17, 0)]], duration=6
+    ),
+    "meeting_d": MeetingInfo(
+        start_times=[
+            [t_to_idx(8, 0), t_to_idx(10, 0)],
+            [t_to_idx(12, 0), t_to_idx(14, 0)],
+        ],
+        duration=12,
+    ),
+    "meeting_e": MeetingInfo(
+        start_times=[[t_to_idx(10, 0), t_to_idx(12, 0)]], duration=24
+    ),
+    "meeting_f": MeetingInfo(
+        start_times=[[t_to_idx(14, 0), t_to_idx(14, 0)]], duration=48
+    ),
+    "meeting_g": MeetingInfo(
+        start_times=[[t_to_idx(14, 0), t_to_idx(16, 0)]], duration=24
+    ),
+}
+
+# Create the model
+model = cp_model.CpModel()
+
+# Create start time and room variables
+start_time_vars = {
+    name: model.new_int_var_from_domain(
+        cp_model.Domain.from_intervals(info.start_times), f"start_{name}"
+    )
+    for name, info in meetings.items()
+}
+
+rooms = ["room_a", "room_b"]
+room_vars = {
+    name: {room: model.new_bool_var(f"{name}_in_{room}") for room in rooms}
+    for name in meetings
+}
+
+# Ensure each meeting is assigned to exactly one room
+for name, room_dict in room_vars.items():
+    model.add_exactly_one(room_dict.values())
+
+# Create interval variables and add no-overlap constraint
+interval_vars = {
+    name: {
+        room: model.new_optional_fixed_size_interval_var(
+            start_time_vars[name],
+            info.duration,
+            room_vars[name][room],
+            f"interval_{name}_in_{room}",
+        )
+        for room in rooms
+    }
+    for name, info in meetings.items()
+}
+
+for room in rooms:
+    model.add_no_overlap([interval_vars[name][room] for name in meetings])
+```
+
+This will result in a solution like this:
+
+| ![Schedule multiple rooms](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/scheduling_multiple_resources.png) |
+| :-------------------------------------------------------------------------------------------------------------------------------: |
+|                            A possible non-overlapping schedule for above example with multiple rooms.                             |
+
+#### Packing rectangles without overlaps
 
 Let us take a quick look on how we can use this to check if we can pack a set of
 rectangles into a container without overlaps. This can be an interesting problem
