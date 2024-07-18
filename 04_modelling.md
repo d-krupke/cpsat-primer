@@ -978,7 +978,7 @@ model.add_linear_expression_in_domain(10 * x + 5 * y, domain)
 > auxiliary variable with a restricted domain and softer constraints (`<=`,
 > `>=`) to achieve a more flexible and forgiving model setup.
 
-<a name="04-modelling-element"></a>
+<a name="04-modelling-element"></a> <a name="04-modelling-array"></a>
 
 ### Element/Array Constraints
 
@@ -1050,12 +1050,14 @@ Examples of feasible variable assignments:
 
 > [!WARNING]
 >
-> I would generally avoid using the `add_element` and `add_inverse` constraints.
-> Although CP-SAT may employ effective propagation techniques for them, these
-> constraints can seem somewhat unnatural and esoteric. Modeling the stable
-> matching constraint is more straightforward using binary variables $x_{ij}$ to
-> denote whether $v_i$ is matched with $w_j$. This approach requires adding an
-> `add_exactly_one` constraint for every vertex to ensure unique pairings. If
-> the model needs to account for specific qualities or costs associated with
-> each connection, binary variables are essential. Using only indices would
-> necessitate additional logic to accurately represent these characteristics.
+> I generally advise against using the `add_element` and `add_inverse`
+> constraints. While CP-SAT may have effective propagation techniques for them,
+> these constraints can appear unnatural and complex. It's often more
+> straightforward to model stable matching with binary variables $x_{ij}$,
+> indicating whether $v_i$ is matched with $w_j$, and employing an
+> `add_exactly_one` constraint for each vertex to ensure unique matches. If your
+> model needs to capture specific attributes or costs associated with
+> connections, binary variables are necessary. Relying solely on indices would
+> require additional logic for accurate representation. Additionally, use
+> non-binary variables only if the numerical value inherently carries semantic
+> meaning that cannot simply be re-indexed.

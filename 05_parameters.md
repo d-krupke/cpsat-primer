@@ -6,6 +6,13 @@
 
 ![Cover Image Parameters](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/logo_3.webp)
 
+> [!WARNING]
+>
+> CP-SAT 9.9 recently changed its API to be more consistent with the commonly
+> used Python style. Instead of `NewIntVar`, you can now also use `new_int_var`.
+> The following part of the primer still uses the old style and will be updated
+> soon.
+
 The CP-SAT solver has a lot of parameters to control its behavior. They are
 implemented via
 [Protocol Buffer](https://developers.google.com/protocol-buffers) and can be
