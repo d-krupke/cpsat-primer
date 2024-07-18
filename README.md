@@ -2032,6 +2032,23 @@ This will result in a solution like this:
 | :-------------------------------------------------------------------------------------------------------------------------------: |
 |                            A possible non-overlapping schedule for above example with multiple rooms.                             |
 
+> [!WARNING]
+>
+> Do not directly jump to intervals when you have a scheduling problem.
+> Intervals are great if you actually have somehow continuous time or space that
+> you have to schedule. If you have a more discrete problem, e.g., a scheduling
+> problem with a fixed number of slots, you can often model this problem much
+> more efficiently using simple Boolean variables and constraints. Especially,
+> if you can use domain knowledge to find clusters of meetings that cannot
+> overlap, this can be much more efficient.
+
+> [!TIP]
+>
+> You could easily extend this model to schedule as many meetings as feasible
+> using an objective function. You could also maximize the distance between two
+> meetings by using a variable size interval. This would be a good exercise to
+> try.
+
 #### Packing rectangles without overlaps
 
 Let us take a quick look on how we can use this to check if we can pack a set of
