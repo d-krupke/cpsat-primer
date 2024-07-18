@@ -407,12 +407,13 @@ effectively.
 
 ![Cover Image Modelling](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/logo_2.webp)
 
-CP-SAT provides a more extensive set of modeling options compared to traditional
-MIP-solvers. It goes beyond the typical linear constraints (<=, ==, >=) by
-offering advanced constraints like `all_different` and
+In this chapter, we dive into the basic modeling capabilities of CP-SAT. CP-SAT
+provides an extensive set of constraints, closer to high-level modeling
+languages like MiniZinc than to traditional Mixed Integer Programming (MIP). For
+example, it offers constraints like `all_different` and
 `add_multiplication_equality`. These advanced features reduce the need for
 modeling complex logic strictly through linear constraints, though they also
-broaden the interface's scope. However, not all constraints are equally
+increase the interface's complexity. However, not all constraints are equally
 efficient; linear and boolean constraints are generally most efficient, whereas
 constraints like `add_multiplication_equality` can be significantly more
 resource-intensive.
@@ -423,9 +424,9 @@ resource-intensive.
 > used to manually implementing higher-level constraints and optimizing Big-M
 > parameters for better performance. With CP-SAT, such manual adjustments are
 > generally unnecessary. CP-SAT operates differently from typical MIP solvers by
-> relying less on linear relaxation and more on its underlying SAT-solver to
-> efficiently manage logical constraints. Embrace the higher-level
-> constraints—they are often more efficient in CP-SAT environments.
+> relying less on linear relaxation and more on its underlying SAT-solver and
+> propagators to efficiently manage logical constraints. Embrace the
+> higher-level constraints—they are often more efficient in CP-SAT.
 
 This primer has been expanded to cover all constraints across two chapters,
 complete with various examples to illustrate the contexts in which they can be
