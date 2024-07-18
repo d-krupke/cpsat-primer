@@ -56,15 +56,18 @@ reading the book
 
 > [!TIP]
 >
-> If your problem is actually the TSP, you may be better off using
-> [Concorde](https://www.math.uwaterloo.ca/tsp/concorde.html). If your problem
-> is nearly the TSP, you may be better off using a Mixed Integer Programming
-> solver, as most TSP-variants have excellent LP-relaxations that a MIP-solver
-> can exploit better than CP-SAT. There is also a sibling of CP-SAT, called
-> [OR-Tools Routing](https://developers.google.com/optimization/routing), if the
-> routing problem is the main part of your problem. However, quite often,
-> variants of the TSP are just a subproblem, and in these cases, the
-> `add_circuit` or `add_multiple_circuit` constraints are very useful.
+> If your problem is specifically the Traveling Salesperson Problem (TSP), you
+> might find the
+> [Concorde solver](https://www.math.uwaterloo.ca/tsp/concorde.html)
+> particularly effective. For problems closely related to the TSP, a Mixed
+> Integer Programming (MIP) solver may be more suitable, as many TSP variants
+> yield strong linear programming relaxations that MIP solvers can efficiently
+> exploit. Additionally, consider
+> [OR-Tools Routing](https://developers.google.com/optimization/routing) if
+> routing constitutes a significant aspect of your problem. However, for
+> scenarios where variants of the TSP are merely a component of a larger
+> problem, utilizing the `add_circuit` or `add_multiple_circuit` constraints can
+> be very beneficial.
 
 |                                                                                                                                                        ![TSP BnB Example](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/tsp_bnb_improved.png)                                                                                                                                                         |
 | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
@@ -169,15 +172,15 @@ various tour and path problems. Explore further examples:
 
 #### `add_multiple_circuit`
 
-You can use multiple `add_circuit` constraint to model multiple disjoint tours,
-as we have seen in
-[./examples/add_circuit_multi_tour.py](https://github.com/d-krupke/cpsat-primer/blob/main/examples/add_circuit_multi_tour.py),
-but if your tours all need to have the same depot (at vertex 0), you can use the
-`add_multiple_circuit` constraint. However, you cannot specify the number of
-tours, and you can also not query within the model to which tour an edge
-belongs. Thus, in most cases the `add_circuit` constraint is still the better
-choice. The parameters are exactly the same, but vertex 0 has a special meaning
-as the depot at which all tours start and end.
+You can model multiple disjoint tours using several `add_circuit` constraints,
+as demonstrated in
+[this example](https://github.com/d-krupke/cpsat-primer/blob/main/examples/add_circuit_multi_tour.py).
+If all tours share a common depot (vertex 0), the `add_multiple_circuit`
+constraint is an alternative. However, this constraint does not allow you to
+specify the number of tours, nor can it determine to which tour a particular
+edge belongs. Therefore, the `add_circuit` constraint is often a superior
+choice. Although the parameters for both constraints are identical, vertex 0
+serves a unique role as the depot where all tours commence and conclude.
 
 #### Performance of `add_circuit` for the TSP
 
