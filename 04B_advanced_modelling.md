@@ -40,7 +40,7 @@ adaptability makes them invaluable for a broad spectrum of practical problems
 where the sequence and arrangement of operations critically impact efficiency
 and outcomes.
 
-|                                                      ![TSP Example](./images/optimal_tsp.png)                                                       |
+|                         ![TSP Example](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/optimal_tsp.png)                         |
 | :-------------------------------------------------------------------------------------------------------------------------------------------------: |
 | The Traveling Salesman Problem (TSP) asks for the shortest possible route that visits every vertex exactly once and returns to the starting vertex. |
 
@@ -66,147 +66,106 @@ reading the book
 > variants of the TSP are just a subproblem, and in these cases, the
 > `add_circuit` or `add_multiple_circuit` constraints are very useful.
 
-|                                                                                                                                                                                      ![TSP BnB Example](./images/tsp_bnb_improved.png)                                                                                                                                                                                      |
+|                                                                                                                                                        ![TSP BnB Example](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/tsp_bnb_improved.png)                                                                                                                                                         |
 | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
 | This example shows why Mixed Integer Programming solvers are so good in solving the TSP. The linear relaxation (at the top) is already very close to the optimal solution. By branching, i.e., trying 0 and 1, on just two fractional variables, we not only find the optimal solution but can also prove optimality. The example was generated with the [DIY TSP Solver](https://www.math.uwaterloo.ca/tsp/D3/bootQ.html). |
 
 #### `add_circuit`
 
-So let us assume, your problem requires circuit constraints only as a
-subproblem. The `add_circuit` constraint expects a list of triples `(u,v,var)`,
-where `u` is the source vertex, `v` is the target vertex, and `var` is a boolean
-variable indicating if the edge is used. As also the edge `(v,v)` is allowed, we
-have a directed graph with loops. The `add_circuit` constraint will then enforce
-that the edges for which the variable is true form a single circuit that visits
-every vertex exactly once, except for the vertices where the variable for the
-loop is true. The vertices need to be encoded by their index, starting with 0.
-Make sure that you do not skip any index, as this will lead to an isolated
-vertex for which there is no circuit possible.
+The `add_circuit` constraint is utilized to solve circuit problems within
+directed graphs, even allowing loops. It operates by taking a list of triples
+`(u,v,var)`, where `u` and `v` denote the source and target vertices,
+respectively, and `var` is a Boolean variable that indicates if an edge is
+included in the solution. The constraint ensures that the edges marked as `True`
+form a single circuit visiting each vertex exactly once, aside from vertices
+with a loop set as `True`. Vertex indices should start at 0 and must not be
+skipped to avoid isolation and infeasibility in the circuit.
 
-The following example shows how to solve the directed TSP with CP-SAT:
+Here is an example using the CP-SAT solver to address a directed Traveling
+Salesperson Problem (TSP):
 
 ```python
 from ortools.sat.python import cp_model
 
-# Define a weighted, directed graph (source, destination) -> cost
-dgraph = {
-    (0, 1): 13,
-    (1, 0): 17,
-    (1, 2): 16,
-    (2, 1): 19,
-    (0, 2): 22,
-    (2, 0): 14,
-    (3, 1): 28,
-    (3, 2): 25,
-    (0, 3): 30,
-    (1, 3): 11,
-    (2, 3): 27,
-}
+# Directed graph with weighted edges
+dgraph = {(0, 1): 13, (1, 0): 17, ...(2, 3): 27}
 
-# Create CP-SAT model
+# Initialize CP-SAT model
 model = cp_model.CpModel()
 
-# Create binary decision variables for each edge in the graph
+# Boolean variables for each edge
 edge_vars = {(u, v): model.new_bool_var(f"e_{u}_{v}") for (u, v) in dgraph.keys()}
 
-# Add a circuit constraint to the model
-circuit = [
-    (u, v, var) for (u, v), var in edge_vars.items()  # (source, destination, variable)
-]
-model.add_circuit(circuit)
+# Circuit constraint for a single tour
+model.add_circuit([(u, v, var) for (u, v), var in edge_vars.items()])
 
-# Objective: minimize the total cost of edges
-obj = sum(dgraph[(u, v)] * x for (u, v), x in edge_vars.items())
-model.minimize(obj)
+# Objective function to minimize total cost
+model.minimize(sum(dgraph[(u, v)] * x for (u, v), x in edge_vars.items()))
 
-# Solve
+# Solve model
 solver = cp_model.CpSolver()
 status = solver.solve(model)
-assert status in (cp_model.OPTIMAL, cp_model.FEASIBLE)
-tour = [(u, v) for (u, v), x in edge_vars.items() if solver.value(x)]
-print("Tour:", tour)
+if status in (cp_model.OPTIMAL, cp_model.FEASIBLE):
+    tour = [(u, v) for (u, v), x in edge_vars.items() if solver.value(x)]
+    print("Tour:", tour)
+
+# Output: [(0, 1), (2, 0), (3, 2), (1, 3)], i.e., 0 -> 1 -> 3 -> 2 -> 0
 ```
 
-    Tour: [(0, 1), (2, 0), (3, 2), (1, 3)]
+This constraint can be adapted for paths by adding a virtual enforced edge that
+closes the path into a circuit, such as `(3, 0, 1)` for a path from vertex 0 to
+vertex 3.
 
-Note that you could also use it to get a path instead of a circuit. If the path
-is to go from vertex 0 to vertex 3, you just have to add `(3, 0, 1)` to the
-`circuit` list. This will essentially add a virtual edge from 3 to 0, which
-would close the path from 0 to 3 to make it a circuit.
+#### Creative usage of `add_circuit`
 
-#### Using the `add_circuit` Constraint for the Shortest Path Problem
-
-Just for fun, let us use this trick in combination with the loop edges, to model
-the Shortest Path Problem. There are actually very efficient algorithms for the
-Shortest Path Problem (otherwise, Google Maps would not work), so this is just
-for demonstration purposes.
+The `add_circuit` constraint can be creatively adapted to solve various related
+problems. While there are more efficient algorithms for solving the Shortest
+Path Problem, let us demonstrate how to adapt the `add_circuit` constraint for
+educational purposes.
 
 ```python
 from ortools.sat.python import cp_model
 
-# Define a weighted, directed graph (source, destination) -> cost
-dgraph = {
-    (0, 1): 13,
-    (1, 0): 17,
-    (1, 2): 16,
-    (2, 1): 19,
-    (0, 2): 22,
-    (2, 0): 14,
-    (3, 1): 28,
-    (3, 2): 25,
-    (0, 3): 30,
-    (1, 3): 11,
-    (2, 3): 27,
-}
+# Define a weighted, directed graph with edge costs
+dgraph = {(0, 1): 13, (1, 0): 17, ...(2, 3): 27}
 
 source_vertex = 0
 target_vertex = 3
 
-# Add zero-cost loop edges for all vertices that are not the source or target
-# This will allow CP-SAT to skip these vertices.
+# Add zero-cost loops for vertices not being the source or target
 for v in [1, 2]:
     dgraph[(v, v)] = 0
 
-# Create CP-SAT model
+# Initialize CP-SAT model and variables
 model = cp_model.CpModel()
+edge_vars = {(u, v): model.new_bool_var(f"e_{u}_{v}") for (u, v) in dgraph}
 
-# Create binary decision variables for each edge in the graph
-edge_vars = {(u, v): model.new_bool_var(f"e_{u}_{v}") for (u, v) in dgraph.keys()}
-
-# Add a circuit constraint to the model
-circuit = [
-    (u, v, var) for (u, v), var in edge_vars.items()  # (source, destination, variable)
+# Define the circuit including a pseudo-edge from target to source
+circuit = [(u, v, var) for (u, v), var in edge_vars.items()] + [
+    (target_vertex, source_vertex, 1)
 ]
-# Add enforced pseudo-edge from target to source to close the path
-circuit.append((target_vertex, source_vertex, 1))
-
 model.add_circuit(circuit)
 
-# Objective: minimize the total cost of edges
-obj = sum(dgraph[(u, v)] * x for (u, v), x in edge_vars.items())
-model.minimize(obj)
+# Minimize total cost
+model.minimize(sum(dgraph[(u, v)] * x for (u, v), x in edge_vars.items()))
 
-# Solve
+# Solve and extract the path
 solver = cp_model.CpSolver()
 status = solver.solve(model)
-assert status in (cp_model.OPTIMAL, cp_model.FEASIBLE)
-tour = [(u, v) for (u, v), x in edge_vars.items() if solver.value(x) and u != v]
-print("Path:", tour)
+if status in (cp_model.OPTIMAL, cp_model.FEASIBLE):
+    path = [(u, v) for (u, v), x in edge_vars.items() if solver.value(x) and u != v]
+    print("Path:", path)
+
+# Output: [(0, 1), (1, 3)], i.e., 0 -> 1 -> 3
 ```
 
-    Path: [(0, 1), (1, 3)]
+This approach showcases the flexibility of the `add_circuit` constraint for
+various tour and path problems. Explore further examples:
 
-You can use this constraint very flexibly for many tour problems. We added three
-examples:
-
-- [./examples/add_circuit.py](https://github.com/d-krupke/cpsat-primer/blob/main/examples/add_circuit.py):
-  The example above, slightly extended. Find out how large you can make the
-  graph.
-- [./examples/add_circuit_budget.py](https://github.com/d-krupke/cpsat-primer/blob/main/examples/add_circuit_budget.py):
-  Find the largest tour with a given budget. This will be a bit more difficult
-  to solve.
-- [./examples/add_circuit_multi_tour.py](https://github.com/d-krupke/cpsat-primer/blob/main/examples/add_circuit_multi_tour.py):
-  Allow $k$ tours, which in sum need to be minimal and cover all vertices.
+- [Budget constrained tours](https://github.com/d-krupke/cpsat-primer/blob/main/examples/add_circuit_budget.py):
+  Optimize the largest possible tour within a specified budget.
+- [Multiple tours](https://github.com/d-krupke/cpsat-primer/blob/main/examples/add_circuit_multi_tour.py):
+  Solve for $k$ minimal tours covering all vertices.
 
 #### `add_multiple_circuit`
 
@@ -220,94 +179,58 @@ belongs. Thus, in most cases the `add_circuit` constraint is still the better
 choice. The parameters are exactly the same, but vertex 0 has a special meaning
 as the depot at which all tours start and end.
 
-#### Comparing the performance of CP-SAT for the TSP
+#### Performance of `add_circuit` for the TSP
 
-The most powerful TSP-solver _concorde_ uses a linear programming based
-approach, but with a lot of additional techniques to improve the performance.
-The book _In Pursuit of the Traveling Salesman_ by William Cook may have already
-given you some insights. For more details, you can also read the more advanced
-book _The Traveling Salesman Problem: A Computational Study_ by Applegate,
-Bixby, Chvatál, and Cook. If you need to solve some variant, MIP-solvers (which
-could be called a generalization of that approach) are known to perform well
-using the
-[Dantzig-Fulkerson-Johnson Formulation](https://en.wikipedia.org/wiki/Travelling_salesman_problem#Dantzig%E2%80%93Fulkerson%E2%80%93Johnson_formulation).
-This model is theoretically exponential, but using lazy constraints (which are
-added when needed), it can be solved efficiently in practice. The
-[Miller-Tucker-Zemlin formulation](https://en.wikipedia.org/wiki/Travelling_salesman_problem#Miller%E2%80%93Tucker%E2%80%93Zemlin_formulation[21])
-allows a small formulation size, but is bad in practice with MIP-solvers due to
-its weak linear relaxations. Because CP-SAT does not allow lazy constraints, the
-Danzig-Fulkerson-Johnson formulation would require many iterations and a lot of
-wasted resources. As CP-SAT does not suffer as much from weak linear relaxations
-(replacing Big-M by logic constraints, such as `only_enforce_if`), the
-Miller-Tucker-Zemlin formulation may be an option in some cases, though a simple
-experiment (see below) shows a similar performance as the iterative approach.
-When using `add_circuit`, CP-SAT will actually use the LP-technique for the
-linear relaxation (so using this constraint may really help, as otherwise CP-SAT
-will not know that your manual constraints are actually a tour with a nice
-linear relaxation), and probably has the lazy constraints implemented
-internally. Using the `add_circuit` constraint is thus highly recommendable for
-any circle or path constraints.
+The table below displays the performance of the CP-SAT solver on various
+instances of the TSPLIB, using the `add_circuit` constraint, under a 90-second
+time limit. The performance can be considered reasonable, but can be easily
+beaten by a Mixed Integer Programming solver.
 
-In
-[./examples/add_circuit_comparison.ipynb](https://github.com/d-krupke/cpsat-primer/blob/main/examples/add_circuit_comparison.ipynb),
-we compare the performance of some models for the TSP, to estimate the
-performance of CP-SAT for the TSP.
+| Instance | # vertices | runtime | lower bound | objective | opt. gap |
+| :------- | ---------: | ------: | ----------: | --------: | -------: |
+| att48    |         48 |    0.47 |       33522 |     33522 |        0 |
+| eil51    |         51 |    0.69 |         426 |       426 |        0 |
+| st70     |         70 |     0.8 |         675 |       675 |        0 |
+| eil76    |         76 |    2.49 |         538 |       538 |        0 |
+| pr76     |         76 |   54.36 |      108159 |    108159 |        0 |
+| kroD100  |        100 |    9.72 |       21294 |     21294 |        0 |
+| kroC100  |        100 |    5.57 |       20749 |     20749 |        0 |
+| kroB100  |        100 |     6.2 |       22141 |     22141 |        0 |
+| kroE100  |        100 |    9.06 |       22049 |     22068 |        0 |
+| kroA100  |        100 |    8.41 |       21282 |     21282 |        0 |
+| eil101   |        101 |    2.24 |         629 |       629 |        0 |
+| lin105   |        105 |    1.37 |       14379 |     14379 |        0 |
+| pr107    |        107 |     1.2 |       44303 |     44303 |        0 |
+| pr124    |        124 |    33.8 |       59009 |     59030 |        0 |
+| pr136    |        136 |   35.98 |       96767 |     96861 |        0 |
+| pr144    |        144 |   21.27 |       58534 |     58571 |        0 |
+| kroB150  |        150 |   58.44 |       26130 |     26130 |        0 |
+| kroA150  |        150 |   90.94 |       26498 |     26977 |       2% |
+| pr152    |        152 |   15.28 |       73682 |     73682 |        0 |
+| kroA200  |        200 |   90.99 |       29209 |     29459 |       1% |
+| kroB200  |        200 |   31.69 |       29437 |     29437 |        0 |
+| pr226    |        226 |   74.61 |       80369 |     80369 |        0 |
+| gil262   |        262 |   91.58 |        2365 |      2416 |       2% |
+| pr264    |        264 |   92.03 |       49121 |     49512 |       1% |
+| pr299    |        299 |   92.18 |       47709 |     49217 |       3% |
+| linhp318 |        318 |   92.45 |       41915 |     52032 |      19% |
+| lin318   |        318 |   92.43 |       41915 |     52025 |      19% |
+| pr439    |        439 |   94.22 |      105610 |    163452 |      35% |
 
-- **AddCircuit** can solve the Euclidean TSP up to a size of around 110 vertices
-  in 10 seconds to optimality.
-- **MTZ (Miller-Tucker-Zemlin)** can solve the euclidean TSP up to a size of
-  around 50 vertices in 10 seconds to optimality.
-- **Dantzig-Fulkerson-Johnson via iterative solving** can solve the euclidean
-  TSP up to a size of around 50 vertices in 10 seconds to optimality.
-- **Dantzig-Fulkerson-Johnson via lazy constraints in Gurobi** can solve the
-  euclidean TSP up to a size of around 225 vertices in 10 seconds to optimality.
-
-This tells you to use a MIP-solver for problems dominated by the tour
-constraint, and if you have to use CP-SAT, you should definitely use the
-`add_circuit` constraint.
-
-> [!WARNING]
->
-> These are all naive implementations, and the benchmark is not very rigorous.
-> These values are only meant to give you a rough idea of the performance.
-> Additionally, this benchmark was regarding proving _optimality_. The
-> performance in just optimizing a tour could be different. The numbers could
-> also look different for differently generated instances. You can find a more
-> detailed benchmark in the later section on proper evaluation.
-
-Here is the performance of `add_circuit` for the TSP on some instances (rounded
-eucl. distance) from the TSPLIB with a time limit of 90 seconds.
-
-| Instance | # nodes | runtime | lower bound | objective | opt. gap |
-| :------- | ------: | ------: | ----------: | --------: | -------: |
-| att48    |      48 |    0.47 |       33522 |     33522 |        0 |
-| eil51    |      51 |    0.69 |         426 |       426 |        0 |
-| st70     |      70 |     0.8 |         675 |       675 |        0 |
-| eil76    |      76 |    2.49 |         538 |       538 |        0 |
-| pr76     |      76 |   54.36 |      108159 |    108159 |        0 |
-| kroD100  |     100 |    9.72 |       21294 |     21294 |        0 |
-| kroC100  |     100 |    5.57 |       20749 |     20749 |        0 |
-| kroB100  |     100 |     6.2 |       22141 |     22141 |        0 |
-| kroE100  |     100 |    9.06 |       22049 |     22068 |        0 |
-| kroA100  |     100 |    8.41 |       21282 |     21282 |        0 |
-| eil101   |     101 |    2.24 |         629 |       629 |        0 |
-| lin105   |     105 |    1.37 |       14379 |     14379 |        0 |
-| pr107    |     107 |     1.2 |       44303 |     44303 |        0 |
-| pr124    |     124 |    33.8 |       59009 |     59030 |        0 |
-| pr136    |     136 |   35.98 |       96767 |     96861 |        0 |
-| pr144    |     144 |   21.27 |       58534 |     58571 |        0 |
-| kroB150  |     150 |   58.44 |       26130 |     26130 |        0 |
-| kroA150  |     150 |   90.94 |       26498 |     26977 |       2% |
-| pr152    |     152 |   15.28 |       73682 |     73682 |        0 |
-| kroA200  |     200 |   90.99 |       29209 |     29459 |       1% |
-| kroB200  |     200 |   31.69 |       29437 |     29437 |        0 |
-| pr226    |     226 |   74.61 |       80369 |     80369 |        0 |
-| gil262   |     262 |   91.58 |        2365 |      2416 |       2% |
-| pr264    |     264 |   92.03 |       49121 |     49512 |       1% |
-| pr299    |     299 |   92.18 |       47709 |     49217 |       3% |
-| linhp318 |     318 |   92.45 |       41915 |     52032 |      19% |
-| lin318   |     318 |   92.43 |       41915 |     52025 |      19% |
-| pr439    |     439 |   94.22 |      105610 |    163452 |      35% |
+There are two prominent formulations to model the Traveling Salesman Problem
+(TSP) without an `add_circuit` constraint: the
+[Dantzig-Fulkerson-Johnson (DFJ) formulation](https://en.wikipedia.org/wiki/Travelling_salesman_problem#Dantzig%E2%80%93Fulkerson%E2%80%93Johnson_formulation)
+and the
+[Miller-Tucker-Zemlin (MTZ) formulation](https://en.wikipedia.org/wiki/Travelling_salesman_problem#Miller%E2%80%93Tucker%E2%80%93Zemlin_formulation[21]).
+The DFJ formulation is generally regarded as more efficient due to its stronger
+linear relaxation. However, it requires lazy constraints, which are not
+supported by the CP-SAT solver. When implemented without lazy constraints, the
+performance of the DFJ formulation is comparable to that of the MTZ formulation
+in CP-SAT. Nevertheless, both formulations perform significantly worse than the
+`add_circuit` constraint. This indicates the superiority of using the
+`add_circuit` constraint for handling tours and paths in such problems. Unlike
+end users, the `add_circuit` constraint can utilize lazy constraints internally,
+offering a substantial advantage in solving the TSP.
 
 <a name="04-modelling-intervals"></a>
 
