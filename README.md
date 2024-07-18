@@ -458,16 +458,34 @@ Additional resources on mathematical modeling (not CP-SAT specific):
 
 **Elements:**
 
-- [Variables](#04-modelling-variables)
-  - [Domain Variables](#04-modelling-domain-variables)
-- [Objectives](#04-modelling-objectives)
-- [Linear Constraints](#04-modelling-linear-constraints)
-- [Logical Constraints (Propositional Logic)](#04-modelling-logic-constraints)
-- [Conditional Constraints (Reification)](#04-modelling-conditional-constraints)
-- [Absolute Values and Max/Min](#04-modelling-absmaxmin)
-- [Multiplication, Division, and Modulo](#04-modelling-multdivmod)
-- [AllDifferent](#04-modelling-alldifferent)
-- [Domains and Combinations](#04-modelling-table)
+- [Variables](#04-modelling-variables): `new_int_var`, `new_bool_var`,
+  `new_constant`, `new_int_var_series`, `new_bool_var_series`
+  - [Domain Variables](#04-modelling-domain-variables):
+    `new_int_var_from_domain`
+- [Objectives](#04-modelling-objectives): `minimize`, `maximize`
+- [Linear Constraints](#04-modelling-linear-constraints): `add`,
+  `add_linear_constraint`
+- [Logical Constraints (Propositional Logic)](#04-modelling-logic-constraints):
+  `add_implication`, `add_bool_or`, `add_at_least_one`, `add_at_most_one`,
+  `add_exactly_one`, `add_bool_and`, `add_bool_xor`
+- [Conditional Constraints (Reification)](#04-modelling-conditional-constraints):
+  `enforce_only_if`
+- [Absolute Values and Max/Min](#04-modelling-absmaxmin): `add_min_equality`,
+  `add_max_equality`, `add_abs_equality`
+- [Multiplication, Division, and Modulo](#04-modelling-multdivmod):
+  `add_modulo_equality`, `add_multiplication_equality`, `add_division_equality`
+- [All Different](#04-modelling-alldifferent): `add_all_different`
+- [Domains and Combinations](#04-modelling-table): `add_allowed_assignments`,
+  `add_forbidden_assignments`,
+
+The more advanced constraints `add_circuit`, `add_multiple_circuit`,
+`add_automaton`, `add_element`, `add_inverse`, `add_reservoir_constraint`,
+`add_reservoir_constraint_with_active`, `new_interval_var`,
+`new_interval_var_series`, `new_fixed_size_interval_var`,
+`new_optional_interval_var`, `new_optional_interval_var_series`,
+`new_optional_fixed_size_interval_var`,
+`new_optional_fixed_size_interval_var_series`, `add_no_overlap`,
+`add_no_overlap_2d`, and `add_cumulative` are discussed in the next chapter.
 
 ---
 
@@ -520,6 +538,10 @@ bs = model.new_bool_var_series("b", df.index)  # noqa: F841
 model.add(bs @ df["weight"] <= 100)
 model.maximize(bs @ df["value"])
 ```
+
+Additionally, there is the `new_constant`-method, which allows you to create a
+variable that is constant. I have not found a use case for this yet, let me know
+if you have one.
 
 > [!TIP]
 >
@@ -1312,6 +1334,9 @@ for i in range(NUM_SHIFTS):
         [x_employee_1[i], x_employee_2[i], x_employee_3[i], x_employee_4[i]],
         allowed_assignments,
     )
+
+# ... some further constraints and objectives to connect the days ...
+# ... if the days would be independent, you would solve each day separately ...
 ```
 
 The `add_allowed_assignments` method in CP-SAT enables the direct incorporation
@@ -1368,6 +1393,15 @@ model.add_linear_expression_in_domain(10 * x + 5 * y, domain)
 > used Python style. Instead of `NewIntVar`, you can now also use `new_int_var`.
 > The following part of the primer still uses the old style and will be updated
 > soon.
+
+`add_circuit`, `add_multiple_circuit`, `add_automaton`, `add_element`,
+`add_inverse`, `add_reservoir_constraint`,
+`add_reservoir_constraint_with_active`, `new_interval_var`,
+`new_interval_var_series`, `new_fixed_size_interval_var`,
+`new_optional_interval_var`, `new_optional_interval_var_series`,
+`new_optional_fixed_size_interval_var`,
+`new_optional_fixed_size_interval_var_series`, `add_no_overlap`,
+`add_no_overlap_2d`, and `add_cumulative`
 
 <a name="04-modelling-circuit"></a>
 

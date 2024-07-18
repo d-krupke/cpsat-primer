@@ -13,6 +13,15 @@
 > The following part of the primer still uses the old style and will be updated
 > soon.
 
+`add_circuit`, `add_multiple_circuit`, `add_automaton`, `add_element`,
+`add_inverse`, `add_reservoir_constraint`,
+`add_reservoir_constraint_with_active`, `new_interval_var`,
+`new_interval_var_series`, `new_fixed_size_interval_var`,
+`new_optional_interval_var`, `new_optional_interval_var_series`,
+`new_optional_fixed_size_interval_var`,
+`new_optional_fixed_size_interval_var_series`, `add_no_overlap`,
+`add_no_overlap_2d`, and `add_cumulative`
+
 <a name="04-modelling-circuit"></a>
 
 ### Circuit/Tour-Constraints

@@ -1,7 +1,6 @@
 # Summary
 
-[Introduction](./00_intro.md)
-
+- [Introduction](./00_intro.md)
 - [Installation](./01_installation.md)
 - [Example](./02_example.md)
 - [Basic Modeling](./04_modelling.md)
