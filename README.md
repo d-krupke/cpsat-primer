@@ -1383,12 +1383,12 @@ model.add_linear_expression_in_domain(10 * x + 5 * y, domain)
 
 ### Element/Array Constraints
 
-Let us discuss the last generic constraints, before going into the more
-specialized ones. The element constraint allows to access the value of a
-variable in an array via an index variable. While it is trivial to access a
-variable in an array via a constant index, you may get into the situation where
-the index is part of the model. You can also use it to make sure that a variable
-is equal to the value of one of the variables in an array.
+Before exploring specialized constraints, let us examine the last of the generic
+ones. The element constraint facilitates accessing the value of a variable
+within an array using another variable as the index. Accessing a variable in an
+array with a constant index is straightforward; however, integrating a variable
+index into your model adds complexity. This constraint can also be use to ensure
+that a variable matches the value at a specific array position.
 
 ```python
 model = cp_model.CpModel()
@@ -1401,11 +1401,11 @@ var_array = [x, y, z]
 index_var = model.new_int_var(0, len(var_array) - 1, "index")
 value_at_index_var = model.new_int_var(-100, 100, "value_at_index")
 
-# Bind the variables together with the element constraint.
+# Apply the element constraint to link the index and value variables.
 model.add_element(variables=var_array, index=index_var, target=value_at_index_var)
 ```
 
-Here are some feasible assignments for the variables in the example above:
+Examples of feasible variable assignments:
 
 | `x` | `y` | `z` | `index_var` | `value_at_index` |
 | --- | --- | --- | ----------- | ---------------- |
@@ -1414,10 +1414,11 @@ Here are some feasible assignments for the variables in the example above:
 | 3   | 4   | 5   | 2           | 5                |
 | 7   | 3   | 4   | 0           | 7                |
 
-The next constraint is actually more of a stable matching in array form. For two
-equally sized arrays of variables $v,w, |v|=|w|$, it requires
-$v[i]=j \Leftrightarrow w[j]=i \quad \forall i,j \in 0,\ldots,|v|-1$. Note that
-this restricts the values of the variables in the arrays to $0,\ldots, |v|-1$.
+The subsequent constraint resembles a stable matching in array form. For two
+equally sized arrays of variables $v$ and $w$, each of size $|v|$, it imposes a
+bijective relationship: $v[i]=j \Leftrightarrow w[j]=i$ for all
+$i,j \in 0,\ldots,|v|-1$. This constraint limits the variables' values to
+$0,\ldots, |v|-1$.
 
 ```python
 model = cp_model.CpModel()
@@ -1427,7 +1428,7 @@ w = [model.new_int_var(0, 5, f"w_{i}") for i in range(6)]
 model.add_inverse(v, w)
 ```
 
-Here are some feasible assignments for the variables in the example above:
+Examples of feasible variable assignments:
 
 | array | 0   | 1   | 2   | 3   | 4   | 5   |
 | ----- | --- | --- | --- | --- | --- | --- |
