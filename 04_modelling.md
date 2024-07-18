@@ -68,7 +68,7 @@ Additional resources on mathematical modeling (not CP-SAT specific):
   `add_implication`, `add_bool_or`, `add_at_least_one`, `add_at_most_one`,
   `add_exactly_one`, `add_bool_and`, `add_bool_xor`
 - [Conditional Constraints (Reification)](#04-modelling-conditional-constraints):
-  `enforce_only_if`
+  `only_enforce_if`
 - [Absolute Values and Max/Min](#04-modelling-absmaxmin): `add_min_equality`,
   `add_max_equality`, `add_abs_equality`
 - [Multiplication, Division, and Modulo](#04-modelling-multdivmod):
