@@ -76,10 +76,12 @@ Additional resources on mathematical modeling (not CP-SAT specific):
   `add_modulo_equality`, `add_multiplication_equality`, `add_division_equality`
 - [All Different](#04-modelling-alldifferent): `add_all_different`
 - [Domains and Combinations](#04-modelling-table): `add_allowed_assignments`,
-  `add_forbidden_assignments`,
+  `add_forbidden_assignments`
+- [Array/Element Constraints](#04-modelling-element): `add_element`,
+  `add_inverse`
 
 The more advanced constraints `add_circuit`, `add_multiple_circuit`,
-`add_automaton`, `add_element`, `add_inverse`, `add_reservoir_constraint`,
+`add_automaton`,`add_reservoir_constraint`,
 `add_reservoir_constraint_with_active`, `new_interval_var`,
 `new_interval_var_series`, `new_fixed_size_interval_var`,
 `new_optional_interval_var`, `new_optional_interval_var_series`,
@@ -975,3 +977,72 @@ model.add_linear_expression_in_domain(10 * x + 5 * y, domain)
 > avoid creating an infeasible or overly restrictive model. Consider using an
 > auxiliary variable with a restricted domain and softer constraints (`<=`,
 > `>=`) to achieve a more flexible and forgiving model setup.
+
+<a name="04-modelling-element"></a>
+
+### Element/Array Constraints
+
+Let us discuss the last generic constraints, before going into the more
+specialized ones. The element constraint allows to access the value of a
+variable in an array via an index variable. While it is trivial to access a
+variable in an array via a constant index, you may get into the situation where
+the index is part of the model. You can also use it to make sure that a variable
+is equal to the value of one of the variables in an array.
+
+```python
+model = cp_model.CpModel()
+x = model.new_int_var(-100, 100, "x")
+y = model.new_int_var(-100, 100, "y")
+z = model.new_int_var(-100, 100, "z")
+var_array = [x, y, z]
+
+# Create a variable for the index and a variable for the value at that index.
+index_var = model.new_int_var(0, len(var_array) - 1, "index")
+value_at_index_var = model.new_int_var(-100, 100, "value_at_index")
+
+# Bind the variables together with the element constraint.
+model.add_element(variables=var_array, index=index_var, target=value_at_index_var)
+```
+
+Here are some feasible assignments for the variables in the example above:
+
+| `x` | `y` | `z` | `index_var` | `value_at_index` |
+| --- | --- | --- | ----------- | ---------------- |
+| 3   | 4   | 5   | 0           | 3                |
+| 3   | 4   | 5   | 1           | 4                |
+| 3   | 4   | 5   | 2           | 5                |
+| 7   | 3   | 4   | 0           | 7                |
+
+The next constraint is actually more of a stable matching in array form. For two
+equally sized arrays of variables $v,w, |v|=|w|$, it requires
+$v[i]=j \Leftrightarrow w[j]=i \quad \forall i,j \in 0,\ldots,|v|-1$. Note that
+this restricts the values of the variables in the arrays to $0,\ldots, |v|-1$.
+
+```python
+model = cp_model.CpModel()
+v = [model.new_int_var(0, 5, f"v_{i}") for i in range(6)]
+w = [model.new_int_var(0, 5, f"w_{i}") for i in range(6)]
+
+model.add_inverse(v, w)
+```
+
+Here are some feasible assignments for the variables in the example above:
+
+| array | 0   | 1   | 2   | 3   | 4   | 5   |
+| ----- | --- | --- | --- | --- | --- | --- |
+| v     | 0   | 1   | 2   | 3   | 4   | 5   |
+| w     | 0   | 1   | 2   | 3   | 4   | 5   |
+
+| array | 0   | 1   | 2   | 3   | 4   | 5   |
+| ----- | --- | --- | --- | --- | --- | --- |
+| v     | 1   | 2   | 3   | 4   | 5   | 0   |
+| w     | 5   | 0   | 1   | 2   | 3   | 4   |
+
+| array | 0   | 1   | 2   | 3   | 4   | 5   |
+| ----- | --- | --- | --- | --- | --- | --- |
+| v     | 1   | 0   | 3   | 5   | 2   | 4   |
+| w     | 1   | 0   | 4   | 2   | 5   | 3   |
+
+|                 ![Example Matching](images/inverse.png)                  |
+| :----------------------------------------------------------------------: |
+| Visualizing the stable matching induced by the `add_inverse` constraint. |
