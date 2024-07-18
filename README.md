@@ -1837,18 +1837,18 @@ model.add_cumulative(
 )
 ```
 
-Let us take a look on a few examples on how we could use these constraints.
+Let us examine a few examples of how to use these constraints effectively.
 
 #### Scheduling for a Conference Room with Intervals
 
-Let us assume we have a conference room and we have to schedule some meetings.
-Each meeting has a certain length and a certain ranges of possible start times.
-The time slots are in 5 minute intervals starting at 8:00 and going until 18:00.
-Thus, we have 10\*12=120 time slots, and can use a simple integer variable to
-model the start time. Assuming the lengths of the meetings are fixed, we can use
-the simple `new_fixed_size_interval_var` to model the intervals. We can then use
-the `add_no_overlap` constraint to ensure that no two meetings overlap. By using
-domains for the start time, we can also model ranges of possible start times.
+Assume we have a conference room and need to schedule several meetings. Each
+meeting has a fixed length and a range of possible start times. The time slots
+are in 5-minute intervals starting at 8:00 AM and ending at 6:00 PM. Thus, there
+are $10 \times 12 = 120$ time slots, and we can use a simple integer variable to
+model the start time. With fixed meeting lengths, we can use the
+`new_fixed_size_interval_var` to model the intervals. The `add_no_overlap`
+constraint ensures no two meetings overlap, and domains for the start time can
+model the range of possible start times.
 
 ```python
 # Convert time to index and back
@@ -1869,27 +1869,27 @@ MeetingInfo = namedtuple("MeetingInfo", ["start_times", "duration"])
 meetings = {
     "meeting_a": MeetingInfo(
         start_times=[
-            [t_to_idx(hour=8, minute=0), t_to_idx(hour=12, minute=0)],
-            [t_to_idx(hour=16, minute=0), t_to_idx(hour=17, minute=0)],
+            [t_to_idx(8, 0), t_to_idx(12, 0)],
+            [t_to_idx(16, 0), t_to_idx(17, 0)],
         ],
         duration=24,  # 2 hours
     ),
     "meeting_b": MeetingInfo(
         start_times=[
-            [t_to_idx(hour=10, minute=0), t_to_idx(hour=12, minute=0)],
+            [t_to_idx(10, 0), t_to_idx(12, 0)],
         ],
         duration=6,  # 30 minutes
     ),
     "meeting_c": MeetingInfo(
         start_times=[
-            [t_to_idx(hour=16, minute=0), t_to_idx(hour=17, minute=0)],
+            [t_to_idx(16, 0), t_to_idx(17, 0)],
         ],
         duration=3,  # 15 minutes
     ),
     "meeting_d": MeetingInfo(
         start_times=[
-            [t_to_idx(hour=8, minute=0), t_to_idx(hour=10, minute=0)],
-            [t_to_idx(hour=12, minute=0), t_to_idx(hour=14, minute=0)],
+            [t_to_idx(8, 0), t_to_idx(10, 0)],
+            [t_to_idx(12, 0), t_to_idx(14, 0)],
         ],
         duration=12,  # 1 hour
     ),
@@ -1937,23 +1937,19 @@ else:
 
 This will result in a solution like this:
 
-|              ![Schedule](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/scheduling_example.png)              |
-| :-------------------------------------------------------------------------------------------------------------------------------: |
-| A possible non-overlapping schedule for above example. The instance is quite simple, but you could try adding some more meetings. |
+|                ![Schedule](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/scheduling_example.png)                |
+| :-----------------------------------------------------------------------------------------------------------------------------------: |
+| A possible non-overlapping schedule for the above example. The instance is quite simple, but you could try adding some more meetings. |
 
-#### Scheduling for multiple resources with optional intervals
+#### Scheduling for Multiple Resources with Optional Intervals
 
-Now imagine, we have multiple resources, e.g., multiple conference rooms, and we
-have to schedule the meetings such that no two meetings overlap in the same
-room. This can be modeled with optional intervals, where the intervals are only
-present if the meeting is scheduled in the room. We can then use the
-`add_no_overlap` constraint to ensure that no two meetings overlap in the same
-room.
+Now, imagine we have multiple resources, such as multiple conference rooms, and
+we need to schedule the meetings such that no two meetings overlap in the same
+room. This can be modeled with optional intervals, where the intervals exist
+only if the meeting is scheduled in the room. The `add_no_overlap` constraint
+ensures that no two meetings overlap in the same room.
 
 ```python
-# Define meeting information
-MeetingInfo = namedtuple("MeetingInfo", ["start_times", "duration"])
-
 # Meeting definitions
 meetings = {
     "meeting_a": MeetingInfo(
@@ -2011,11 +2007,12 @@ for name, room_dict in room_vars.items():
 # Create interval variables and add no-overlap constraint
 interval_vars = {
     name: {
+        # We need a separate interval for each room
         room: model.new_optional_fixed_size_interval_var(
-            start_time_vars[name],
-            info.duration,
-            room_vars[name][room],
-            f"interval_{name}_in_{room}",
+            start=start_time_vars[name],
+            size=info.duration,
+            is_present=room_vars[name][room],
+            name=f"interval_{name}_in_{room}",
         )
         for room in rooms
     }
@@ -2030,17 +2027,17 @@ This will result in a solution like this:
 
 | ![Schedule multiple rooms](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/scheduling_multiple_resources.png) |
 | :-------------------------------------------------------------------------------------------------------------------------------: |
-|                            A possible non-overlapping schedule for above example with multiple rooms.                             |
+|                          A possible non-overlapping schedule for the above example with multiple rooms.                           |
 
 > [!WARNING]
 >
 > Do not directly jump to intervals when you have a scheduling problem.
-> Intervals are great if you actually have somehow continuous time or space that
-> you have to schedule. If you have a more discrete problem, e.g., a scheduling
-> problem with a fixed number of slots, you can often model this problem much
-> more efficiently using simple Boolean variables and constraints. Especially,
-> if you can use domain knowledge to find clusters of meetings that cannot
-> overlap, this can be much more efficient.
+> Intervals are great if you actually have a somewhat continuous time or space
+> that you need to schedule. If you have a more discrete problem, such as a
+> scheduling problem with a fixed number of slots, you can often model this
+> problem much more efficiently using simple Boolean variables and constraints.
+> Especially if you can use domain knowledge to find clusters of meetings that
+> cannot overlap, this can be much more efficient.
 
 > [!TIP]
 >
