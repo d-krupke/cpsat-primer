@@ -1044,6 +1044,6 @@ Examples of feasible variable assignments:
 | v     | 1   | 0   | 3   | 5   | 2   | 4   |
 | w     | 1   | 0   | 4   | 2   | 5   | 3   |
 
-|                ![Example Matching](./images/inverse.png)                 |
-| :----------------------------------------------------------------------: |
-| Visualizing the stable matching induced by the `add_inverse` constraint. |
+| ![Example Matching](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/inverse.png) |
+| :--------------------------------------------------------------------------------------------------: |
+|               Visualizing the stable matching induced by the `add_inverse` constraint.               |
