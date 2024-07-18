@@ -1047,3 +1047,15 @@ Examples of feasible variable assignments:
 | ![Example Matching](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/inverse.png) |
 | :--------------------------------------------------------------------------------------------------: |
 |               Visualizing the stable matching induced by the `add_inverse` constraint.               |
+
+> [!WARNING]
+>
+> I would generally avoid using the `add_element` and `add_inverse` constraints.
+> Although CP-SAT may employ effective propagation techniques for them, these
+> constraints can seem somewhat unnatural and esoteric. Modeling the stable
+> matching constraint is more straightforward using binary variables $x_{ij}$ to
+> denote whether $v_i$ is matched with $w_j$. This approach requires adding an
+> `add_exactly_one` constraint for every vertex to ensure unique pairings. If
+> the model needs to account for specific qualities or costs associated with
+> each connection, binary variables are essential. Using only indices would
+> necessitate additional logic to accurately represent these characteristics.
