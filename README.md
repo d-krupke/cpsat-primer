@@ -1826,10 +1826,12 @@ model.add_no_overlap_2d(
 
 The `add_cumulative` constraint is used to model a resource constraint, where
 the sum of the demands of the overlapping intervals must not exceed the capacity
-of the resource. It takes a list of intervals, a list of demands, and a capacity
-variable. The list of demands must have the same length as the list of
-intervals, as the demands of the intervals are matched by index. As capacity and
-demands can be variables (or affine expressions), quite complex resource
+of the resource. An example could be scheduling the usage of certain energy
+intensive machines, where the sum of the energy demands must not exceed the
+capacity of the power grid. It takes a list of intervals, a list of demands, and
+a capacity variable. The list of demands must have the same length as the list
+of intervals, as the demands of the intervals are matched by index. As capacity
+and demands can be variables (or affine expressions), quite complex resource
 constraints can be modeled.
 
 ```python
@@ -1860,21 +1862,28 @@ model the start time. With fixed meeting lengths, we can use the
 constraint ensures no two meetings overlap, and domains for the start time can
 model the range of possible start times.
 
+To handle input data, let us define a `namedtuple` to store the meeting and two
+functions to convert between time and index.
+
 ```python
 # Convert time to index and back
 def t_to_idx(hour, minute):
     return (hour - 8) * 12 + minute // 5
 
 
-def idx_to_t(timepoint):
-    hour = 8 + timepoint // 12
-    minute = (timepoint % 12) * 5
+def idx_to_t(time_idx):
+    hour = 8 + time_idx // 12
+    minute = (time_idx % 12) * 5
     return f"{hour}:{minute:02d}"
 
 
 # Define meeting information using namedtuples
 MeetingInfo = namedtuple("MeetingInfo", ["start_times", "duration"])
+```
 
+Then let us create a few meetings we want to schedule.
+
+```python
 # Meeting definitions
 meetings = {
     "meeting_a": MeetingInfo(
@@ -1882,29 +1891,33 @@ meetings = {
             [t_to_idx(8, 0), t_to_idx(12, 0)],
             [t_to_idx(16, 0), t_to_idx(17, 0)],
         ],
-        duration=24,  # 2 hours
+        duration=120 // 5,  # 2 hours
     ),
     "meeting_b": MeetingInfo(
         start_times=[
             [t_to_idx(10, 0), t_to_idx(12, 0)],
         ],
-        duration=6,  # 30 minutes
+        duration=30 // 5,  # 30 minutes
     ),
     "meeting_c": MeetingInfo(
         start_times=[
             [t_to_idx(16, 0), t_to_idx(17, 0)],
         ],
-        duration=3,  # 15 minutes
+        duration=15 // 5,  # 15 minutes
     ),
     "meeting_d": MeetingInfo(
         start_times=[
             [t_to_idx(8, 0), t_to_idx(10, 0)],
             [t_to_idx(12, 0), t_to_idx(14, 0)],
         ],
-        duration=12,  # 1 hour
+        duration=160 // 5,  # 1 hour
     ),
 }
+```
 
+Now we can create the CP-SAT model and add the intervals and constraints.
+
+```python
 # Create a new CP-SAT model
 model = cp_model.CpModel()
 
@@ -1927,9 +1940,13 @@ interval_vars = {
     for meeting_name, meeting_info in meetings.items()
 }
 
-# Add the no-overlap constraint to the model
+# Ensure that now two meetings overlap
 model.add_no_overlap(list(interval_vars.values()))
+```
 
+And finally, we can solve the model and extract the solution.
+
+```python
 # Solve the model
 solver = cp_model.CpSolver()
 status = solver.solve(model)
@@ -1945,7 +1962,7 @@ else:
     print("No feasible solution found.")
 ```
 
-This will result in a solution like this:
+Doing some quick magic with matplotlib, we can visualize the schedule.
 
 |                ![Schedule](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/scheduling_example.png)                |
 | :-----------------------------------------------------------------------------------------------------------------------------------: |
