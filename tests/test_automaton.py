@@ -32,18 +32,18 @@ def test_automaton_model():
 
     for test in test_cases:
         model = cp_model.CpModel()
-        transition_vars = [model.NewIntVar(0, 2, f"transition_{i}") for i in range(4)]
-        model.AddAutomaton(transition_vars, 0, [3], transition_triples)
+        transition_vars = [model.new_int_var(0, 2, f"transition_{i}") for i in range(4)]
+        model.add_automaton(transition_vars, 0, [3], transition_triples)
 
         solution = test["solution"]
         expected_status = test["expected_status"]
 
         # Enforce the solution values
         for i, value in enumerate(solution):
-            model.Add(transition_vars[i] == value)
+            model.add(transition_vars[i] == value)
 
         solver = cp_model.CpSolver()
-        status = solver.Solve(model)
+        status = solver.solve(model)
 
         assert (
             status == expected_status

@@ -1707,54 +1707,54 @@ offering a substantial advantage in solving the TSP.
 
 ### Automaton Constraints
 
-Automaton constraints are used to model finite state machines, which allow you
-to model feasible transitions between states. This can be useful for software
-verification, where you need to ensure that a program follows a certain sequence
-of states. Considering that verification is a critical research area, there
-probably is a group of people who are very happy about this constraint. However,
-most other people can probably jump to the next section.
+Automaton constraints model finite state machines, enabling the representation
+of feasible transitions between states. This is particularly useful in software
+verification, where it is essential to ensure that a program follows a specified
+sequence of states. Given the critical importance of verification in research,
+there is likely a dedicated audience that appreciates this constraint. However,
+others may prefer to proceed to the next section.
 
-|          ![Automaton Example](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/automaton.png)          |
-| :-----------------------------------------------------------------------------------------------------------------------: |
-| An example of a finite state machine with four states and 7 transitions. 0 is the initial state and 3 is the final state. |
+|                  ![Automaton Example](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/automaton.png)                   |
+| :----------------------------------------------------------------------------------------------------------------------------------------: |
+| An example of a finite state machine with four states and seven transitions. State 0 is the initial state, and state 3 is the final state. |
 
-The automaton works as follows: We have a list of integer variables
-`transition_vars` that represent the transition values. We start at the
-`starting_state` and the next state is determined by the the transition triple
+The automaton operates as follows: We have a list of integer variables
+`transition_variables` that represent the transition values. Starting from the
+`starting_state`, the next state is determined by the transition triple
 `(state, transition_value, next_state)` matching the first transition variable.
-If no such triple is found, the model is infeasible. This process is repeated
-for the next transition variable, and so on. It is important that the last
-transition leads to a final state (possibly by loop), otherwise the model is
+If no such triple is found, the model is infeasible. This process repeats for
+each subsequent transition variable. It is crucial that the final transition
+leads to a final state (possibly via a loop); otherwise, the model remains
 infeasible.
 
-The state machine from the example could be modeled as follows:
+The state machine from the example can be modeled as follows:
 
 ```python
 model = cp_model.CpModel()
 
-transition_vars = [model.new_int_var(0, 2, f"transition_{i}") for i in range(4)]
-transition_tiples = [
-    (0, 0, 1),  # if we are in state 0 and the transition value is 0, we go to state 1
-    (1, 0, 1),  # if we are in state 1 and the transition value is 0, stay in state 1
-    (1, 1, 2),  # if we are in state 1 and the transition value is 1, go to state 2
-    (2, 0, 0),  # if we are in state 2 and the transition value is 0, go to state 0
-    (2, 1, 1),  # if we are in state 2 and the transition value is 1, to to state 1
-    (2, 2, 3),  # if we are in state 2 and the transition value is 2, to to state 3
-    (3, 0, 3),  # if we are in state 3 and the transition value is 0, stay in state 3
+transition_variables = [model.new_int_var(0, 2, f"transition_{i}") for i in range(4)]
+transition_triples = [
+    (0, 0, 1),  # If in state 0 and the transition value is 0, go to state 1
+    (1, 0, 1),  # If in state 1 and the transition value is 0, stay in state 1
+    (1, 1, 2),  # If in state 1 and the transition value is 1, go to state 2
+    (2, 0, 0),  # If in state 2 and the transition value is 0, go to state 0
+    (2, 1, 1),  # If in state 2 and the transition value is 1, go to state 1
+    (2, 2, 3),  # If in state 2 and the transition value is 2, go to state 3
+    (3, 0, 3),  # If in state 3 and the transition value is 0, stay in state 3
 ]
 
 model.add_automaton(
-    transition_variables=transition_vars,
+    transition_variables=transition_variables,
     starting_state=0,
     final_states=[3],
     transition_triples=transition_triples,
 )
 ```
 
-The assignment `[0, 1, 2, 0]` would be a feasible solution for this model, the
-assignment `[1, 0, 1, 2]` would be infeasible because state `0` has no
-transition for value `1`, and the assignment `[0, 0, 1, 1]` would also be
-infeasible because it does not end in a final state.
+The assignment `[0, 1, 2, 0]` would be a feasible solution for this model,
+whereas the assignment `[1, 0, 1, 2]` would be infeasible because state 0 has no
+transition for value 1. Similarly, the assignment `[0, 0, 1, 1]` would be
+infeasible as it does not end in a final state.
 
 <a name="04-modelling-reservoir"></a>
 
