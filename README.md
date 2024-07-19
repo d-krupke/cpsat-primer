@@ -220,6 +220,8 @@ CP-SAT, our hardware choices were also influenced by their recommendations.
 
 ## Example
 
+![Example Cover](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/logo_example.webp)
+
 Before we dive into any internals, let us take a quick look at a simple
 application of CP-SAT. This example is so simple that you could solve it by
 hand, but know that CP-SAT would (probably) be fine with you adding a thousand
