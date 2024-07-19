@@ -733,207 +733,176 @@ Again, doing some quick magic with matplotlib, we get the following schedule.
 
 #### Packing rectangles without overlaps
 
-Let us take a quick look on how we can use this to check if we can pack a set of
-rectangles into a container without overlaps. This can be an interesting problem
-in logistics, where we have to pack boxes into a container, or in cutting stock
-problems, where we have to cut pieces from a larger piece of material.
+Let us examine how to check if a set of rectangles can be packed into a
+container without overlaps. This is a common problem in logistics, where boxes
+must be packed into a container, or in cutting stock problems, where pieces are
+cut from a larger material.
+
+First, we define namedtuples for the rectangles and the container.
 
 ```python
-class RectanglePackingWithoutRotationsModel:
-    def __init__(self, instance: Instance) -> None:
-        self.instance = instance
-        self.model = cp_model.CpModel()
+from collections import namedtuple
 
-        # We have to create the variable for the bottom left corner of the boxes.
-        # We directly limit their range, such that the boxes are inside the container
-        self.x_vars = [
-            self.model.NewIntVar(
-                0, instance.container.width - box.width, name=f"x1_{i}"
-            )
-            for i, box in enumerate(instance.rectangles)
-        ]
-        self.y_vars = [
-            self.model.NewIntVar(
-                0, instance.container.height - box.height, name=f"y1_{i}"
-            )
-            for i, box in enumerate(instance.rectangles)
-        ]
+# Define namedtuples for rectangles and container
+Rectangle = namedtuple("Rectangle", ["width", "height"])
+Container = namedtuple("Container", ["width", "height"])
 
-        # Interval variables are actually more like constraint containers, that are then passed to the no overlap constraint
-        # Note that we could also make size and end variables, but we do not need them here
-        x_interval_vars = [
-            self.model.NewFixedSizeIntervalVar(
-                start=self.x_vars[i],  # the x value of the bottom left corner
-                size=box.width,  # the width of the rectangle
-                name=f"x_interval_{i}",
-            )
-            for i, box in enumerate(instance.rectangles)
-        ]
-        y_interval_vars = [
-            self.model.NewFixedSizeIntervalVar(
-                start=self.y_vars[i],  # the y value of the bottom left corner
-                size=box.height,  # the height of the rectangle
-                name=f"y_interval_{i}",
-            )
-            for i, box in enumerate(instance.rectangles)
-        ]
-        # Enforce that no two rectangles overlap
-        self.model.AddNoOverlap2D(x_interval_vars, y_interval_vars)
-
-    def _extract_solution(self, solver: cp_model.CpSolver) -> Optional[Solution]:
-        if self.status not in (cp_model.OPTIMAL, cp_model.FEASIBLE):
-            return None
-        placements = []
-        for i, box in enumerate(self.instance.rectangles):
-            x = solver.Value(self.x_vars[i])
-            y = solver.Value(self.y_vars[i])
-            placements.append(Placement(x=x, y=y))
-        return Solution(placements=placements)
-
-    def solve(self, time_limit: float = 900.0):
-        solver = cp_model.CpSolver()
-        solver.parameters.log_search_progress = True
-        solver.parameters.max_time_in_seconds = time_limit
-        self.status = solver.Solve(self.model)
-        self.solution = self._extract_solution(solver)
-        self.upper_bound = solver.BestObjectiveBound()
-        self.objective_value = solver.ObjectiveValue()
-        return self.status
-
-    def is_infeasible(self):
-        return self.status == cp_model.INFEASIBLE
-
-    def is_feasible(self):
-        return self.status in (cp_model.OPTIMAL, cp_model.FEASIBLE)
+# Example usage
+rectangles = [Rectangle(width=2, height=3), Rectangle(width=4, height=5)]
+container = Container(width=10, height=10)
 ```
 
-The optional intervals with flexible length allow us to even model rotations and
-instead of just checking if a feasible packing exists, finding the largest
-possible packing. The code may look a bit more complex, but considering the
-complexity of the problem, it is still quite simple.
+Next, we create variables for the bottom-left corners of the rectangles. These
+variables are constrained to ensure the rectangles remain within the container.
 
 ```python
-class RectangleKnapsackWithRotationsModel:
-    def __init__(self, instance: Instance) -> None:
-        self.instance = instance
-        self.model = cp_model.CpModel()
+model = cp_model.CpModel()
 
-        # Create coordinates for the placement. We need variables for the begin and end of each rectangle.
-        # This will also ensure that the rectangles are placed inside the container.
-        self.bottom_left_x_vars = [
-            self.model.NewIntVar(0, instance.container.width, name=f"x1_{i}")
-            for i, box in enumerate(instance.rectangles)
-        ]
-        self.bottom_left_y_vars = [
-            self.model.NewIntVar(0, instance.container.height, name=f"y1_{i}")
-            for i, box in enumerate(instance.rectangles)
-        ]
-        self.upper_right_x_vars = [
-            self.model.NewIntVar(0, instance.container.width, name=f"x2_{i}")
-            for i, box in enumerate(instance.rectangles)
-        ]
-        self.upper_right_y_vars = [
-            self.model.NewIntVar(0, instance.container.height, name=f"y2_{i}")
-            for i, box in enumerate(instance.rectangles)
-        ]
-        # These variables indicate if a rectangle is rotated or not
-        self.rotated_vars = [
-            self.model.NewBoolVar(f"rotated_{i}")
-            for i in range(len(instance.rectangles))
-        ]
-        # Depending on if a rectangle is rotated or not, we have to adjust the width and height variables
-        self.width_vars = [
-            self.model.NewIntVar(0, max(box.width, box.height), name=f"width_{i}")
-            for i, box in enumerate(instance.rectangles)
-        ]
-        self.height_vars = [
-            self.model.NewIntVar(0, max(box.width, box.height), name=f"height_{i}")
-            for i, box in enumerate(instance.rectangles)
-        ]
-        # Here we enforce that the width and height variables are correctly set
-        for i, box in enumerate(instance.rectangles):
-            if box.width > box.height:
-                diff = box.width - box.height
-                self.model.Add(
-                    self.width_vars[i] == box.width - self.rotated_vars[i] * diff
-                )
-                self.model.Add(
-                    self.height_vars[i] == box.height + self.rotated_vars[i] * diff
-                )
-            else:
-                diff = box.height - box.width
-                self.model.Add(
-                    self.width_vars[i] == box.width + self.rotated_vars[i] * diff
-                )
-                self.model.Add(
-                    self.height_vars[i] == box.height - self.rotated_vars[i] * diff
-                )
-        # And finally, a variable indicating if a rectangle is packed or not
-        self.packed_vars = [
-            self.model.NewBoolVar(f"packed_{i}")
-            for i in range(len(instance.rectangles))
-        ]
+# Create variables for the bottom-left corners of the rectangles
+x_vars = [
+    model.new_int_var(0, container.width - box.width, name=f"x1_{i}")
+    for i, box in enumerate(rectangles)
+]
+y_vars = [
+    model.new_int_var(0, container.height - box.height, name=f"y1_{i}")
+    for i, box in enumerate(rectangles)
+]
+```
 
-        # Interval variables are actually more like constraint containers, that are then passed to the no overlap constraint
-        # Note that we could also make size and end variables, but we do not need them here
-        self.x_interval_vars = [
-            self.model.NewOptionalIntervalVar(
-                start=self.bottom_left_x_vars[i],
-                size=self.width_vars[i],
-                is_present=self.packed_vars[i],
-                end=self.upper_right_x_vars[i],
-                name=f"x_interval_{i}",
-            )
-            for i, box in enumerate(instance.rectangles)
-        ]
-        self.y_interval_vars = [
-            self.model.NewOptionalIntervalVar(
-                start=self.bottom_left_y_vars[i],
-                size=self.height_vars[i],
-                is_present=self.packed_vars[i],
-                end=self.upper_right_y_vars[i],
-                name=f"y_interval_{i}",
-            )
-            for i, box in enumerate(instance.rectangles)
-        ]
-        # Enforce that no two rectangles overlap
-        self.model.AddNoOverlap2D(self.x_interval_vars, self.y_interval_vars)
+Next, we create interval variables for each rectangle. The start of these
+intervals corresponds to the bottom-left corner, and the size is the width or
+height of the rectangle. We use the `add_no_overlap_2d` constraint to ensure
+that no two rectangles overlap.
 
-        # maximize the number of packed rectangles
-        self.model.Maximize(
-            sum(
-                box.value * self.packed_vars[i]
-                for i, box in enumerate(instance.rectangles)
-            )
-        )
+```python
+# Create interval variables representing the width and height of the rectangles
+x_interval_vars = [
+    model.new_fixed_size_interval_var(
+        start=x_vars[i], size=box.width, name=f"x_interval_{i}"
+    )
+    for i, box in enumerate(rectangles)
+]
+y_interval_vars = [
+    model.new_fixed_size_interval_var(
+        start=y_vars[i], size=box.height, name=f"y_interval_{i}"
+    )
+    for i, box in enumerate(rectangles)
+]
 
-    def _extract_solution(self, solver: cp_model.CpSolver) -> Optional[Solution]:
-        if self.status not in (cp_model.OPTIMAL, cp_model.FEASIBLE):
-            return None
-        placements = []
-        for i, box in enumerate(self.instance.rectangles):
-            if solver.Value(self.packed_vars[i]):
-                placements.append(
-                    Placement(
-                        x=solver.Value(self.bottom_left_x_vars[i]),
-                        y=solver.Value(self.bottom_left_y_vars[i]),
-                        rotated=bool(solver.Value(self.rotated_vars[i])),
-                    )
-                )
-            else:
-                placements.append(None)
-        return Solution(placements=placements)
+# Ensure no two rectangles overlap
+model.add_no_overlap_2d(x_interval_vars, y_interval_vars)
+```
 
-    def solve(self, time_limit: float = 900.0, opt_tol: float = 0.01):
-        solver = cp_model.CpSolver()
-        solver.parameters.log_search_progress = True
-        solver.parameters.max_time_in_seconds = time_limit
-        solver.parameters.relative_gap_limit = opt_tol
-        self.status = solver.Solve(self.model)
-        self.solution = self._extract_solution(solver)
-        self.upper_bound = solver.BestObjectiveBound()
-        self.objective_value = solver.ObjectiveValue()
-        return self.status
+The optional intervals with flexible length allow us to model rotations and find
+the largest possible packing. The code may appear complex, but it remains
+straightforward considering the problem's complexity.
+
+First, we define namedtuples for the rectangles and the container.
+
+```python
+from collections import namedtuple
+from ortools.sat.python import cp_model
+
+# Define namedtuples for rectangles and container
+Rectangle = namedtuple("Rectangle", ["width", "height", "value"])
+Container = namedtuple("Container", ["width", "height"])
+
+# Example usage
+rectangles = [
+    Rectangle(width=2, height=3, value=1),
+    Rectangle(width=4, height=5, value=1),
+]
+container = Container(width=10, height=10)
+```
+
+Next, we create variables for the coordinates of the rectangles. This includes
+variables for the bottom-left and top-right corners, as well as a boolean
+variable to indicate if a rectangle is rotated.
+
+```python
+model = cp_model.CpModel()
+
+# Create variables for the bottom-left and top-right corners of the rectangles
+bottom_left_x_vars = [
+    model.new_int_var(0, container.width, name=f"x1_{i}")
+    for i, box in enumerate(rectangles)
+]
+bottom_left_y_vars = [
+    model.new_int_var(0, container.height, name=f"y1_{i}")
+    for i, box in enumerate(rectangles)
+]
+upper_right_x_vars = [
+    model.new_int_var(0, container.width, name=f"x2_{i}")
+    for i, box in enumerate(rectangles)
+]
+upper_right_y_vars = [
+    model.new_int_var(0, container.height, name=f"y2_{i}")
+    for i, box in enumerate(rectangles)
+]
+
+# Create variables to indicate if a rectangle is rotated
+rotated_vars = [model.new_bool_var(f"rotated_{i}") for i in range(len(rectangles))]
+```
+
+We then create variables for the width and height of each rectangle, adjusting
+for rotation. Constraints ensure these variables are set correctly based on
+whether the rectangle is rotated.
+
+```python
+# Create variables for the width and height, adjusted for rotation
+width_vars = []
+height_vars = []
+for i, box in enumerate(rectangles):
+    domain = cp_model.Domain.from_values([box.width, box.height])
+    width_vars.append(model.new_int_var_from_domain(domain, name=f"width_{i}"))
+    height_vars.append(model.new_int_var_from_domain(domain, name=f"height_{i}"))
+    # There are two possible assignments for width and height
+    model.add_allowed_assignments(
+        [width_vars[i], height_vars[i], rotated_vars[i]],
+        [(box.width, box.height, 0), (box.height, box.width, 1)],
+    )
+```
+
+Next, we create a boolean variable indicating if a rectangle is packed or not,
+and then interval variables representing its occupied space in the container.
+These intervals are used to enforce the no-overlap constraint.
+
+```python
+# Create variables indicating if a rectangle is packed
+packed_vars = [model.new_bool_var(f"packed_{i}") for i in range(len(rectangles))]
+
+# Create interval variables representing the width and height of the rectangles
+x_interval_vars = [
+    model.new_optional_interval_var(
+        start=bottom_left_x_vars[i],
+        size=width_vars[i],
+        is_present=packed_vars[i],
+        end=upper_right_x_vars[i],
+        name=f"x_interval_{i}",
+    )
+    for i, box in enumerate(rectangles)
+]
+y_interval_vars = [
+    model.new_optional_interval_var(
+        start=bottom_left_y_vars[i],
+        size=height_vars[i],
+        is_present=packed_vars[i],
+        end=upper_right_y_vars[i],
+        name=f"y_interval_{i}",
+    )
+    for i, box in enumerate(rectangles)
+]
+
+# Ensure no two rectangles overlap
+model.add_no_overlap_2d(x_interval_vars, y_interval_vars)
+```
+
+Finally, we maximize the number of packed rectangles by defining an objective
+function.
+
+```python
+# Maximize the number of packed rectangles
+model.maximize(sum(box.value * x for x, box in zip(packed_vars, rectangles)))
 ```
 
 |                       ![./images/dense_packing.png](https://github.com/d-krupke/cpsat-primer/blob/main/images/dense_packing.png)                       |
