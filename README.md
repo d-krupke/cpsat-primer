@@ -1976,6 +1976,10 @@ room. This can be modeled with optional intervals, where the intervals exist
 only if the meeting is scheduled in the room. The `add_no_overlap` constraint
 ensures that no two meetings overlap in the same room.
 
+Because we now have two rooms, we need to create a more challenging instance
+first. Otherwise, the solver may not need to use both rooms. We do this by
+simply adding more and longer meetings.
+
 ```python
 # Meeting definitions
 meetings = {
@@ -1984,32 +1988,39 @@ meetings = {
             [t_to_idx(8, 0), t_to_idx(12, 0)],
             [t_to_idx(16, 0), t_to_idx(16, 0)],
         ],
-        duration=24,
+        duration=120 // 5,
     ),
     "meeting_b": MeetingInfo(
-        start_times=[[t_to_idx(10, 0), t_to_idx(12, 0)]], duration=48
+        start_times=[[t_to_idx(10, 0), t_to_idx(12, 0)]], duration=240 // 5
     ),
     "meeting_c": MeetingInfo(
-        start_times=[[t_to_idx(16, 0), t_to_idx(17, 0)]], duration=6
+        start_times=[[t_to_idx(16, 0), t_to_idx(17, 0)]], duration=30 // 5
     ),
     "meeting_d": MeetingInfo(
         start_times=[
             [t_to_idx(8, 0), t_to_idx(10, 0)],
             [t_to_idx(12, 0), t_to_idx(14, 0)],
         ],
-        duration=12,
+        duration=60 // 5,
     ),
     "meeting_e": MeetingInfo(
-        start_times=[[t_to_idx(10, 0), t_to_idx(12, 0)]], duration=24
+        start_times=[[t_to_idx(10, 0), t_to_idx(12, 0)]], duration=120 // 5
     ),
     "meeting_f": MeetingInfo(
-        start_times=[[t_to_idx(14, 0), t_to_idx(14, 0)]], duration=48
+        start_times=[[t_to_idx(14, 0), t_to_idx(14, 0)]], duration=240 // 5
     ),
     "meeting_g": MeetingInfo(
-        start_times=[[t_to_idx(14, 0), t_to_idx(16, 0)]], duration=24
+        start_times=[[t_to_idx(14, 0), t_to_idx(16, 0)]], duration=120 // 5
     ),
 }
+```
 
+This time, we need to create an interval variable for each room and meeting, as
+well as a Boolean variable indicating if the meeting is scheduled in the room.
+We cannot use the same interval variable for multiple rooms, as otherwise the
+interval would be present in both rooms.
+
+```python
 # Create the model
 model = cp_model.CpModel()
 
@@ -2027,10 +2038,6 @@ room_vars = {
     for name in meetings
 }
 
-# Ensure each meeting is assigned to exactly one room
-for name, room_dict in room_vars.items():
-    model.add_exactly_one(room_dict.values())
-
 # Create interval variables and add no-overlap constraint
 interval_vars = {
     name: {
@@ -2045,12 +2052,21 @@ interval_vars = {
     }
     for name, info in meetings.items()
 }
+```
+
+Now we can enforce that each meeting is assigned to exactly one room and that
+there is no overlap between meetings in the same room.
+
+```python
+# Ensure each meeting is assigned to exactly one room
+for name, room_dict in room_vars.items():
+    model.add_exactly_one(room_dict.values())
 
 for room in rooms:
     model.add_no_overlap([interval_vars[name][room] for name in meetings])
 ```
 
-This will result in a solution like this:
+Again, doing some quick magic with matplotlib, we get the following schedule.
 
 | ![Schedule multiple rooms](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/scheduling_multiple_resources.png) |
 | :-------------------------------------------------------------------------------------------------------------------------------: |
