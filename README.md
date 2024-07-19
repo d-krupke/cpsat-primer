@@ -1703,6 +1703,63 @@ in CP-SAT. Nevertheless, both formulations perform significantly worse than the
 end users, the `add_circuit` constraint can utilize lazy constraints internally,
 offering a substantial advantage in solving the TSP.
 
+<a name="04-modelling-reservoir"></a>
+
+### Reservoir Constraints
+
+Sometimes, we need to keep the balance between inflows and outflows of a
+reservoir. The name giving example is a water reservoir, where we need to keep
+the water level between a minimum and a maximum level. However, there are many
+other examples, such as maintaining a certain stock level in a warehouse, or
+ensuring a certain staffing level in a clinic. The `add_reservoir_constraint`
+constraint in CP-SAT allows you to model such problems easily. It takes a list
+of time variables, a list of change variables, and the minimum and maximum level
+of the reservoir. `time_vars[i]` represents the time at which the change
+`change_vars[i]` will be applied, thus both lists needs to be of the same
+length. The reservoir level starts at 0, and the minimum level has to $\leq 0$
+and the maximum level has to $\geq 0$.
+
+```python
+time_vars = [model.new_int_var(0, 100, f"time_{i}") for i in range(10)]
+change_vars = [model.new_int_var(-10, 10, f"change_{i}") for i in range(10)]
+
+model.add_reservoir_constraint(
+    time_vars=time_vars,
+    change_vars=change_vars,
+    min_level=-20,
+    max_level=20,
+)
+```
+
+Additionally, the `add_reservoir_constraint_with_active` constraint allows you
+to model a reservoir with _optional_ changes. Here, we additionally have a list
+of Boolean variables `active_vars`, where `active_vars[i]` indicates if the
+change `change_vars[i]` takes place. If a change is not active, it is as if it
+does not exist, and the reservoir level remains the same, independent of the
+time and change values.
+
+```python
+time_vars = [model.new_int_var(0, 100, f"time_{i}") for i in range(10)]
+change_vars = [model.new_int_var(-10, 10, f"change_{i}") for i in range(10)]
+active_vars = [model.new_bool_var(f"active_{i}") for i in range(10)]
+
+model.add_reservoir_constraint_with_active(
+    time_vars=time_vars,
+    change_vars=change_vars,
+    active_vars=active_vars,
+    min_level=-20,
+    max_level=20,
+)
+```
+
+> [!NOTE]
+>
+> The reservoir constraints can express conditions that are difficult to model
+> "by hand". However, while I do not have much experience with them, I would not
+> expect them to be particularly easy to optimize. Let me know if you have
+> either good or bad experiences with them in practice and for which problem
+> scales they work well.
+
 <a name="04-modelling-intervals"></a>
 
 ### Scheduling and Packing with Intervals
@@ -1849,6 +1906,16 @@ model.add_cumulative(
 )
 ```
 
+> [!WARNING]
+>
+> Do not directly jump to intervals when you have a scheduling problem.
+> Intervals are great if you actually have a somewhat continuous time or space
+> that you need to schedule. If you have a more discrete problem, such as a
+> scheduling problem with a fixed number of slots, you can often model this
+> problem much more efficiently using simple Boolean variables and constraints.
+> Especially if you can use domain knowledge to find clusters of meetings that
+> cannot overlap, this can be much more efficient.
+
 Let us examine a few examples of how to use these constraints effectively.
 
 #### Scheduling for a Conference Room with Intervals
@@ -1910,7 +1977,7 @@ meetings = {
             [t_to_idx(8, 0), t_to_idx(10, 0)],
             [t_to_idx(12, 0), t_to_idx(14, 0)],
         ],
-        duration=160 // 5,  # 1 hour
+        duration=60 // 5,  # 1 hour
     ),
 }
 ```
@@ -2071,16 +2138,6 @@ Again, doing some quick magic with matplotlib, we get the following schedule.
 | ![Schedule multiple rooms](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/scheduling_multiple_resources.png) |
 | :-------------------------------------------------------------------------------------------------------------------------------: |
 |                          A possible non-overlapping schedule for the above example with multiple rooms.                           |
-
-> [!WARNING]
->
-> Do not directly jump to intervals when you have a scheduling problem.
-> Intervals are great if you actually have a somewhat continuous time or space
-> that you need to schedule. If you have a more discrete problem, such as a
-> scheduling problem with a fixed number of slots, you can often model this
-> problem much more efficiently using simple Boolean variables and constraints.
-> Especially if you can use domain knowledge to find clusters of meetings that
-> cannot overlap, this can be much more efficient.
 
 > [!TIP]
 >
