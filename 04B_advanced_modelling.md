@@ -2,6 +2,8 @@
 
 ## Advanced Modeling
 
+![Cover Image Modelling](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/logo_complex_assembly.webp)
+
 After having seen the basic elements of CP-SAT, this chapter will introduce you
 to the more complex constraints. These constraints are already focussed on
 specific problems, such as routing or scheduling, but very generic and powerful
