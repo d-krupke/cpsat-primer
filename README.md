@@ -1783,46 +1783,56 @@ dimensions, e.g., for packing rectangles. `add_cumulative` is used to model a
 resource constraint, where the sum of the demands of the overlapping intervals
 must not exceed the capacity of the resource.
 
+The `add_no_overlap` constraints takes a list of (optional) interval variables
+and ensures that no two present intervals overlap.
+
 ```python
-optional_interval = model.new_optional_interval_var(
-    start=start_var,
-    size=length_var,
-    end=end_var,
-    is_present=is_present_var,
-    name="optional_interval",
-)
-
-# creating an interval that can be present or not
-optional_fixed_interval = model.new_optional_fixed_size_interval_var(
-    start=start_var,
-    size=10,  # needs to be a constant
-    is_present=is_present_var,
-    name="optional_fixed_interval",
-)
-
 model.add_no_overlap(
     interval_vars=[
         flexible_interval,
         fixed_interval,
         optional_interval,
         optional_fixed_interval,
+        # ...
     ]
 )
+```
+
+The `add_no_overlap_2d` constraints takes two lists of (optional) interval and
+ensures that for every `i` and `j` either `x_intervals[i]` and `x_intervals[j]`
+or `y_intervals[i]` and `y_intervals[j]` do not overlap. Thus, both lists must
+have the same length as `x_intervals[i]` and `y_intervals[i]` are considered
+belonging together. If either `x_intervals[i]` or `y_intervals[i]` are optional,
+the whole object is optional.
+
+```python
 model.add_no_overlap_2d(
     x_intervals=[
         flexible_interval,
         fixed_interval,
         optional_interval,
         optional_fixed_interval,
+        # ...
     ],
     y_intervals=[
         flexible_interval,
         fixed_interval,
         optional_interval,
         optional_fixed_interval,
+        # ...
     ],
 )
+```
 
+The `add_cumulative` constraint is used to model a resource constraint, where
+the sum of the demands of the overlapping intervals must not exceed the capacity
+of the resource. It takes a list of intervals, a list of demands, and a capacity
+variable. The list of demands must have the same length as the list of
+intervals, as the demands of the intervals are matched by index. As capacity and
+demands can be variables (or affine expressions), quite complex resource
+constraints can be modeled.
+
+```python
 demand_vars = [model.new_int_var(1, 10, f"demand_{i}") for i in range(4)]
 capacity_var = model.new_int_var(1, 100, "capacity")
 model.add_cumulative(
@@ -2041,7 +2051,7 @@ This will result in a solution like this:
 
 > [!TIP]
 >
-> You could easily extend this model to schedule as many meetings as feasible
+> You could easily extend this model to schedule as many meetings as possible
 > using an objective function. You could also maximize the distance between two
 > meetings by using a variable size interval. This would be a good exercise to
 > try.
