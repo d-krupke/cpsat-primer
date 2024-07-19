@@ -2457,7 +2457,7 @@ becomes. Thus, it is usually only chosen to be as high as necessary.
 | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
 | We can model an arbitrary continuous function with a piecewise linear function. Here, we split the original function into a number of straight segments. The accuracy can be adapted to the requirements. The linear segments can then be expressed in CP-SAT. The fewer such segments, the easier it remains to model and solve. |
 
-Using linear constraints (`model.Add`) and reification (`.OnlyEnforceIf`), we
+Using linear constraints (`model.add`) and reification (`.only_enforce_if`), we
 can model such a piecewise linear function in CP-SAT. For this we simply use
 boolean variables to decide for a segment, and then activate the corresponding
 linear constraint via reification. However, this has two problems in CP-SAT, as
@@ -2495,25 +2495,25 @@ An implementation could now look as follows:
 
 ```python
 # We want to enforce y=f(x)
-x = model.NewIntVar(0, 7, "x")
-y = model.NewIntVar(0, 5, "y")
+x = model.new_int_var(0, 7, "x")
+y = model.new_int_var(0, 5, "y")
 
 # use boolean variables to decide for a segment
-segment_active = [model.NewBoolVar("segment_1"), model.NewBoolVar("segment_2")]
-model.AddAtMostOne(segment_active)  # enforce one segment to be active
+segment_active = [model.new_bool_var("segment_1"), model.new_bool_var("segment_2")]
+model.add_at_most_one(segment_active)  # enforce one segment to be active
 
 # Segment 1
 # if 0<=x<=3, then y >= 0.5*x + 0.5
-model.Add(2 * y >= x + 1).OnlyEnforceIf(segment_active[0])
-model.Add(x >= 0).OnlyEnforceIf(segment_active[0])
-model.Add(x <= 3).OnlyEnforceIf(segment_active[0])
+model.add(2 * y >= x + 1).only_enforce_if(segment_active[0])
+model.add(x >= 0).only_enforce_if(segment_active[0])
+model.add(x <= 3).only_enforce_if(segment_active[0])
 
 # Segment 2
-model.Add(_SLIGHTLY_MORE_COMPLEX_INEQUALITY_).OnlyEnforceIf(segment_active[1])
-model.Add(x >= 3).OnlyEnforceIf(segment_active[1])
-model.Add(x <= 7).OnlyEnforceIf(segment_active[1])
+model.add(_SLIGHTLY_MORE_COMPLEX_INEQUALITY_).only_enforce_if(segment_active[1])
+model.add(x >= 3).only_enforce_if(segment_active[1])
+model.add(x <= 7).only_enforce_if(segment_active[1])
 
-model.Minimize(y)
+model.minimize(y)
 # if we were to maximize y, we would have used <= instead of >=
 ```
 
@@ -2530,8 +2530,8 @@ This code does some further optimizations:
    convex ranges, as the constraints of convex areas do not interfere with each
    other.
 2. Adding the convex hull of the segments as a redundant constraint that does
-   not depend on any `OnlyEnforceIf` can in some cases help the solver to find
-   better bounds. `OnlyEnforceIf`-constraints are often not very good for the
+   not depend on any `only_enforce_if` can in some cases help the solver to find
+   better bounds. `only_enforce_if`-constraints are often not very good for the
    linear relaxation, and having the convex hull as independent constraint can
    directly limit the solution space, without having to do any branching on the
    cases.
@@ -2559,16 +2559,16 @@ requirements_2 = (2, 1, 3)
 from ortools.sat.python import cp_model
 
 model = cp_model.CpModel()
-buy_1 = model.NewIntVar(0, 1_500, "buy_1")
-buy_2 = model.NewIntVar(0, 1_500, "buy_2")
-buy_3 = model.NewIntVar(0, 1_500, "buy_3")
+buy_1 = model.new_int_var(0, 1_500, "buy_1")
+buy_2 = model.new_int_var(0, 1_500, "buy_2")
+buy_3 = model.new_int_var(0, 1_500, "buy_3")
 
-produce_1 = model.NewIntVar(0, 300, "produce_1")
-produce_2 = model.NewIntVar(0, 300, "produce_2")
+produce_1 = model.new_int_var(0, 300, "produce_1")
+produce_2 = model.new_int_var(0, 300, "produce_2")
 
-model.Add(produce_1 * requirements_1[0] + produce_2 * requirements_2[0] <= buy_1)
-model.Add(produce_1 * requirements_1[1] + produce_2 * requirements_2[1] <= buy_2)
-model.Add(produce_1 * requirements_1[2] + produce_2 * requirements_2[2] <= buy_3)
+model.add(produce_1 * requirements_1[0] + produce_2 * requirements_2[0] <= buy_1)
+model.add(produce_1 * requirements_1[1] + produce_2 * requirements_2[1] <= buy_2)
+model.add(produce_1 * requirements_1[2] + produce_2 * requirements_2[2] <= buy_3)
 
 # You can find this code it ./utils!
 from piecewise_functions import PiecewiseLinearFunction, PiecewiseLinearConstraint
@@ -2608,13 +2608,13 @@ model.Maximize(x_gain_1.y + x_gain_2.y - (x_costs_1.y + x_costs_2.y + x_costs_3.
 
 solver = cp_model.CpSolver()
 solver.parameters.log_search_progress = True
-status = solver.Solve(model)
-print(f"Buy {solver.Value(buy_1)} of component 1")
-print(f"Buy {solver.Value(buy_2)} of component 2")
-print(f"Buy {solver.Value(buy_3)} of component 3")
-print(f"Produce {solver.Value(produce_1)} of product 1")
-print(f"Produce {solver.Value(produce_2)} of product 2")
-print(f"Overall gain: {solver.ObjectiveValue()}")
+status = solver.solve(model)
+print(f"Buy {solver.value(buy_1)} of component 1")
+print(f"Buy {solver.value(buy_2)} of component 2")
+print(f"Buy {solver.value(buy_3)} of component 3")
+print(f"Produce {solver.value(produce_1)} of product 1")
+print(f"Produce {solver.value(produce_2)} of product 2")
+print(f"Overall gain: {solver.objective_value}")
 ```
 
 This will give you the following output:
