@@ -6,133 +6,123 @@
 
 ![Cover Image Parameters](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/logo_3.webp)
 
-> [!WARNING]
->
-> CP-SAT 9.9 recently changed its API to be more consistent with the commonly
-> used Python style. Instead of `NewIntVar`, you can now also use `new_int_var`.
-> The following part of the primer still uses the old style and will be updated
-> soon.
-
-The CP-SAT solver has a lot of parameters to control its behavior. They are
-implemented via
-[Protocol Buffer](https://developers.google.com/protocol-buffers) and can be
-manipulated via the `parameters`-member. If you want to find out all options,
-you can check the reasonably well documented `proto`-file in the
+The CP-SAT solver offers numerous parameters to control its behavior. These
+parameters are implemented via
+[Protocol Buffers](https://developers.google.com/protocol-buffers) and can be
+manipulated using the `parameters` member. To explore all available options,
+refer to the well-documented `proto` file in the
 [official repository](https://github.com/google/or-tools/blob/stable/ortools/sat/sat_parameters.proto).
-I will give you the most important right below.
+Below, I will highlight the most important parameters so you can get the most
+out of CP-SAT.
 
-> :warning: Only a few of the parameters (e.g., timelimit) are
-> beginner-friendly. Most other parameters (e.g., decision strategies) should
-> not be touched as the defaults are well-chosen, and it is likely that you will
-> interfere with some optimizations. If you need a better performance, try to
-> improve your model of the optimization problem.
+> :warning: Only a few parameters, such as `timelimit`, are suitable for
+> beginners. Most other parameters, like decision strategies, are best left at
+> their default settings, as they are well-chosen and tampering with them could
+> disrupt optimizations. For better performance, focus on improving your model.
 
-### Time limit and Status
+### Time Limit and Status
 
-If we have a huge model, CP-SAT may not be able to solve it to optimality (if
-the constraints are not too difficult, there is a good chance we still get a
-good solution). Of course, we do not want CP-SAT to run endlessly for hours
-(years, decades,...) but simply abort after a fixed time and return us the best
-solution so far. If you are now asking yourself why you should use a tool that
-may run forever: There are simply no provably faster algorithms and considering
-the combinatorial complexity, it is incredible that it works so well. Those not
-familiar with the concepts of NP-hardness and combinatorial complexity, I
-recommend reading the book 'In Pursuit of the Traveling Salesman' by William
-Cook. Actually, I recommend this book to anyone into optimization: It is a
-beautiful and light weekend-read.
+When working with large or complex models, the CP-SAT solver may not always
+reach an optimal solution within a reasonable time frame and could potentially
+run indefinitely. Therefore, setting a time limit is advisable, particularly in
+a production environment, to prevent the solver from running endlessly. Even
+within a time limit, CP-SAT often finds a reasonably good solution, although it
+may not be proven optimal.
 
-To set a time limit (in seconds), we can simply set the following value before
-we run the solver:
+Determining an appropriate time limit depends on various factors and usually
+requires some experimentation. I typically start with a time limit between 60
+and 300 seconds, as this provides a balance between not having to wait too long
+during model testing and giving the solver enough time to find a good solution.
+
+To set a time limit (in seconds) before running the solver, use the following
+command:
 
 ```python
-solver.parameters.max_time_in_seconds = 60  # 60s timelimit
+# solver = cp_model.CpSolver()
+solver.parameters.max_time_in_seconds = 60  # 60s time limit
+# status = solver.solve(model)
 ```
 
-We now of course have the problem, that maybe we will not have an optimal
-solution, or a solution at all, we can continue on. Thus, we need to check the
-status of the solver.
+After running the solver, it is important to check the status to determine
+whether an optimal solution, a feasible solution, or no solution at all has been
+found:
 
 ```python
-status = solver.Solve(model)
+status = solver.solve(model)
 if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
     print("We have a solution.")
 else:
     print("Help?! No solution available! :( ")
 ```
 
-The following status codes are possible:
+The possible status codes are:
 
-- `OPTIMAL`: Perfect, we have an optimal solution.
-- `FEASIBLE`: Good, we have at least a feasible solution (we may also have a
-  bound available to check the quality via `solver.BestObjectiveBound()`).
-- `INFEASIBLE`: There is a proof that no solution can satisfy all our
-  constraints.
-- `MODEL_INVALID`: You used CP-SAT wrongly.
-- `UNKNOWN`: No solution was found, but also no infeasibility proof. Thus, we
-  actually know nothing. Maybe there is at least a bound available?
+- `OPTIMAL` (4): An optimal solution has been found.
+- `FEASIBLE` (2): A feasible solution has been found, and a bound may be
+  available to assess its quality via `solver.best_objective_bound`.
+- `INFEASIBLE` (3): No solution can satisfy all constraints.
+- `MODEL_INVALID` (1): The CP-SAT model is incorrectly specified.
+- `UNKNOWN` (0): No solution was found, and no infeasibility proof is available.
+  A bound may still be available.
 
-If you want to print the status, you can use `solver.StatusName(status)`.
+To get the name from the status code, use `solver.status_name(status)`.
 
-We can not only limit the runtime but also tell CP-SAT, we are satisfied with a
-solution within a specific, provable quality range. For this, we can set the
-parameters `absolute_gap_limit` and `relative_gap_limit`. The absolute limit
-tells CP-SAT to stop as soon as the solution is at most a specific value apart
-to the bound, the relative limit is relative to the bound. More specifically,
-CP-SAT will stop as soon as the objective value(O) is within relative ratio
-$abs(O - B) / max(1, abs(O))$ of the bound (B). To stop as soon as we are within
-5% of the optimum, we could state (TODO: Check)
+In addition to limiting runtime, you can specify acceptable solution quality
+using `absolute_gap_limit` and `relative_gap_limit`. The absolute limit stops
+the solver when the solution is within a specified value of the bound. The
+relative limit stops the solver when the objective value (O) is within a
+specified ratio of the bound (B). To stop when the solution is (provably) within
+5% of the optimum, use:
 
 ```python
 solver.parameters.relative_gap_limit = 0.05
 ```
 
-Now we may want to stop after we did not make progress for some time or
-whatever. In this case, we can make use of the solution callbacks.
+For cases where progress stalls or for other reasons, solution callbacks can be
+used to halt the solver. With these, you can decide on every new solution if the
+solution is good enough or if the solver should continue searching for a better
+one. Unlike Gurobi, CP-SAT does not support adding lazy constraints from these
+callbacks (or at all), which is a significant limitation for problems requiring
+dynamic model adjustments.
 
-> For those familiar with Gurobi: Unfortunately, we can only abort the solution
-> progress and not add lazy constraints or similar. For those not familiar with
-> Gurobi or MIPs: With Mixed Integer Programming we can adapt the model during
-> the solution process via callbacks which allows us to solve problems with
-> many(!) constraints by only adding them lazily. This is currently the biggest
-> shortcoming of CP-SAT for me. Sometimes you can still do dynamic model
-> building with only little overhead feeding information of previous iterations
-> into the model
-
-For adding a solution callback, we have to inherit from a base class. The
-documentation of the base class and the available operations can be found in the
-[documentation](https://developers.google.com/optimization/reference/python/sat/python/cp_model#cp_model.CpSolverSolutionCallback).
+To add a solution callback, inherit from the base class
+`CpSolverSolutionCallback`. Documentation for this base class and its operations
+is available
+[here](https://developers.google.com/optimization/reference/python/sat/python/cp_model#cp_model.CpSolverSolutionCallback).
 
 ```python
 class MySolutionCallback(cp_model.CpSolverSolutionCallback):
-    def __init__(self, stuff):
+    def __init__(self, data):
         cp_model.CpSolverSolutionCallback.__init__(self)
-        self.stuff = stuff  # just to show that we can save some data in the callback.
+        self.data = data  # Store data in the callback.
 
     def on_solution_callback(self):
-        obj = self.ObjectiveValue()  # best solution value
-        bound = self.BestObjectiveBound()  # best bound
+        obj = self.objective_value  # Best solution value
+        bound = self.best_objective_bound  # Best bound
         print(f"The current value of x is {self.Value(x)}")
         if abs(obj - bound) < 10:
-            self.StopSearch()  # abort search for better solution
+            self.StopSearch()  # Stop search for a better solution
         # ...
 
 
-solver.Solve(model, MySolutionCallback(None))
+solver.solve(model, MySolutionCallback(None))
 ```
 
-You can find an
-[official example of using such callbacks](https://github.com/google/or-tools/blob/stable/ortools/sat/samples/stop_after_n_solutions_sample_sat.py)
-.
+An
+[official example using callbacks](https://github.com/google/or-tools/blob/stable/ortools/sat/samples/stop_after_n_solutions_sample_sat.py)
+is available.
 
-Beside querying the objective value of the currently best solution, the solution
-itself, and the best known bound, you can also find out about internals such as
-`NumBooleans(self)`, `NumConflicts(self)`, `NumBranches(self)`. What those
-values mean will be discussed later.
+Besides querying the objective value of the best solution and the best known
+bound, you can also access internal metrics such as `self.num_booleans`,
+`self.num_branches`, and `self.num_conflicts`. These metrics will be discussed
+later.
 
-With version 9.10, CP-SAT also supports bound callbacks. These are called when
-CP-SAT is able to improve the proven bound. As the solution callback is only
-called when a new solution is found, you may want to additionally use the bound
-callback when you want to abort the search as soon as the bound is good enough.
+As of version 9.10, CP-SAT also supports bound callbacks, which are triggered
+when the proven bound improves. Unlike solution callbacks, which activate upon
+finding new solutions, bound callbacks are useful for stopping the search when
+the bound is sufficiently good. The syntax for bound callbacks differs from that
+of solution callbacks, as they are implemented as free functions that directly
+access the solver object.
 
 ```python
 solver = cp_model.CpSolver()
@@ -141,18 +131,38 @@ solver = cp_model.CpSolver()
 def bound_callback(bound):
     print(f"New bound: {bound}")
     if bound > 100:
-        solver.StopSearch()
+        solver.stop_search()
 
 
 solver.best_bound_callback = bound_callback
 ```
 
-You can also try to directly hook into the log output of CP-SAT, which should be
-called for new solutions, new bounds, and other important events. This can be
-done by setting the `log_callback` parameter.
+Instead of using a simple function, you can also use a callable object to store
+a reference to the solver object. This approach allows you to define the
+callback outside the local scope, providing greater flexibility.
 
 ```python
-solver.log_callback = lambda msg: print("LOG:", msg)  # (str)->None
+class BoundCallback:
+    def __init__(self, solver) -> None:
+        self.solver = solver
+
+    def __call__(self, bound):
+        print(f"New bound: {bound}")
+        if bound > 200:
+            print("Abort search due to bound")
+            self.solver.stop_search()
+```
+
+This method is more flexible than the solution callback and can be considered
+more Pythonic.
+
+Additionally, whenever there is a new solution or bound, a log message is
+generated. You can hook into the log output to decide when to stop the search
+using CP-SAT's log callback.
+
+```python
+solver.parameters.log_search_progress = True  # Enable logging
+solver.log_callback = lambda msg: print("LOG:", msg)  # (str) -> None
 ```
 
 ### Parallelization
@@ -362,16 +372,8 @@ e.g., by a branch-and-bound algorithm. Available full problem subsolvers are:
   the formula.
 - `fixed`: User-specified search strategy.
 
-You can specify the used full problem subsolvers manually by
-
-```
-# make sure list is empty
-while solver.parameters.subsolvers:
-   solver.parameters.subsolvers.pop()
-# set new list
-solver.parameters.subsolvers.extend(["default_lp", "fixed", "less_encoding", "no_lp", "max_lp", "pseudo_costs", "reduced_costs", "quick_restart", "quick_restart_no_lp", "lb_tree_search", "probing"])
-```
-
+You can modify the used subsolvers by `solver.parameters.subsolvers`,
+`solver.parameters.extra_subsolvers`, and `solver.parameters.ignore_subsolvers`.
 This can be interesting, e.g., if you are using CP-SAT especially because the
 linear relaxation is not useful (and the BnB-algorithm performing badly). There
 are even more options, but for these you can simply look into the
@@ -495,60 +497,79 @@ def import_model(filename: str) -> cp_model.CpModel:
 
 ### Assumptions
 
-Quite often you want to find out what happens if you force some variables to a
-specific value. Because you possibly want to do that multiple times, you do not
-want to copy the whole model. CP-SAT has a nice option of adding assumptions
-that you can clear afterwards, without needing to copy the object to test the
-next assumptions. This is a feature also known from many SAT-solvers and CP-SAT
-also only allows this feature for boolean literals. You cannot add any more
-complicated expressions here, but for boolean literals it seems to be pretty
-efficient. By adding some auxiliary boolean variables, you can also use this
-technique to play around with more complicated expressions without the need to
-copy the model. If you really need to temporarily add complex constraints, you
-may have to copy the model using `model.CopyFrom` (maybe you also need to copy
-the variables. Need to check that.).
+Often, you may need to explore the impact of forcing certain variables to
+specific values. To avoid copying the entire model multiple times, CP-SAT offers
+a convenient option: adding assumptions. Assumptions can be cleared afterward,
+allowing you to test new assumptions without duplicating the model. This
+feature, common in many SAT solvers, is restricted to boolean literals in
+CP-SAT. While you cannot add complex expressions directly, using auxiliary
+boolean variables enables you to experiment with more intricate constraints
+without model duplication. For temporary complex constraints, model copying
+using `model.CopyFrom` may still be necessary, along with variable copying.
 
 ```python
-model.AddAssumptions([b1, b2.Not()])  # assume b1=True, b2=False
-model.AddAssumption(b3)  # assume b3=True (single literal)
-# ... solve again and analyse ...
-model.ClearAssumptions()  # clear all assumptions
+b1 = model.new_bool_var("b1")
+b2 = model.new_bool_var("b2")
+b3 = model.new_bool_var("b3")
+
+model.add_assumptions([b1, ~b2])  # assume b1=True, b2=False
+model.add_assumption(b3)  # assume b3=True (single literal)
+# ... solve again and analyze ...
+model.clear_assumptions()  # clear all assumptions
 ```
 
-> An **assumption** is a temporary fixation of a boolean variable to true or
-> false. It can be efficiently handled by a SAT-solver (and thus probably also
-> by CP-SAT) and does not harm the learned clauses (but can reuse them).
+> **Note:** While incremental SAT solvers can reuse learned clauses from
+> previous runs despite changing assumptions, CP-SAT does not support this
+> feature. Assumptions in CP-SAT only help avoid model duplication.
 
 ### Hints
 
-Maybe we already have a good intuition on how the solution will look like (this
-could be, because we already solved a similar model, have a good heuristic,
-etc.). In this case it may be useful, to tell CP-SAT about it, so it can
-incorporate this knowledge into its search. For Mixed Integer Programming
-Solver, this often yields a visible boost, even with mediocre heuristic
-solutions. For CP-SAT I actually also encountered downgrades of the performance
-if the hints were not great (but this may depend on the problem).
+If you have a good intuition about how the solution might look—perhaps from
+solving a similar model or using a good heuristic—you can inform CP-SAT to
+incorporate this knowledge into its search. Some workers will try to follow
+these hints, which can significantly improve the solver's performance if they
+are good. If the hints actually represent a feasible solution, the solver can
+use them to prune the search space of all branches that have worse bounds than
+the hints.
 
 ```python
-model.AddHint(x, 1)  # Tell CP-SAT that x will probably be 1
-model.AddHint(y, 2)  # and y probably be 2.
+model.add_hint(x, 1)  # Suggest that x will probably be 1
+model.add_hint(y, 2)  # Suggest that y will probably be 2
 ```
 
-You can also find
-[an official example](https://github.com/google/or-tools/blob/stable/ortools/sat/samples/solution_hinting_sample_sat.py).
+For more examples, refer to
+[the official example](https://github.com/google/or-tools/blob/stable/ortools/sat/samples/solution_hinting_sample_sat.py).
 
-To make sure, your hints are actually correct, you can use the following
-parameters to make CP-SAT throw an error if your hints are wrong.
+To ensure your hints are correct, you can enable the following parameter, which
+will make CP-SAT throw an error if the hints are incorrect:
 
 ```python
 solver.parameters.debug_crash_on_bad_hint = True
 ```
 
-If you have the feeling that your hints are not used, you may have made a
-logical error in your model or just have a bug in your code. This parameter will
-tell you about it.
+If you suspect that your hints are not being utilized, it might indicate a
+logical error in your model or a bug in your code. This parameter can help
+diagnose such issues. However, this feature does not work reliably, so it should
+not be solely relied upon.
 
-(TODO: Have not tested this, yet)
+> [!TIP]
+>
+> Hints can significantly improve solver performance, especially if it struggles
+> to find a good initial solution (as indicated in the logs). This practice is
+> often called **warm-starting** the solver. You do not need to provide values
+> for all auxiliary variables, but if you use integer variables to approximate
+> continuous variables, it is beneficial to provide hints for these. CP-SAT may
+> struggle with quickly completing the solution, and only completed solutions
+> can be used for pruning the search space. If CP-SAT needs a long time to
+> complete the solution from the hint, it may have wasted a lot of time in
+> branches it could otherwise have pruned.
+
+> [!WARNING]
+>
+> In older versions of CP-SAT, hints could sometimes visibly slow down the
+> solver, even if they were correct but not optimal. While this issue seems
+> resolved in the latest versions, it is important to note that bad hints can
+> still cause slowdowns by guiding the solver in the wrong direction.
 
 ### Logging
 
