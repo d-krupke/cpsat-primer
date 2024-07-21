@@ -1,6 +1,6 @@
 <!-- EDIT THIS PART VIA 00_intro.md -->
 
-# The CP-SAT Primer: Using and Understanding OR-Tools' CP-SAT Solver
+# The CP-SAT Primer: Using and Understanding Google OR-Tools' CP-SAT Solver
 
 ![Cover Image](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/logo_1.webp)
 
