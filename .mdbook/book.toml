@@ -3,7 +3,7 @@ authors = ["Dominik Krupke"]
 language = "en"
 multilingual = false
 src = "."
-title = "CP-SAT Primer - Using and Understanding OR-Tools' CP-SAT"
+title = "The CP-SAT Primer - Using and Understanding OR-Tools' CP-SAT"
 [output.html]
 mathjax-support = true
 edit-url-template = "https://github.com/d-krupke/cpsat-primer/edit/main/{path}"

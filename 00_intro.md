@@ -1,6 +1,6 @@
 <!-- EDIT THIS PART VIA 00_intro.md -->
 
-# Using and Understanding OR-Tools' CP-SAT: A Primer and Cheat Sheet
+# The CP-SAT Primer: Using and Understanding OR-Tools' CP-SAT
 
 ![Cover Image](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/logo_1.webp)
 
@@ -11,7 +11,7 @@ optimization problems can, despite their proven theoretical hardness, be solved
 reasonably well in practice. The most successful approach is to use
 [Mixed Integer Linear Programming](https://en.wikipedia.org/wiki/Integer_programming)
 (MIP) to model the problem and then use a solver to find a solution. The most
-successful solvers for MIPs are [Gurobi](https://www.gurobi.com/) and
+successful solvers for MIPs are, e.g., [Gurobi](https://www.gurobi.com/) and
 [CPLEX](https://www.ibm.com/analytics/cplex-optimizer), which are both
 commercial and expensive (though, free for academics). There are also some open
 source solvers, but they are often not as powerful as the commercial ones.
@@ -118,7 +118,7 @@ deeper.
 > **Found a mistake?** Please open an issue or a pull request. You can also just
 > write me a quick mail to `krupked@gmail.com`.
 
-> **Want to Contribute?** If you are interested in contributing, please open an
+> **Want to contribute?** If you are interested in contributing, please open an
 > issue or email me with a brief description of your proposal. We can then
 > discuss the details. I welcome all assistance and am open to expanding the
 > content. Contributors to any section or similar input will be recognized as
