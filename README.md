@@ -3160,9 +3160,11 @@ model.add_assumption(b3)  # assume b3=True (single literal)
 model.clear_assumptions()  # clear all assumptions
 ```
 
-> **Note:** While incremental SAT solvers can reuse learned clauses from
-> previous runs despite changing assumptions, CP-SAT does not support this
-> feature. Assumptions in CP-SAT only help avoid model duplication.
+> [!NOTE]
+>
+> While incremental SAT solvers can reuse learned clauses from previous runs
+> despite changing assumptions, CP-SAT does not support this feature.
+> Assumptions in CP-SAT only help avoid model duplication.
 
 ### Hints
 
@@ -3182,18 +3184,6 @@ model.add_hint(y, 2)  # Suggest that y will probably be 2
 For more examples, refer to
 [the official example](https://github.com/google/or-tools/blob/stable/ortools/sat/samples/solution_hinting_sample_sat.py).
 
-To ensure your hints are correct, you can enable the following parameter, which
-will make CP-SAT throw an error if the hints are incorrect:
-
-```python
-solver.parameters.debug_crash_on_bad_hint = True
-```
-
-If you suspect that your hints are not being utilized, it might indicate a
-logical error in your model or a bug in your code. This parameter can help
-diagnose such issues. However, this feature does not work reliably, so it should
-not be solely relied upon.
-
 > [!TIP]
 >
 > Hints can significantly improve solver performance, especially if it struggles
@@ -3205,6 +3195,18 @@ not be solely relied upon.
 > can be used for pruning the search space. If CP-SAT needs a long time to
 > complete the solution from the hint, it may have wasted a lot of time in
 > branches it could otherwise have pruned.
+
+To ensure your hints are correct, you can enable the following parameter, which
+will make CP-SAT throw an error if the hints are incorrect:
+
+```python
+solver.parameters.debug_crash_on_bad_hint = True
+```
+
+If you suspect that your hints are not being utilized, it might indicate a
+logical error in your model or a bug in your code. This parameter can help
+diagnose such issues. However, this feature does not work reliably, so it should
+not be solely relied upon.
 
 > [!WARNING]
 >
