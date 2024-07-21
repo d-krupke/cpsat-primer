@@ -3682,6 +3682,7 @@ class KnapsackInstance(BaseModel):
 class KnapsackSolverConfig(BaseModel):
     time_limit: PositiveInt = 900  # Solver time limit in seconds
     opt_tol: NonNegativeFloat = 0.01  # Optimality tolerance (1% gap allowed)
+    log_search_progress: bool = False
 
 
 class KnapsackSolution(BaseModel):
@@ -3701,6 +3702,7 @@ def solve_knapsack(
     solver = cp_model.CpSolver()
     solver.parameters.max_time_in_seconds = config.time_limit
     solver.parameters.relative_gap_limit = config.opt_tol
+    solver.parameters.log_search_progress = config.log_search_progress
     status = solver.Solve(model)
     if status in [cp_model.OPTIMAL, cp_model.FEASIBLE]:
         return KnapsackSolution(
