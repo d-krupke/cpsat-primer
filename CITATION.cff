@@ -3,7 +3,7 @@
 cff-version: "1.1.0"
 message: "You are free to use material from this primer. If so, please cite it using this metadata."
 title: "CP-SAT Primer"
-abstract: "The CP-SAT Primer: Using and Understanding OR-Tools' CP-SAT"
+abstract: "The CP-SAT Primer: Using and Understanding Google OR-Tools' CP-SAT Solver"
 authors:
   - affiliation: "TU Braunschweig"
     family-names: Krupke
