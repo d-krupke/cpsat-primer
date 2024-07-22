@@ -215,7 +215,9 @@ small remaining gap.
 
 The structure of the log entries is standardized as follows:
 
-`EVENT NAME\t|\tTIME\t|\tBEST SOLUTION\t|\tRANGE OF THE SEARCH\t|\tCOMMENT`
+```
+EVENT NAME | TIME  | BEST SOLUTION | RANGE OF THE SEARCH | COMMENT
+```
 
 For instance, an event marked `#2` indicates the discovery of the second
 solution. Here, you will observe an improvement in the `BEST SOLUTION` metric. A
