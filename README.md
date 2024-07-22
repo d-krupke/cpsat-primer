@@ -218,7 +218,7 @@ CP-SAT, our hardware choices were also influenced by their recommendations.
 
 <a name="02-example"></a>
 
-## Example
+## A simple Example
 
 ![Example Cover](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/logo_example.webp)
 
@@ -240,12 +240,14 @@ smaller problems (let us say a few hundred to thousands of variables) and obtain
 optimal solutions without having an idea of what is going on. The solvers can
 handle more and more 'bad' problem models effectively with every year.
 
-> **Definition:** A _model_ in mathematical programming refers to a mathematical
-> description of a problem, consisting of variables, constraints, and optionally
-> an objective function that can be understood by the corresponding solver
-> class. _Modelling_ refers to transforming a problem (instance) into the
-> corresponding framework, e.g., by making all constraints linear as required
-> for Mixed Integer Linear Programming. Be aware that the
+> [!NOTE]
+>
+> A **model** in mathematical programming refers to a mathematical description
+> of a problem, consisting of variables, constraints, and optionally an
+> objective function that can be understood by the corresponding solver class.
+> _Modelling_ refers to transforming a problem (instance) into the corresponding
+> framework, e.g., by making all constraints linear as required for Mixed
+> Integer Linear Programming. Be aware that the
 > [SAT](https://en.wikipedia.org/wiki/SAT_solver)-community uses the term
 > _model_ to refer to a (feasible) variable assignment, i.e., solution of a
 > SAT-formula. If you struggle with this terminology, maybe you want to read
