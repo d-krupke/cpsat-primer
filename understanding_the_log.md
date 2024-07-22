@@ -213,6 +213,11 @@ important to discern whether the upper or lower bounds are causing issues, or if
 the solver initially finds a near-optimal solution but struggles to minimize a
 small remaining gap.
 
+> [!WARNING]
+>
+> For models without an objective, especially the log of the search phase will
+> look very different. This chapter focuses on models with an objective.
+
 The structure of the log entries is standardized as follows:
 
 ```
