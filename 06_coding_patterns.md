@@ -4,7 +4,11 @@
 
 ## Coding Patterns for Optimization Problems
 
+<!-- START_SKIP_FOR_README -->
+
 ![Cover Image Patterns](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/logo_4.webp)
+
+<!-- STOP_SKIP_FOR_README -->
 
 > [!WARNING]
 >

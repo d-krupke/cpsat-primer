@@ -2,7 +2,11 @@
 
 # The CP-SAT Primer: Using and Understanding Google OR-Tools' CP-SAT Solver
 
+<!-- START_SKIP_FOR_README -->
+
 ![Cover Image](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/logo_1.webp)
+
+<!-- STOP_SKIP_FOR_README -->
 
 _By [Dominik Krupke](https://krupke.cc), TU Braunschweig_
 
@@ -130,11 +134,15 @@ deeper.
 > even be copied without any acknowledgement for non-commercial, educational
 > purposes.
 
+<!-- START_SKIP_FOR_README -->
+
 > **Why are there so many platypuses in the text?** I enjoy incorporating
 > elements in my texts that add a light-hearted touch. The choice of the
 > platypus is intentional: much like CP-SAT integrates diverse elements from
 > various domains, the platypus combines traits from different animals. The
 > platypus also symbolizes Australia, home to the development of a key technique
 > in CP-SAT - Lazy Clause Generation (LCG).
+
+<!-- STOP_SKIP_FOR_README -->
 
 ---

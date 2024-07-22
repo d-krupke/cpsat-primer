@@ -4,7 +4,11 @@
 
 ## Using CP-SAT for Bigger Problems with Large Neighborhood Search
 
+<!-- START_SKIP_FOR_README -->
+
 ![Cover Image LNS](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/logo_6.webp)
+
+<!-- STOP_SKIP_FOR_README -->
 
 CP-SAT is great at solving small and medium-sized problems. But what if you have
 a really big problem on your hands? One option might be to use a special kind of

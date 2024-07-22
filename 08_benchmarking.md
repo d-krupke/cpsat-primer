@@ -4,7 +4,11 @@
 
 ## Benchmarking your Model
 
+<!-- START_SKIP_FOR_README -->
+
 ![Cover Image Benchmarking](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/logo_5.webp)
+
+<!-- STOP_SKIP_FOR_README -->
 
 Benchmarking is an essential step if your model is not yet meeting the
 performance standards of your application or if you are aiming for an academic

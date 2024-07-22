@@ -4,7 +4,11 @@
 
 ## A Simple Example
 
+<!-- START_SKIP_FOR_README -->
+
 ![Example Cover](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/logo_example.webp)
+
+<!-- STOP_SKIP_FOR_README -->
 
 Before we dive into any internals, let us take a quick look at a simple
 application of CP-SAT. This example is so simple that you could solve it by

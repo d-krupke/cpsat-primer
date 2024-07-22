@@ -4,7 +4,11 @@
 
 ## Basic Modeling
 
+<!-- START_SKIP_FOR_README -->
+
 ![Cover Image Modelling](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/logo_2.webp)
+
+<!-- STOP_SKIP_FOR_README -->
 
 In this chapter, we dive into the basic modeling capabilities of CP-SAT. CP-SAT
 provides an extensive set of constraints, closer to high-level modeling

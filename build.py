@@ -238,6 +238,24 @@ def convert_for_mdbook(content):
     return content
 
 
+def convert_for_readme(content: str) -> str:
+    # If we have a `<!-- START_SKIP_FOR_README -->` and `<!-- STOP_SKIP_FOR_README -->` in the content, we skip this part.
+    # These will be single lines, so we can use `splitlines()` to get the lines and then check if we should skip after having
+    # removed all whitespaces which can be created by the formatting.
+    lines = content.splitlines()
+    skip = False
+    new_lines = []
+    for line in lines:
+        if "<!-- START_SKIP_FOR_README -->" in line:
+            skip = True
+        if not skip:
+            new_lines.append(line)
+        if "<!-- STOP_SKIP_FOR_README -->" in line:
+            skip = False
+    content = "\n".join(new_lines)
+    return content
+
+
 if __name__ == "__main__":
     # get all markdown files that start with a number
     # [f for f in os.listdir() if f.endswith(".md") and f[0].isdigit()]
@@ -268,7 +286,7 @@ if __name__ == "__main__":
                 content = current_file.read()
                 f.write(disclaimer)
                 f.write(f"<!-- {file} -->\n")
-                f.write(content)
+                f.write(convert_for_readme(content))
                 f.write("\n\n")
                 Path("./.mdbook/").mkdir(parents=True, exist_ok=True)
                 with open(Path("./.mdbook/") / file, "w") as book_file:
