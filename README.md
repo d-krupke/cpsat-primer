@@ -218,7 +218,7 @@ CP-SAT, our hardware choices were also influenced by their recommendations.
 
 <a name="02-example"></a>
 
-## A simple Example
+## A Simple Example
 
 ![Example Cover](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/logo_example.webp)
 
@@ -2664,6 +2664,97 @@ out of CP-SAT.
 > their default settings, as they are well-chosen and tampering with them could
 > disrupt optimizations. For better performance, focus on improving your model.
 
+### Logging
+
+The `log_search_progress` parameter is crucial at the beginning. It enables
+logging of the search progress, providing insights into how CP-SAT solves your
+problem. While you may deactivate it later for production, it is beneficial
+during development to understand the process and respond to any issues.
+
+```python
+solver = cp_model.CpSolver()
+solver.parameters.log_search_progress = True
+
+# Custom log function, for example, using the Python logging module instead of stdout
+# Useful in a Jupyter notebook, where logging to stdout might not be visible
+solver.log_callback = print  # (str)->None
+# If using a custom log function, you can disable logging to stdout
+solver.parameters.log_to_stdout = False
+```
+
+The log offers valuable information for understanding CP-SAT and your
+optimization problem. It details aspects such as how many variables were
+directly removed and which techniques most effectively contributed to improving
+lower and upper bounds.
+
+An example log might look like this:
+
+```
+Starting CP-SAT solver v9.10.4067
+Parameters: max_time_in_seconds: 30 log_search_progress: true relative_gap_limit: 0.01
+Setting number of workers to 16
+
+Initial optimization model '': (model_fingerprint: 0x1d316fc2ae4c02b1)
+#Variables: 450 (#bools: 276 #ints: 6 in objective)
+  - 342 Booleans in [0,1]
+  - 12 in [0][10][20][30][40][50][60][70][80][90][100]
+  - 6 in [0][10][20][30][40][100]
+  - 6 in [0][80][100]
+  - 6 in [0][100]
+  - 6 in [0,1][34][67][100]
+  - 12 in [0,6]
+  - 18 in [0,7]
+  - 6 in [0,35]
+  - 6 in [0,36]
+  - 6 in [0,100]
+  - 12 in [21,57]
+  - 12 in [22,57]
+#kBoolOr: 30 (#literals: 72)
+#kLinear1: 33 (#enforced: 12)
+#kLinear2: 1'811
+#kLinear3: 36
+#kLinearN: 94 (#terms: 1'392)
+
+Starting presolve at 0.00s
+  3.26e-04s  0.00e+00d  [DetectDominanceRelations]
+  6.60e-03s  0.00e+00d  [PresolveToFixPoint] #num_loops=4 #num_dual_strengthening=3
+  2.69e-05s  0.00e+00d  [ExtractEncodingFromLinear] #potential_supersets=44 #potential_subsets=12
+[Symmetry] Graph for symmetry has 2'224 nodes and 5'046 arcs.
+[Symmetry] Symmetry computation done. time: 0.000374304 dtime: 0.00068988
+[Symmetry] #generators: 2, average support size: 12
+[Symmetry] 12 orbits with sizes: 2,2,2,2,2,2,2,2,2,2,...
+[Symmetry] Found orbitope of size 6 x 2
+[SAT presolve] num removable Booleans: 0 / 309
+[SAT presolve] num trivial clauses: 0
+[SAT presolve] [0s] clauses:570 literals:1152 vars:303 one_side_vars:268 simple_definition:35 singleton_clauses:0
+[SAT presolve] [3.0778e-05s] clauses:570 literals:1152 vars:303 one_side_vars:268 simple_definition:35 singleton_clauses:0
+[SAT presolve] [4.6758e-05s] clauses:570 literals:1152 vars:303 one_side_vars:268 simple_definition:35 singleton_clauses:0
+  1.10e-02s  9.68e-03d  [Probe] #probed=1'738 #new_bounds=12 #new_binary_clauses=1'111
+  2.34e-03s  0.00e+00d  [MaxClique] Merged 602(1374 literals) into 506(1960 literals) at_most_ones.
+  3.31e-04s  0.00e+00d  [DetectDominanceRelations]
+  1.89e-03s  0.00e+00d  [PresolveToFixPoint] #num_loops=2 #num_dual_strengthening=1
+  5.45e-04s  0.00e+00d  [ProcessAtMostOneAndLinear]
+  8.19e-04s  0.00e+00d  [DetectDuplicateConstraints] #without_enforcements=306
+  8.62e-05s  7.21e-06d  [DetectDominatedLinearConstraints] #relevant_constraints=114 #num_inclusions=42
+  1.94e-05s  0.00e+00d  [DetectDifferentVariables]
+  1.90e-04s  8.39e-06d  [ProcessSetPPC] #relevant_constraints=560 #num_inclusions=24
+  2.01e-05s  0.00e+00d  [FindAlmostIdenticalLinearConstraints]
+...
+```
+
+Given the complexity of the log, I developed a tool to visualize and comment on
+it. You can copy and paste your log into the tool, which will automatically
+highlight the most important details. Be sure to check out the examples.
+
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://cpsat-log-analyzer.streamlit.app/)
+[![d-krupke - CP-SAT Log Analyzer](https://img.shields.io/badge/d--krupke-CP--SAT%20Log%20Analyzer-blue?style=for-the-badge&logo=github)](https://github.com/d-krupke/CP-SAT-Log-Analyzer)
+
+|                                                                                                                       ![Search Progress](https://github.com/d-krupke/cpsat-primer/blob/main/images/search_progress.png)                                                                                                                       |
+| :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+| A plot of the search progress over time as visualized by the log analyzer using information from the log (a different log than displayed above). This plot helps you understand which part of your problem is more challenging: finding a good solution or proving its quality. Based on this, you can implement appropriate countermeasures. |
+
+We will revisit the logs in the next section.
+
 ### Time Limit and Status
 
 When working with large or complex models, the CP-SAT solver may not always
@@ -3217,33 +3308,116 @@ not be solely relied upon.
 > resolved in the latest versions, it is important to note that bad hints can
 > still cause slowdowns by guiding the solver in the wrong direction.
 
-### Logging
+### Decision Strategy
 
-Sometimes it is useful to activate logging to see what is going on. This can be
-achieved by setting the following two parameters.
+In the end of this section, a more advanced parameter that looks interesting for
+advanced users as it gives some insights into the search algorithm, **but is
+probably better left alone**.
+
+We can tell CP-SAT, how to branch (or make a decision) whenever it can no longer
+deduce anything via propagation. For this, we need to provide a list of the
+variables (order may be important for some strategies), define which variable
+should be selected next (fixed variables are automatically skipped), and define
+which value should be probed.
+
+We have the following options for variable selection:
+
+- `CHOOSE_FIRST`: the first not-fixed variable in the list.
+- `CHOOSE_LOWEST_MIN`: the variable that could (potentially) take the lowest
+  value.
+- `CHOOSE_HIGHEST_MAX`: the variable that could (potentially) take the highest
+  value.
+- `CHOOSE_MIN_DOMAIN_SIZE`: the variable that has the fewest feasible
+  assignments.
+- `CHOOSE_MAX_DOMAIN_SIZE`: the variable the has the most feasible assignments.
+
+For the value/domain strategy, we have the options:
+
+- `SELECT_MIN_VALUE`: try to assign the smallest value.
+- `SELECT_MAX_VALUE`: try to assign the largest value.
+- `SELECT_LOWER_HALF`: branch to the lower half.
+- `SELECT_UPPER_HALF`: branch to the upper half.
+- `SELECT_MEDIAN_VALUE`: try to assign the median value.
+
+> **CAVEAT:** In the documentation there is a warning about the completeness of
+> the domain strategy. I am not sure, if this is just for custom strategies or
+> you have to be careful in general. So be warned.
 
 ```python
-solver = cp_model.CpSolver()
-solver.parameters.log_search_progress = True
-solver.log_callback = print  # (str)->None
+model.AddDecisionStrategy([x], cp_model.CHOOSE_FIRST, cp_model.SELECT_MIN_VALUE)
+
+# your can force CP-SAT to follow this strategy exactly
+solver.parameters.search_branching = cp_model.FIXED_SEARCH
 ```
 
-If you get a doubled output, remove the last line.
+For example for [coloring](https://en.wikipedia.org/wiki/Graph_coloring) (with
+integer representation of the color), we could order the variables by decreasing
+neighborhood size (`CHOOSE_FIRST`) and then always try to assign the lowest
+color (`SELECT_MIN_VALUE`). This strategy should perform an implicit
+kernelization, because if we need at least $k$ colors, the vertices with less
+than $k$ neighbors are trivial (and they would not be relevant for any
+conflict). Thus, by putting them at the end of the list, CP-SAT will only
+consider them once the vertices with higher degree could be colored without any
+conflict (and then the vertices with lower degree will, too). Another strategy
+may be to use `CHOOSE_LOWEST_MIN` to always select the vertex that has the
+lowest color available. Whether this will actually help, has to be evaluated:
+CP-SAT will probably notice by itself which vertices are the critical ones after
+some conflicts.
 
-The output can look as follows:
+> :warning: I played around a little with selecting a manual search strategy.
+> But even for the coloring, where this may even seem smart, it only gave an
+> advantage for a bad model and after improving the model by symmetry breaking,
+> it performed worse. Further, I assume that CP-SAT can learn the best strategy
+> (Gurobi does such a thing, too) much better dynamically on its own.
+
+---
+
+
+<!-- This file was generated by the `build.py` script. Do not edit it manually. -->
+<!-- understanding_the_log.md -->
+# Understanding the CP-SAT log
+
+**UNDER CONSTRUCTION 2024-07-22**
+
+> As the log can be quite overwhelming, I developed a small tool to visualize
+> and comment the log. You can just copy and paste your log into it, and it will
+> automatically show you the most important details. Also be sure to check out
+> the examples in it.
+
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://cpsat-log-analyzer.streamlit.app/)
+[![d-krupke - CP-SAT Log Analyzer](https://img.shields.io/badge/d--krupke-CP--SAT%20Log%20Analyzer-blue?style=for-the-badge&logo=github)](https://github.com/d-krupke/CP-SAT-Log-Analyzer)
+
+The text below is partially deprecated and supposed to be completely replaced by
+the tool, which will have extensive documentation.
+
+> **WORK IN PROGRESS**
+
+Just printing version and parameters:
 
 ```
 Starting CP-SAT solver v9.3.10497
 Parameters: log_search_progress: true
 Setting number of workers to 16
+```
 
+Description of the model how you created it. For example we used 34
+`AllDifferent`, 1 `MaxEquality`, and 2312 linear constraints with 2 variables.
+
+```
 Initial optimization model '':
 #Variables: 290 (#ints:1 in objective)
   - 290 in [0,17]
 #kAllDiff: 34
 #kLinMax: 1
 #kLinear2: 2312 (#complex_domain: 2312)
+```
 
+## Presolve
+
+We first see multiple rounds of domain reduction, expansion, equivalence
+checking, substitution, and probing.
+
+```
 Starting presolve at 0.00s
 [ExtractEncodingFromLinear] #potential_supersets=0 #potential_subsets=0 #at_most_one_encodings=0 #exactly_one_encodings=0 #unique_terms=0 #multiple_terms=0 #literals=0 time=9.558e-06s
 [Probing] deterministic_time: 0.053825 (limit: 1) wall_time: 0.0947566 (12427/12427)
@@ -3259,7 +3433,12 @@ Starting presolve at 0.00s
 [DetectDominatedLinearConstraints] #relevant_constraints=2312 #work_done=14118 #num_inclusions=0 #num_redundant=0 time=0.000688681s
 [DetectOverlappingColumns] #processed_columns=0 #work_done=0 #nz_reduction=0 time=0.000992311s
 [ProcessSetPPC] #relevant_constraints=612 #num_inclusions=0 work=29376 time=0.00121334s
+```
 
+Here we see for example that the `AllDifferent` constraint was expanded 34
+times.
+
+```
 Presolve summary:
   - 0 affine relations were detected.
   - rule 'all_diff: expanded' was applied 34 times.
@@ -3269,6 +3448,14 @@ Presolve summary:
   - rule 'presolve: iteration' was applied 2 times.
   - rule 'variables: add encoding constraint' was applied 5202 times.
 
+```
+
+Here we see the optimization model with its variables and constraints. For
+example, we have 5492 variables with 5202 of them being boolean, 289 of them
+being in {0, 1, 2, ... , 17} and 1 of them being in {1, 2, ..., 17}. Afterwards
+come the different constraints that are used internally.
+
+```
 Presolved optimization model '':
 #Variables: 5492 (#ints:1 in objective)
   - 5202 in [0,1]
@@ -3278,7 +3465,11 @@ Presolved optimization model '':
 #kLinMax: 1
 #kLinear1: 10404 (#enforced: 10404)
 #kLinear2: 2312 (#complex_domain: 2312)
+```
 
+## Search progress
+
+```
 Preloading model.
 #Bound   0.45s best:inf   next:[1,17]     initial_domain
 
@@ -3291,7 +3482,40 @@ Interleaved subsolvers: [feasibility_pump, rnd_var_lns_default, rnd_cst_lns_defa
 #Bound   1.30s best:15    next:[8,14]     max_lp initial_propagation
 #Done    3.40s max_lp
 #Done    3.40s probing
+```
 
+The list has the following columns:
+
+1. Event or solution count (e.g. `#1` or `#Done`)
+2. Time in seconds (e.g. `0.71s`)
+3. Best objective (e.g. `best:17` or `best:inf`)
+4. Next objective range (e.g. `next:[8,14]` for looking for better solutions
+   with an objective between 8 and 14.) The first number is the current lower
+   bound.
+5. Info on how the solution/event was achieved.
+
+## Subsolver statistics
+
+### Statistics on the internal LPs
+
+You will notice that the LP solver returns only three different states:
+
+1. OPTIMAL: An optimal linear relaxation was found.
+2. DUAL_UNBOUNDED: The linear relaxation is infeasible (because the dual problem
+   is unbounded).
+3. DUAL_FEASIBLE: We have a feasible solution for the dual problem (which gives
+   us at least a lower bound).
+
+Note that the dual simplex algorithm will only give us a solution for the linear
+relaxation if it is optimal.
+
+We can see that the LP in `max_lp` has much more constraints (2498 rows) than
+the other solvers. On top come the cutting planes (cuts) of various types that
+can be deduced from the LP to improve the integrality. The numbers of simplex
+iterations are surprisingly low: Usually simplex can need quite a lot of
+iterations.
+
+```
 Sub-solver search statistics:
   'max_lp':
      LP statistics:
@@ -3372,120 +3596,58 @@ Sub-solver search statistics:
          - 'LinMax': 2
          - 'MIR_1': 87
          - 'MIR_2': 79
+```
 
+Which solvers actually found solutions? In this case, both solvers do not make
+use of linear programming.
 
+```
 Solutions found per subsolver:
   'no_lp': 1
   'quick_restart_no_lp': 2
+```
 
+Which solvers were able to improve the lower bounds? While the LP-based solver
+were not able to provide good solutions the solver that makes maximal usage of
+linear programming was able to proof the lower bound.
+
+```
 Objective bounds found per subsolver:
   'initial_domain': 1
   'max_lp': 1
+```
 
+The bounds on individual variables one the other hand were best improved by the
+solvers without linear programming.
+
+```
 Improving variable bounds shared per subsolver:
   'no_lp': 579
   'quick_restart_no_lp': 1159
+```
 
+## Summary
+
+The final `CpSolverResponse`, which is defined and partially commented
+[here](https://github.com/google/or-tools/blob/49b6301e1e1e231d654d79b6032e79809868a70e/ortools/sat/cp_model.proto#L704).
+
+```bash
 CpSolverResponse summary:
-status: OPTIMAL
-objective: 15
-best_bound: 15
+status: OPTIMAL  # We solved the problem to optimality
+objective: 15  # We found a solution with value 15
+best_bound: 15  # The proofed lower bound is 15
 booleans: 12138
 conflicts: 0
 branches: 23947
-propagations: 408058
-integer_propagations: 317340
+propagations: 408058  # propagation of boolean variables
+integer_propagations: 317340  # propagation of integer variables
 restarts: 23698
 lp_iterations: 1174
-walltime: 3.5908
+walltime: 3.5908  # runtime in seconds
 usertime: 3.5908
 deterministic_time: 6.71917
-gap_integral: 11.2892
+gap_integral: 11.2892  # "The integral of log(1 + absolute_objective_gap) over time."
 ```
-
-The log is actually very interesting to understand CP-SAT, but also to learn
-about the optimization problem at hand. It gives you a lot of details on, e.g.,
-how many variables could be directly removed or which techniques contributed to
-lower and upper bounds the most.
-
-As the log can be quite overwhelming, I developed a small tool to visualize and
-comment the log. You can just copy and paste your log into it, and it will
-automatically show you the most important details. Also be sure to check out the
-examples in it.
-
-[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://cpsat-log-analyzer.streamlit.app/)
-[![d-krupke - CP-SAT Log Analyzer](https://img.shields.io/badge/d--krupke-CP--SAT%20Log%20Analyzer-blue?style=for-the-badge&logo=github)](https://github.com/d-krupke/CP-SAT-Log-Analyzer)
-
-|                                                                                                                            ![Search Progress](https://github.com/d-krupke/cpsat-primer/blob/main/images/search_progress.png)                                                                                                                            |
-| :-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
-| A plot of the search progress over time as visualized by the log analyzer by utilizing the information from the log (a different log than displayed above). Such a plot helps you understand what part of your problem is more challenging: Finding a good solution or proving its quality. Based on that you can implement respective countermeasures. |
-
-You can also find an older explanation of the log
-[here](https://github.com/d-krupke/cpsat-primer/blob/main/understanding_the_log.md).
-
-### Decision Strategy
-
-In the end of this section, a more advanced parameter that looks interesting for
-advanced users as it gives some insights into the search algorithm, **but is
-probably better left alone**.
-
-We can tell CP-SAT, how to branch (or make a decision) whenever it can no longer
-deduce anything via propagation. For this, we need to provide a list of the
-variables (order may be important for some strategies), define which variable
-should be selected next (fixed variables are automatically skipped), and define
-which value should be probed.
-
-We have the following options for variable selection:
-
-- `CHOOSE_FIRST`: the first not-fixed variable in the list.
-- `CHOOSE_LOWEST_MIN`: the variable that could (potentially) take the lowest
-  value.
-- `CHOOSE_HIGHEST_MAX`: the variable that could (potentially) take the highest
-  value.
-- `CHOOSE_MIN_DOMAIN_SIZE`: the variable that has the fewest feasible
-  assignments.
-- `CHOOSE_MAX_DOMAIN_SIZE`: the variable the has the most feasible assignments.
-
-For the value/domain strategy, we have the options:
-
-- `SELECT_MIN_VALUE`: try to assign the smallest value.
-- `SELECT_MAX_VALUE`: try to assign the largest value.
-- `SELECT_LOWER_HALF`: branch to the lower half.
-- `SELECT_UPPER_HALF`: branch to the upper half.
-- `SELECT_MEDIAN_VALUE`: try to assign the median value.
-
-> **CAVEAT:** In the documentation there is a warning about the completeness of
-> the domain strategy. I am not sure, if this is just for custom strategies or
-> you have to be careful in general. So be warned.
-
-```python
-model.AddDecisionStrategy([x], cp_model.CHOOSE_FIRST, cp_model.SELECT_MIN_VALUE)
-
-# your can force CP-SAT to follow this strategy exactly
-solver.parameters.search_branching = cp_model.FIXED_SEARCH
-```
-
-For example for [coloring](https://en.wikipedia.org/wiki/Graph_coloring) (with
-integer representation of the color), we could order the variables by decreasing
-neighborhood size (`CHOOSE_FIRST`) and then always try to assign the lowest
-color (`SELECT_MIN_VALUE`). This strategy should perform an implicit
-kernelization, because if we need at least $k$ colors, the vertices with less
-than $k$ neighbors are trivial (and they would not be relevant for any
-conflict). Thus, by putting them at the end of the list, CP-SAT will only
-consider them once the vertices with higher degree could be colored without any
-conflict (and then the vertices with lower degree will, too). Another strategy
-may be to use `CHOOSE_LOWEST_MIN` to always select the vertex that has the
-lowest color available. Whether this will actually help, has to be evaluated:
-CP-SAT will probably notice by itself which vertices are the critical ones after
-some conflicts.
-
-> :warning: I played around a little with selecting a manual search strategy.
-> But even for the coloring, where this may even seem smart, it only gave an
-> advantage for a bad model and after improving the model by symmetry breaking,
-> it performed worse. Further, I assume that CP-SAT can learn the best strategy
-> (Gurobi does such a thing, too) much better dynamically on its own.
-
----
 
 
 <!-- This file was generated by the `build.py` script. Do not edit it manually. -->

@@ -2,7 +2,7 @@
 
 <a name="02-example"></a>
 
-## A simple Example
+## A Simple Example
 
 ![Example Cover](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/logo_example.webp)
 

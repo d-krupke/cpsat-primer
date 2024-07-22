@@ -1,5 +1,7 @@
 # Understanding the CP-SAT log
 
+**UNDER CONSTRUCTION 2024-07-22**
+
 > As the log can be quite overwhelming, I developed a small tool to visualize
 > and comment the log. You can just copy and paste your log into it, and it will
 > automatically show you the most important details. Also be sure to check out

@@ -20,6 +20,97 @@ out of CP-SAT.
 > their default settings, as they are well-chosen and tampering with them could
 > disrupt optimizations. For better performance, focus on improving your model.
 
+### Logging
+
+The `log_search_progress` parameter is crucial at the beginning. It enables
+logging of the search progress, providing insights into how CP-SAT solves your
+problem. While you may deactivate it later for production, it is beneficial
+during development to understand the process and respond to any issues.
+
+```python
+solver = cp_model.CpSolver()
+solver.parameters.log_search_progress = True
+
+# Custom log function, for example, using the Python logging module instead of stdout
+# Useful in a Jupyter notebook, where logging to stdout might not be visible
+solver.log_callback = print  # (str)->None
+# If using a custom log function, you can disable logging to stdout
+solver.parameters.log_to_stdout = False
+```
+
+The log offers valuable information for understanding CP-SAT and your
+optimization problem. It details aspects such as how many variables were
+directly removed and which techniques most effectively contributed to improving
+lower and upper bounds.
+
+An example log might look like this:
+
+```
+Starting CP-SAT solver v9.10.4067
+Parameters: max_time_in_seconds: 30 log_search_progress: true relative_gap_limit: 0.01
+Setting number of workers to 16
+
+Initial optimization model '': (model_fingerprint: 0x1d316fc2ae4c02b1)
+#Variables: 450 (#bools: 276 #ints: 6 in objective)
+  - 342 Booleans in [0,1]
+  - 12 in [0][10][20][30][40][50][60][70][80][90][100]
+  - 6 in [0][10][20][30][40][100]
+  - 6 in [0][80][100]
+  - 6 in [0][100]
+  - 6 in [0,1][34][67][100]
+  - 12 in [0,6]
+  - 18 in [0,7]
+  - 6 in [0,35]
+  - 6 in [0,36]
+  - 6 in [0,100]
+  - 12 in [21,57]
+  - 12 in [22,57]
+#kBoolOr: 30 (#literals: 72)
+#kLinear1: 33 (#enforced: 12)
+#kLinear2: 1'811
+#kLinear3: 36
+#kLinearN: 94 (#terms: 1'392)
+
+Starting presolve at 0.00s
+  3.26e-04s  0.00e+00d  [DetectDominanceRelations]
+  6.60e-03s  0.00e+00d  [PresolveToFixPoint] #num_loops=4 #num_dual_strengthening=3
+  2.69e-05s  0.00e+00d  [ExtractEncodingFromLinear] #potential_supersets=44 #potential_subsets=12
+[Symmetry] Graph for symmetry has 2'224 nodes and 5'046 arcs.
+[Symmetry] Symmetry computation done. time: 0.000374304 dtime: 0.00068988
+[Symmetry] #generators: 2, average support size: 12
+[Symmetry] 12 orbits with sizes: 2,2,2,2,2,2,2,2,2,2,...
+[Symmetry] Found orbitope of size 6 x 2
+[SAT presolve] num removable Booleans: 0 / 309
+[SAT presolve] num trivial clauses: 0
+[SAT presolve] [0s] clauses:570 literals:1152 vars:303 one_side_vars:268 simple_definition:35 singleton_clauses:0
+[SAT presolve] [3.0778e-05s] clauses:570 literals:1152 vars:303 one_side_vars:268 simple_definition:35 singleton_clauses:0
+[SAT presolve] [4.6758e-05s] clauses:570 literals:1152 vars:303 one_side_vars:268 simple_definition:35 singleton_clauses:0
+  1.10e-02s  9.68e-03d  [Probe] #probed=1'738 #new_bounds=12 #new_binary_clauses=1'111
+  2.34e-03s  0.00e+00d  [MaxClique] Merged 602(1374 literals) into 506(1960 literals) at_most_ones.
+  3.31e-04s  0.00e+00d  [DetectDominanceRelations]
+  1.89e-03s  0.00e+00d  [PresolveToFixPoint] #num_loops=2 #num_dual_strengthening=1
+  5.45e-04s  0.00e+00d  [ProcessAtMostOneAndLinear]
+  8.19e-04s  0.00e+00d  [DetectDuplicateConstraints] #without_enforcements=306
+  8.62e-05s  7.21e-06d  [DetectDominatedLinearConstraints] #relevant_constraints=114 #num_inclusions=42
+  1.94e-05s  0.00e+00d  [DetectDifferentVariables]
+  1.90e-04s  8.39e-06d  [ProcessSetPPC] #relevant_constraints=560 #num_inclusions=24
+  2.01e-05s  0.00e+00d  [FindAlmostIdenticalLinearConstraints]
+...
+```
+
+Given the complexity of the log, I developed a tool to visualize and comment on
+it. You can copy and paste your log into the tool, which will automatically
+highlight the most important details. Be sure to check out the examples.
+
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://cpsat-log-analyzer.streamlit.app/)
+[![d-krupke - CP-SAT Log Analyzer](https://img.shields.io/badge/d--krupke-CP--SAT%20Log%20Analyzer-blue?style=for-the-badge&logo=github)](https://github.com/d-krupke/CP-SAT-Log-Analyzer)
+
+|                                                                                                                       ![Search Progress](https://github.com/d-krupke/cpsat-primer/blob/main/images/search_progress.png)                                                                                                                       |
+| :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+| A plot of the search progress over time as visualized by the log analyzer using information from the log (a different log than displayed above). This plot helps you understand which part of your problem is more challenging: finding a good solution or proving its quality. Based on this, you can implement appropriate countermeasures. |
+
+We will revisit the logs in the next section.
+
 ### Time Limit and Status
 
 When working with large or complex models, the CP-SAT solver may not always
@@ -572,212 +663,6 @@ not be solely relied upon.
 > solver, even if they were correct but not optimal. While this issue seems
 > resolved in the latest versions, it is important to note that bad hints can
 > still cause slowdowns by guiding the solver in the wrong direction.
-
-### Logging
-
-Sometimes it is useful to activate logging to see what is going on. This can be
-achieved by setting the following two parameters.
-
-```python
-solver = cp_model.CpSolver()
-solver.parameters.log_search_progress = True
-solver.log_callback = print  # (str)->None
-```
-
-If you get a doubled output, remove the last line.
-
-The output can look as follows:
-
-```
-Starting CP-SAT solver v9.3.10497
-Parameters: log_search_progress: true
-Setting number of workers to 16
-
-Initial optimization model '':
-#Variables: 290 (#ints:1 in objective)
-  - 290 in [0,17]
-#kAllDiff: 34
-#kLinMax: 1
-#kLinear2: 2312 (#complex_domain: 2312)
-
-Starting presolve at 0.00s
-[ExtractEncodingFromLinear] #potential_supersets=0 #potential_subsets=0 #at_most_one_encodings=0 #exactly_one_encodings=0 #unique_terms=0 #multiple_terms=0 #literals=0 time=9.558e-06s
-[Probing] deterministic_time: 0.053825 (limit: 1) wall_time: 0.0947566 (12427/12427)
-[Probing]  - new integer bounds: 1
-[Probing]  - new binary clause: 9282
-[DetectDuplicateConstraints] #duplicates=0 time=0.00993671s
-[DetectDominatedLinearConstraints] #relevant_constraints=2312 #work_done=14118 #num_inclusions=0 #num_redundant=0 time=0.0013379s
-[DetectOverlappingColumns] #processed_columns=0 #work_done=0 #nz_reduction=0 time=0.00176239s
-[ProcessSetPPC] #relevant_constraints=612 #num_inclusions=0 work=29376 time=0.0022503s
-[Probing] deterministic_time: 0.0444515 (limit: 1) wall_time: 0.0820382 (11849/11849)
-[Probing]  - new binary clause: 9282
-[DetectDuplicateConstraints] #duplicates=0 time=0.00786558s
-[DetectDominatedLinearConstraints] #relevant_constraints=2312 #work_done=14118 #num_inclusions=0 #num_redundant=0 time=0.000688681s
-[DetectOverlappingColumns] #processed_columns=0 #work_done=0 #nz_reduction=0 time=0.000992311s
-[ProcessSetPPC] #relevant_constraints=612 #num_inclusions=0 work=29376 time=0.00121334s
-
-Presolve summary:
-  - 0 affine relations were detected.
-  - rule 'all_diff: expanded' was applied 34 times.
-  - rule 'deductions: 10404 stored' was applied 1 time.
-  - rule 'linear: simplified rhs' was applied 7514 times.
-  - rule 'presolve: 0 unused variables removed.' was applied 1 time.
-  - rule 'presolve: iteration' was applied 2 times.
-  - rule 'variables: add encoding constraint' was applied 5202 times.
-
-Presolved optimization model '':
-#Variables: 5492 (#ints:1 in objective)
-  - 5202 in [0,1]
-  - 289 in [0,17]
-  - 1 in [1,17]
-#kAtMostOne: 612 (#literals: 9792)
-#kLinMax: 1
-#kLinear1: 10404 (#enforced: 10404)
-#kLinear2: 2312 (#complex_domain: 2312)
-
-Preloading model.
-#Bound   0.45s best:inf   next:[1,17]     initial_domain
-
-Starting Search at 0.47s with 16 workers.
-9 full subsolvers: [default_lp, no_lp, max_lp, reduced_costs, pseudo_costs, quick_restart, quick_restart_no_lp, lb_tree_search, probing]
-Interleaved subsolvers: [feasibility_pump, rnd_var_lns_default, rnd_cst_lns_default, graph_var_lns_default, graph_cst_lns_default, rins_lns_default, rens_lns_default]
-#1       0.71s best:17    next:[1,16]     quick_restart_no_lp fixed_bools:0/11849
-#2       0.72s best:16    next:[1,15]     quick_restart_no_lp fixed_bools:289/11849
-#3       0.74s best:15    next:[1,14]     no_lp fixed_bools:867/11849
-#Bound   1.30s best:15    next:[8,14]     max_lp initial_propagation
-#Done    3.40s max_lp
-#Done    3.40s probing
-
-Sub-solver search statistics:
-  'max_lp':
-     LP statistics:
-       final dimension: 2498 rows, 5781 columns, 106908 entries with magnitude in [6.155988e-02, 1.000000e+00]
-       total number of simplex iterations: 3401
-       num solves:
-         - #OPTIMAL: 6
-         - #DUAL_UNBOUNDED: 1
-         - #DUAL_FEASIBLE: 1
-       managed constraints: 5882
-       merged constraints: 3510
-       coefficient strenghtenings: 19
-       num simplifications: 1
-       total cuts added: 3534 (out of 4444 calls)
-         - 'CG': 1134
-         - 'IB': 150
-         - 'MIR_1': 558
-         - 'MIR_2': 647
-         - 'MIR_3': 490
-         - 'MIR_4': 37
-         - 'MIR_5': 60
-         - 'MIR_6': 20
-         - 'ZERO_HALF': 438
-
-  'reduced_costs':
-     LP statistics:
-       final dimension: 979 rows, 5781 columns, 6456 entries with magnitude in [3.333333e-01, 1.000000e+00]
-       total number of simplex iterations: 1369
-       num solves:
-         - #OPTIMAL: 15
-         - #DUAL_FEASIBLE: 51
-       managed constraints: 2962
-       merged constraints: 2819
-       shortened constraints: 1693
-       coefficient strenghtenings: 675
-       num simplifications: 1698
-       total cuts added: 614 (out of 833 calls)
-         - 'CG': 7
-         - 'IB': 439
-         - 'LinMax': 1
-         - 'MIR_1': 87
-         - 'MIR_2': 80
-
-  'pseudo_costs':
-     LP statistics:
-       final dimension: 929 rows, 5781 columns, 6580 entries with magnitude in [3.333333e-01, 1.000000e+00]
-       total number of simplex iterations: 1174
-       num solves:
-         - #OPTIMAL: 14
-         - #DUAL_FEASIBLE: 33
-       managed constraints: 2923
-       merged constraints: 2810
-       shortened constraints: 1695
-       coefficient strenghtenings: 675
-       num simplifications: 1698
-       total cuts added: 575 (out of 785 calls)
-         - 'CG': 5
-         - 'IB': 400
-         - 'LinMax': 1
-         - 'MIR_1': 87
-         - 'MIR_2': 82
-
-  'lb_tree_search':
-     LP statistics:
-       final dimension: 929 rows, 5781 columns, 6650 entries with magnitude in [3.333333e-01, 1.000000e+00]
-       total number of simplex iterations: 1249
-       num solves:
-         - #OPTIMAL: 16
-         - #DUAL_FEASIBLE: 14
-       managed constraints: 2924
-       merged constraints: 2809
-       shortened constraints: 1692
-       coefficient strenghtenings: 675
-       num simplifications: 1698
-       total cuts added: 576 (out of 785 calls)
-         - 'CG': 8
-         - 'IB': 400
-         - 'LinMax': 2
-         - 'MIR_1': 87
-         - 'MIR_2': 79
-
-
-Solutions found per subsolver:
-  'no_lp': 1
-  'quick_restart_no_lp': 2
-
-Objective bounds found per subsolver:
-  'initial_domain': 1
-  'max_lp': 1
-
-Improving variable bounds shared per subsolver:
-  'no_lp': 579
-  'quick_restart_no_lp': 1159
-
-CpSolverResponse summary:
-status: OPTIMAL
-objective: 15
-best_bound: 15
-booleans: 12138
-conflicts: 0
-branches: 23947
-propagations: 408058
-integer_propagations: 317340
-restarts: 23698
-lp_iterations: 1174
-walltime: 3.5908
-usertime: 3.5908
-deterministic_time: 6.71917
-gap_integral: 11.2892
-```
-
-The log is actually very interesting to understand CP-SAT, but also to learn
-about the optimization problem at hand. It gives you a lot of details on, e.g.,
-how many variables could be directly removed or which techniques contributed to
-lower and upper bounds the most.
-
-As the log can be quite overwhelming, I developed a small tool to visualize and
-comment the log. You can just copy and paste your log into it, and it will
-automatically show you the most important details. Also be sure to check out the
-examples in it.
-
-[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://cpsat-log-analyzer.streamlit.app/)
-[![d-krupke - CP-SAT Log Analyzer](https://img.shields.io/badge/d--krupke-CP--SAT%20Log%20Analyzer-blue?style=for-the-badge&logo=github)](https://github.com/d-krupke/CP-SAT-Log-Analyzer)
-
-|                                                                                                                            ![Search Progress](https://github.com/d-krupke/cpsat-primer/blob/main/images/search_progress.png)                                                                                                                            |
-| :-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
-| A plot of the search progress over time as visualized by the log analyzer by utilizing the information from the log (a different log than displayed above). Such a plot helps you understand what part of your problem is more challenging: Finding a good solution or proving its quality. Based on that you can implement respective countermeasures. |
-
-You can also find an older explanation of the log
-[here](https://github.com/d-krupke/cpsat-primer/blob/main/understanding_the_log.md).
 
 ### Decision Strategy
 
