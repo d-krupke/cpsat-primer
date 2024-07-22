@@ -222,6 +222,7 @@ class KnapsackInstance(BaseModel):
 class KnapsackSolverConfig(BaseModel):
     time_limit: PositiveInt = 900  # Solver time limit in seconds
     opt_tol: NonNegativeFloat = 0.01  # Optimality tolerance (1% gap allowed)
+    log_search_progress: bool = False  # Whether to log search progress
 
 
 class KnapsackSolution(BaseModel):

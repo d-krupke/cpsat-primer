@@ -1,6 +1,6 @@
 <a name="understanding-the-log"></a>
 
-# Understanding the CP-SAT Log
+## Understanding the CP-SAT Log
 
 ![Cover Image Log](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/logo_logs.webp)
 
@@ -17,7 +17,7 @@ The log consists of different parts. Let us go through them step by step.
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://cpsat-log-analyzer.streamlit.app/)
 [![d-krupke - CP-SAT Log Analyzer](https://img.shields.io/badge/d--krupke-CP--SAT%20Log%20Analyzer-blue?style=for-the-badge&logo=github)](https://github.com/d-krupke/CP-SAT-Log-Analyzer)
 
-## Initialization
+### Initialization
 
 The log starts with the version of CP-SAT, the parameters you set, and how many
 workers it has been using. For example, we have set a time limit via
@@ -30,7 +30,7 @@ Parameters: max_time_in_seconds: 30 log_search_progress: true relative_gap_limit
 Setting number of workers to 16
 ```
 
-## Initial Model Description
+### Initial Model Description
 
 The next block provides an overview of the model before presolve, detailing the
 number of variables and constraints, as well as their coefficients and domains.
@@ -75,7 +75,7 @@ few variables or constraints of a certain type. This step is crucial as it also
 provides insight into the number of auxiliary variables in your model, helping
 you better understand its structure and complexity.
 
-## Presolve Log
+### Presolve Log
 
 The next block represents the presolve phase, an essential component of CP-SAT.
 During this phase, the solver reformulates your model for greater efficiency.
@@ -137,7 +137,7 @@ on the simplifications and optimizations made by CP-SAT. Reviewing this log can
 help you understand the transformations applied to your model, allowing you to
 identify and address any unnecessary variables or constraints in your code.
 
-## Presolved Model
+### Presolved Model
 
 This is the most important block of the presolve phase and gives an overview of
 the model after presolve. It contains the number of variables and constraints,
@@ -188,7 +188,7 @@ Presolved optimization model '': (model_fingerprint: 0xb4e599720afb8c14)
 > compare the two and see how much the presolve-phase has reformulated the
 > model.
 
-## Preloading Model
+### Preloading Model
 
 This block serves as a prelude to the search phase and provides an overview of
 the model at the beginning of the search. Typically, this information is not
@@ -206,7 +206,7 @@ Preloading model.
 #Model   0.05s var:405/405 constraints:1468/1468
 ```
 
-## Search Phase
+### Search Phase
 
 The search progress log is an essential element of the overall log, crucial for
 identifying performance bottlenecks. It clearly demonstrates the solver's
@@ -301,7 +301,7 @@ on the relevant parts of the search.
 | :----------------------------------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------------: |
 |                               Shows how the lower and upper bounds change over time.                               |                                  Shows how quickly the optimality gap converges.                                  |     Shows how the model changes over time as new insights from the search allow the solver to fix variables.     |
 
-## Subsolver Details
+### Subsolver Details
 
 Now there comes a lot of information about the different subsolvers that are
 used. This is a very detailed part of the log and can be overwhelming. You
@@ -334,7 +334,7 @@ Clauses shared            Num
         'reduced_costs':    2
 ```
 
-## Summary
+### Summary
 
 This final block of the log contains a summary by the solver. Here you find the
 most important information, such as how successful the search was.
