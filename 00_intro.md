@@ -84,15 +84,16 @@ deeper.
    as circuit constraints and intervals.
 5. [Parameters](#05-parameters): How to specify CP-SATs behavior, if needed.
    Timelimits, hints, assumptions, parallelization, ...
-6. [Coding Patterns](#06-coding-patterns): Basic design patterns for creating
+6. [Understanding the Log](#understanding-the-log): How to interpret the log
+7. [Coding Patterns](#06-coding-patterns): Basic design patterns for creating
    maintainable algorithms.
-7. [How does it work?](#07-under-the-hood): After we know what we can do with
+8. [How does it work?](#07-under-the-hood): After we know what we can do with
    CP-SAT, we look into how CP-SAT will do all these things.
-8. [Alternatives](#03-big-picture): An overview of the different optimization
+9. [Alternatives](#03-big-picture): An overview of the different optimization
    techniques and tools available. Putting CP-SAT into context.
-9. [Benchmarking your Model](#08-benchmarking): How to benchmark your model and
-   how to interpret the results.
-10. [Large Neighborhood Search](#09-lns): The use of CP-SAT to create more
+10. [Benchmarking your Model](#08-benchmarking): How to benchmark your model and
+    how to interpret the results.
+11. [Large Neighborhood Search](#09-lns): The use of CP-SAT to create more
     powerful heuristics.
 
 ---

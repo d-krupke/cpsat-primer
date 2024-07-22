@@ -1,3 +1,5 @@
+<a name="understanding-the-log"></a>
+
 # Understanding the CP-SAT Log
 
 ![Cover Image Log](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/logo_logs.webp)
