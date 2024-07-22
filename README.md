@@ -2757,7 +2757,19 @@ highlight the most important details. Be sure to check out the examples.
 | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
 | A plot of the search progress over time as visualized by the log analyzer using information from the log (a different log than displayed above). This plot helps you understand which part of your problem is more challenging: finding a good solution or proving its quality. Based on this, you can implement appropriate countermeasures. |
 
-We will revisit the logs in the next section.
+We will revisit the logs in the next chapter.
+
+> [!TIP]
+>
+> From my experience as a lecturer, I often encounter students who believe
+> CP-SAT is stuck, only to discover that their model building includes an
+> unnecessarily complex $O(n^5)$ nested loop, which would take days to run. It
+> is natural to assume that the issue lies with CP-SAT because it handles the
+> hard part of solving the problem. However, even the seemingly simple part of
+> model building can consume a lot of time if implemented incorrectly. By
+> enabling logging, students could immediately see that the issue lies in their
+> own code rather than with CP-SAT. This simple step can save a lot of time and
+> frustration.
 
 ### Time Limit and Status
 
