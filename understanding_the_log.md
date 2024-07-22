@@ -2,7 +2,11 @@
 
 ## Understanding the CP-SAT Log
 
+<!-- START_SKIP_FOR_README -->
+
 ![Cover Image Log](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/logo_logs.webp)
+
+<!-- STOP_SKIP_FOR_README -->
 
 If you want to master CP-SAT, understanding the log is crucial. The log is the
 output of the solver that shows you what the solver is doing and how it is
