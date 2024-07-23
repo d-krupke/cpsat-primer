@@ -3311,8 +3311,12 @@ not be solely relied upon.
 ### Decision Strategy
 
 In the end of this section, a more advanced parameter that looks interesting for
-advanced users as it gives some insights into the search algorithm, **but is
-probably better left alone**.
+advanced users as it gives some insights into the search algorithm. It can be
+useful in combination with `solver.parameters.enumerate_all_solutions = True` to
+specify the order in which all solutions are iterated. It can also have some
+impact on the search performance for normal optimization, but this is often hard
+to predict, thus, you should leave the following parameters unless you have a
+good reason to change them.
 
 We can tell CP-SAT, how to branch (or make a decision) whenever it can no longer
 deduce anything via propagation. For this, we need to provide a list of the
@@ -3339,12 +3343,8 @@ For the value/domain strategy, we have the options:
 - `SELECT_UPPER_HALF`: branch to the upper half.
 - `SELECT_MEDIAN_VALUE`: try to assign the median value.
 
-> **CAVEAT:** In the documentation there is a warning about the completeness of
-> the domain strategy. I am not sure, if this is just for custom strategies or
-> you have to be careful in general. So be warned.
-
 ```python
-model.AddDecisionStrategy([x], cp_model.CHOOSE_FIRST, cp_model.SELECT_MIN_VALUE)
+model.add_decision_strategy([x], cp_model.CHOOSE_FIRST, cp_model.SELECT_MIN_VALUE)
 
 # your can force CP-SAT to follow this strategy exactly
 solver.parameters.search_branching = cp_model.FIXED_SEARCH
