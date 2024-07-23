@@ -311,6 +311,12 @@ Now there comes a lot of information about the different subsolvers that are
 used. This is a very detailed part of the log and can be overwhelming. You
 already need to be rather deep into the details of CP-SAT to actually make any
 use of this information. It is primarily intended for the developers of CP-SAT.
+It gives you insights into how the various subsolvers have been contributing to
+the solution, how the otherwise hidden LP-techniques, including cutting planes,
+have been used, and how the different heuristics have been applied. Based on
+this data, you could try to tune the various parameters of CP-SAT for your
+problem. However, note that you will probably need a lot of experience and
+experiments to gain an advantage compared to the default settings.
 
 ```
 Task timing                          n [     min,      max]      avg      dev     time         n [     min,      max]      avg      dev    dtime
