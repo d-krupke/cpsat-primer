@@ -109,13 +109,16 @@ a lower and an upper bound.
 
 ```python
 model = cp_model.CpModel()
-# integer variable z with bounds -100 <= z <= 100
+
+# Integer variable z with bounds -100 <= z <= 100
 z = model.new_int_var(-100, 100, "z")  # new syntax
 z_ = model.NewIntVar(-100, 100, "z_")  # old syntax
-# boolean variable b
+
+# Boolean variable b
 b = model.new_bool_var("b")  # new syntax
 b_ = model.NewBoolVar("b_")  # old syntax
-# implicitly available negation of b:
+
+# Implicitly available negation of b:
 not_b = ~b  # will be 1 if b is 0 and 0 if b is 1
 not_b_ = b.Not()  # old syntax
 ```
@@ -128,17 +131,20 @@ convenient.
 
 ```python
 model = cp_model.CpModel()
-# create an Index from 0 to 9
+
+# Create an Index from 0 to 9
 index = pd.Index(range(10), name="index")
-# create a pandas Series with 10 integer variables matching the index
+
+# Create a pandas Series with 10 integer variables matching the index
 xs = model.new_int_var_series("x", index, 0, 100)
 
-# list of boolean variables
+# List of boolean variables
 df = pd.DataFrame(
     data={"weight": [1 for _ in range(10)], "value": [3 for _ in range(10)]},
     index=["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"],
 )
 bs = model.new_bool_var_series("b", df.index)  # noqa: F841
+
 # Using the dot product on the pandas DataFrame is actually a pretty
 # convenient way to create common linear expressions.
 model.add(bs @ df["weight"] <= 100)
@@ -249,12 +255,14 @@ scenarios, here is how to define them:
 from ortools.sat.python import cp_model
 
 model = cp_model.CpModel()
+
 # Define a domain with selected values
 domain = cp_model.Domain.from_values([2, 5, 8, 10, 20, 50, 90])
-# cam also be done via intervals
+
+# Can also be done via intervals
 domain_2 = cp_model.Domain.from_intervals([[8, 12], [14, 20]])
 
-# there are also some operations available
+# There are also some operations available
 domain_3 = domain.union_with(domain_2)
 
 # Create a domain variable within this defined domain
@@ -616,7 +624,7 @@ truck_a = model.new_bool_var("truck_a")
 truck_b = model.new_bool_var("truck_b")
 truck_c = model.new_bool_var("truck_c")
 
-# only rent one truck
+# Only rent one truck
 model.add_at_most_one([truck_a, truck_b, truck_c])
 
 # Depending on which truck is rented, the load value is limited
