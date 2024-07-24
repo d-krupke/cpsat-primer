@@ -1,0 +1,4 @@
+fastapi
+ortools
+redis
+rq
