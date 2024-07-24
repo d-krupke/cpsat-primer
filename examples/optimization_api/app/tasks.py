@@ -2,10 +2,14 @@ from config import get_db_connection
 from solver import TspSolver
 from datetime import datetime
 from uuid import UUID
+from db import TspJobDbConnection
 
 
-def run_optimization_job(job_id: UUID) -> None:
-    db_connection = get_db_connection()
+def run_optimization_job(
+    job_id: UUID, db_connection: TspJobDbConnection | None = None
+) -> None:
+    if db_connection is None:
+        db_connection = get_db_connection()
     job_status = db_connection.get_status(job_id)
     job_request = db_connection.get_request(job_id)
     if job_status is None or job_request is None:

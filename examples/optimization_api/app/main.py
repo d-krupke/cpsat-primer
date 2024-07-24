@@ -23,7 +23,12 @@ def post_job(
     Submit a new job to solve a TSP instance.
     """
     job_status = db_connection.register_job(job_request)
-    task_queue.enqueue(run_optimization_job, job_status.task_id)
+    task_queue.enqueue(
+        run_optimization_job,
+        job_status.task_id,
+        # adding a 60 second buffer to the job timeout
+        job_timeout=job_request.optimization_parameters.timeout + 60,
+    )
     return job_status
 
 
