@@ -379,7 +379,7 @@ model.add(x < y + z)
 model.add(y > 300 - 4 * z)
 ```
 
-Note that `!=` can be expected slower than the other (`<=`, `>=`, `==`)
+Note that `!=` can be slower than the other (`<=`, `>=`, `==`)
 constraints, because it is not a linear constraint. If you have a set of
 mutually `!=` variables, it is better to use `all_different` (see below) than to
 use the explicit `!=` constraints.
@@ -507,7 +507,7 @@ model.add_bool_and(b1, ~b2, ~b3)  # Alternative notation using '~' for negation
 The `add_bool_and` method is most effective when used with the `only_enforce_if`
 method. For cases not utilizing `only_enforce_if` a simple AND-clause such as
 $\left( b_1 \land \neg b_2 \land \neg b_3 \right)$ becomes redundant by simply
-substituting $b_1$ with `1` and $b_2`, $b_3` with `0`. In straightforward
+substituting $b_1$ with `1` and $b_2, $b_3$ with `0`. In straightforward
 scenarios, consider substituting these variables with their constant values to
 reduce unnecessary complexity, especially in larger models where size and
 manageability are concerns. In smaller or simpler models, CP-SAT efficiently
@@ -779,7 +779,7 @@ advisable.
 
 Here is one of my students' favorite examples of a non-linear expression that
 can be avoided. Once introduced to mathematical notation like
-$\sum_{e\ in E} cost(e)\cdot x_e$, if a term depends on the combination of two
+$\sum_{e \in E} cost(e)\cdot x_e$, if a term depends on the combination of two
 binary variables, they might initially opt for a quadratic expression such as
 $\sum_{e,e'\in E} concost(e, e')\cdot x_e\cdot x_{e'}$. However, such cases can
 often be modeled linearly using an auxiliary variable, avoiding the complexities

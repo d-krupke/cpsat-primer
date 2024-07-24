@@ -42,9 +42,9 @@ handle more and more 'bad' problem models effectively with every year.
 > this short guide on
 > [Math Programming Modelling Basics](https://www.gurobi.com/resources/math-programming-modeling-basics/).
 
-Our first problem has no deeper meaning, except of showing the basic workflow of
+Our first problem has no deeper meaning, except for showing the basic workflow of
 creating the variables (x and y), adding the constraint $x+y<=30$ on them,
-setting the objective function (maximize $30*x + 50*y$), and obtaining a
+setting the objective function (maximize $30x + 50y$), and obtaining a
 solution:
 
 ```python
@@ -92,7 +92,7 @@ model by hand for larger instances.
 > | `INFEASIBLE`    | 3    | The model has no feasible solution. This means that your constraints are too restrictive.                                                                                             |
 > | `OPTIMAL`       | 4    | The model has an optimal solution. If your model does not have an objective, `OPTIMAL` is returned instead of `FEASIBLE`.                                                             |
 >
-> The status `UNBOUNDED` does _not_ exists, as CP-SAT does not have unbounded
+> The status `UNBOUNDED` does _not_ exist, as CP-SAT does not have unbounded
 > variables.
 
 For larger models, CP-SAT will unfortunately not always able to compute an
