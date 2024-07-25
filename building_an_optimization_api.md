@@ -1,16 +1,16 @@
-## Building an Optimization API
+# Building an Optimization API
 
 In this chapter, we will create a basic optimization service that performs
 computations on a cluster rather than on the client side. This service can be
-enhanced with a straightforward frontend, allowing non-technical users to access
+extended with a straightforward frontend, allowing non-technical users to access
 the optimization capabilities. By encapsulating your optimization code within an
 easy-to-use API, integration into larger systems becomes more streamlined, and
 the separation of algorithm development from deployment is achieved.
 
 While this chapter does not cover every aspect of building a production-ready
-API, it will address many important considerations. This foundational knowledge
+API, it will address many important points of it. This foundational knowledge
 will enable you to collaborate effectively with your integration experts to
-finalize the implementation details.
+finalize the implementation details, or even do it yourself.
 
 To illustrate these principles, we will develop a simple optimization model for
 the Traveling Salesman Problem (TSP). Users will be able to submit an instance
@@ -27,14 +27,17 @@ the status of their computation and retrieve the result once it is ready. To
 enhance user experience, we will allow users to specify a webhook URL, which we
 will call once the computation is complete.
 
-By following this approach, we will demonstrate how to manage complex
-optimization tasks within an API, providing a practical example of separating
-algorithm development from deployment.
+You should be able to easily adapt this API to your own optimization problems,
+allowing you to quickly service your optimization algorithms to your colleagues.
 
-### Specifying the Essential Endpoints
+## Specifying the Essential Endpoints
 
 Before we start coding, we should specify the endpoints our API will expose, so
-we know what we need to implement.
+we know what we need to implement. This is something you can directly share with
+the coworkers who will implement the frontend or other parts of the system, so
+they know what to expect and can start working on their parts. It is usually
+simple to change the details of the payloads later, but changing the flow of the
+API can be much more complex.
 
 The fundamental operations we will support are:
 
@@ -56,54 +59,83 @@ handling the core functionalities required for managing and solving TSP
 instances. This structure will facilitate user interactions, from submitting
 tasks to retrieving solutions and monitoring the status of their requests.
 
-Once we have successfully optimized the TSP, we can anticipate requests to
-extend our optimization capabilities to other problems. Therefore, we should add
-the prefix `/tsp_solver/v1` to all endpoints to facilitate future expansions of
-our API with additional solvers.
+Once we have successfully launched or TSP optimization service, we can
+anticipate requests to extend our optimization capabilities to other problems.
+Therefore, we should add the prefix `/tsp_solver/v1` to all endpoints to
+facilitate future expansions of our API with additional solvers, e.g.,
+`knapsack_solver/v1`, or `/tsp_solver/v2_experimental`.
 
-Although a more hierarchical approach, such as `/solvers/tsp/v1`, could be used,
-we will stick to the flat structure for simplicity in this chapter to avoid
-unnecessary complexity in the code. You may ask why we do not just create a new
-project for each solver and then just stick them together on a higher level. The
-reason is that we may want to share the same infrastructure for all solvers,
-especially the task queue and the worker cluster. Therefore, it makes sense to
-keep them in the same project. However, it will make sense to separate the
-actual algorithms from the API code, and only import the algorithms into our API
-project. We will not do this in this chapter, but I personally prefer the
-algorithms to be as separated as possible as they are often complex enough on
-their own.
+You may ask why we do not just create a new project for each solver and then
+just stick them together on a higher level. The reason is that we may want to
+share the same infrastructure for all solvers, especially the task queue and the
+worker cluster. This can not only be easier to maintain, but also cheaper as
+resources can be shared. Therefore, it makes sense to keep them in the same
+project. However, it will make sense to separate the actual algorithms from the
+API code, and only import the algorithms into our API project. We will not do
+this in this chapter, but I personally prefer the algorithms to be as separated
+as possible as they are often complex enough on their own.
 
-### Architecture
+## Architecture
 
-This project aims to develop a scalable and efficient web API for solving the
-Traveling Salesman Problem (TSP) using modern technologies. The API will
-leverage FastAPI for handling web requests, Redis for data storage, and RQ for
-task queue management. The goal is to create an API that accepts TSP instances,
-processes them asynchronously, and returns solutions, facilitating easy
-integration into larger systems.
+Having outlined the requirements, we will now consider the architecture of our
+system. The system will incorporate the following components:
 
-We will use the following technologies and libraries, on top of OR-Tools:
-
-1. **FastAPI**: FastAPI is a modern, fast (high-performance) web framework for
-   building APIs with Python 3.6+ based on standard Python type hints. We use
+1. **FastAPI for implementing the endpoints**: FastAPI is a modern,
+   high-performance web framework for building APIs with Python. We will use
    FastAPI to define API endpoints and handle HTTP requests due to its
    simplicity, speed, and automatic interactive API documentation.
 
-2. **Redis**: Redis is an in-memory data structure store that can be used as a
-   database, cache, and message broker. We use Redis for its speed and
-   efficiency in storing tasks and solutions, allowing quick access and
+2. **Redis as a database and communication interface with the workers**: Redis
+   is an in-memory data structure store that can function as a database, cache,
+   and message broker. We will utilize Redis for its speed and efficiency in
+   storing and sharing tasks and solutions, which allows quick access and
    automatic expiration of data when it is no longer needed.
 
-3. **RQ (Redis Queue)**: RQ is a simple Python library for queuing jobs and
-   processing them in the background with workers. This allows our API to handle
-   tasks asynchronously, offloading computationally expensive processes to
-   background workers and thus improving the API's responsiveness.
+3. **Workers managed with RQ (Redis Queue)**: RQ is a simple Python library for
+   queuing jobs and processing them in the background with workers. This enables
+   our API to handle tasks asynchronously, offloading computationally expensive
+   processes to background workers and thereby improving the API's
+   responsiveness.
+
+To easily manage these components, we will use Docker and Docker Compose to
+containerize the API, Redis, and worker instances. This will allow us to quickly
+set up and run the service either locally or in a cloud environment.
+
+> [!WARNING]
+>
+> We will ignore security aspects in this chapter. This service should be only
+> for internal use within the own network and not be exposed to the internet. If
+> you want to expose it, you should add authentication, rate limiting, and other
+> security measures.
 
 ### Project Structure
+
+As we only have a single solver in this project, we will neither separate the
+solver from the API nor encapsulate the API, but use a simple, flat structure.
+You can find the complete project in
+[./examples/optimization_api](./examples/optimization_api).
+
+```text
+├── app
+│   ├── __init__.py
+│   ├── config.py
+│   ├── db.py
+│   ├── main.py
+│   ├── models.py
+│   ├── solver.py
+│   └── tasks.py
+├── docker-compose.yml
+├── Dockerfile
+└── requirements.txt
+```
+
+Let us quickly go through the components of the project:
 
 1. **Requirements**: We define the necessary Python packages in a
    `requirements.txt` file to ensure that the environment can be easily set up
    and replicated. This file includes all dependencies needed for the project.
+   `requirements.txt` are rather outdated, but they are the simplest way to just
+   install the dependencies in our container.
 
 2. **Docker Environment**:
 
@@ -113,78 +145,50 @@ We will use the following technologies and libraries, on top of OR-Tools:
    - **docker-compose.yml**: This file configures the services required for the
      project, including the API, Redis, and worker instances. Docker Compose
      simplifies the process of managing multiple containers, ensuring they are
-     correctly built and started in the right order.
+     correctly built and started in the right order. A simple
+     `docker-compose up -d --build` will get the whole system up and running.
 
 3. **Solver Implementation**:
 
-   - `solver.py`: This script contains the implementation of the TSP solver
-     using OR-Tools. It defines how the TSP instance is solved and how the
-     results are structured. The solver takes in a set of locations and returns
-     the optimal route.
+   - `./app/solver.py`: This module contains the implementation of the TSP
+     solver using CP-SAT. It also specifies the expected input and output data.
 
 4. **Request and Response Models**:
 
-   - `models.py`: This module defines data models for API requests and responses
-     using Pydantic. Pydantic ensures data validation and serialization, which
-     helps maintain the integrity and consistency of data being processed by the
-     API.
+   - `./app/models.py`: This module specifies further data models for API
+     requests and responses.
 
 5. **Database**:
 
-   - `db.py`: This script implements a proxy class to interact with Redis,
+   - `./app/db.py`: This module implements a proxy class to interact with Redis,
      abstracting database operations for storing and retrieving job requests,
-     statuses, and solutions. It provides a clean interface for the rest of the
-     application to interact with Redis without needing to handle low-level
-     details.
+     statuses, and solutions.
 
 6. **Config**:
 
-   - `config.py`: This module provides configuration functions to set up the
-     database connection and task queue. By centralizing configuration, we
+   - `./app/sconfig.py`: This module provides configuration functions to set up
+     the database connection and task queue. By centralizing configuration, we
      ensure that other parts of the application do not need to manage connection
      details, making the codebase more modular and easier to maintain.
 
 7. **Tasks**:
 
-   - `tasks.py`: This script defines the tasks that fetch job data, run the
-     optimization algorithm, store results, and send notifications via webhooks.
-     These tasks will be outsourced to separate workers, and the API just needs
-     to have a reference to the task functions in order to queue them. For the
-     workers, this file will be the entry point.
+   - `./app/tasks.py`: This module defines the tasks to be outsourced to
+     workers, which right now only includes the optimization job. Our web server
+     will only need to get a reference to the task functions in order to queue
+     them, but not actually run anything of this code. For the workers, this
+     file will be the entry point.
 
 8. **API**:
-   - `main.py`: This script implements the FastAPI application with routes for
-     submitting jobs, checking job statuses, retrieving solutions, and canceling
-     jobs. It integrates all components to provide a functional API that users
-     can interact with.
+   - `./app/main.py`: This module implements the FastAPI application with routes
+     for submitting jobs, checking job statuses, retrieving solutions, and
+     canceling jobs. This is the entry point for the web server.
 
 ### Running the Application
 
-To run the application, use Docker and Docker Compose to build and run the
+To run the application, we use Docker and Docker Compose to build and run the
 containers. This ensures the API and its dependencies are correctly set up. Once
-the containers are running, you can interact with the API via HTTP requests to
-submit TSP instances, monitor job progress, retrieve solutions, and manage
-tasks.
-
-By the end of this project, you will have a robust API capable of solving TSP
-instances asynchronously, providing a foundation for deploying optimization
-algorithms as web services.
-
-## Requirements
-
-We will use FastAPI as the web framework for our API because it is modern,
-efficient, and easy to use. Redis will serve as our database, and RQ will manage
-the task queue. These technologies are chosen for their performance, ease of
-use, and community support.
-
-### requirements.txt
-
-```plaintext
-fastapi
-ortools
-redis
-rq
-```
+the containers are running, you can interact with the API via HTTP requests.
 
 ## Docker Environment
 
@@ -192,7 +196,9 @@ We use Docker to ensure a consistent development and production environment.
 Docker allows us to package our application with all its dependencies into a
 standardized unit for software development. Docker Compose is used to manage
 multi-container applications, defining and running multi-container Docker
-applications.
+applications. As the web server and the workers essentially share the same code,
+just with different entry points, we can use the same Docker image for both. The
+different entry points will be specified in the `docker-compose.yml`.
 
 ### Dockerfile
 
@@ -213,32 +219,31 @@ RUN pip install --no-cache-dir -r /requirements.txt
 COPY ./app /app
 ```
 
-The Dockerfile defines the environment setup for the API. It starts with a slim
-version of Python 3.12, sets the working directory, installs required packages,
-and copies the application code into the container.
-
 ### docker-compose.yml
+
+To get our composition of containers, with the API, Redis, and the workers up
+and running, we use the following `docker-compose.yml` file:
 
 ```yaml
 services:
-  optimization_api_fastapi:
+  optimization_api_fastapi: # The web server
     build: .
     container_name: optimization_api_fastapi
-    ports:
+    ports: # exposing the API on port 80. Change this if you want to use a different port.
       - "80:80"
-    depends_on:
+    depends_on: # Ensuring that the web server starts after the database.
       - optimization_api_redis
     command: python3 -m uvicorn main:app --host 0.0.0.0 --port 80 --reload
 
-  optimization_api_redis:
+  optimization_api_redis: # The database. We use the official Redis image.
     image: redis:latest
     container_name: optimization_api_redis
 
-  optimization_api_worker:
+  optimization_api_worker: # The worker
     build: .
-    command:
+    command: # Running this command will make our container a worker instead of a web server.
       rq worker --with-scheduler --url redis://optimization_api_redis:6379/1
-    depends_on:
+    depends_on: # Ensuring that the worker starts after the database, as it needs to connect to it.
       - optimization_api_redis
     deploy:
       replicas: 2 # Adding two workers for parallel processing
@@ -248,15 +253,13 @@ The `docker-compose.yml` file sets up three services:
 
 - `optimization_api_fastapi`: This service builds the FastAPI application,
   exposes it on port 80, and ensures it starts after Redis is available.
-- `optimization_api_redis`: This service uses the latest Redis image to provide
-  in-memory data storage.
+- `optimization_api_redis`: This service sets up the Redis database from the
+  official Redis image. We just need to remember the name of the container to
+  connect to it.
 - `optimization_api_worker`: This service builds the worker, which processes
   tasks from the queue. We can scale the number of workers by increasing the
   number of replicas. Theoretically, these workers could be run on different
   machines to scale horizontally.
-
-This setup ensures that all components are correctly orchestrated, enabling a
-seamless development and deployment experience.
 
 ### Solver
 
@@ -395,11 +398,7 @@ class TspSolver:
 
 In this section, we will define the request and response models for the API.
 These models will facilitate the communication between the client and the server
-by ensuring that the data exchanged is structured and validated correctly. We
-use Pydantic to define these models, leveraging its powerful data validation and
-serialization capabilities.
-
-### Implementation of Request and Response Models
+by ensuring that the data exchanged is structured and validated correctly.
 
 The models are defined in the `models.py` file and include the necessary data
 structures for submitting a TSP job request and tracking the status of the job.
@@ -415,8 +414,6 @@ from pydantic import BaseModel, HttpUrl, Field
 from uuid import UUID, uuid4
 from solver import OptimizationParameters, TspInstance
 ```
-
-### TSP Job Request Model
 
 The `TspJobRequest` model encapsulates the information required to submit a TSP
 job to the API. It includes the TSP instance, optimization parameters, and an
@@ -456,8 +453,6 @@ An request could look as follows:
 },
 ```
 
-### TSP Job Status Model
-
 The `TspJobStatus` model is used to track the status of a TSP job. It provides
 fields to monitor various stages of the job lifecycle, from submission to
 completion.
@@ -485,19 +480,14 @@ class TspJobStatus(BaseModel):
 ```
 
 These models ensure that the data exchanged between the client and the server is
-well-defined and validated, providing a robust framework for handling TSP job
-requests and tracking their status.
+well-defined and validated.
 
 ## Database
 
-In this section, we will implement a database to store the tasks and solutions.
-For simplicity, we use Redis, which serves as both our database and task queue.
-This approach minimizes the need to set up additional databases and leverages
-Redis's key-value storage and automatic data expiration features. To ensure
-flexibility, we wrap Redis operations in a proxy class, allowing us to switch
-the database backend easily if needed.
-
-### Implementation of the Database Proxy Class
+In this section, we will implement a database proxy to store the tasks and
+solutions. For simplicity, we use Redis, which serves as both our database and
+task queue. This approach minimizes the need to set up additional databases and
+leverages Redis's key-value storage and automatic data expiration features.
 
 The `TspJobDbConnection` class encapsulates the interactions with the Redis
 database. It provides methods to register new jobs, update job statuses,
@@ -520,8 +510,6 @@ import redis
 from typing import Optional, List
 import logging
 ```
-
-### Initialization and Helper Methods
 
 The class is initialized with a Redis client and an expiration time for the
 stored data. The `_get_data` method is a helper that retrieves and parses JSON
@@ -546,8 +534,6 @@ class TspJobDbConnection:
         return None
 ```
 
-### Retrieve Data Methods
-
 The `get_request`, `get_status`, and `get_solution` methods retrieve a TSP job
 request, status, and solution, respectively, by their task ID.
 
@@ -569,8 +555,6 @@ def get_solution(self, task_id: UUID) -> Optional[TspSolution]:
     data = self._get_data(f"solution:{task_id}")
     return TspSolution(**data) if data else None
 ```
-
-### Store Data Methods
 
 The `set_solution` method stores a TSP solution in Redis with an expiration
 time. The `register_job` method registers a new TSP job request and status in
@@ -609,8 +593,6 @@ def register_job(self, request: TspJobRequest) -> TspJobStatus:
     return job_status
 ```
 
-### Update and List Jobs Methods
-
 The `update_job_status` method updates the status of an existing TSP job. The
 `list_jobs` method lists all TSP job statuses.
 
@@ -638,8 +620,6 @@ def list_jobs(self) -> List[TspJobStatus]:
 
         return []
 ```
-
-### Delete Job Method
 
 The `delete_job` method deletes a TSP job request, status, and solution from
 Redis.
