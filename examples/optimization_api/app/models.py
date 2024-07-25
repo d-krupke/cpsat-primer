@@ -10,6 +10,10 @@ from solver import OptimizationParameters, TspInstance
 
 
 class TspJobRequest(BaseModel):
+    """
+    A request model for a TSP job.
+    """
+
     tsp_instance: TspInstance = Field(..., description="The TSP instance to solve.")
     optimization_parameters: OptimizationParameters = Field(
         default_factory=OptimizationParameters,
@@ -40,6 +44,10 @@ class TspJobRequest(BaseModel):
 
 
 class TspJobStatus(BaseModel):
+    """
+    A response model for the status of a TSP job.
+    """
+
     task_id: UUID = Field(default_factory=uuid4, description="The ID of the task.")
     status: str = Field(default="Submitted", description="The status of the task.")
     submitted_at: datetime = Field(
