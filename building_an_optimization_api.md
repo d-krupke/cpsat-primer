@@ -119,7 +119,7 @@ set up and run the service either locally or in a cloud environment.
 As we only have a single solver in this project, we will neither separate the
 solver from the API nor encapsulate the API, but use a simple, flat structure.
 You can find the complete project in
-[./examples/optimization_api](./examples/optimization_api).
+[./examples/optimization_api](https://github.com/d-krupke/cpsat-primer/blob/main/examples/optimization_api).
 
 ```text
 ├── app
@@ -900,13 +900,13 @@ After you have run `docker-compose up -d --build`, you can access the API at
 the API. You can submit a job, check the status, and retrieve the solution. You
 can also cancel a job or list all jobs.
 
-|                ![Swagger UI](./images/swagger_optimization_api.png)                |
-| :--------------------------------------------------------------------------------: |
-| FastAPI comes with a built-in Swagger UI that allows you to interact with the API. |
+| ![Swagger UI](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/swagger_optimization_api.png) |
+| :-------------------------------------------------------------------------------------------------------------: |
+|               FastAPI comes with a built-in Swagger UI that allows you to interact with the API.                |
 
-|    ![Swagger UI - Job Submission](./images/swagger_try_it_out.png)    |
-| :-------------------------------------------------------------------: |
-| By clicking on "try it out" you can directly submit a job to the API. |
+| ![Swagger UI - Job Submission](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/swagger_try_it_out.png) |
+| :------------------------------------------------------------------------------------------------------------------------: |
+|                           By clicking on "try it out" you can directly submit a job to the API.                            |
 
 Here is an instance to try it out
 
