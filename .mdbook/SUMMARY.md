@@ -8,6 +8,7 @@
 - [Parameters](./05_parameters.md)
 - [Understanding the Log](./understanding_the_log.md)
 - [Coding Patterns](./06_coding_patterns.md)
+- [(DRAFT) Building an Optimization API](./building_an_optimization_api.md)
 - [How does it work?](./07_under_the_hood.md)
 - [Alternatives](./03_big_picture.md)
 - [Benchmarking your Model](./08_benchmarking.md)

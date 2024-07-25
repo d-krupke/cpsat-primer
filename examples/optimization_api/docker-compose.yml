@@ -1,0 +1,22 @@
+services:
+  optimization_api_fastapi:
+    build: .
+    container_name: optimization_api_fastapi
+    ports:
+      - "80:80"
+    depends_on:
+      - optimization_api_redis
+    command: python3 -m uvicorn main:app --host 0.0.0.0 --port 80 --reload
+
+  optimization_api_redis:
+    image: redis:latest
+    container_name: optimization_api_redis
+
+  optimization_api_worker:
+    build: .
+    command:
+      rq worker --with-scheduler --url redis://optimization_api_redis:6379/1
+    depends_on:
+      - optimization_api_redis
+    deploy:
+      replicas: 2

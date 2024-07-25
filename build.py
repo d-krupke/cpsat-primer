@@ -268,6 +268,7 @@ if __name__ == "__main__":
         "05_parameters.md",
         "understanding_the_log.md",
         "06_coding_patterns.md",
+        "building_an_optimization_api.md",
         "07_under_the_hood.md",
         "03_big_picture.md",
         "08_benchmarking.md",

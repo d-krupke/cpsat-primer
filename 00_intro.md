@@ -91,13 +91,15 @@ deeper.
 6. [Understanding the Log](#understanding-the-log): How to interpret the log
 7. [Coding Patterns](#06-coding-patterns): Basic design patterns for creating
    maintainable algorithms.
-8. [How does it work?](#07-under-the-hood): After we know what we can do with
+8. [(DRAFT) Building an Optimization API](#building_an_optimization_api) How to
+   build a scalable API for long running optimization jobs.
+9. [How does it work?](#07-under-the-hood): After we know what we can do with
    CP-SAT, we look into how CP-SAT will do all these things.
-9. [Alternatives](#03-big-picture): An overview of the different optimization
-   techniques and tools available. Putting CP-SAT into context.
-10. [Benchmarking your Model](#08-benchmarking): How to benchmark your model and
+10. [Alternatives](#03-big-picture): An overview of the different optimization
+    techniques and tools available. Putting CP-SAT into context.
+11. [Benchmarking your Model](#08-benchmarking): How to benchmark your model and
     how to interpret the results.
-11. [Large Neighborhood Search](#09-lns): The use of CP-SAT to create more
+12. [Large Neighborhood Search](#09-lns): The use of CP-SAT to create more
     powerful heuristics.
 
 ---
@@ -113,12 +115,12 @@ deeper.
 
 > **About the Main Author:** [Dr. Dominik Krupke](https://krupke.cc) is a
 > postdoctoral researcher with the
-> [Algorithms Group](https://www.ibr.cs.tu-bs.de/alg) at TU Braunschweig. He
+> [Algorithms Division](https://www.ibr.cs.tu-bs.de/alg) at TU Braunschweig. He
 > specializes in practical solutions to NP-hard problems. Initially focused on
 > theoretical computer science, he now applies his expertise to solve what was
-> once deemed impossible. This primer, first developed as course material for
-> his students, has been extended in his spare time to cater to a wider
-> audience.
+> once deemed impossible, frequently with the help of CP-SAT. This primer on
+> CP-SAT, first developed as course material for his students, has been extended
+> in his spare time to cater to a wider audience.
 
 > **Found a mistake?** Please open an issue or a pull request. You can also just
 > write me a quick mail to `krupked@gmail.com`.
