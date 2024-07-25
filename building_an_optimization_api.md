@@ -73,7 +73,7 @@ project. We will not do this in this chapter, but I personally prefer the
 algorithms to be as separated as possible as they are often complex enough on
 their own.
 
-## Overview
+### Architecture
 
 This project aims to develop a scalable and efficient web API for solving the
 Traveling Salesman Problem (TSP) using modern technologies. The API will
@@ -82,7 +82,7 @@ task queue management. The goal is to create an API that accepts TSP instances,
 processes them asynchronously, and returns solutions, facilitating easy
 integration into larger systems.
 
-### Key Components
+We will use the following technologies and libraries, on top of OR-Tools:
 
 1. **FastAPI**: FastAPI is a modern, fast (high-performance) web framework for
    building APIs with Python 3.6+ based on standard Python type hints. We use
@@ -98,11 +98,6 @@ integration into larger systems.
    processing them in the background with workers. This allows our API to handle
    tasks asynchronously, offloading computationally expensive processes to
    background workers and thus improving the API's responsiveness.
-
-4. **OR-Tools**: OR-Tools is an open-source software suite for optimization,
-   developed by Google. It provides various algorithms for solving optimization
-   problems, including the TSP. We use OR-Tools for its robust and efficient
-   implementations.
 
 ### Project Structure
 
