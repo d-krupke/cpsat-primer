@@ -112,12 +112,12 @@ deeper.
 
 > **About the Main Author:** [Dr. Dominik Krupke](https://krupke.cc) is a
 > postdoctoral researcher with the
-> [Algorithms Group](https://www.ibr.cs.tu-bs.de/alg) at TU Braunschweig. He
+> [Algorithms Division](https://www.ibr.cs.tu-bs.de/alg) at TU Braunschweig. He
 > specializes in practical solutions to NP-hard problems. Initially focused on
 > theoretical computer science, he now applies his expertise to solve what was
-> once deemed impossible. This primer, first developed as course material for
-> his students, has been extended in his spare time to cater to a wider
-> audience.
+> once deemed impossible, frequently with the help of CP-SAT. This primer on
+> CP-SAT, first developed as course material for his students, has been extended
+> in his spare time to cater to a wider audience.
 
 > **Found a mistake?** Please open an issue or a pull request. You can also just
 > write me a quick mail to `krupked@gmail.com`.
