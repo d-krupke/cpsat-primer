@@ -1,4 +1,10 @@
-# Building an Optimization API
+<a name="building_an_optimization_api"></a>
+
+# Building an Optimization API (DRAFT)
+
+> [!WARNING]
+>
+> This chapter is a draft, but feedback is already welcome.
 
 In this chapter, we will create a basic optimization service that performs
 computations on a cluster rather than on the client side. This service can be
@@ -637,19 +643,21 @@ def delete_job(self, task_id: UUID) -> None:
         logging.error("Redis error: %s", e)
 ```
 
-## Config
+## Configuration
 
-In this section, we will set up the configuration for the optimization API. The
-configuration will ensure that the database and the task queue are properly set
-up, allowing the rest of the code to remain unaware of the specific connection
-details. This separation of concerns enhances maintainability and modularity.
+The database and task queue require a connection to be established before they
+can be used. We provide `get_db_connection` and `get_task_queue` functions in
+the `config.py` file for three primary reasons:
 
-### Implementation of the Configuration File
-
-The `config.py` file contains functions to set up and provide the database
-connection and task queue. This centralized configuration allows the rest of the
-application to use these resources without needing to handle their
-initialization or connection details.
+- To ensure that the database and task queue are properly set up with the
+  correct connection details. If we change the Redis host, we only need to
+  update it in one place.
+- To integrate these functions into FastAPI's dependency injection system,
+  ensuring that the database and task queue are available to the API endpoints
+  without establishing the connection in each endpoint. This approach also
+  facilitates testing with a different database.
+- To allow both the FastAPI application and the workers to use the same
+  configuration functions, despite having different entry points.
 
 ```python
 # ./app/config.py
@@ -662,28 +670,16 @@ The other parts of the API should not be aware of the specific connection detail
 from db import TspJobDbConnection
 import redis
 from rq import Queue
-```
 
-### Database Connection Function
 
-The `get_db_connection` function sets up the Redis client for the database and
-returns an instance of `TspJobDbConnection`.
-
-```python
 def get_db_connection() -> TspJobDbConnection:
     """Provides a TspJobDbConnection instance."""
     redis_client = redis.Redis(
         host="optimization_api_redis", port=6379, decode_responses=True, db=0
     )
     return TspJobDbConnection(redis_client=redis_client)
-```
 
-### Task Queue Function
 
-The `get_task_queue` function sets up the Redis client for the task queue and
-returns an instance of `Queue`.
-
-```python
 def get_task_queue() -> Queue:
     """Provides a Redis Queue instance."""
     redis_client = redis.Redis(host="optimization_api_redis", port=6379, db=1)
@@ -699,8 +695,6 @@ only the job reference to the task. The task will fetch the necessary data from
 the database and update the database with the results. Additionally, by
 including an `if __name__ == "__main__":` block, we allow the tasks to be run
 via an external task queue as system commands.
-
-### Implementation of the Tasks
 
 The `tasks.py` file contains functions and logic for running the optimization
 job in a separate worker process.
@@ -720,8 +714,6 @@ from db import TspJobDbConnection
 import httpx
 import logging
 ```
-
-### Webhook Notification Function
 
 The `send_webhook` function sends a POST request to the specified webhook URL
 with the job status. This allows for asynchronous notifications when the
@@ -743,8 +735,6 @@ def send_webhook(job_request: TspJobRequest, job_status: TspJobStatus) -> None:
         except Exception as e:
             logging.error(f"An error occurred: {e}")
 ```
-
-### Optimization Job Function
 
 The `run_optimization_job` function fetches the job request from the database,
 runs the optimization algorithm, and stores the solution back in the database.
@@ -821,10 +811,6 @@ app = FastAPI(
 tsp_solver_v1_router = APIRouter(tags=["TSP_solver_v1"])
 ```
 
-### API Routes
-
-#### Submit a New Job
-
 The `post_job` endpoint allows users to submit a new TSP job. The job is
 registered in the database, and the optimization task is enqueued in the task
 queue for asynchronous processing.
@@ -851,8 +837,6 @@ def post_job(
     return job_status
 ```
 
-#### Get Job Status
-
 The `get_job` endpoint returns the status of a specific job identified by its
 task ID.
 
@@ -867,8 +851,6 @@ def get_job(task_id: UUID, db_connection=Depends(get_db_connection)):
         raise HTTPException(status_code=404, detail="Job not found")
     return status
 ```
-
-#### Get Job Solution
 
 The `get_solution` endpoint returns the solution of a specific job if it is
 available.
@@ -885,8 +867,6 @@ def get_solution(task_id: UUID, db_connection=Depends(get_db_connection)):
     return solution
 ```
 
-#### Cancel a Job
-
 The `cancel_job` endpoint deletes or cancels a job. It does not immediately stop
 the job if it is already running.
 
@@ -899,8 +879,6 @@ def cancel_job(task_id: UUID, db_connection=Depends(get_db_connection)):
     db_connection.delete_job(task_id)
 ```
 
-#### List All Jobs
-
 The `list_jobs` endpoint returns a list of all jobs and their statuses.
 
 ```python
@@ -912,8 +890,6 @@ def list_jobs(db_connection=Depends(get_db_connection)):
     return db_connection.list_jobs()
 ```
 
-### Including the Router and Running the Application
-
 The router is included in the FastAPI application with a specific prefix, and
 the application is set up to run with Uvicorn when executed as a script.
 
@@ -924,4 +900,244 @@ if __name__ == "__main__":
     import uvicorn
 
     uvicorn.run(app, host="localhost", port=8000, workers=1)
+```
+
+### Running the Application
+
+After you have run `docker-compose up -d --build`, you can access the API at
+`http://localhost:80/docs`. This will open the Swagger UI, where you can test
+the API. You can submit a job, check the status, and retrieve the solution. You
+can also cancel a job or list all jobs.
+
+|                ![Swagger UI](./images/swagger_optimization_api.png)                |
+| :--------------------------------------------------------------------------------: |
+| FastAPI comes with a built-in Swagger UI that allows you to interact with the API. |
+
+|    ![Swagger UI - Job Submission](./images/swagger_try_it_out.png)    |
+| :-------------------------------------------------------------------: |
+| By clicking on "try it out" you can directly submit a job to the API. |
+
+Here is an instance to try it out
+
+```json
+{
+  "optimization_parameters": {
+    "timeout": 5
+  },
+  "tsp_instance": {
+    "num_nodes": 15,
+    "edges": [
+      { "source": 0, "target": 1, "cost": 82 },
+      { "source": 1, "target": 0, "cost": 82 },
+      { "source": 0, "target": 2, "cost": 35 },
+      { "source": 2, "target": 0, "cost": 35 },
+      { "source": 0, "target": 3, "cost": 58 },
+      { "source": 3, "target": 0, "cost": 58 },
+      { "source": 0, "target": 4, "cost": 9 },
+      { "source": 4, "target": 0, "cost": 9 },
+      { "source": 0, "target": 5, "cost": 13 },
+      { "source": 5, "target": 0, "cost": 13 },
+      { "source": 0, "target": 6, "cost": 91 },
+      { "source": 6, "target": 0, "cost": 91 },
+      { "source": 0, "target": 7, "cost": 72 },
+      { "source": 7, "target": 0, "cost": 72 },
+      { "source": 0, "target": 8, "cost": 16 },
+      { "source": 8, "target": 0, "cost": 16 },
+      { "source": 0, "target": 9, "cost": 50 },
+      { "source": 9, "target": 0, "cost": 50 },
+      { "source": 0, "target": 10, "cost": 80 },
+      { "source": 10, "target": 0, "cost": 80 },
+      { "source": 0, "target": 11, "cost": 92 },
+      { "source": 11, "target": 0, "cost": 92 },
+      { "source": 0, "target": 12, "cost": 28 },
+      { "source": 12, "target": 0, "cost": 28 },
+      { "source": 0, "target": 13, "cost": 17 },
+      { "source": 13, "target": 0, "cost": 17 },
+      { "source": 0, "target": 14, "cost": 97 },
+      { "source": 14, "target": 0, "cost": 97 },
+      { "source": 1, "target": 2, "cost": 14 },
+      { "source": 2, "target": 1, "cost": 14 },
+      { "source": 1, "target": 3, "cost": 32 },
+      { "source": 3, "target": 1, "cost": 32 },
+      { "source": 1, "target": 4, "cost": 41 },
+      { "source": 4, "target": 1, "cost": 41 },
+      { "source": 1, "target": 5, "cost": 52 },
+      { "source": 5, "target": 1, "cost": 52 },
+      { "source": 1, "target": 6, "cost": 58 },
+      { "source": 6, "target": 1, "cost": 58 },
+      { "source": 1, "target": 7, "cost": 20 },
+      { "source": 7, "target": 1, "cost": 20 },
+      { "source": 1, "target": 8, "cost": 1 },
+      { "source": 8, "target": 1, "cost": 1 },
+      { "source": 1, "target": 9, "cost": 54 },
+      { "source": 9, "target": 1, "cost": 54 },
+      { "source": 1, "target": 10, "cost": 75 },
+      { "source": 10, "target": 1, "cost": 75 },
+      { "source": 1, "target": 11, "cost": 15 },
+      { "source": 11, "target": 1, "cost": 15 },
+      { "source": 1, "target": 12, "cost": 45 },
+      { "source": 12, "target": 1, "cost": 45 },
+      { "source": 1, "target": 13, "cost": 94 },
+      { "source": 13, "target": 1, "cost": 94 },
+      { "source": 1, "target": 14, "cost": 41 },
+      { "source": 14, "target": 1, "cost": 41 },
+      { "source": 2, "target": 3, "cost": 82 },
+      { "source": 3, "target": 2, "cost": 82 },
+      { "source": 2, "target": 4, "cost": 44 },
+      { "source": 4, "target": 2, "cost": 44 },
+      { "source": 2, "target": 5, "cost": 83 },
+      { "source": 5, "target": 2, "cost": 83 },
+      { "source": 2, "target": 6, "cost": 91 },
+      { "source": 6, "target": 2, "cost": 91 },
+      { "source": 2, "target": 7, "cost": 78 },
+      { "source": 7, "target": 2, "cost": 78 },
+      { "source": 2, "target": 8, "cost": 51 },
+      { "source": 8, "target": 2, "cost": 51 },
+      { "source": 2, "target": 9, "cost": 6 },
+      { "source": 9, "target": 2, "cost": 6 },
+      { "source": 2, "target": 10, "cost": 81 },
+      { "source": 10, "target": 2, "cost": 81 },
+      { "source": 2, "target": 11, "cost": 77 },
+      { "source": 11, "target": 2, "cost": 77 },
+      { "source": 2, "target": 12, "cost": 93 },
+      { "source": 12, "target": 2, "cost": 93 },
+      { "source": 2, "target": 13, "cost": 97 },
+      { "source": 13, "target": 2, "cost": 97 },
+      { "source": 2, "target": 14, "cost": 33 },
+      { "source": 14, "target": 2, "cost": 33 },
+      { "source": 3, "target": 4, "cost": 66 },
+      { "source": 4, "target": 3, "cost": 66 },
+      { "source": 3, "target": 5, "cost": 47 },
+      { "source": 5, "target": 3, "cost": 47 },
+      { "source": 3, "target": 6, "cost": 54 },
+      { "source": 6, "target": 3, "cost": 54 },
+      { "source": 3, "target": 7, "cost": 39 },
+      { "source": 7, "target": 3, "cost": 39 },
+      { "source": 3, "target": 8, "cost": 98 },
+      { "source": 8, "target": 3, "cost": 98 },
+      { "source": 3, "target": 9, "cost": 90 },
+      { "source": 9, "target": 3, "cost": 90 },
+      { "source": 3, "target": 10, "cost": 5 },
+      { "source": 10, "target": 3, "cost": 5 },
+      { "source": 3, "target": 11, "cost": 27 },
+      { "source": 11, "target": 3, "cost": 27 },
+      { "source": 3, "target": 12, "cost": 61 },
+      { "source": 12, "target": 3, "cost": 61 },
+      { "source": 3, "target": 13, "cost": 95 },
+      { "source": 13, "target": 3, "cost": 95 },
+      { "source": 3, "target": 14, "cost": 19 },
+      { "source": 14, "target": 3, "cost": 19 },
+      { "source": 4, "target": 5, "cost": 34 },
+      { "source": 5, "target": 4, "cost": 34 },
+      { "source": 4, "target": 6, "cost": 10 },
+      { "source": 6, "target": 4, "cost": 10 },
+      { "source": 4, "target": 7, "cost": 20 },
+      { "source": 7, "target": 4, "cost": 20 },
+      { "source": 4, "target": 8, "cost": 44 },
+      { "source": 8, "target": 4, "cost": 44 },
+      { "source": 4, "target": 9, "cost": 33 },
+      { "source": 9, "target": 4, "cost": 33 },
+      { "source": 4, "target": 10, "cost": 29 },
+      { "source": 10, "target": 4, "cost": 29 },
+      { "source": 4, "target": 11, "cost": 36 },
+      { "source": 11, "target": 4, "cost": 36 },
+      { "source": 4, "target": 12, "cost": 62 },
+      { "source": 12, "target": 4, "cost": 62 },
+      { "source": 4, "target": 13, "cost": 77 },
+      { "source": 13, "target": 4, "cost": 77 },
+      { "source": 4, "target": 14, "cost": 63 },
+      { "source": 14, "target": 4, "cost": 63 },
+      { "source": 5, "target": 6, "cost": 73 },
+      { "source": 6, "target": 5, "cost": 73 },
+      { "source": 5, "target": 7, "cost": 6 },
+      { "source": 7, "target": 5, "cost": 6 },
+      { "source": 5, "target": 8, "cost": 91 },
+      { "source": 8, "target": 5, "cost": 91 },
+      { "source": 5, "target": 9, "cost": 5 },
+      { "source": 9, "target": 5, "cost": 5 },
+      { "source": 5, "target": 10, "cost": 61 },
+      { "source": 10, "target": 5, "cost": 61 },
+      { "source": 5, "target": 11, "cost": 11 },
+      { "source": 11, "target": 5, "cost": 11 },
+      { "source": 5, "target": 12, "cost": 91 },
+      { "source": 12, "target": 5, "cost": 91 },
+      { "source": 5, "target": 13, "cost": 7 },
+      { "source": 13, "target": 5, "cost": 7 },
+      { "source": 5, "target": 14, "cost": 88 },
+      { "source": 14, "target": 5, "cost": 88 },
+      { "source": 6, "target": 7, "cost": 52 },
+      { "source": 7, "target": 6, "cost": 52 },
+      { "source": 6, "target": 8, "cost": 86 },
+      { "source": 8, "target": 6, "cost": 86 },
+      { "source": 6, "target": 9, "cost": 48 },
+      { "source": 9, "target": 6, "cost": 48 },
+      { "source": 6, "target": 10, "cost": 13 },
+      { "source": 10, "target": 6, "cost": 13 },
+      { "source": 6, "target": 11, "cost": 31 },
+      { "source": 11, "target": 6, "cost": 31 },
+      { "source": 6, "target": 12, "cost": 91 },
+      { "source": 12, "target": 6, "cost": 91 },
+      { "source": 6, "target": 13, "cost": 62 },
+      { "source": 13, "target": 6, "cost": 62 },
+      { "source": 6, "target": 14, "cost": 30 },
+      { "source": 14, "target": 6, "cost": 30 },
+      { "source": 7, "target": 8, "cost": 79 },
+      { "source": 8, "target": 7, "cost": 79 },
+      { "source": 7, "target": 9, "cost": 94 },
+      { "source": 9, "target": 7, "cost": 94 },
+      { "source": 7, "target": 10, "cost": 58 },
+      { "source": 10, "target": 7, "cost": 58 },
+      { "source": 7, "target": 11, "cost": 12 },
+      { "source": 11, "target": 7, "cost": 12 },
+      { "source": 7, "target": 12, "cost": 81 },
+      { "source": 12, "target": 7, "cost": 81 },
+      { "source": 7, "target": 13, "cost": 2 },
+      { "source": 13, "target": 7, "cost": 2 },
+      { "source": 7, "target": 14, "cost": 89 },
+      { "source": 14, "target": 7, "cost": 89 },
+      { "source": 8, "target": 9, "cost": 15 },
+      { "source": 9, "target": 8, "cost": 15 },
+      { "source": 8, "target": 10, "cost": 94 },
+      { "source": 10, "target": 8, "cost": 94 },
+      { "source": 8, "target": 11, "cost": 23 },
+      { "source": 11, "target": 8, "cost": 23 },
+      { "source": 8, "target": 12, "cost": 50 },
+      { "source": 12, "target": 8, "cost": 50 },
+      { "source": 8, "target": 13, "cost": 79 },
+      { "source": 13, "target": 8, "cost": 79 },
+      { "source": 8, "target": 14, "cost": 65 },
+      { "source": 14, "target": 8, "cost": 65 },
+      { "source": 9, "target": 10, "cost": 68 },
+      { "source": 10, "target": 9, "cost": 68 },
+      { "source": 9, "target": 11, "cost": 81 },
+      { "source": 11, "target": 9, "cost": 81 },
+      { "source": 9, "target": 12, "cost": 34 },
+      { "source": 12, "target": 9, "cost": 34 },
+      { "source": 9, "target": 13, "cost": 21 },
+      { "source": 13, "target": 9, "cost": 21 },
+      { "source": 9, "target": 14, "cost": 16 },
+      { "source": 14, "target": 9, "cost": 16 },
+      { "source": 10, "target": 11, "cost": 10 },
+      { "source": 11, "target": 10, "cost": 10 },
+      { "source": 10, "target": 12, "cost": 12 },
+      { "source": 12, "target": 10, "cost": 12 },
+      { "source": 10, "target": 13, "cost": 60 },
+      { "source": 13, "target": 10, "cost": 60 },
+      { "source": 10, "target": 14, "cost": 61 },
+      { "source": 14, "target": 10, "cost": 61 },
+      { "source": 11, "target": 12, "cost": 36 },
+      { "source": 12, "target": 11, "cost": 36 },
+      { "source": 11, "target": 13, "cost": 78 },
+      { "source": 13, "target": 11, "cost": 78 },
+      { "source": 11, "target": 14, "cost": 79 },
+      { "source": 14, "target": 11, "cost": 79 },
+      { "source": 12, "target": 13, "cost": 54 },
+      { "source": 13, "target": 12, "cost": 54 },
+      { "source": 12, "target": 14, "cost": 33 },
+      { "source": 14, "target": 12, "cost": 33 },
+      { "source": 13, "target": 14, "cost": 29 },
+      { "source": 14, "target": 13, "cost": 29 }
+    ]
+  }
+}
 ```
