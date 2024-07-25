@@ -5232,8 +5232,6 @@ expose endpoints to submit TSP job requests, check job statuses, retrieve
 solutions, cancel jobs, and list all jobs. FastAPI provides an efficient and
 easy-to-use framework for building web APIs with Python.
 
-### Implementation of the API
-
 The `main.py` file contains the FastAPI application setup and the API routes.
 For simplicity, all routes are included in a single file, but in larger
 projects, it is advisable to separate them into different modules.
@@ -5253,8 +5251,6 @@ from solver import TspSolution
 from config import get_db_connection, get_task_queue
 from tasks import run_optimization_job
 ```
-
-### FastAPI Application Setup
 
 The FastAPI application is initialized with a title and description. An API
 router is created to group the routes related to the TSP solver.
@@ -5347,16 +5343,11 @@ def list_jobs(db_connection=Depends(get_db_connection)):
     return db_connection.list_jobs()
 ```
 
-The router is included in the FastAPI application with a specific prefix, and
-the application is set up to run with Uvicorn when executed as a script.
+Finally, we include the API router in the FastAPI application under the
+`/tsp_solver/v1` prefix.
 
 ```python
 app.include_router(tsp_solver_v1_router, prefix="/tsp_solver/v1")
-
-if __name__ == "__main__":
-    import uvicorn
-
-    uvicorn.run(app, host="localhost", port=8000, workers=1)
 ```
 
 ### Running the Application
