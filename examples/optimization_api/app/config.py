@@ -1,3 +1,9 @@
+"""
+This file contains the configuration for the optimization API.
+For this simple project, it only sets up the database connection and the task queue.
+The other parts of the API should not be aware of the specific connection details.
+"""
+
 from db import TspJobDbConnection
 import redis
 from rq import Queue

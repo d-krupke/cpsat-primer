@@ -1,29 +1,12 @@
+"""
+This file contains the implementation of additional data models for the optimization API.
+"""
+
 from datetime import datetime
 from pydantic import BaseModel, HttpUrl, Field
 from uuid import UUID, uuid4
 
-
-class DirectedEdge(BaseModel):
-    source: int = Field(..., ge=0, description="The source node of the edge.")
-    target: int = Field(..., ge=0, description="The target node of the edge.")
-    cost: int = Field(..., ge=0, description="The cost of traversing the edge.")
-
-
-class TspInstance(BaseModel):
-    num_nodes: int = Field(
-        ..., gt=0, description="The number of nodes in the TSP instance."
-    )
-    edges: list[DirectedEdge] = Field(
-        ..., description="The directed edges of the TSP instance."
-    )
-
-
-class OptimizationParameters(BaseModel):
-    timeout: int = Field(
-        default=60,
-        gt=0,
-        description="The maximum time in seconds to run the optimization.",
-    )
+from solver import OptimizationParameters, TspInstance
 
 
 class TspJobRequest(BaseModel):
@@ -70,15 +53,4 @@ class TspJobStatus(BaseModel):
     )
     error: str | None = Field(
         default=None, description="The error message if the task failed."
-    )
-
-
-class TspSolution(BaseModel):
-    node_order: list[int] | None = Field(
-        ..., description="The order of the nodes in the solution."
-    )
-    cost: float = Field(..., description="The cost of the solution.")
-    lower_bound: float = Field(..., description="The lower bound of the solution.")
-    is_infeasible: bool = Field(
-        default=False, description="Whether the instance is infeasible."
     )

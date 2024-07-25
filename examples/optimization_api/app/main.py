@@ -1,7 +1,13 @@
+"""
+This file contains the main FastAPI application.
+For a larger project, we would move the routes to separate files, but for this example, we keep everything in one file.
+"""
+
 from uuid import UUID
 from fastapi import FastAPI, APIRouter, HTTPException, Depends
 
-from models import TspJobRequest, TspJobStatus, TspSolution
+from models import TspJobRequest, TspJobStatus
+from solver import TspSolution
 from config import get_db_connection, get_task_queue
 from tasks import run_optimization_job
 

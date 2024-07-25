@@ -1,5 +1,13 @@
+"""
+This file contains a proxy class to interact with the database.
+We are using Redis as the database for this example, but the implementation
+can be easily adapted to other databases, as the proxy class abstracts the
+database operations.
+"""
+
 import json
-from models import TspJobStatus, TspJobRequest, TspSolution
+from models import TspJobStatus, TspJobRequest
+from solver import TspSolution
 from uuid import UUID
 import redis
 from typing import Optional, List
