@@ -4629,7 +4629,7 @@ Let us quickly go through the components of the project:
 
 6. **Config**:
 
-   - `./app/sconfig.py`: This module provides configuration functions to set up
+   - `./app/config.py`: This module provides configuration functions to set up
      the database connection and task queue. By centralizing configuration, we
      ensure that other parts of the application do not need to manage connection
      details, making the codebase more modular and easier to maintain.
