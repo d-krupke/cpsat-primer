@@ -4602,10 +4602,10 @@ Let us quickly go through the components of the project:
 
 2. **Docker Environment**:
 
-   - **Dockerfile**: The Dockerfile specifies the Docker image and environment
+   - `Dockerfile`: The Dockerfile specifies the Docker image and environment
      setup for the API. It ensures that the application runs in a consistent
      environment across different machines.
-   - **docker-compose.yml**: This file configures the services required for the
+   - `docker-compose.yml`: This file configures the services required for the
      project, including the API, Redis, and worker instances. Docker Compose
      simplifies the process of managing multiple containers, ensuring they are
      correctly built and started in the right order. A simple
