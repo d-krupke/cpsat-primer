@@ -3815,20 +3815,20 @@ def solve_knapsack(
     model = cp_model.CpModel()
     n = len(weights)  # Number of items
     # Decision variables for items
-    x = [model.NewBoolVar(f"x_{i}") for i in range(n)]
+    x = [model.new_bool_var(f"x_{i}") for i in range(n)]
     # Capacity constraint
-    model.Add(sum(weights[i] * x[i] for i in range(n)) <= capacity)
+    model.add(sum(weights[i] * x[i] for i in range(n)) <= capacity)
     # Objective function to maximize value
-    model.Maximize(sum(values[i] * x[i] for i in range(n)))
+    model.maximize(sum(values[i] * x[i] for i in range(n)))
     # Solve the model
     solver = cp_model.CpSolver()
     solver.parameters.max_time_in_seconds = time_limit  # Solver time limit
     solver.parameters.relative_gap_limit = opt_tol  # Solver optimality tolerance
-    status = solver.Solve(model)
+    status = solver.solve(model)
     # Extract solution
     return (
         # Return indices of selected items
-        [i for i in range(n) if solver.Value(x[i])]
+        [i for i in range(n) if solver.value(x[i])]
         if status in [cp_model.OPTIMAL, cp_model.FEASIBLE]
         else []
     )
@@ -3883,11 +3883,11 @@ def solve_knapsack(
             "Min/Mean/Max value: %d/%.2f/%d", min(values), sum(values) / n, max(values)
         )
     # Decision variables for items
-    x = [model.NewBoolVar(f"x_{i}") for i in range(n)]
+    x = [model.new_bool_var(f"x_{i}") for i in range(n)]
     # Capacity constraint
-    model.Add(sum(weights[i] * x[i] for i in range(n)) <= capacity)
+    model.add(sum(weights[i] * x[i] for i in range(n)) <= capacity)
     # Objective function to maximize value
-    model.Maximize(sum(values[i] * x[i] for i in range(n)))
+    model.maximize(sum(values[i] * x[i] for i in range(n)))
     # Log the model
     _logger.debug("Model created with %d items", n)
     # Solve the model
@@ -3897,10 +3897,10 @@ def solve_knapsack(
     _logger.debug(
         "Starting the solution process with time limit %d seconds", time_limit
     )
-    status = solver.Solve(model)
+    status = solver.solve(model)
     # Extract solution
     selected_items = (
-        [i for i in range(n) if solver.Value(x[i])]
+        [i for i in range(n) if solver.value(x[i])]
         if status in [cp_model.OPTIMAL, cp_model.FEASIBLE]
         else []
     )
@@ -3918,7 +3918,8 @@ consider adding it to your code.
 > a handler that, e.g., waits for the tag `"Selected items: %s"` and then can
 > directly access the selected items, as the actual object is passed to the
 > handler (and not just the string). This can be very useful to gather
-> statistics or to visualize the search process.
+> statistics or to visualize the search process, without having to change the
+> (production) code.
 
 ### Custom Data Classes for Instances, Configurations, and Solutions
 
@@ -3952,12 +3953,12 @@ annotations. The changes include:
 
 ```python
 from ortools.sat.python import cp_model
-from pydantic import BaseModel, PositiveInt, List, NonNegativeFloat
+from pydantic import BaseModel, PositiveInt, NonNegativeFloat
 
 
 class KnapsackInstance(BaseModel):
-    weights: List[PositiveInt]  # the weight of each item
-    values: List[PositiveInt]  # the value of each item
+    weights: list[PositiveInt]  # the weight of each item
+    values: list[PositiveInt]  # the value of each item
     capacity: PositiveInt  # the capacity of the knapsack
 
     @model_validator(mode="after")
@@ -3974,8 +3975,8 @@ class KnapsackSolverConfig(BaseModel):
 
 
 class KnapsackSolution(BaseModel):
-    selected_items: List[int]  # Indices of the selected items
-    objective: int  # Objective value of the solution
+    selected_items: list[int]  # Indices of the selected items
+    objective: float  # Objective value of the solution
     upper_bound: float  # Upper bound of the solution
 
 
@@ -3984,18 +3985,21 @@ def solve_knapsack(
 ) -> KnapsackSolution:
     model = cp_model.CpModel()
     n = len(instance.weights)
-    x = [model.NewBoolVar(f"x_{i}") for i in range(n)]
-    model.Add(sum(instance.weights[i] * x[i] for i in range(n)) <= instance.capacity)
-    model.Maximize(sum(instance.values[i] * x[i] for i in range(n)))
+    x = [model.new_bool_var(f"x_{i}") for i in range(n)]
+    model.add(sum(instance.weights[i] * x[i] for i in range(n)) <= instance.capacity)
+    model.maximize(sum(instance.values[i] * x[i] for i in range(n)))
     solver = cp_model.CpSolver()
+    # Set solver parameters from the configuration
     solver.parameters.max_time_in_seconds = config.time_limit
     solver.parameters.relative_gap_limit = config.opt_tol
-    status = solver.Solve(model)
+    solver.parameters.log_search_progress = config.log_search_progress
+    # solve the model and return the solution
+    status = solver.solve(model)
     if status in [cp_model.OPTIMAL, cp_model.FEASIBLE]:
         return KnapsackSolution(
-            selected_items=[i for i in range(n) if solver.Value(x[i])],
-            objective=solver.ObjectiveValue(),
-            upper_bound=solver.BestObjectiveBound(),
+            selected_items=[i for i in range(n) if solver.value(x[i])],
+            objective=solver.objective_value,
+            upper_bound=solver.best_objective_bound,
         )
     return KnapsackSolution(selected_items=[], objective=0, upper_bound=0)
 ```
@@ -4014,18 +4018,24 @@ def solve_knapsack(
 - **Backward Compatibility**: Default values in data classes enable seamless
   integration of older configurations with new software versions, accommodating
   new parameters without disrupting existing setups.
+- **Type Hinting**: Type annotations in data classes provide a clear
+  specification of the expected data types, enhancing code readability and
+  enabling static type checkers to catch potential errors early.
 
-One challenge I often face is designing data classes to be as generic as
-possible so that they can be used with multiple solvers and remain compatible
-throughout various stages of the optimization process. For instance, a graph
-might be represented as an edge list, an adjacency matrix, or an adjacency list,
-each with its own pros and cons, complicating the decision of which format is
-optimal for all stages. However, converting between different data class formats
-is typically straightforward, often requiring only a few lines of code and
-having a negligible impact compared to the optimization process itself.
-Therefore, I recommend focusing on functionality with your current solver
-without overcomplicating this aspect. There is little harm in having to call a
-few convert functions because you created separate specialized data classes.
+> [!TIP]
+>
+> One challenge I often face is designing data classes to be as generic as
+> possible so that they can be used with multiple solvers and remain compatible
+> throughout various stages of the optimization process. For instance, a graph
+> might be represented as an edge list, an adjacency matrix, or an adjacency
+> list, each with its own pros and cons, complicating the decision of which
+> format is optimal for all stages. However, converting between different data
+> class formats is typically straightforward, often requiring only a few lines
+> of code and having a negligible impact compared to the optimization process
+> itself. Therefore, I recommend focusing on functionality with your current
+> solver without overcomplicating this aspect. There is little harm in having to
+> call a few convert functions because you created separate specialized data
+> classes.
 
 ### Solver Class
 
@@ -4047,7 +4057,7 @@ class KnapsackSolver:
         self.config = config
         self.model = cp_model.CpModel()
         self.n = len(instance.weights)
-        self.x = [self.model.NewBoolVar(f"x_{i}") for i in range(self.n)]
+        self.x = [self.model.new_bool_var(f"x_{i}") for i in range(self.n)]
         self._build_model()
         self.solver = cp_model.CpSolver()
 
@@ -4055,10 +4065,10 @@ class KnapsackSolver:
         used_weight = sum(
             weight * x_i for weight, x_i in zip(self.instance.weights, self.x)
         )
-        self.model.Add(used_weight <= self.instance.capacity)
+        self.model.add(used_weight <= self.instance.capacity)
 
     def _add_objective(self):
-        self.model.Maximize(
+        self.model.maximize(
             sum(value * x_i for value, x_i in zip(self.instance.values, self.x))
         )
 
@@ -4070,21 +4080,30 @@ class KnapsackSolver:
         self.solver.parameters.max_time_in_seconds = self.config.time_limit
         self.solver.parameters.relative_gap_limit = self.config.opt_tol
         self.solver.parameters.log_search_progress = self.config.log_search_progress
-        status = self.solver.Solve(self.model)
+        status = self.solver.solve(self.model)
         if status in [cp_model.OPTIMAL, cp_model.FEASIBLE]:
             return KnapsackSolution(
                 selected_items=[
-                    i for i in range(self.n) if self.solver.Value(self.x[i])
+                    i for i in range(self.n) if self.solver.value(self.x[i])
                 ],
-                objective=self.solver.ObjectiveValue(),
-                upper_bound=self.solver.BestObjectiveBound(),
+                objective=self.solver.objective_value,
+                upper_bound=self.solver.best_objective_bound,
             )
         return KnapsackSolution(
             selected_items=[], objective=0, upper_bound=float("inf")
         )
 
     def prohibit_combination(self, item_a: int, item_b: int):
-        self.model.Add(self.x[item_a] + self.x[item_b] <= 1)
+        """
+        Prohibit the combination of two items in the solution,
+        without having to know the actual model, e.g., if they
+        do not follow clean rules but after presenting the solution
+        to the user, the user decides that these two items should
+        not be packed together. After calling this method, you can
+        simply call `solve` again to get a new solution obeying
+        this constraint.
+        """
+        self.model.add(self.x[item_a] + self.x[item_b] <= 1)
 
 
 if __name__ == "__main__":
@@ -4106,9 +4125,148 @@ if __name__ == "__main__":
   invocations of the `solve` method. This allows for iterative refinement of the
   solution by adjusting constraints or solver parameters such as time limits and
   optimality tolerance.
-- **Direct Model and Solver Access**: Provides direct access to the model and
-  solver, enhancing flexibility for advanced operations and debugging, a
+- **Direct Model and Solver Access**: Provides direct member-access to the model
+  and solver, enhancing flexibility for advanced operations and debugging, a
   capability not exposed in the function-based approach.
+
+### Exchangeable Objective
+
+In the real world, you rarely have cleanly defined objectives. Often, there are
+multiple objectives of different priorities, and it is not clear how to combine
+them. For example, imagine the Knapsack problem represents a logistic problem
+where we want to transport as much of a valuable goods as possible in a single
+trip. Assuming that the value and weights of the goods are already determined,
+the first objective is to maximize the value of the packed goods. You compute
+the solution, present it, and get told that your solution provides a lot of
+value but it also really fills up the truck - could you maybe check if there is
+a solution of similar value that does not fill up the truck as much? It would be
+okay to loose like 5% of the value, if a it would visibly reduce the load.
+
+So, what we would like to do is to optimize in two rounds: First, we optimize
+the value under the hard weight constraint. Then, we add a constraint that the
+value needs to be at least 95% of the value of the first solution and exchange
+the objective to minimize the weight instead. The company can then decide which
+solution to take. Of course, there could be more rounds than two, exploring the
+Pareto front of the two objectives. You can also imagine that such problems can
+become much more complex than this simple example.
+
+One issue with this approach is that we do not want to create multiple models
+and starts from scratch for every round. We already have a solution that will
+also be close to the new solution, so we want to use this solution as a starting
+point. This is called warm-starting and is a common technique in optimization
+which can significantly reduce the time needed to find a solution. Additionally,
+not having to rebuild the model can also make the code a little bit faster but
+also more readable.
+
+The following code demonstrate how to build upon the previous solver class to
+support exchangeable objectives, including the ability to fix the current
+objective value to prevent degeneration and use the current solution as a hint.
+
+```python
+class MultiObjectiveKnapsackSolver:
+    def __init__(self, instance: KnapsackInstance, config: KnapsackSolverConfig):
+        self.instance = instance
+        self.config = config
+        self.model = cp_model.CpModel()
+        self.n = len(instance.weights)
+        self.x = [self.model.new_bool_var(f"x_{i}") for i in range(self.n)]
+        self._objective = 0
+        self._build_model()
+        self.solver = cp_model.CpSolver()
+
+    # ----------------------------------------
+    # Objective functions
+    # ----------------------------------------
+
+    def set_maximize_value_objective(self):
+        self._objective = sum(
+            value * x_i for value, x_i in zip(self.instance.values, self.x)
+        )
+        self.model.maximize(self._objective)
+
+    def set_minimize_weight_objective(self):
+        self._objective = sum(
+            weight * x_i for weight, x_i in zip(self.instance.weights, self.x)
+        )
+        self.model.minimize(self._objective)
+
+    def _set_solution_as_hint(self):
+        """
+        Set the current solution as a hint for the next solve.
+        Important: If you add constraints that are not satisfied by the current solution,
+        this is not always useful. It is primarily useful when you want to use this solution
+        as a starting point for another solve with a different objective function.
+        """
+        for i, v in enumerate(self.model.proto.variables):
+            v_ = self.model.get_int_var_from_proto_index(i)
+            # We are using the internal protobuf here, so future versions of OR-Tools
+            # might behave differently. Adding an assertion to verify (deactivate in production for speed).
+            assert v.name == v_.name, "Should be the same variable"
+            self.model.add_hint(v_, self.solver.value(v_))
+
+    def fix_current_objective(self, ratio: float = 1.0):
+        """
+        Fix the current objective value to not degenerate.
+        You can then exchange the objective function with another one,
+        while the value of the previous one is fixed.
+
+        These constraints will not violate the current solution, making hints
+        extremely useful.
+        """
+        if ratio == 1.0:
+            self.model.add(self._objective == self.solver.objective_value)
+        elif ratio > 1.0:
+            self.model.add(self._objective <= ceil(self.solver.objective_value * ratio))
+        else:
+            # If the ratio is less than 1, we have a maximization problem, thus, we
+            # need to lower bound.
+            self.model.add(
+                self._objective >= floor(self.solver.objective_value * ratio)
+            )
+
+    # ----------------------------------------
+    # Build and solve
+    # ----------------------------------------
+
+    def _add_constraints(self):
+        used_weight = sum(
+            weight * x_i for weight, x_i in zip(self.instance.weights, self.x)
+        )
+        self.model.add(used_weight <= self.instance.capacity)
+
+    def _build_model(self):
+        self._add_constraints()
+        self.set_maximize_value_objective()
+
+    def solve(self) -> KnapsackSolution:
+        self.solver.parameters.max_time_in_seconds = self.config.time_limit
+        self.solver.parameters.relative_gap_limit = self.config.opt_tol
+        self.solver.parameters.log_search_progress = self.config.log_search_progress
+        status = self.solver.solve(self.model)
+        if status in [cp_model.OPTIMAL, cp_model.FEASIBLE]:
+            # If we have a solution, we add it as a hint for the next solve.
+            self._set_solution_as_hint()
+            return KnapsackSolution(
+                selected_items=[
+                    i for i in range(self.n) if self.solver.value(self.x[i])
+                ],
+                objective=self.solver.objective_value,
+                upper_bound=self.solver.best_objective_bound,
+            )
+        return KnapsackSolution(
+            selected_items=[], objective=0, upper_bound=float("inf")
+        )
+```
+
+**Key Benefits:**
+
+- **Objective Flexibility**: The ability to exchange objectives and fix the
+  current objective value enhances the solver's adaptability to changing
+  requirements and constraints, enabling the exploration of multiple objectives
+  and trade-offs.
+- **Warm-Starting**: By using the current solution as a hint for the next solve,
+  the solver can leverage the existing solution to find a new one more quickly,
+  reducing the computational overhead and improving performance.
 
 ### Variable Containers
 
@@ -4130,13 +4288,13 @@ from typing import Generator, Tuple
 class _ItemVariables:
     def __init__(self, instance: KnapsackInstance, model: cp_model.CpModel):
         self.instance = instance
-        self.x = [model.NewBoolVar(f"x_{i}") for i in range(len(instance.weights))]
+        self.x = [model.new_bool_var(f"x_{i}") for i in range(len(instance.weights))]
 
     def __getitem__(self, i):
         return self.x[i]
 
     def extract_packed_items(self, solver: cp_model.CpSolver) -> List[int]:
-        return [i for i, x_i in enumerate(self.x) if solver.Value(x_i)]
+        return [i for i, x_i in enumerate(self.x) if solver.value(x_i)]
 
     def used_weight(self) -> cp_model.LinearExpr:
         return sum(weight * x_i for weight, x_i in zip(self.instance.weights, self.x))
@@ -4169,10 +4327,10 @@ class KnapsackSolver:
         self.solver = cp_model.CpSolver()
 
     def _add_constraints(self):
-        self.model.Add(self._item_vars.used_weight() <= self.instance.capacity)
+        self.model.add(self._item_vars.used_weight() <= self.instance.capacity)
 
     def _add_objective(self):
-        self.model.Maximize(self._item_vars.packed_value())
+        self.model.maximize(self._item_vars.packed_value())
 
     def _build_model(self):
         self._add_constraints()
@@ -4182,19 +4340,19 @@ class KnapsackSolver:
         self.solver.parameters.max_time_in_seconds = self.config.time_limit
         self.solver.parameters.relative_gap_limit = self.config.opt_tol
         self.solver.parameters.log_search_progress = self.config.log_search_progress
-        status = self.solver.Solve(self.model)
+        status = self.solver.solve(self.model)
         if status in [cp_model.OPTIMAL, cp_model.FEASIBLE]:
             return KnapsackSolution(
                 selected_items=self._item_vars.extract_packed_items(self.solver),
-                objective=self.solver.ObjectiveValue(),
-                upper_bound=self.solver.BestObjectiveBound(),
+                objective=self.solver.objective_value,
+                upper_bound=self.solver.best_objective_bound,
             )
         return KnapsackSolution(
             selected_items=[], objective=0, upper_bound=float("inf")
         )
 
     def prohibit_combination(self, item_a: int, item_b: int):
-        self.model.Add(self._item_vars[item_a] + self._item_vars[item_b] <= 1)
+        self.model.add(self._item_vars[item_a] + self._item_vars[item_b] <= 1)
 ```
 
 **Key Benefits:**
@@ -4236,9 +4394,9 @@ buy_3 = model.NewIntVar(0, 1_500, "buy_3")
 produce_1 = model.NewIntVar(0, 300, "produce_1")
 produce_2 = model.NewIntVar(0, 300, "produce_2")
 
-model.Add(produce_1 * requirements_1[0] + produce_2 * requirements_2[0] <= buy_1)
-model.Add(produce_1 * requirements_1[1] + produce_2 * requirements_2[1] <= buy_2)
-model.Add(produce_1 * requirements_1[2] + produce_2 * requirements_2[2] <= buy_3)
+model.add(produce_1 * requirements_1[0] + produce_2 * requirements_2[0] <= buy_1)
+model.add(produce_1 * requirements_1[1] + produce_2 * requirements_2[1] <= buy_2)
+model.add(produce_1 * requirements_1[2] + produce_2 * requirements_2[2] <= buy_3)
 
 # You can find this code it ./utils!
 from piecewise_functions import PiecewiseLinearFunction, PiecewiseLinearConstraint
@@ -4274,7 +4432,7 @@ x_gain_1 = PiecewiseLinearConstraint(model, produce_1, f_gain_1, upper_bound=Tru
 x_gain_2 = PiecewiseLinearConstraint(model, produce_2, f_gain_2, upper_bound=True)
 
 # Maximize the gain minus the costs
-model.Maximize(x_gain_1.y + x_gain_2.y - (x_costs_1.y + x_costs_2.y + x_costs_3.y))
+model.maximize(x_gain_1.y + x_gain_2.y - (x_costs_1.y + x_costs_2.y + x_costs_3.y))
 ```
 
 **Key Benefits:**
@@ -4295,12 +4453,12 @@ model.Maximize(x_gain_1.y + x_gain_2.y - (x_costs_1.y + x_costs_2.y + x_costs_3.
       f = PiecewiseLinearFunction(xs=[0, 10, 20], ys=[0, 10, 5])
       # Using the submodel
       c = PiecewiseLinearConstraint(model, x, f, upper_bound=True)
-      model.Maximize(c.y)
+      model.maximize(c.y)
       # Checking its behavior
       solver = cp_model.CpSolver()
-      assert solver.Solve(model) == cp_model.OPTIMAL
-      assert solver.Value(c.y) == 10
-      assert solver.Value(x) == 10
+      assert solver.solve(model) == cp_model.OPTIMAL
+      assert solver.value(c.y) == 10
+      assert solver.value(x) == 10
   ```
 - **Modularity**: Submodels allow for the encapsulation of complex logic into
   smaller, more manageable components, enhancing code organization and
@@ -4338,13 +4496,13 @@ computational overhead.
 class _ItemVariables:
     def __init__(self, instance: KnapsackInstance, model: cp_model.CpModel):
         self.instance = instance
-        self.x = [model.NewBoolVar(f"x_{i}") for i in range(len(instance.weights))]
+        self.x = [model.new_bool_var(f"x_{i}") for i in range(len(instance.weights))]
 
     def __getitem__(self, i):
         return self.x[i]
 
     def extract_packed_items(self, solver: cp_model.CpSolver) -> List[int]:
-        return [i for i, x_i in enumerate(self.x) if solver.Value(x_i)]
+        return [i for i, x_i in enumerate(self.x) if solver.value(x_i)]
 
     def used_weight(self) -> cp_model.LinearExpr:
         return sum(weight * x_i for weight, x_i in zip(self.instance.weights, self.x))
@@ -4382,8 +4540,8 @@ class _CombiVariables:
     def __getitem__(self, i, j):
         i, j = min(i, j), max(i, j)
         if (i, j) not in self.bonus:
-            self.bonus[(i, j)] = self.model.NewBoolVar(f"bonus_{i}_{j}")
-            self.model.Add(
+            self.bonus[(i, j)] = self.model.new_bool_var(f"bonus_{i}_{j}")
+            self.model.add(
                 self.item_vars[i] + self.item_vars[j] >= 2 * self.bonus[(i, j)]
             )
         return self.bonus[(i, j)]
@@ -4400,16 +4558,16 @@ class KnapsackSolver:
         self.solver = cp_model.CpSolver()
 
     def solve(self) -> KnapsackSolution:
-        self.model.Maximize(self._objective)
+        self.model.maximize(self._objective)
         self.solver.parameters.max_time_in_seconds = self.config.time_limit
         self.solver.parameters.relative_gap_limit = self.config.opt_tol
         self.solver.parameters.log_search_progress = self.config.log_search_progress
-        status = self.solver.Solve(self.model)
+        status = self.solver.solve(self.model)
         if status in [cp_model.OPTIMAL, cp_model.FEASIBLE]:
             return KnapsackSolution(
                 selected_items=self._item_vars.extract_packed_items(self.solver),
-                objective=self.solver.ObjectiveValue(),
-                upper_bound=self.solver.BestObjectiveBound(),
+                objective=self.solver.objective_value,
+                upper_bound=self.solver.best_objective_bound,
             )
         return KnapsackSolution(
             selected_items=[], objective=0, upper_bound=float("inf")
