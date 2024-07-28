@@ -4131,34 +4131,32 @@ if __name__ == "__main__":
 
 ### Exchangeable Objective
 
-In the real world, objectives are often not clearly defined. There are typically
-multiple objectives with varying priorities, making it challenging to combine
-them. Consider the Knapsack problem as an example of a logistics problem where
-we aim to transport as many valuable goods as possible in a single trip. Given
-the values and weights of the goods, the primary objective is to maximize the
-value of the packed goods. After computing the solution and presenting it, you
-might be informed that although the solution provides significant value, it also
-fills the truck completely. You might then be asked to find a solution of
-similar value that reduces the truck's load, accepting a 5% decrease in value
-for a visibly reduced load.
+In real-world scenarios, objectives are often not clearly defined. Typically,
+there are multiple objectives with different priorities, making it challenging
+to combine them. Consider the Knapsack problem, representing a logistics issue
+where we aim to transport the maximum value of goods in a single trip. Given the
+values and weights of the goods, our primary objective is to maximize the packed
+goods' value. However, after computing and presenting the solution, we might be
+asked to find an alternative solution that does not fill the truck as much, even
+if it means accepting up to a 5% decrease in value.
 
-To address this, we can optimize in two rounds: first, we maximize the value
-under the weight constraint. Then, we add a constraint requiring the value to be
-at least 95% of the initial solution's value and change the objective to
-minimize the weight. This process can continue through multiple rounds,
-exploring the Pareto front of the two objectives. Such problems can become more
-complex than this straightforward example.
+To handle this, we can optimize in two phases. First, we maximize the value
+under the weight constraint. Next, we add a constraint that the value must be at
+least 95% of the initial solution's value and change the objective to minimize
+the weight. This iterative process can continue through multiple phases,
+exploring the Pareto front of the two objectives. More complex problems can be
+tackled using similar approaches.
 
-A challenge with this approach is avoiding the creation of multiple models and
-starting from scratch for each round. Since we already have a solution close to
-the new one, we want to use it as a starting point. This technique, called
-warm-starting, is common in optimization and can significantly reduce the time
-needed to find a solution. Additionally, not having to rebuild the model can
-improve code readability and performance.
+A challenge with this method is avoiding the creation of multiple models and
+restarting from scratch in each phase. Since we have a solution close to the new
+one, we can use it as a starting point. This technique, known as warm-starting,
+is common in optimization and significantly reduces the time needed to find a
+solution. Additionally, reusing the model can improve code readability and
+performance.
 
-The following code demonstrates how to extend the previous solver class to
-support exchangeable objectives. It includes fixing the current objective value
-to prevent degeneration and using the current solution as a hint.
+The following code demonstrates how to extend a solver class to support
+exchangeable objectives. It includes fixing the current objective value to
+prevent degeneration and using the current solution as a hint.
 
 ```python
 class MultiObjectiveKnapsackSolver:
@@ -4172,37 +4170,29 @@ class MultiObjectiveKnapsackSolver:
         self._build_model()
         self.solver = cp_model.CpSolver()
 
-    # Objective functions
-
     def set_maximize_value_objective(self):
+        """Set the objective to maximize the value of the packed goods."""
         self._objective = sum(
             value * x_i for value, x_i in zip(self.instance.values, self.x)
         )
         self.model.maximize(self._objective)
 
     def set_minimize_weight_objective(self):
+        """Set the objective to minimize the weight of the packed goods."""
         self._objective = sum(
             weight * x_i for weight, x_i in zip(self.instance.weights, self.x)
         )
         self.model.minimize(self._objective)
 
     def _set_solution_as_hint(self):
-        """
-        Set the current solution as a hint for the next solve.
-        This is useful primarily when using the current solution
-        as a starting point for another solve with a different objective function.
-        """
+        """Use the current solution as a hint for the next solve."""
         for i, v in enumerate(self.model.proto.variables):
             v_ = self.model.get_int_var_from_proto_index(i)
             assert v.name == v_.name, "Variable names should match"
             self.model.add_hint(v_, self.solver.value(v_))
 
     def fix_current_objective(self, ratio: float = 1.0):
-        """
-        Fix the current objective value to prevent degeneration.
-        This allows exchanging the objective function while preserving the value
-        of the previous one.
-        """
+        """Fix the current objective value to prevent degeneration."""
         if ratio == 1.0:
             self.model.add(self._objective == self.solver.objective_value)
         elif ratio > 1.0:
@@ -4212,19 +4202,20 @@ class MultiObjectiveKnapsackSolver:
                 self._objective >= floor(self.solver.objective_value * ratio)
             )
 
-    # Build and solve
-
     def _add_constraints(self):
+        """Add the weight constraint to the model."""
         used_weight = sum(
             weight * x_i for weight, x_i in zip(self.instance.weights, self.x)
         )
         self.model.add(used_weight <= self.instance.capacity)
 
     def _build_model(self):
+        """Build the initial model with constraints and objective."""
         self._add_constraints()
         self.set_maximize_value_objective()
 
     def solve(self) -> KnapsackSolution:
+        """Solve the knapsack problem and return the solution."""
         self.solver.parameters.max_time_in_seconds = self.config.time_limit
         self.solver.parameters.relative_gap_limit = self.config.opt_tol
         self.solver.parameters.log_search_progress = self.config.log_search_progress
