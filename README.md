@@ -4153,6 +4153,13 @@ The following code demonstrates how to extend a solver class to support
 exchangeable objectives. It includes fixing the current objective value to
 prevent degeneration and using the current solution as a hint.
 
+**Implemented Changes:** We created a member `_objective` to store the current
+objective function and added methods to set the objective to maximize value or
+minimize weight. We also introduced methods to set the solution as a hint for
+the next solve which will automatically be called if the `solve` found a
+feasible solution. To not degenerate on previous objectives, we added a method
+to fix the current objective value based on some ratio.
+
 ```python
 class MultiObjectiveKnapsackSolver:
     def __init__(self, instance: KnapsackInstance, config: KnapsackSolverConfig):
@@ -4229,6 +4236,20 @@ class MultiObjectiveKnapsackSolver:
         )
 ```
 
+We can use the `MultiObjectiveKnapsackSolver` class as follows:
+
+```python
+config = KnapsackSolverConfig(time_limit=15, opt_tol=0.01, log_search_progress=True)
+solver = MultiObjectiveKnapsackSolver(instance, config)
+solution_1 = solver.solve()
+
+# maintain at least 95% of the current objective value
+solver.fix_current_objective(0.95)
+# change the objective to minimize the weight
+solver.set_minimize_weight_objective()
+solution_2 = solver.solve()
+```
+
 **Key Benefits:**
 
 - **Objective Flexibility**: The ability to exchange objectives and fix the
@@ -4241,16 +4262,29 @@ class MultiObjectiveKnapsackSolver:
 
 ### Variable Containers
 
-Modularization is crucial in software engineering for maintaining and scaling
-complex codebases. In the context of optimization models, modularizing by
-separating variables from the core model logic is a strategic approach. This
-separation facilitates easier management of variables and provides methods for
-more structured interactions with them.
+In complex models, variables play a crucial role and can span the entire model.
+While managing variables as a list or dictionary may suffice for simple models,
+this approach becomes cumbersome and error-prone as the model's complexity
+increases. A single mistake in indexing can introduce subtle errors, potentially
+leading to incorrect results that are difficult to trace.
 
-**Implemented Changes:** We introduce the `_ItemVariables` class, which acts as
-a container for the decision variables associated with the knapsack items. This
-class not only creates these variables but also offers several utility methods
-to interact with them, improving the clarity and maintainability of the code.
+As variables form the foundation of the model, refactoring them becomes more
+challenging as the model grows. Therefore, it is crucial to establish a robust
+management system early on. Encapsulating variables in a dedicated class ensures
+that they are always accessed correctly. This approach also allows for the easy
+addition of new variables or modifications in their management without altering
+the entire model.
+
+Furthermore, incorporating clear query methods helps maintain the readability
+and manageability of constraints. Readable constraints, free from complex
+variable access patterns, ensure that the constraints accurately reflect the
+intended model.
+
+**Implemented Changes:** We introduce the `_ItemVariables` class to the
+`KnapsackSolver`, which acts as a container for the decision variables
+associated with the knapsack items. This class not only creates these variables
+but also offers several utility methods to interact with them, improving the
+clarity and maintainability of the code.
 
 ```python
 from typing import Generator, Tuple
