@@ -387,36 +387,34 @@ if __name__ == "__main__":
 
 ### Exchangeable Objective
 
-In the real world, you rarely have cleanly defined objectives. Often, there are
-multiple objectives of different priorities, and it is not clear how to combine
-them. For example, imagine the Knapsack problem represents a logistic problem
-where we want to transport as much of a valuable goods as possible in a single
-trip. Assuming that the value and weights of the goods are already determined,
-the first objective is to maximize the value of the packed goods. You compute
-the solution, present it, and get told that your solution provides a lot of
-value but it also really fills up the truck - could you maybe check if there is
-a solution of similar value that does not fill up the truck as much? It would be
-okay to loose like 5% of the value, if a it would visibly reduce the load.
+In the real world, objectives are often not clearly defined. There are typically
+multiple objectives with varying priorities, making it challenging to combine
+them. Consider the Knapsack problem as an example of a logistics problem where
+we aim to transport as many valuable goods as possible in a single trip. Given
+the values and weights of the goods, the primary objective is to maximize the
+value of the packed goods. After computing the solution and presenting it, you
+might be informed that although the solution provides significant value, it also
+fills the truck completely. You might then be asked to find a solution of
+similar value that reduces the truck's load, accepting a 5% decrease in value
+for a visibly reduced load.
 
-So, what we would like to do is to optimize in two rounds: First, we optimize
-the value under the hard weight constraint. Then, we add a constraint that the
-value needs to be at least 95% of the value of the first solution and exchange
-the objective to minimize the weight instead. The company can then decide which
-solution to take. Of course, there could be more rounds than two, exploring the
-Pareto front of the two objectives. You can also imagine that such problems can
-become much more complex than this simple example.
+To address this, we can optimize in two rounds: first, we maximize the value
+under the weight constraint. Then, we add a constraint requiring the value to be
+at least 95% of the initial solution's value and change the objective to
+minimize the weight. This process can continue through multiple rounds,
+exploring the Pareto front of the two objectives. Such problems can become more
+complex than this straightforward example.
 
-One issue with this approach is that we do not want to create multiple models
-and starts from scratch for every round. We already have a solution that will
-also be close to the new solution, so we want to use this solution as a starting
-point. This is called warm-starting and is a common technique in optimization
-which can significantly reduce the time needed to find a solution. Additionally,
-not having to rebuild the model can also make the code a little bit faster but
-also more readable.
+A challenge with this approach is avoiding the creation of multiple models and
+starting from scratch for each round. Since we already have a solution close to
+the new one, we want to use it as a starting point. This technique, called
+warm-starting, is common in optimization and can significantly reduce the time
+needed to find a solution. Additionally, not having to rebuild the model can
+improve code readability and performance.
 
-The following code demonstrate how to build upon the previous solver class to
-support exchangeable objectives, including the ability to fix the current
-objective value to prevent degeneration and use the current solution as a hint.
+The following code demonstrates how to extend the previous solver class to
+support exchangeable objectives. It includes fixing the current objective value
+to prevent degeneration and using the current solution as a hint.
 
 ```python
 class MultiObjectiveKnapsackSolver:
@@ -430,9 +428,7 @@ class MultiObjectiveKnapsackSolver:
         self._build_model()
         self.solver = cp_model.CpSolver()
 
-    # ----------------------------------------
     # Objective functions
-    # ----------------------------------------
 
     def set_maximize_value_objective(self):
         self._objective = sum(
@@ -449,40 +445,30 @@ class MultiObjectiveKnapsackSolver:
     def _set_solution_as_hint(self):
         """
         Set the current solution as a hint for the next solve.
-        Important: If you add constraints that are not satisfied by the current solution,
-        this is not always useful. It is primarily useful when you want to use this solution
+        This is useful primarily when using the current solution
         as a starting point for another solve with a different objective function.
         """
         for i, v in enumerate(self.model.proto.variables):
             v_ = self.model.get_int_var_from_proto_index(i)
-            # We are using the internal protobuf here, so future versions of OR-Tools
-            # might behave differently. Adding an assertion to verify (deactivate in production for speed).
-            assert v.name == v_.name, "Should be the same variable"
+            assert v.name == v_.name, "Variable names should match"
             self.model.add_hint(v_, self.solver.value(v_))
 
     def fix_current_objective(self, ratio: float = 1.0):
         """
-        Fix the current objective value to not degenerate.
-        You can then exchange the objective function with another one,
-        while the value of the previous one is fixed.
-
-        These constraints will not violate the current solution, making hints
-        extremely useful.
+        Fix the current objective value to prevent degeneration.
+        This allows exchanging the objective function while preserving the value
+        of the previous one.
         """
         if ratio == 1.0:
             self.model.add(self._objective == self.solver.objective_value)
         elif ratio > 1.0:
             self.model.add(self._objective <= ceil(self.solver.objective_value * ratio))
         else:
-            # If the ratio is less than 1, we have a maximization problem, thus, we
-            # need to lower bound.
             self.model.add(
                 self._objective >= floor(self.solver.objective_value * ratio)
             )
 
-    # ----------------------------------------
     # Build and solve
-    # ----------------------------------------
 
     def _add_constraints(self):
         used_weight = sum(
@@ -500,7 +486,6 @@ class MultiObjectiveKnapsackSolver:
         self.solver.parameters.log_search_progress = self.config.log_search_progress
         status = self.solver.solve(self.model)
         if status in [cp_model.OPTIMAL, cp_model.FEASIBLE]:
-            # If we have a solution, we add it as a hint for the next solve.
             self._set_solution_as_hint()
             return KnapsackSolution(
                 selected_items=[
@@ -522,7 +507,7 @@ class MultiObjectiveKnapsackSolver:
   and trade-offs.
 - **Warm-Starting**: By using the current solution as a hint for the next solve,
   the solver can leverage the existing solution to find a new one more quickly,
-  reducing the computational overhead and improving performance.
+  reducing computational overhead and improving performance.
 
 ### Variable Containers
 
