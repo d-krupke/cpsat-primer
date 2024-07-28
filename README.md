@@ -3756,13 +3756,6 @@ solution_fingerprint: 0xf10c47f1901c2c16  # Useful to check if two runs result i
 ## Coding Patterns for Optimization Problems
 
 
-> [!WARNING]
->
-> CP-SAT 9.9 recently changed its API to be more consistent with the commonly
-> used Python style. Instead of `NewIntVar`, you can now also use `new_int_var`.
-> The following part of the primer still uses the old style and will be updated
-> soon.
-
 In this section, we will explore various coding patterns that are essential for
 structuring implementations for optimization problems using CP-SAT. While we
 will not delve into the modeling of specific problems, our focus will be on
@@ -4365,12 +4358,12 @@ requirements_2 = (2, 1, 3)
 from ortools.sat.python import cp_model
 
 model = cp_model.CpModel()
-buy_1 = model.NewIntVar(0, 1_500, "buy_1")
-buy_2 = model.NewIntVar(0, 1_500, "buy_2")
-buy_3 = model.NewIntVar(0, 1_500, "buy_3")
+buy_1 = model.new_int_var(0, 1_500, "buy_1")
+buy_2 = model.new_int_var(0, 1_500, "buy_2")
+buy_3 = model.new_int_var(0, 1_500, "buy_3")
 
-produce_1 = model.NewIntVar(0, 300, "produce_1")
-produce_2 = model.NewIntVar(0, 300, "produce_2")
+produce_1 = model.new_int_var(0, 300, "produce_1")
+produce_2 = model.new_int_var(0, 300, "produce_2")
 
 model.add(produce_1 * requirements_1[0] + produce_2 * requirements_2[0] <= buy_1)
 model.add(produce_1 * requirements_1[1] + produce_2 * requirements_2[1] <= buy_2)
@@ -4427,7 +4420,7 @@ model.maximize(x_gain_1.y + x_gain_2.y - (x_costs_1.y + x_costs_2.y + x_costs_3.
       # Defining the input. Note that for some problems it may be
       # easier to fix variables to a specific value and then just
       # test feasibility.
-      x = model.NewIntVar(0, 20, "x")
+      x = model.new_int_var(0, 20, "x")
       f = PiecewiseLinearFunction(xs=[0, 10, 20], ys=[0, 10, 5])
       # Using the submodel
       c = PiecewiseLinearConstraint(model, x, f, upper_bound=True)
@@ -6114,10 +6107,10 @@ publication purposes.
 
 Given the breadth and complexity of benchmarking, our focus will be on the
 basics, particularly through the lens of the Traveling Salesman Problem (TSP),
-as previously discussed in the `AddCircuit` section. We refer to the different
+as previously discussed in the `add_circuit` section. We refer to the different
 model implementations as 'solvers', and we'll explore four specific types:
 
-- A solver employing the `AddCircuit` approach.
+- A solver employing the `add_circuit` approach.
 - A solver based on the Miller-Tucker-Zemlin formulation.
 - A solver utilizing the Dantzig-Fulkerson-Johnson formulation with iterative
   addition of subtour constraints until a connected tour is achieved.
@@ -6161,7 +6154,7 @@ insights.
   problem sizes, potential challenges, and narrowing down hyperparameter search
   spaces.
 
-For instance, in the `AddCircuit`-section, an exploratory study helped us
+For instance, in the `add_circuit`-section, an exploratory study helped us
 determine that our focus should be on instances with 100 to 200 nodes. If you
 encounter fundamental issues with your model at this stage, it’s advisable to
 address these before proceeding to workhorse studies.
@@ -6435,7 +6428,7 @@ In contrast, the cactus plot still provides a clear and comprehensive
 perspective of various model performances. An interesting observation we can
 clearly see in it, is the diminished capability of the "Iterative Dantzig" model
 in solving instances, and a closer performance alignment between the
-`AddCircuit` and Gurobi models.
+`add_circuit` and Gurobi models.
 
 | ![Effective Cactus Plot](https://github.com/d-krupke/cpsat-primer/blob/main/evaluations/tsp/2023-11-18_tsplib/PUBLIC_DATA/cactus_plot_opt_tol.png) |
 | :------------------------------------------------------------------------------------------------------------------------------------------------: |
@@ -6445,7 +6438,7 @@ However, since cactus plots do not offer insights into individual instances,
 it's beneficial to complement them with a detailed table of results for the
 specific model you are focusing on. This approach ensures a more nuanced
 understanding of model performance across varied instances. The following table
-provides the results for the `AddCircuit`-model.
+provides the results for the `add_circuit`-model.
 
 | Instance | # nodes | runtime | lower bound | objective | opt. gap |
 | :------- | ------: | ------: | ----------: | --------: | -------: |

@@ -10,13 +10,6 @@
 
 <!-- STOP_SKIP_FOR_README -->
 
-> [!WARNING]
->
-> CP-SAT 9.9 recently changed its API to be more consistent with the commonly
-> used Python style. Instead of `NewIntVar`, you can now also use `new_int_var`.
-> The following part of the primer still uses the old style and will be updated
-> soon.
-
 In this section, we will explore various coding patterns that are essential for
 structuring implementations for optimization problems using CP-SAT. While we
 will not delve into the modeling of specific problems, our focus will be on
@@ -619,12 +612,12 @@ requirements_2 = (2, 1, 3)
 from ortools.sat.python import cp_model
 
 model = cp_model.CpModel()
-buy_1 = model.NewIntVar(0, 1_500, "buy_1")
-buy_2 = model.NewIntVar(0, 1_500, "buy_2")
-buy_3 = model.NewIntVar(0, 1_500, "buy_3")
+buy_1 = model.new_int_var(0, 1_500, "buy_1")
+buy_2 = model.new_int_var(0, 1_500, "buy_2")
+buy_3 = model.new_int_var(0, 1_500, "buy_3")
 
-produce_1 = model.NewIntVar(0, 300, "produce_1")
-produce_2 = model.NewIntVar(0, 300, "produce_2")
+produce_1 = model.new_int_var(0, 300, "produce_1")
+produce_2 = model.new_int_var(0, 300, "produce_2")
 
 model.add(produce_1 * requirements_1[0] + produce_2 * requirements_2[0] <= buy_1)
 model.add(produce_1 * requirements_1[1] + produce_2 * requirements_2[1] <= buy_2)
@@ -681,7 +674,7 @@ model.maximize(x_gain_1.y + x_gain_2.y - (x_costs_1.y + x_costs_2.y + x_costs_3.
       # Defining the input. Note that for some problems it may be
       # easier to fix variables to a specific value and then just
       # test feasibility.
-      x = model.NewIntVar(0, 20, "x")
+      x = model.new_int_var(0, 20, "x")
       f = PiecewiseLinearFunction(xs=[0, 10, 20], ys=[0, 10, 5])
       # Using the submodel
       c = PiecewiseLinearConstraint(model, x, f, upper_bound=True)

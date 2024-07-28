@@ -25,10 +25,10 @@ publication purposes.
 
 Given the breadth and complexity of benchmarking, our focus will be on the
 basics, particularly through the lens of the Traveling Salesman Problem (TSP),
-as previously discussed in the `AddCircuit` section. We refer to the different
+as previously discussed in the `add_circuit` section. We refer to the different
 model implementations as 'solvers', and we'll explore four specific types:
 
-- A solver employing the `AddCircuit` approach.
+- A solver employing the `add_circuit` approach.
 - A solver based on the Miller-Tucker-Zemlin formulation.
 - A solver utilizing the Dantzig-Fulkerson-Johnson formulation with iterative
   addition of subtour constraints until a connected tour is achieved.
@@ -72,7 +72,7 @@ insights.
   problem sizes, potential challenges, and narrowing down hyperparameter search
   spaces.
 
-For instance, in the `AddCircuit`-section, an exploratory study helped us
+For instance, in the `add_circuit`-section, an exploratory study helped us
 determine that our focus should be on instances with 100 to 200 nodes. If you
 encounter fundamental issues with your model at this stage, it’s advisable to
 address these before proceeding to workhorse studies.
@@ -346,7 +346,7 @@ In contrast, the cactus plot still provides a clear and comprehensive
 perspective of various model performances. An interesting observation we can
 clearly see in it, is the diminished capability of the "Iterative Dantzig" model
 in solving instances, and a closer performance alignment between the
-`AddCircuit` and Gurobi models.
+`add_circuit` and Gurobi models.
 
 | ![Effective Cactus Plot](https://github.com/d-krupke/cpsat-primer/blob/main/evaluations/tsp/2023-11-18_tsplib/PUBLIC_DATA/cactus_plot_opt_tol.png) |
 | :------------------------------------------------------------------------------------------------------------------------------------------------: |
@@ -356,7 +356,7 @@ However, since cactus plots do not offer insights into individual instances,
 it's beneficial to complement them with a detailed table of results for the
 specific model you are focusing on. This approach ensures a more nuanced
 understanding of model performance across varied instances. The following table
-provides the results for the `AddCircuit`-model.
+provides the results for the `add_circuit`-model.
 
 | Instance | # nodes | runtime | lower bound | objective | opt. gap |
 | :------- | ------: | ------: | ----------: | --------: | -------: |
