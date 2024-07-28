@@ -648,6 +648,8 @@ model.add_hint(y, 2)  # Suggest that y will probably be 2
 
 For more examples, refer to
 [the official example](https://github.com/google/or-tools/blob/stable/ortools/sat/samples/solution_hinting_sample_sat.py).
+We will also see how to utilize hints for multi-objective optimization in the
+next chapter.
 
 > [!TIP]
 >
