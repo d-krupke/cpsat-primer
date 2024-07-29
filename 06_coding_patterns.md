@@ -1,5 +1,7 @@
 <!-- EDIT THIS PART VIA 06_coding_patterns.md -->
 
+# Part 2: Advanced Topics
+
 <a name="06-coding-patterns"></a>
 
 ## Coding Patterns for Optimization Problems

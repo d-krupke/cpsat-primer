@@ -41,49 +41,38 @@ competitive for many problems and sometimes even superior.
 
 ### Content
 
-<!-- Content -->
+Whether you are from the MIP community seeking alternatives or CP-SAT is your
+first optimization solver, this book will guide you through the fundamentals of
+CP-SAT in the first part, demonstrating all its features. The second part will
+equip you with the skills needed to build and deploy optimization algorithms
+using CP-SAT.
 
-This unofficial primer shall help you use and understand this powerful tool,
-especially if you are coming from the
-[Mixed Integer Linear Programming](https://en.wikipedia.org/wiki/Integer_programming)-community,
-as it may prove useful in cases where Branch and Bound performs poorly. It is
-split into two parts: The first part covers the basics of CP-SAT, while the
-second part delves into more advanced topics.
+The first part introduces the fundamentals of CP-SAT, starting with a chapter on
+installation. This chapter guides you through setting up CP-SAT and outlines the
+necessary hardware requirements. The next chapter provides a simple example of
+using CP-SAT, explaining the mathematical notation and its approximation in
+Python with overloaded operators. You will then progress to basic modeling,
+learning how to create variables, objectives, and fundamental constraints in
+CP-SAT.
 
-<!-- Content first part -->
+Following this, a chapter on advanced modeling will teach you how to handle
+complex constraints, such as circuit constraints and intervals, with practical
+examples. Another chapter discusses specifying CP-SAT's behavior, including
+setting time limits and using parallelization. You will also find a chapter on
+interpreting CP-SAT logs, which helps you understand how well CP-SAT is managing
+your problem. Additionally, there is an overview of the underlying techniques
+used in CP-SAT. The first part concludes with a chapter comparing CP-SAT with
+other optimization techniques and tools, providing a broader context.
 
-The first part is fully focused on the basics of CP-SAT. The chapter
-[Installation](#01-installation) tells you how to install CP-SAT and what
-hardware requirements you need. The chapter [Example](#02-example) gives a short
-example of how to use CP-SAT, as well as a short detour to the mathematical
-notation and how it is approximated in Python using overloaded operators. The
-chapter [Basic Modeling](#04-modelling) explains how to create variables,
-objectives, and the fundamental constraints in CP-SAT. The chapter
-[Advanced Modeling](#04B-advanced-modelling) shows how to model more complex
-constraints, such as circuit constraints and intervals, and gives examples of
-how to use them. The chapter [Parameters](#05-parameters) explains how to
-specify CP-SAT's behavior, such as time limits and parallelization. The chapter
-[Understanding the Log](#understanding-the-log) explains how to interpret the
-log of CP-SAT to understand how CP-SAT is dealing with your problem. The chapter
-[How does it work?](#07-under-the-hood) gives a short overview and pointers on
-the underlying techniques of CP-SAT. Finally, the chapter
-[Alternatives](#03-big-picture) gives an overview of the different optimization
-techniques and tools available, putting CP-SAT into context.
-
-<!-- Content second part -->
-
-The second part covers more advanced topics, which are rather focussed on
-general skills such as coding patterns and benchmarking, than specific CP-SAT
-features. The chapter [Coding Patterns](#06-coding-patterns) gives some basic
-design patterns for creating maintainable algorithms with CP-SAT. The chapter
-[Building an Optimization API](#building_an_optimization_api) shows how to
-provide your optimization algorithm as a service. The chapter
-[Large Neighborhood Search](#09-lns) shows how to build a powerful heuristic
-using CP-SAT, when the problem is too difficult or too large to be solved
-directly. The chapter [Benchmarking your Model](#08-benchmarking) shows how to
-benchmark your model and how to interpret the results.
-
-<!-- Target Audience -->
+The second part delves into more advanced topics, focusing on general skills
+like coding patterns and benchmarking rather than specific CP-SAT features. A
+chapter on coding patterns offers basic design patterns for creating
+maintainable algorithms with CP-SAT. Another chapter explains how to provide
+your optimization algorithm as a service by building an optimization API. There
+is also a chapter on developing powerful heuristics using CP-SAT for
+particularly difficult or large problems. The second part concludes with a
+chapter on benchmarking, offering guidance on how to scientifically benchmark
+your model and interpret the results.
 
 ### Target Audience
 

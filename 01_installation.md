@@ -1,5 +1,7 @@
 <!-- EDIT THIS PART VIA 01_installation.md -->
 
+# Part 1: The Basics
+
 <a name="01-installation"></a>
 
 ## Installation
