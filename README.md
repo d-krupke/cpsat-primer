@@ -9,6 +9,8 @@
 
 _By [Dominik Krupke](https://krupke.cc), TU Braunschweig_
 
+<!-- Introduction Paragraph --->
+
 Many [combinatorially difficult](https://en.wikipedia.org/wiki/NP-hardness)
 optimization problems can, despite their proven theoretical hardness, be solved
 reasonably well in practice. The most successful approach is to use
@@ -36,10 +38,95 @@ than a few thousand variables and constraints. However, the relatively new
 the weaknesses and provides a viable alternative to MIP-solvers, being
 competitive for many problems and sometimes even superior.
 
+### Content
+
+<!-- Content -->
+
 This unofficial primer shall help you use and understand this powerful tool,
 especially if you are coming from the
 [Mixed Integer Linear Programming](https://en.wikipedia.org/wiki/Integer_programming)-community,
-as it may prove useful in cases where Branch and Bound performs poorly.
+as it may prove useful in cases where Branch and Bound performs poorly. It is
+split into two parts: The first part covers the basics of CP-SAT, while the
+second part delves into more advanced topics.
+
+<!-- Content first part -->
+
+The first part is fully focused on the basics of CP-SAT. The chapter
+[Installation](#01-installation) tells you how to install CP-SAT and what
+hardware requirements you need. The chapter [Example](#02-example) gives a short
+example of how to use CP-SAT, as well as a short detour to the mathematical
+notation and how it is approximated in Python using overloaded operators. The
+chapter [Basic Modeling](#04-modelling) explains how to create variables,
+objectives, and the fundamental constraints in CP-SAT. The chapter
+[Advanced Modeling](#04B-advanced-modelling) shows how to model more complex
+constraints, such as circuit constraints and intervals, and gives examples of
+how to use them. The chapter [Parameters](#05-parameters) explains how to
+specify CP-SAT's behavior, such as time limits and parallelization. The chapter
+[Understanding the Log](#understanding-the-log) explains how to interpret the
+log of CP-SAT to understand how CP-SAT is dealing with your problem. The chapter
+[How does it work?](#07-under-the-hood) gives a short overview and pointers on
+the underlying techniques of CP-SAT. Finally, the chapter
+[Alternatives](#03-big-picture) gives an overview of the different optimization
+techniques and tools available, putting CP-SAT into context.
+
+<!-- Content second part -->
+
+The second part covers more advanced topics, which are rather focussed on
+general skills such as coding patterns and benchmarking, than specific CP-SAT
+features. The chapter [Coding Patterns](#06-coding-patterns) gives some basic
+design patterns for creating maintainable algorithms with CP-SAT. The chapter
+[Building an Optimization API](#building_an_optimization_api) shows how to
+provide your optimization algorithm as a service. The chapter
+[Large Neighborhood Search](#09-lns) shows how to build a powerful heuristic
+using CP-SAT, when the problem is too difficult or too large to be solved
+directly. The chapter [Benchmarking your Model](#08-benchmarking) shows how to
+benchmark your model and how to interpret the results.
+
+<!-- Target Audience -->
+
+### Target Audience
+
+People (especially my computer science students at TU Braunschweig) with some
+background in
+[integer programming](https://en.wikipedia.org/wiki/Integer_programming)
+/[linear optimization](https://en.wikipedia.org/wiki/Linear_programming), who
+would like to know an actual viable alternative to
+[Branch and Cut](https://en.wikipedia.org/wiki/Branch_and_cut). However, I try
+to make it understandable for anyone interested in
+[combinatorial optimization](https://en.wikipedia.org/wiki/Combinatorial_optimization).
+
+### Table of Content
+
+**Part 1: The Basics**
+
+1. [Installation](#01-installation): Quick installation guide.
+2. [Example](#02-example): A short example, showing the usage of CP-SAT.
+3. [Basic Modeling](#04-modelling): An overview of variables, objectives, and
+   constraints.
+4. [Advanced Modeling](#04B-advanced-modelling): More complex constraints, such
+   as circuit constraints and intervals.
+5. [Parameters](#05-parameters): How to specify CP-SATs behavior, if needed.
+   Timelimits, hints, assumptions, parallelization, ...
+6. [Understanding the Log](#understanding-the-log): How to interpret the log
+7. [How does it work?](#07-under-the-hood): After we know what we can do with
+   CP-SAT, we look into how CP-SAT will do all these things.
+8. [Alternatives](#03-big-picture): An overview of the different optimization
+   techniques and tools available. Putting CP-SAT into context.
+
+**Part 2: Advanced Topics**
+
+7. [Coding Patterns](#06-coding-patterns): Basic design patterns for creating
+   maintainable algorithms.
+8. [(DRAFT) Building an Optimization API](#building_an_optimization_api) How to
+   build a scalable API for long running optimization jobs.
+9. [Large Neighborhood Search](#09-lns): The use of CP-SAT to create more
+   powerful heuristics.
+10. [Benchmarking your Model](#08-benchmarking): How to benchmark your model and
+    how to interpret the results.
+
+### Background
+
+<!-- Background --->
 
 If you are new to combinatorial optimization, I recommend starting with the free
 course on Coursera,
@@ -75,41 +162,6 @@ knowledge in combinatorial optimization, you may find
 [this hands-on tutorial](https://pganalyze.com/blog/a-practical-introduction-to-constraint-programming-using-cp-sat)
 a little easier to get started with CP-SAT, and come back once you want to dive
 deeper.
-
-**Content:**
-
-1. [Installation](#01-installation): Quick installation guide.
-2. [Example](#02-example): A short example, showing the usage of CP-SAT.
-3. [Basic Modeling](#04-modelling): An overview of variables, objectives, and
-   constraints.
-4. [Advanced Modeling](#04B-advanced-modelling): More complex constraints, such
-   as circuit constraints and intervals.
-5. [Parameters](#05-parameters): How to specify CP-SATs behavior, if needed.
-   Timelimits, hints, assumptions, parallelization, ...
-6. [Understanding the Log](#understanding-the-log): How to interpret the log
-7. [Coding Patterns](#06-coding-patterns): Basic design patterns for creating
-   maintainable algorithms.
-8. [(DRAFT) Building an Optimization API](#building_an_optimization_api) How to
-   build a scalable API for long running optimization jobs.
-9. [How does it work?](#07-under-the-hood): After we know what we can do with
-   CP-SAT, we look into how CP-SAT will do all these things.
-10. [Alternatives](#03-big-picture): An overview of the different optimization
-    techniques and tools available. Putting CP-SAT into context.
-11. [Benchmarking your Model](#08-benchmarking): How to benchmark your model and
-    how to interpret the results.
-12. [Large Neighborhood Search](#09-lns): The use of CP-SAT to create more
-    powerful heuristics.
-
----
-
-> **Target audience:** People (especially my computer science students at TU
-> Braunschweig) with some background in
-> [integer programming](https://en.wikipedia.org/wiki/Integer_programming)
-> /[linear optimization](https://en.wikipedia.org/wiki/Linear_programming), who
-> would like to know an actual viable alternative to
-> [Branch and Cut](https://en.wikipedia.org/wiki/Branch_and_cut). However, I try
-> to make it understandable for anyone interested in
-> [combinatorial optimization](https://en.wikipedia.org/wiki/Combinatorial_optimization).
 
 > **About the Main Author:** [Dr. Dominik Krupke](https://krupke.cc) is a
 > postdoctoral researcher with the
