@@ -307,8 +307,8 @@ constraint in CP-SAT allows you to model such problems easily. It takes a list
 of time variables, a list of change variables, and the minimum and maximum level
 of the reservoir. `time_vars[i]` represents the time at which the change
 `change_vars[i]` will be applied, thus both lists needs to be of the same
-length. The reservoir level starts at 0, and the minimum level has to be $\leq 0$
-and the maximum level has to be $\geq 0$.
+length. The reservoir level starts at 0, and the minimum level has to be
+$\leq 0$ and the maximum level has to be $\geq 0$.
 
 ```python
 time_vars = [model.new_int_var(0, 100, f"time_{i}") for i in range(10)]

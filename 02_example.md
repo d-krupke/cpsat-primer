@@ -42,10 +42,9 @@ handle more and more 'bad' problem models effectively with every year.
 > this short guide on
 > [Math Programming Modelling Basics](https://www.gurobi.com/resources/math-programming-modeling-basics/).
 
-Our first problem has no deeper meaning, except for showing the basic workflow of
-creating the variables (x and y), adding the constraint $x+y<=30$ on them,
-setting the objective function (maximize $30x + 50y$), and obtaining a
-solution:
+Our first problem has no deeper meaning, except for showing the basic workflow
+of creating the variables (x and y), adding the constraint $x+y<=30$ on them,
+setting the objective function (maximize $30x + 50y$), and obtaining a solution:
 
 ```python
 from ortools.sat.python import cp_model

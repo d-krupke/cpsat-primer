@@ -38,9 +38,8 @@ competitive for many problems and sometimes even superior.
 
 This unofficial primer shall help you use and understand this powerful tool,
 especially if you are coming from the
-[Mixed Integer Linear Programming](https://en.wikipedia.org/wiki/Integer_programming)
--community, as it may prove useful in cases where Branch and Bound performs
-poorly.
+[Mixed Integer Linear Programming](https://en.wikipedia.org/wiki/Integer_programming)-community,
+as it may prove useful in cases where Branch and Bound performs poorly.
 
 If you are new to combinatorial optimization, I recommend starting with the free
 course on Coursera,
@@ -247,10 +246,9 @@ handle more and more 'bad' problem models effectively with every year.
 > this short guide on
 > [Math Programming Modelling Basics](https://www.gurobi.com/resources/math-programming-modeling-basics/).
 
-Our first problem has no deeper meaning, except of showing the basic workflow of
-creating the variables (x and y), adding the constraint $x+y<=30$ on them,
-setting the objective function (maximize $30*x + 50*y$), and obtaining a
-solution:
+Our first problem has no deeper meaning, except for showing the basic workflow
+of creating the variables (x and y), adding the constraint $x+y<=30$ on them,
+setting the objective function (maximize $30x + 50y$), and obtaining a solution:
 
 ```python
 from ortools.sat.python import cp_model
@@ -297,7 +295,7 @@ model by hand for larger instances.
 > | `INFEASIBLE`    | 3    | The model has no feasible solution. This means that your constraints are too restrictive.                                                                                             |
 > | `OPTIMAL`       | 4    | The model has an optimal solution. If your model does not have an objective, `OPTIMAL` is returned instead of `FEASIBLE`.                                                             |
 >
-> The status `UNBOUNDED` does _not_ exists, as CP-SAT does not have unbounded
+> The status `UNBOUNDED` does _not_ exist, as CP-SAT does not have unbounded
 > variables.
 
 For larger models, CP-SAT will unfortunately not always able to compute an
@@ -504,13 +502,16 @@ a lower and an upper bound.
 
 ```python
 model = cp_model.CpModel()
-# integer variable z with bounds -100 <= z <= 100
+
+# Integer variable z with bounds -100 <= z <= 100
 z = model.new_int_var(-100, 100, "z")  # new syntax
 z_ = model.NewIntVar(-100, 100, "z_")  # old syntax
-# boolean variable b
+
+# Boolean variable b
 b = model.new_bool_var("b")  # new syntax
 b_ = model.NewBoolVar("b_")  # old syntax
-# implicitly available negation of b:
+
+# Implicitly available negation of b:
 not_b = ~b  # will be 1 if b is 0 and 0 if b is 1
 not_b_ = b.Not()  # old syntax
 ```
@@ -523,17 +524,20 @@ convenient.
 
 ```python
 model = cp_model.CpModel()
-# create an Index from 0 to 9
+
+# Create an Index from 0 to 9
 index = pd.Index(range(10), name="index")
-# create a pandas Series with 10 integer variables matching the index
+
+# Create a pandas Series with 10 integer variables matching the index
 xs = model.new_int_var_series("x", index, 0, 100)
 
-# list of boolean variables
+# List of boolean variables
 df = pd.DataFrame(
     data={"weight": [1 for _ in range(10)], "value": [3 for _ in range(10)]},
     index=["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"],
 )
 bs = model.new_bool_var_series("b", df.index)  # noqa: F841
+
 # Using the dot product on the pandas DataFrame is actually a pretty
 # convenient way to create common linear expressions.
 model.add(bs @ df["weight"] <= 100)
@@ -644,12 +648,14 @@ scenarios, here is how to define them:
 from ortools.sat.python import cp_model
 
 model = cp_model.CpModel()
+
 # Define a domain with selected values
 domain = cp_model.Domain.from_values([2, 5, 8, 10, 20, 50, 90])
-# cam also be done via intervals
+
+# Can also be done via intervals
 domain_2 = cp_model.Domain.from_intervals([[8, 12], [14, 20]])
 
-# there are also some operations available
+# There are also some operations available
 domain_3 = domain.union_with(domain_2)
 
 # Create a domain variable within this defined domain
@@ -774,10 +780,10 @@ model.add(x < y + z)
 model.add(y > 300 - 4 * z)
 ```
 
-Note that `!=` can be expected slower than the other (`<=`, `>=`, `==`)
-constraints, because it is not a linear constraint. If you have a set of
-mutually `!=` variables, it is better to use `all_different` (see below) than to
-use the explicit `!=` constraints.
+Note that `!=` can be slower than the other (`<=`, `>=`, `==`) constraints,
+because it is not a linear constraint. If you have a set of mutually `!=`
+variables, it is better to use `all_different` (see below) than to use the
+explicit `!=` constraints.
 
 > [!WARNING]
 >
@@ -902,7 +908,7 @@ model.add_bool_and(b1, ~b2, ~b3)  # Alternative notation using '~' for negation
 The `add_bool_and` method is most effective when used with the `only_enforce_if`
 method. For cases not utilizing `only_enforce_if` a simple AND-clause such as
 $\left( b_1 \land \neg b_2 \land \neg b_3 \right)$ becomes redundant by simply
-substituting $b_1$ with `1` and $b_2`, $b_3` with `0`. In straightforward
+substituting $b_1$ with `1` and $b_2, $b_3$ with `0`. In straightforward
 scenarios, consider substituting these variables with their constant values to
 reduce unnecessary complexity, especially in larger models where size and
 manageability are concerns. In smaller or simpler models, CP-SAT efficiently
@@ -1011,7 +1017,7 @@ truck_a = model.new_bool_var("truck_a")
 truck_b = model.new_bool_var("truck_b")
 truck_c = model.new_bool_var("truck_c")
 
-# only rent one truck
+# Only rent one truck
 model.add_at_most_one([truck_a, truck_b, truck_c])
 
 # Depending on which truck is rented, the load value is limited
@@ -1174,7 +1180,7 @@ advisable.
 
 Here is one of my students' favorite examples of a non-linear expression that
 can be avoided. Once introduced to mathematical notation like
-$\sum_{e\ in E} cost(e)\cdot x_e$, if a term depends on the combination of two
+$\sum_{e \in E} cost(e)\cdot x_e$, if a term depends on the combination of two
 binary variables, they might initially opt for a quadratic expression such as
 $\sum_{e,e'\in E} concost(e, e')\cdot x_e\cdot x_{e'}$. However, such cases can
 often be modeled linearly using an auxiliary variable, avoiding the complexities
@@ -1469,7 +1475,7 @@ Examples of feasible variable assignments:
 
 
 After having seen the basic elements of CP-SAT, this chapter will introduce you
-to the more complex constraints. These constraints are already focussed on
+to the more complex constraints. These constraints are already focused on
 specific problems, such as routing or scheduling, but very generic and powerful
 within their domain. However, they also need more explanation on the correct
 usage.
@@ -1767,8 +1773,8 @@ constraint in CP-SAT allows you to model such problems easily. It takes a list
 of time variables, a list of change variables, and the minimum and maximum level
 of the reservoir. `time_vars[i]` represents the time at which the change
 `change_vars[i]` will be applied, thus both lists needs to be of the same
-length. The reservoir level starts at 0, and the minimum level has to $\leq 0$
-and the maximum level has to $\geq 0$.
+length. The reservoir level starts at 0, and the minimum level has to be
+$\leq 0$ and the maximum level has to be $\geq 0$.
 
 ```python
 time_vars = [model.new_int_var(0, 100, f"time_{i}") for i in range(10)]
@@ -2649,10 +2655,11 @@ refer to the well-documented `proto` file in the
 Below, I will highlight the most important parameters so you can get the most
 out of CP-SAT.
 
-> :warning: Only a few parameters, such as `timelimit`, are suitable for
-> beginners. Most other parameters, like decision strategies, are best left at
-> their default settings, as they are well-chosen and tampering with them could
-> disrupt optimizations. For better performance, focus on improving your model.
+> :warning: Only a few parameters, such as `max_time_in_seconds`, are suitable
+> for beginners. Most other parameters, like decision strategies, are best left
+> at their default settings, as they are well-chosen and tampering with them
+> could disrupt optimizations. For better performance, focus on improving your
+> model.
 
 ### Logging
 
@@ -2920,10 +2927,10 @@ workers.
 solver.parameters.num_workers = 8  # use 8 cores
 ```
 
-Here the solvers used by CP-SAT 9.9 on different parallelization levels for an
-optimization problem and no additional specifications (e.g., decision
+Here are the solvers used by CP-SAT 9.9 on different parallelization levels for
+an optimization problem and no additional specifications (e.g., decision
 strategies). Note that some parameters/constraints/objectives can change the
-parallelization strategy Also check
+parallelization strategy. Also check
 [the official documentation](https://github.com/google/or-tools/blob/main/ortools/sat/docs/troubleshooting.md#improving-performance-with-multiple-workers).
 
 - `solver.parameters.num_workers = 1`: Single-threaded search with
@@ -6380,14 +6387,13 @@ following questions:
 > **Our Benchmarks:** We executed the four solvers with a time limit of 90s and
 > the optimality tolerances [0.1%, 1%, 5%, 10%, 25%] on a random benchmark set
 > and a TSPLIB benchmark set. The random benchmark set consists of 10 instances
-> for each number of nodes [25, 50, 75, 100, 150, 200, > 250, 300, 350, 400, > >
->
-> > 450, 500]. The weights were chosen based on randomly embedding the nodes
-> > into a 2D plane and using the Euclidean distances. The TSPLIB benchmark
-> > consists of all euclidean instances with less than 500 nodes. It is critical
-> > to have a time limit, as otherwise, the benchmarks would take forever. You
-> > can find all find the whole experiment
-> > [here](https://github.com/d-krupke/cpsat-primer/blob/main/evaluations/tsp/).
+> for each number of nodes
+> `[25, 50, 75, 100, 150, 200, 250, 300, 350, 400, 450, 500]`. The weights were
+> chosen based on randomly embedding the nodes into a 2D plane and using the
+> Euclidean distances. The TSPLIB benchmark consists of all Euclidean instances
+> with less than 500 nodes. It is critical to have a time limit, as otherwise,
+> the benchmarks would take forever. You can find all find the whole experiment
+> [here](https://github.com/d-krupke/cpsat-primer/blob/main/evaluations/tsp/).
 
 Let us first look at the results of the random benchmark, as they are easier to
 interpret. We will then compare them to the TSPLIB benchmark.

@@ -240,12 +240,12 @@ following questions:
 > **Our Benchmarks:** We executed the four solvers with a time limit of 90s and
 > the optimality tolerances [0.1%, 1%, 5%, 10%, 25%] on a random benchmark set
 > and a TSPLIB benchmark set. The random benchmark set consists of 10 instances
-> for each number of nodes [25, 50, 75, 100, 150, 200, 250, 300, 350, 400, 
-> 450, 500]. The weights were chosen based on randomly embedding the nodes
-> into a 2D plane and using the Euclidean distances. The TSPLIB benchmark
-> consists of all Euclidean instances with less than 500 nodes. It is critical
-> to have a time limit, as otherwise, the benchmarks would take forever. You
-> can find all find the whole experiment
+> for each number of nodes
+> `[25, 50, 75, 100, 150, 200, 250, 300, 350, 400, 450, 500]`. The weights were
+> chosen based on randomly embedding the nodes into a 2D plane and using the
+> Euclidean distances. The TSPLIB benchmark consists of all Euclidean instances
+> with less than 500 nodes. It is critical to have a time limit, as otherwise,
+> the benchmarks would take forever. You can find all find the whole experiment
 > [here](https://github.com/d-krupke/cpsat-primer/blob/main/evaluations/tsp/).
 
 Let us first look at the results of the random benchmark, as they are easier to

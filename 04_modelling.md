@@ -387,10 +387,10 @@ model.add(x < y + z)
 model.add(y > 300 - 4 * z)
 ```
 
-Note that `!=` can be slower than the other (`<=`, `>=`, `==`)
-constraints, because it is not a linear constraint. If you have a set of
-mutually `!=` variables, it is better to use `all_different` (see below) than to
-use the explicit `!=` constraints.
+Note that `!=` can be slower than the other (`<=`, `>=`, `==`) constraints,
+because it is not a linear constraint. If you have a set of mutually `!=`
+variables, it is better to use `all_different` (see below) than to use the
+explicit `!=` constraints.
 
 > [!WARNING]
 >
