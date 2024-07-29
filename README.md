@@ -124,8 +124,10 @@ optimization.
 
 <!-- Background --->
 
-In case you are just getting into combinatorial optimization and are learning on
-your own, I recommend starting with the free Coursera course,
+This book assumes you are fluent in Python, and have already been introduced to
+combinatorial optimization problems. In case you are just getting into
+combinatorial optimization and are learning on your own, I recommend starting
+with the free Coursera course,
 [Discrete Optimization](https://www.coursera.org/learn/discrete-optimization),
 taught by Pascal Van Hentenryck and Carleton Coffrin. This course provides a
 comprehensive introduction in a concise format.
@@ -145,19 +147,6 @@ programming and modeling. In this context, the term "Programming" does not refer
 to coding; rather, it originates from an earlier usage of the word "program",
 which denoted a plan of action or a schedule. If this distinction is new to you,
 it is a strong indication that you would benefit from reading this article.
-
-For those who prefer a hands-on approach, you can begin with the primer outlined
-below and consult the recommended resources as needed.
-
-Please note, while this primer strives to be self-contained, it is designed for
-computer science students who already have a basic understanding of
-combinatorial optimization as well as experience in coding with Python. Thus,
-some prior knowledge in the field might be necessary to fully benefit from the
-content provided. If you are a computer science student **without** prior
-knowledge in combinatorial optimization, you may find
-[this hands-on tutorial](https://pganalyze.com/blog/a-practical-introduction-to-constraint-programming-using-cp-sat)
-a little easier to get started with CP-SAT, and come back once you want to dive
-deeper.
 
 > **About the Main Author:** [Dr. Dominik Krupke](https://krupke.cc) is a
 > postdoctoral researcher with the
