@@ -76,14 +76,21 @@ your model and interpret the results.
 
 ### Target Audience
 
-People (especially my computer science students at TU Braunschweig) with some
-background in
-[integer programming](https://en.wikipedia.org/wiki/Integer_programming)
-/[linear optimization](https://en.wikipedia.org/wiki/Linear_programming), who
-would like to know an actual viable alternative to
-[Branch and Cut](https://en.wikipedia.org/wiki/Branch_and_cut). However, I try
-to make it understandable for anyone interested in
-[combinatorial optimization](https://en.wikipedia.org/wiki/Combinatorial_optimization).
+I wrote this book for my computer science students at TU Braunschweig, and it is
+used as supplementary material in my algorithm engineering courses. Initially,
+we focused on Mixed Integer Programming (MIP), with CP-SAT discussed as an
+alternative. However, we recently began using CP-SAT as the first optimization
+solver due to its high-level interface, which is much easier for beginners to
+grasp. Despite this shift, because MIP is more commonly used, the book includes
+numerous comparisons to MIP. Thus, it is designed to be beginner-friendly while
+also addressing the needs of MIP users seeking alternatives.
+
+Unlike other books aimed at mathematical optimization or operations research
+students, this one, aimed at computer science students, emphasizes coding over
+mathematics or business cases, providing a hands-on approach to learning
+optimization. The second part of the book can also be interesting for more
+advanced users, providing content that I found missing in other books on
+optimization.
 
 ### Table of Content
 
