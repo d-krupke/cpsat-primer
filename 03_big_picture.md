@@ -159,6 +159,30 @@ and I will consider including them.
   - [OR-Tools' Network Flows](https://developers.google.com/optimization/flow):
     OR-Tools also comes with a dedicated solver for network flow problems.
   - ...
+- **Approximation Algorithms:** For many difficult optimization problems, you
+  can find scientific papers that describe approximation algorithms for them.
+  These algorithms come with some guarantees of not being too far off from the
+  optimal solution. Some are even proven to achieve the best possible
+  guarantees. However, you should not directly try to implement such a paper
+  even if it perfectly fits your problem. There are some approximation
+  algorithms that are actually practical, but many are not. The guarantees are
+  usually focussed on artificial worst-case scenarios, and even if the
+  algorithms can be implemented, they may be beaten by simple heuristics.
+  Approximation algorithms and their analysis can be quite useful for
+  understanding the structure of your problem, but their direct practical use is
+  limited.
+- **Meta-Heuristics:** Instead of using a generic solver like CP-SAT, you can
+  also try to build a custom algorithm for your problem based on some
+  meta-heuristic pattern, like simulated annealing, genetic algorithms, or tabu
+  search. Meta-heuristics require some coding, but once you know the pattern,
+  they are quite straightforward to implement. While there are some libraries to
+  generalize parts of the algorithms, you could also just write the whole
+  algorithm yourself. This gives the advantage of truly understanding what is
+  going on in the algorithm, but you miss a lot of advanced techniques contained
+  in solvers like CP-SAT. For many optimization problems, you will have
+  difficulties competing against techniques utilizing advanced solvers in terms
+  of solution quality. If you just want a quick solution, meta-heuristics can be
+  a good start.
 
 As evident, there exists a diverse array of tools and techniques for solving
 optimization problems. CP-SAT stands out as a versatile approach, particularly
