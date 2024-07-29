@@ -19,7 +19,7 @@ refer to the well-documented `proto` file in the
 Below, I will highlight the most important parameters so you can get the most
 out of CP-SAT.
 
-> :warning: Only a few parameters, such as `timelimit`, are suitable for
+> :warning: Only a few parameters, such as `max_time_in_seconds`, are suitable for
 > beginners. Most other parameters, like decision strategies, are best left at
 > their default settings, as they are well-chosen and tampering with them could
 > disrupt optimizations. For better performance, focus on improving your model.
@@ -290,10 +290,10 @@ workers.
 solver.parameters.num_workers = 8  # use 8 cores
 ```
 
-Here the solvers used by CP-SAT 9.9 on different parallelization levels for an
+Here are the solvers used by CP-SAT 9.9 on different parallelization levels for an
 optimization problem and no additional specifications (e.g., decision
 strategies). Note that some parameters/constraints/objectives can change the
-parallelization strategy Also check
+parallelization strategy. Also check
 [the official documentation](https://github.com/google/or-tools/blob/main/ortools/sat/docs/troubleshooting.md#improving-performance-with-multiple-workers).
 
 - `solver.parameters.num_workers = 1`: Single-threaded search with
