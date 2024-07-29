@@ -908,7 +908,7 @@ model.add_bool_and(b1, ~b2, ~b3)  # Alternative notation using '~' for negation
 The `add_bool_and` method is most effective when used with the `only_enforce_if`
 method. For cases not utilizing `only_enforce_if` a simple AND-clause such as
 $\left( b_1 \land \neg b_2 \land \neg b_3 \right)$ becomes redundant by simply
-substituting $b_1$ with `1` and $b_2, $b_3$ with `0`. In straightforward
+substituting $b_1$ with `1` and $b_2, b_3$ with `0`. In straightforward
 scenarios, consider substituting these variables with their constant values to
 reduce unnecessary complexity, especially in larger models where size and
 manageability are concerns. In smaller or simpler models, CP-SAT efficiently
