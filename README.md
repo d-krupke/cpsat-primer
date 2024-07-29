@@ -124,9 +124,9 @@ optimization.
 
 <!-- Background --->
 
-If you are new to combinatorial optimization, I recommend starting with the free
-course on Coursera,
-[Discrete Optimization](https://www.coursera.org/learn/discrete-optimization)
+In case you are just getting into combinatorial optimization and are learning on
+your own, I recommend starting with the free Coursera course,
+[Discrete Optimization](https://www.coursera.org/learn/discrete-optimization),
 taught by Pascal Van Hentenryck and Carleton Coffrin. This course provides a
 comprehensive introduction in a concise format.
 
