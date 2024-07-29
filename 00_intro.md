@@ -39,9 +39,8 @@ competitive for many problems and sometimes even superior.
 
 This unofficial primer shall help you use and understand this powerful tool,
 especially if you are coming from the
-[Mixed Integer Linear Programming](https://en.wikipedia.org/wiki/Integer_programming)
--community, as it may prove useful in cases where Branch and Bound performs
-poorly.
+[Mixed Integer Linear Programming](https://en.wikipedia.org/wiki/Integer_programming)-community,
+as it may prove useful in cases where Branch and Bound performs poorly.
 
 If you are new to combinatorial optimization, I recommend starting with the free
 course on Coursera,
