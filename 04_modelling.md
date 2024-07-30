@@ -817,7 +817,7 @@ modeling scenarios effectively.
 
 <a name="04-modelling-alldifferent"></a>
 
-### `add_all_different` Constraint
+### All Different
 
 In various assignment and scheduling problems, ensuring that all variables hold
 distinct values is crucial. For example, in frequency assignment, no two
