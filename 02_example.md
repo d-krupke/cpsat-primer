@@ -63,15 +63,15 @@ model.maximize(30 * x + 50 * y)
 
 # Solve
 solver = cp_model.CpSolver()
-status = solver.solve(model)
+status_code = solver.solve(model)
+status_name = solver.status_name()
 
-# The status tells us if we were able to compute an optimal solution.
-assert status == cp_model.OPTIMAL, "Could not find optimal solution."
-
-# Print the optimal solution.
+# Print the solver status and the optimal solution.
+print(f"{status_name} ({status_code})")
 print(f"x={solver.value(x)},  y={solver.value(y)}")
 ```
 
+    OPTIMAL (4)
     x=0,  y=30
 
 Pretty easy, right? For solving a generic problem, not just one specific
@@ -91,8 +91,7 @@ model by hand for larger instances.
 > | `INFEASIBLE`    | 3    | The model has no feasible solution. This means that your constraints are too restrictive.                                                                                             |
 > | `OPTIMAL`       | 4    | The model has an optimal solution. If your model does not have an objective, `OPTIMAL` is returned instead of `FEASIBLE`.                                                             |
 >
-> The status `UNBOUNDED` does _not_ exist, as CP-SAT does not have unbounded
-> variables.
+> The status `UNBOUNDED` does _not_ exist, as CP-SAT does not have unbounded variables.
 
 For larger models, CP-SAT will unfortunately not always able to compute an
 optimal solution. However, the good news is that the solver will likely still
