@@ -740,9 +740,7 @@ variables and generators.
 ```python
 model = cp_model.CpModel()
 x_vars = [model.new_bool_var(f"x{i}") for i in range(10)]
-model.minimize(
-    sum(i * x_vars[i] if i % 2 == 0 else i * x_vars[i].Not() for i in range(10))
-)
+model.minimize(sum(i * x_vars[i] if i % 2 == 0 else i * ~x_vars[i] for i in range(10)))
 ```
 
 This objective evaluates to
