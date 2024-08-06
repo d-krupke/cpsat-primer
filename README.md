@@ -496,7 +496,7 @@ Additional resources on mathematical modeling (not CP-SAT specific):
 
 - [Variables](#04-modelling-variables): `new_int_var`, `new_bool_var`,
   `new_constant`, `new_int_var_series`, `new_bool_var_series`
-  - [Domain Variables](#04-modelling-domain-variables):
+  - [Custom Domain Variables](#04-modelling-domain-variables):
     `new_int_var_from_domain`
 - [Objectives](#04-modelling-objectives): `minimize`, `maximize`
 - [Linear Constraints](#04-modelling-linear-constraints): `add`,
@@ -648,14 +648,15 @@ variables.
 
 <a name="04-modelling-domain-variables"></a>
 
-#### Domain Variables
+#### Custom Domain Variables
 
 When dealing with integer variables that you know will only need to take certain
-values, or when you wish to limit their possible values, domain variables can
-become interesting. Unlike regular integer variables, domain variables are
-tailored to represent a specific set of values. This approach can enhance
-efficiency when the domain - the range of sensible values - is small. However,
-it may not be the best choice for larger domains.
+values, or when you wish to limit their possible values, custom domain variables
+can become interesting. Unlike regular integer variables, which must have a
+domain between a given range of values (e.g., $\[ 1, 100 \]$), domain variables
+can specify a custom set of values as domain (e.g., $\\{1, 3, 5 \\}$). This
+approach can enhance efficiency when the domain - the range of sensible values -
+is small. However, it may not be the best choice for larger domains.
 
 CP-SAT works by converting all integer variables into boolean variables
 (warning: simplification). For each potential value, it creates two boolean
