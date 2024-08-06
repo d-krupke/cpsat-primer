@@ -152,8 +152,9 @@ model.maximize(bs @ df["value"])
 ```
 
 Additionally, there is the `new_constant`-method, which allows you to create a
-variable that is constant. I have not found a use case for this yet, let me know
-if you have one.
+variable that is constant. This allows you to safely replace variables by
+constants. This is primarily useful for boolean variables, as constant integer
+variables can in most cases be simply replaced by plain integers.
 
 > [!TIP]
 >
