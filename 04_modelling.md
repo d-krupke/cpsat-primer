@@ -345,6 +345,11 @@ model.minimize(second_objective)  # optimize for second objective
 solver.solve(model)
 ```
 
+> [!TIP]
+>
+> You can find a more efficient implementation of lexicographic optimization in
+> the _Coding Patterns_ chapter.
+
 To handle non-linear objectives in CP-SAT, you can employ auxiliary variables
 and constraints. For instance, to incorporate the absolute value of a variable
 into your objective, you first create a new variable representing this absolute
