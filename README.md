@@ -328,13 +328,14 @@ model by hand for larger instances.
 >
 > | Status          | Code | Description                                                                                                                                                                           |
 > | --------------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-> | `UNKNOWN`       | 0    | The solver has not yet run.                                                                                                                                                           |
+> | `UNKNOWN`       | 0    | The solver has not run for long enough.                                                                                                                                               |
 > | `MODEL_INVALID` | 1    | The model is invalid. You will rarely see that status.                                                                                                                                |
 > | `FEASIBLE`      | 2    | The model has a feasible, but not necessarily optimal, solution. If your model does not have an objective, every feasible model will return `OPTIMAL`, which may be counterintuitive. |
 > | `INFEASIBLE`    | 3    | The model has no feasible solution. This means that your constraints are too restrictive.                                                                                             |
 > | `OPTIMAL`       | 4    | The model has an optimal solution. If your model does not have an objective, `OPTIMAL` is returned instead of `FEASIBLE`.                                                             |
 >
-> The status `UNBOUNDED` does _not_ exist, as CP-SAT does not have unbounded variables.
+> The status `UNBOUNDED` does _not_ exist, as CP-SAT does not have unbounded
+> variables.
 
 For larger models, CP-SAT will unfortunately not always able to compute an
 optimal solution. However, the good news is that the solver will likely still
