@@ -3151,35 +3151,6 @@ def import_model(filename: str) -> cp_model.CpModel:
     return model
 ```
 
-### Assumptions
-
-Often, you may need to explore the impact of forcing certain variables to
-specific values. To avoid copying the entire model multiple times, CP-SAT offers
-a convenient option: adding assumptions. Assumptions can be cleared afterward,
-allowing you to test new assumptions without duplicating the model. This
-feature, common in many SAT solvers, is restricted to boolean literals in
-CP-SAT. While you cannot add complex expressions directly, using auxiliary
-boolean variables enables you to experiment with more intricate constraints
-without model duplication. For temporary complex constraints, model copying
-using `model.CopyFrom` may still be necessary, along with variable copying.
-
-```python
-b1 = model.new_bool_var("b1")
-b2 = model.new_bool_var("b2")
-b3 = model.new_bool_var("b3")
-
-model.add_assumptions([b1, ~b2])  # assume b1=True, b2=False
-model.add_assumption(b3)  # assume b3=True (single literal)
-# ... solve again and analyze ...
-model.clear_assumptions()  # clear all assumptions
-```
-
-> [!NOTE]
->
-> While incremental SAT solvers can reuse learned clauses from previous runs
-> despite changing assumptions, CP-SAT does not support this feature.
-> Assumptions in CP-SAT only help avoid model duplication.
-
 ### Hints
 
 If you have a good intuition about how the solution might look—perhaps from
@@ -3198,7 +3169,7 @@ model.add_hint(y, 2)  # Suggest that y will probably be 2
 For more examples, refer to
 [the official example](https://github.com/google/or-tools/blob/stable/ortools/sat/samples/solution_hinting_sample_sat.py).
 We will also see how to utilize hints for multi-objective optimization in the
-next chapter.
+[Coding Patterns](#06-coding-patterns) chapter.
 
 > [!TIP]
 >
@@ -3230,6 +3201,46 @@ not be solely relied upon.
 > solver, even if they were correct but not optimal. While this issue seems
 > resolved in the latest versions, it is important to note that bad hints can
 > still cause slowdowns by guiding the solver in the wrong direction.
+
+Often, you may need to explore the impact of forcing certain variables to
+specific values. To avoid copying the entire model multiple times to set the
+values of variables explicitly, you can also use hints to fix variables their
+hinted value with the following parameter:
+
+```python
+solver.parameters.fix_variables_to_their_hinted_value = True
+```
+
+Hints can be cleared afterwards by calling `model.clear_hints()`, allowing you
+to test other hints without duplicating the model. While you cannot add complex
+expressions directly, fixing variables enables you to experiment with more
+intricate constraints without model duplication. For temporary complex
+constraints, model copying using `model.CopyFrom` may still be necessary, along
+with variable copying.
+
+### Assumptions
+
+Another way to explore the impact of forcing certain variables to specific
+values is by means of assumptions, which is a common feature in many SAT
+solvers. Unlike fixing hinted values, assumptions are restricted to boolean
+literals in CP-SAT.
+
+```python
+b1 = model.new_bool_var("b1")
+b2 = model.new_bool_var("b2")
+b3 = model.new_bool_var("b3")
+
+model.add_assumptions([b1, ~b2])  # assume b1=True, b2=False
+model.add_assumption(b3)  # assume b3=True (single literal)
+# ... solve again and analyze ...
+model.clear_assumptions()  # clear all assumptions
+```
+
+> [!NOTE]
+>
+> While incremental SAT solvers can reuse learned clauses from previous runs
+> despite changing assumptions, CP-SAT does not support this feature.
+> Assumptions in CP-SAT only help avoid model duplication.
 
 ### Decision Strategy
 
