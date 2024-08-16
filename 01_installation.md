@@ -39,8 +39,8 @@ problems. The primary requirements are CPU power and memory bandwidth, with a
 GPU being unnecessary.
 
 In terms of CPU power, the key is balancing the number of cores with the
-performance of each individual core. CP-SAT leverages all available cores,
-implementing different strategies on each.
+performance of each individual core. CP-SAT leverages all available cores by
+default, implementing different strategies on each.
 [Depending on the number of cores, CP-SAT will behave differently](https://github.com/google/or-tools/blob/main/ortools/sat/docs/troubleshooting.md#improving-performance-with-multiple-workers).
 However, the effectiveness of these strategies can vary, and it is usually not
 apparent which one will be most effective. A higher single-core performance

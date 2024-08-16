@@ -282,8 +282,8 @@ also increase the chance of running the right technique. Predicting which
 technique will be the best for a specific problem is often hard, thus, this
 parallelization can be quite useful.
 
-You can control the parallelization of CP-SAT by setting the number of search
-workers.
+By default, CP-SAT leverages all available cores. You can control the
+parallelization of CP-SAT by setting the number of search workers.
 
 ```python
 solver.parameters.num_workers = 8  # use 8 cores

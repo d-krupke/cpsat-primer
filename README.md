@@ -217,8 +217,8 @@ problems. The primary requirements are CPU power and memory bandwidth, with a
 GPU being unnecessary.
 
 In terms of CPU power, the key is balancing the number of cores with the
-performance of each individual core. CP-SAT leverages all available cores,
-implementing different strategies on each.
+performance of each individual core. CP-SAT leverages all available cores by
+default, implementing different strategies on each.
 [Depending on the number of cores, CP-SAT will behave differently](https://github.com/google/or-tools/blob/main/ortools/sat/docs/troubleshooting.md#improving-performance-with-multiple-workers).
 However, the effectiveness of these strategies can vary, and it is usually not
 apparent which one will be most effective. A higher single-core performance
@@ -2956,8 +2956,8 @@ also increase the chance of running the right technique. Predicting which
 technique will be the best for a specific problem is often hard, thus, this
 parallelization can be quite useful.
 
-You can control the parallelization of CP-SAT by setting the number of search
-workers.
+By default, CP-SAT leverages all available cores. You can control the
+parallelization of CP-SAT by setting the number of search workers.
 
 ```python
 solver.parameters.num_workers = 8  # use 8 cores
