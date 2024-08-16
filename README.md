@@ -217,8 +217,8 @@ problems. The primary requirements are CPU power and memory bandwidth, with a
 GPU being unnecessary.
 
 In terms of CPU power, the key is balancing the number of cores with the
-performance of each individual core. CP-SAT leverages all available cores,
-implementing different strategies on each.
+performance of each individual core. CP-SAT leverages all available cores by
+default, implementing different strategies on each.
 [Depending on the number of cores, CP-SAT will behave differently](https://github.com/google/or-tools/blob/main/ortools/sat/docs/troubleshooting.md#improving-performance-with-multiple-workers).
 However, the effectiveness of these strategies can vary, and it is usually not
 apparent which one will be most effective. A higher single-core performance
@@ -2828,9 +2828,7 @@ To set a time limit (in seconds) before running the solver, use the following
 command:
 
 ```python
-# solver = cp_model.CpSolver()
 solver.parameters.max_time_in_seconds = 60  # 60s time limit
-# status = solver.solve(model)
 ```
 
 After running the solver, it is important to check the status to determine
@@ -2966,8 +2964,8 @@ also increase the chance of running the right technique. Predicting which
 technique will be the best for a specific problem is often hard, thus, this
 parallelization can be quite useful.
 
-You can control the parallelization of CP-SAT by setting the number of search
-workers.
+By default, CP-SAT leverages all available cores. You can control the
+parallelization of CP-SAT by setting the number of search workers.
 
 ```python
 solver.parameters.num_workers = 8  # use 8 cores
@@ -2975,149 +2973,26 @@ solver.parameters.num_workers = 8  # use 8 cores
 
 Here are the solvers used by CP-SAT 9.9 on different parallelization levels for
 an optimization problem and no additional specifications (e.g., decision
-strategies). Note that some parameters/constraints/objectives can change the
-parallelization strategy. Also check
+strategies). Each row describes the addition of various solvers with respect to
+the previous row. Note that some parameters/constraints/objectives can change
+the parallelization strategy. Also check
 [the official documentation](https://github.com/google/or-tools/blob/main/ortools/sat/docs/troubleshooting.md#improving-performance-with-multiple-workers).
 
-- `solver.parameters.num_workers = 1`: Single-threaded search with
-  `[default_lp]`.
-  - 1 full problem subsolver: [default_lp]
-- `solver.parameters.num_workers = 2`: Additional use of heuristics to support
-  the `default_lp` search.
-  - 1 full problem subsolver: [default_lp]
-  - 13 incomplete subsolvers: [feasibility_pump, graph_arc_lns, graph_cst_lns,
-    graph_dec_lns, graph_var_lns, packing_precedences_lns,
-    packing_rectangles_lns, packing_slice_lns, rins/rens, rnd_cst_lns,
-    rnd_var_lns, scheduling_precedences_lns, violation_ls]
-  - 3 helper subsolvers: [neighborhood_helper, synchronization_agent,
-    update_gap_integral]
-- `solver.parameters.num_workers = 3`: Using a second full problem solver that
-  does not try to linearize the model.
-  - 2 full problem subsolvers: [default_lp, no_lp]
-  - 13 incomplete subsolvers: [feasibility_pump, graph_arc_lns, graph_cst_lns,
-    graph_dec_lns, graph_var_lns, packing_precedences_lns,
-    packing_rectangles_lns, packing_slice_lns, rins/rens, rnd_cst_lns,
-    rnd_var_lns, scheduling_precedences_lns, violation_ls]
-  - 3 helper subsolvers: [neighborhood_helper, synchronization_agent,
-    update_gap_integral]
-- `solver.parameters.num_workers = 4`: Additionally using a third full problem
-  solver that tries to linearize the model as much as possible.
-  - 3 full problem subsolvers: [default_lp, max_lp, no_lp]
-  - 13 incomplete subsolvers: [feasibility_pump, graph_arc_lns, graph_cst_lns,
-    graph_dec_lns, graph_var_lns, packing_precedences_lns,
-    packing_rectangles_lns, packing_slice_lns, rins/rens, rnd_cst_lns,
-    rnd_var_lns, scheduling_precedences_lns, violation_ls]
-  - 3 helper subsolvers: [neighborhood_helper, synchronization_agent,
-    update_gap_integral]
-- `solver.parameters.num_workers = 5`: Additionally using a first solution
-  subsolver.
-  - 3 full problem subsolvers: [default_lp, max_lp, no_lp]
-  - 1 first solution subsolver: [fj_short_default]
-  - 13 incomplete subsolvers: [feasibility_pump, graph_arc_lns, graph_cst_lns,
-    graph_dec_lns, graph_var_lns, packing_precedences_lns,
-    packing_rectangles_lns, packing_slice_lns, rins/rens, rnd_cst_lns,
-    rnd_var_lns, scheduling_precedences_lns, violation_ls]
-  - 3 helper subsolvers: [neighborhood_helper, synchronization_agent,
-    update_gap_integral]
-- `solver.parameters.num_workers = 6`: Using a fourth full problem solver
-  `quick_restart` that does more "probing".
-  - 4 full problem subsolvers: [default_lp, max_lp, no_lp, quick_restart]
-  - 1 first solution subsolver: [fj_short_default]
-  - 13 incomplete subsolvers: [feasibility_pump, graph_arc_lns, graph_cst_lns,
-    graph_dec_lns, graph_var_lns, packing_precedences_lns,
-    packing_rectangles_lns, packing_slice_lns, rins/rens, rnd_cst_lns,
-    rnd_var_lns, scheduling_precedences_lns, violation_ls]
-  - 3 helper subsolvers: [neighborhood_helper, synchronization_agent,
-    update_gap_integral]
-- `solver.parameters.num_workers = 7`:
-  - 5 full problem subsolvers: [default_lp, max_lp, no_lp, quick_restart,
-    reduced_costs]
-  - 1 first solution subsolver: [fj_short_default]
-  - 13 incomplete subsolvers: [feasibility_pump, graph_arc_lns, graph_cst_lns,
-    graph_dec_lns, graph_var_lns, packing_precedences_lns,
-    packing_rectangles_lns, packing_slice_lns, rins/rens, rnd_cst_lns,
-    rnd_var_lns, scheduling_precedences_lns, violation_ls]
-  - 3 helper subsolvers: [neighborhood_helper, synchronization_agent,
-    update_gap_integral]
-- `solver.parameters.num_workers = 8`:
-  - 6 full problem subsolvers: [default_lp, max_lp, no_lp, quick_restart,
-    quick_restart_no_lp, reduced_costs]
-  - 1 first solution subsolver: [fj_short_default]
-  - 13 incomplete subsolvers: [feasibility_pump, graph_arc_lns, graph_cst_lns,
-    graph_dec_lns, graph_var_lns, packing_precedences_lns,
-    packing_rectangles_lns, packing_slice_lns, rins/rens, rnd_cst_lns,
-    rnd_var_lns, scheduling_precedences_lns, violation_ls]
-  - 3 helper subsolvers: [neighborhood_helper, synchronization_agent,
-    update_gap_integral]
-- `solver.parameters.num_workers = 12`:
-  - 8 full problem subsolvers: [default_lp, lb_tree_search, max_lp, no_lp,
-    pseudo_costs, quick_restart, quick_restart_no_lp, reduced_costs]
-  - 3 first solution subsolvers: [fj_long_default, fj_short_default, fs_random]
-  - 13 incomplete subsolvers: [feasibility_pump, graph_arc_lns, graph_cst_lns,
-    graph_dec_lns, graph_var_lns, packing_precedences_lns,
-    packing_rectangles_lns, packing_slice_lns, rins/rens, rnd_cst_lns,
-    rnd_var_lns, scheduling_precedences_lns, violation_ls]
-  - 3 helper subsolvers: [neighborhood_helper, synchronization_agent,
-    update_gap_integral]
-- `solver.parameters.num_workers = 16`:
-  - 11 full problem subsolvers: [default_lp, lb_tree_search, max_lp, no_lp,
-    objective_lb_search, objective_shaving_search_no_lp, probing, pseudo_costs,
-    quick_restart, quick_restart_no_lp, reduced_costs]
-  - 4 first solution subsolvers: [fj_long_default, fj_short_default, fs_random,
-    fs_random_quick_restart]
-  - 13 incomplete subsolvers: [feasibility_pump, graph_arc_lns, graph_cst_lns,
-    graph_dec_lns, graph_var_lns, packing_precedences_lns,
-    packing_rectangles_lns, packing_slice_lns, rins/rens, rnd_cst_lns,
-    rnd_var_lns, scheduling_precedences_lns, violation_ls]
-  - 3 helper subsolvers: [neighborhood_helper, synchronization_agent,
-    update_gap_integral]
-- `solver.parameters.num_workers = 20`:
-  - 13 full problem subsolvers: [default_lp, lb_tree_search, max_lp, no_lp,
-    objective_lb_search, objective_shaving_search_max_lp,
-    objective_shaving_search_no_lp, probing, probing_max_lp, pseudo_costs,
-    quick_restart, quick_restart_no_lp, reduced_costs]
-  - 5 first solution subsolvers: [fj_long_default, fj_short_default,
-    fj_short_lin_default, fs_random, fs_random_quick_restart]
-  - 13 incomplete subsolvers: [feasibility_pump, graph_arc_lns, graph_cst_lns,
-    graph_dec_lns, graph_var_lns, packing_precedences_lns,
-    packing_rectangles_lns, packing_slice_lns, rins/rens, rnd_cst_lns,
-    rnd_var_lns, scheduling_precedences_lns, violation_ls]
-  - 3 helper subsolvers: [neighborhood_helper, synchronization_agent,
-    update_gap_integral]
-- `solver.parameters.num_workers = 32`:
-  - 15 full problem subsolvers: [default_lp, lb_tree_search, max_lp, no_lp,
-    objective_lb_search, objective_lb_search_max_lp, objective_lb_search_no_lp,
-    objective_shaving_search_max_lp, objective_shaving_search_no_lp, probing,
-    probing_max_lp, pseudo_costs, quick_restart, quick_restart_no_lp,
-    reduced_costs]
-  - 15 first solution subsolvers: [fj_long_default, fj_long_lin_default,
-    fj_long_lin_random, fj_long_random, fj_short_default, fj_short_lin_default,
-    fj_short_lin_random, fj_short_random, fs_random(2), fs_random_no_lp(2),
-    fs_random_quick_restart(2), fs_random_quick_restart_no_lp]
-  - 15 incomplete subsolvers: [feasibility_pump, graph_arc_lns, graph_cst_lns,
-    graph_dec_lns, graph_var_lns, packing_precedences_lns,
-    packing_rectangles_lns, packing_slice_lns, rins/rens, rnd_cst_lns,
-    rnd_var_lns, scheduling_precedences_lns, violation_ls(3)]
-  - 3 helper subsolvers: [neighborhood_helper, synchronization_agent,
-    update_gap_integral]
-- `solver.parameters.num_workers = 64`:
-  - 15 full problem subsolvers: [default_lp, lb_tree_search, max_lp, no_lp,
-    objective_lb_search, objective_lb_search_max_lp, objective_lb_search_no_lp,
-    objective_shaving_search_max_lp, objective_shaving_search_no_lp, probing,
-    probing_max_lp, pseudo_costs, quick_restart, quick_restart_no_lp,
-    reduced_costs]
-  - 47 first solution subsolvers: [fj_long_default(2), fj_long_lin_default(2),
-    fj_long_lin_perturb(2), fj_long_lin_random(2), fj_long_perturb(2),
-    fj_long_random(2), fj_short_default(2), fj_short_lin_default(2),
-    fj_short_lin_perturb(2), fj_short_lin_random(2), fj_short_perturb(2),
-    fj_short_random(2), fs_random(6), fs_random_no_lp(6),
-    fs_random_quick_restart(6), fs_random_quick_restart_no_lp(5)]
-  - 19 incomplete subsolvers: [feasibility_pump, graph_arc_lns, graph_cst_lns,
-    graph_dec_lns, graph_var_lns, packing_precedences_lns,
-    packing_rectangles_lns, packing_slice_lns, rins/rens, rnd_cst_lns,
-    rnd_var_lns, scheduling_precedences_lns, violation_ls(7)]
-  - 3 helper subsolvers: [neighborhood_helper, synchronization_agent,
-    update_gap_integral]
+| # Workers | Full Problem Subsolvers                                                        | First Solution Subsolvers                                                                                                                                                                                                                                                                 | Incomplete Subsolvers                                                                                                                                                                                                                                                  | Helper Subsolvers                                                                 |
+| --------- | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| **1**     | `default_lp`                                                                   | No solver                                                                                                                                                                                                                                                                                 | No solver                                                                                                                                                                                                                                                              | No solver                                                                         |
+| **2**     |                                                                                |                                                                                                                                                                                                                                                                                           | +13 solvers: `feasibility_pump`, `graph_arc_lns`, `graph_cst_lns`, `graph_dec_lns`, `graph_var_lns`, `packing_precedences_lns`, `packing_rectangles_lns`, `packing_slice_lns`, `rins/rens`, `rnd_cst_lns`, `rnd_var_lns`, `scheduling_precedences_lns`, `violation_ls` | +3 solvers: `neighborhood_helper`, `synchronization_agent`, `update_gap_integral` |
+| **3**     | +1 solver: `no_lp`                                                             |                                                                                                                                                                                                                                                                                           |                                                                                                                                                                                                                                                                        |                                                                                   |
+| **4**     | +1 solver: `max_lp`                                                            |                                                                                                                                                                                                                                                                                           |                                                                                                                                                                                                                                                                        |                                                                                   |
+| **5**     |                                                                                | +1 solver: `fj_short_default`                                                                                                                                                                                                                                                             |                                                                                                                                                                                                                                                                        |                                                                                   |
+| **6**     | +1 solver: `quick_restart`                                                     |                                                                                                                                                                                                                                                                                           |                                                                                                                                                                                                                                                                        |                                                                                   |
+| **7**     | +1 solver: `reduced_costs`                                                     |                                                                                                                                                                                                                                                                                           |                                                                                                                                                                                                                                                                        |                                                                                   |
+| **8**     | +1 solver: `quick_restart_no_lp`                                               |                                                                                                                                                                                                                                                                                           |                                                                                                                                                                                                                                                                        |                                                                                   |
+| **12**    | +2 solvers: `lb_tree_search`, `pseudo_costs`                                   | +2 solvers: `fj_long_default`, `fs_random`                                                                                                                                                                                                                                                |                                                                                                                                                                                                                                                                        |                                                                                   |
+| **16**    | +3 solvers: `objective_lb_search`, `objective_shaving_search_no_lp`, `probing` | +1 solver: `fs_random_quick_restart`                                                                                                                                                                                                                                                      |                                                                                                                                                                                                                                                                        |                                                                                   |
+| **20**    | +2 solvers: `objective_shaving_search_max_lp`, `probing_max_lp`                | +1 solver: `fj_short_lin_default`                                                                                                                                                                                                                                                         |                                                                                                                                                                                                                                                                        |                                                                                   |
+| **32**    | +2 solvers: `objective_lb_search_max_lp`, `objective_lb_search_no_lp`          | +8 solvers: `fj_long_lin_default`, `fj_long_lin_random`, `fj_long_random`, `fj_short_lin_random`, `fj_short_random`, `fs_random_no_lp`, `fs_random_quick_restart_no_lp`                                                                                                                   | +1 solver: `violation_ls(3)`                                                                                                                                                                                                                                           |                                                                                   |
+| **64**    |                                                                                | +11 solvers: `fj_long_default(2)`, `fj_long_lin_default(2)`, `fj_long_lin_random(2)`, `fj_long_random(2)`, `fj_short_default(2)`, `fj_short_lin_default(2)`, `fj_short_random(2)`, `fs_random(6)`, `fs_random_no_lp(6)`, `fs_random_quick_restart(6)`, `fs_random_quick_restart_no_lp(5)` | +1 solver: `violation_ls(7)`                                                                                                                                                                                                                                           |                                                                                   |
 
 Important steps:
 
@@ -3125,7 +3000,7 @@ Important steps:
 - With two workers or more, CP-SAT starts using incomplete subsolvers, i.e.,
   heuristics such as LNS.
 - With five workers, CP-SAT will also have a first solution subsolver.
-- With 23 workers, all 15 full problem subsolvers are used.
+- With 32 workers, all 15 full problem subsolvers are used.
 - For more than 32 workers, primarily the number of first solution subsolvers is
   increased.
 
@@ -3285,35 +3160,6 @@ def import_model(filename: str) -> cp_model.CpModel:
     return model
 ```
 
-### Assumptions
-
-Often, you may need to explore the impact of forcing certain variables to
-specific values. To avoid copying the entire model multiple times, CP-SAT offers
-a convenient option: adding assumptions. Assumptions can be cleared afterward,
-allowing you to test new assumptions without duplicating the model. This
-feature, common in many SAT solvers, is restricted to boolean literals in
-CP-SAT. While you cannot add complex expressions directly, using auxiliary
-boolean variables enables you to experiment with more intricate constraints
-without model duplication. For temporary complex constraints, model copying
-using `model.CopyFrom` may still be necessary, along with variable copying.
-
-```python
-b1 = model.new_bool_var("b1")
-b2 = model.new_bool_var("b2")
-b3 = model.new_bool_var("b3")
-
-model.add_assumptions([b1, ~b2])  # assume b1=True, b2=False
-model.add_assumption(b3)  # assume b3=True (single literal)
-# ... solve again and analyze ...
-model.clear_assumptions()  # clear all assumptions
-```
-
-> [!NOTE]
->
-> While incremental SAT solvers can reuse learned clauses from previous runs
-> despite changing assumptions, CP-SAT does not support this feature.
-> Assumptions in CP-SAT only help avoid model duplication.
-
 ### Hints
 
 If you have a good intuition about how the solution might look—perhaps from
@@ -3332,7 +3178,7 @@ model.add_hint(y, 2)  # Suggest that y will probably be 2
 For more examples, refer to
 [the official example](https://github.com/google/or-tools/blob/stable/ortools/sat/samples/solution_hinting_sample_sat.py).
 We will also see how to utilize hints for multi-objective optimization in the
-next chapter.
+[Coding Patterns](#06-coding-patterns) chapter.
 
 > [!TIP]
 >
@@ -3364,6 +3210,46 @@ not be solely relied upon.
 > solver, even if they were correct but not optimal. While this issue seems
 > resolved in the latest versions, it is important to note that bad hints can
 > still cause slowdowns by guiding the solver in the wrong direction.
+
+Often, you may need to explore the impact of forcing certain variables to
+specific values. To avoid copying the entire model multiple times to set the
+values of variables explicitly, you can also use hints to fix variables their
+hinted value with the following parameter:
+
+```python
+solver.parameters.fix_variables_to_their_hinted_value = True
+```
+
+Hints can be cleared afterwards by calling `model.clear_hints()`, allowing you
+to test other hints without duplicating the model. While you cannot add complex
+expressions directly, fixing variables enables you to experiment with more
+intricate constraints without model duplication. For temporary complex
+constraints, model copying using `model.CopyFrom` may still be necessary, along
+with variable copying.
+
+### Assumptions
+
+Another way to explore the impact of forcing certain variables to specific
+values is by means of assumptions, which is a common feature in many SAT
+solvers. Unlike fixing hinted values, assumptions are restricted to boolean
+literals in CP-SAT.
+
+```python
+b1 = model.new_bool_var("b1")
+b2 = model.new_bool_var("b2")
+b3 = model.new_bool_var("b3")
+
+model.add_assumptions([b1, ~b2])  # assume b1=True, b2=False
+model.add_assumption(b3)  # assume b3=True (single literal)
+# ... solve again and analyze ...
+model.clear_assumptions()  # clear all assumptions
+```
+
+> [!NOTE]
+>
+> While incremental SAT solvers can reuse learned clauses from previous runs
+> despite changing assumptions, CP-SAT does not support this feature.
+> Assumptions in CP-SAT only help avoid model duplication.
 
 ### Decision Strategy
 
