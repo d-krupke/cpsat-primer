@@ -2820,9 +2820,7 @@ To set a time limit (in seconds) before running the solver, use the following
 command:
 
 ```python
-# solver = cp_model.CpSolver()
 solver.parameters.max_time_in_seconds = 60  # 60s time limit
-# status = solver.solve(model)
 ```
 
 After running the solver, it is important to check the status to determine
@@ -2971,145 +2969,21 @@ strategies). Note that some parameters/constraints/objectives can change the
 parallelization strategy. Also check
 [the official documentation](https://github.com/google/or-tools/blob/main/ortools/sat/docs/troubleshooting.md#improving-performance-with-multiple-workers).
 
-- `solver.parameters.num_workers = 1`: Single-threaded search with
-  `[default_lp]`.
-  - 1 full problem subsolver: [default_lp]
-- `solver.parameters.num_workers = 2`: Additional use of heuristics to support
-  the `default_lp` search.
-  - 1 full problem subsolver: [default_lp]
-  - 13 incomplete subsolvers: [feasibility_pump, graph_arc_lns, graph_cst_lns,
-    graph_dec_lns, graph_var_lns, packing_precedences_lns,
-    packing_rectangles_lns, packing_slice_lns, rins/rens, rnd_cst_lns,
-    rnd_var_lns, scheduling_precedences_lns, violation_ls]
-  - 3 helper subsolvers: [neighborhood_helper, synchronization_agent,
-    update_gap_integral]
-- `solver.parameters.num_workers = 3`: Using a second full problem solver that
-  does not try to linearize the model.
-  - 2 full problem subsolvers: [default_lp, no_lp]
-  - 13 incomplete subsolvers: [feasibility_pump, graph_arc_lns, graph_cst_lns,
-    graph_dec_lns, graph_var_lns, packing_precedences_lns,
-    packing_rectangles_lns, packing_slice_lns, rins/rens, rnd_cst_lns,
-    rnd_var_lns, scheduling_precedences_lns, violation_ls]
-  - 3 helper subsolvers: [neighborhood_helper, synchronization_agent,
-    update_gap_integral]
-- `solver.parameters.num_workers = 4`: Additionally using a third full problem
-  solver that tries to linearize the model as much as possible.
-  - 3 full problem subsolvers: [default_lp, max_lp, no_lp]
-  - 13 incomplete subsolvers: [feasibility_pump, graph_arc_lns, graph_cst_lns,
-    graph_dec_lns, graph_var_lns, packing_precedences_lns,
-    packing_rectangles_lns, packing_slice_lns, rins/rens, rnd_cst_lns,
-    rnd_var_lns, scheduling_precedences_lns, violation_ls]
-  - 3 helper subsolvers: [neighborhood_helper, synchronization_agent,
-    update_gap_integral]
-- `solver.parameters.num_workers = 5`: Additionally using a first solution
-  subsolver.
-  - 3 full problem subsolvers: [default_lp, max_lp, no_lp]
-  - 1 first solution subsolver: [fj_short_default]
-  - 13 incomplete subsolvers: [feasibility_pump, graph_arc_lns, graph_cst_lns,
-    graph_dec_lns, graph_var_lns, packing_precedences_lns,
-    packing_rectangles_lns, packing_slice_lns, rins/rens, rnd_cst_lns,
-    rnd_var_lns, scheduling_precedences_lns, violation_ls]
-  - 3 helper subsolvers: [neighborhood_helper, synchronization_agent,
-    update_gap_integral]
-- `solver.parameters.num_workers = 6`: Using a fourth full problem solver
-  `quick_restart` that does more "probing".
-  - 4 full problem subsolvers: [default_lp, max_lp, no_lp, quick_restart]
-  - 1 first solution subsolver: [fj_short_default]
-  - 13 incomplete subsolvers: [feasibility_pump, graph_arc_lns, graph_cst_lns,
-    graph_dec_lns, graph_var_lns, packing_precedences_lns,
-    packing_rectangles_lns, packing_slice_lns, rins/rens, rnd_cst_lns,
-    rnd_var_lns, scheduling_precedences_lns, violation_ls]
-  - 3 helper subsolvers: [neighborhood_helper, synchronization_agent,
-    update_gap_integral]
-- `solver.parameters.num_workers = 7`:
-  - 5 full problem subsolvers: [default_lp, max_lp, no_lp, quick_restart,
-    reduced_costs]
-  - 1 first solution subsolver: [fj_short_default]
-  - 13 incomplete subsolvers: [feasibility_pump, graph_arc_lns, graph_cst_lns,
-    graph_dec_lns, graph_var_lns, packing_precedences_lns,
-    packing_rectangles_lns, packing_slice_lns, rins/rens, rnd_cst_lns,
-    rnd_var_lns, scheduling_precedences_lns, violation_ls]
-  - 3 helper subsolvers: [neighborhood_helper, synchronization_agent,
-    update_gap_integral]
-- `solver.parameters.num_workers = 8`:
-  - 6 full problem subsolvers: [default_lp, max_lp, no_lp, quick_restart,
-    quick_restart_no_lp, reduced_costs]
-  - 1 first solution subsolver: [fj_short_default]
-  - 13 incomplete subsolvers: [feasibility_pump, graph_arc_lns, graph_cst_lns,
-    graph_dec_lns, graph_var_lns, packing_precedences_lns,
-    packing_rectangles_lns, packing_slice_lns, rins/rens, rnd_cst_lns,
-    rnd_var_lns, scheduling_precedences_lns, violation_ls]
-  - 3 helper subsolvers: [neighborhood_helper, synchronization_agent,
-    update_gap_integral]
-- `solver.parameters.num_workers = 12`:
-  - 8 full problem subsolvers: [default_lp, lb_tree_search, max_lp, no_lp,
-    pseudo_costs, quick_restart, quick_restart_no_lp, reduced_costs]
-  - 3 first solution subsolvers: [fj_long_default, fj_short_default, fs_random]
-  - 13 incomplete subsolvers: [feasibility_pump, graph_arc_lns, graph_cst_lns,
-    graph_dec_lns, graph_var_lns, packing_precedences_lns,
-    packing_rectangles_lns, packing_slice_lns, rins/rens, rnd_cst_lns,
-    rnd_var_lns, scheduling_precedences_lns, violation_ls]
-  - 3 helper subsolvers: [neighborhood_helper, synchronization_agent,
-    update_gap_integral]
-- `solver.parameters.num_workers = 16`:
-  - 11 full problem subsolvers: [default_lp, lb_tree_search, max_lp, no_lp,
-    objective_lb_search, objective_shaving_search_no_lp, probing, pseudo_costs,
-    quick_restart, quick_restart_no_lp, reduced_costs]
-  - 4 first solution subsolvers: [fj_long_default, fj_short_default, fs_random,
-    fs_random_quick_restart]
-  - 13 incomplete subsolvers: [feasibility_pump, graph_arc_lns, graph_cst_lns,
-    graph_dec_lns, graph_var_lns, packing_precedences_lns,
-    packing_rectangles_lns, packing_slice_lns, rins/rens, rnd_cst_lns,
-    rnd_var_lns, scheduling_precedences_lns, violation_ls]
-  - 3 helper subsolvers: [neighborhood_helper, synchronization_agent,
-    update_gap_integral]
-- `solver.parameters.num_workers = 20`:
-  - 13 full problem subsolvers: [default_lp, lb_tree_search, max_lp, no_lp,
-    objective_lb_search, objective_shaving_search_max_lp,
-    objective_shaving_search_no_lp, probing, probing_max_lp, pseudo_costs,
-    quick_restart, quick_restart_no_lp, reduced_costs]
-  - 5 first solution subsolvers: [fj_long_default, fj_short_default,
-    fj_short_lin_default, fs_random, fs_random_quick_restart]
-  - 13 incomplete subsolvers: [feasibility_pump, graph_arc_lns, graph_cst_lns,
-    graph_dec_lns, graph_var_lns, packing_precedences_lns,
-    packing_rectangles_lns, packing_slice_lns, rins/rens, rnd_cst_lns,
-    rnd_var_lns, scheduling_precedences_lns, violation_ls]
-  - 3 helper subsolvers: [neighborhood_helper, synchronization_agent,
-    update_gap_integral]
-- `solver.parameters.num_workers = 32`:
-  - 15 full problem subsolvers: [default_lp, lb_tree_search, max_lp, no_lp,
-    objective_lb_search, objective_lb_search_max_lp, objective_lb_search_no_lp,
-    objective_shaving_search_max_lp, objective_shaving_search_no_lp, probing,
-    probing_max_lp, pseudo_costs, quick_restart, quick_restart_no_lp,
-    reduced_costs]
-  - 15 first solution subsolvers: [fj_long_default, fj_long_lin_default,
-    fj_long_lin_random, fj_long_random, fj_short_default, fj_short_lin_default,
-    fj_short_lin_random, fj_short_random, fs_random(2), fs_random_no_lp(2),
-    fs_random_quick_restart(2), fs_random_quick_restart_no_lp]
-  - 15 incomplete subsolvers: [feasibility_pump, graph_arc_lns, graph_cst_lns,
-    graph_dec_lns, graph_var_lns, packing_precedences_lns,
-    packing_rectangles_lns, packing_slice_lns, rins/rens, rnd_cst_lns,
-    rnd_var_lns, scheduling_precedences_lns, violation_ls(3)]
-  - 3 helper subsolvers: [neighborhood_helper, synchronization_agent,
-    update_gap_integral]
-- `solver.parameters.num_workers = 64`:
-  - 15 full problem subsolvers: [default_lp, lb_tree_search, max_lp, no_lp,
-    objective_lb_search, objective_lb_search_max_lp, objective_lb_search_no_lp,
-    objective_shaving_search_max_lp, objective_shaving_search_no_lp, probing,
-    probing_max_lp, pseudo_costs, quick_restart, quick_restart_no_lp,
-    reduced_costs]
-  - 47 first solution subsolvers: [fj_long_default(2), fj_long_lin_default(2),
-    fj_long_lin_perturb(2), fj_long_lin_random(2), fj_long_perturb(2),
-    fj_long_random(2), fj_short_default(2), fj_short_lin_default(2),
-    fj_short_lin_perturb(2), fj_short_lin_random(2), fj_short_perturb(2),
-    fj_short_random(2), fs_random(6), fs_random_no_lp(6),
-    fs_random_quick_restart(6), fs_random_quick_restart_no_lp(5)]
-  - 19 incomplete subsolvers: [feasibility_pump, graph_arc_lns, graph_cst_lns,
-    graph_dec_lns, graph_var_lns, packing_precedences_lns,
-    packing_rectangles_lns, packing_slice_lns, rins/rens, rnd_cst_lns,
-    rnd_var_lns, scheduling_precedences_lns, violation_ls(7)]
-  - 3 helper subsolvers: [neighborhood_helper, synchronization_agent,
-    update_gap_integral]
+| # Workers | Full Problem Subsolvers                                                             | First Solution Subsolvers                                                                                                                                                                                                                                                                      | Incomplete Subsolvers                                                                                                                                                                                                                                                       | Helper Subsolvers                                                                      |
+| --------- | ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| **1**     | `default_lp`                                                                        | -                                                                                                                                                                                                                                                                                              | -                                                                                                                                                                                                                                                                           | -                                                                                      |
+| **2**     | No change                                                                           | No change                                                                                                                                                                                                                                                                                      | Added 13 solvers: `feasibility_pump`, `graph_arc_lns`, `graph_cst_lns`, `graph_dec_lns`, `graph_var_lns`, `packing_precedences_lns`, `packing_rectangles_lns`, `packing_slice_lns`, `rins/rens`, `rnd_cst_lns`, `rnd_var_lns`, `scheduling_precedences_lns`, `violation_ls` | Added 3 solvers: `neighborhood_helper`, `synchronization_agent`, `update_gap_integral` |
+| **3**     | Added 1 solver: `no_lp`                                                             | No change                                                                                                                                                                                                                                                                                      | No change                                                                                                                                                                                                                                                                   | No change                                                                              |
+| **4**     | Added 1 solver: `max_lp`                                                            | No change                                                                                                                                                                                                                                                                                      | No change                                                                                                                                                                                                                                                                   | No change                                                                              |
+| **5**     | No change                                                                           | Added 1 solver: `fj_short_default`                                                                                                                                                                                                                                                             | No change                                                                                                                                                                                                                                                                   | No change                                                                              |
+| **6**     | Added 1 solver: `quick_restart`                                                     | No change                                                                                                                                                                                                                                                                                      | No change                                                                                                                                                                                                                                                                   | No change                                                                              |
+| **7**     | Added 1 solver: `reduced_costs`                                                     | No change                                                                                                                                                                                                                                                                                      | No change                                                                                                                                                                                                                                                                   | No change                                                                              |
+| **8**     | Added 1 solver: `quick_restart_no_lp`                                               | No change                                                                                                                                                                                                                                                                                      | No change                                                                                                                                                                                                                                                                   | No change                                                                              |
+| **12**    | Added 2 solvers: `lb_tree_search`, `pseudo_costs`                                   | Added 2 solvers: `fj_long_default`, `fs_random`                                                                                                                                                                                                                                                | No change                                                                                                                                                                                                                                                                   | No change                                                                              |
+| **16**    | Added 3 solvers: `objective_lb_search`, `objective_shaving_search_no_lp`, `probing` | Added 1 solver: `fs_random_quick_restart`                                                                                                                                                                                                                                                      | No change                                                                                                                                                                                                                                                                   | No change                                                                              |
+| **20**    | Added 2 solvers: `objective_shaving_search_max_lp`, `probing_max_lp`                | Added 1 solver: `fj_short_lin_default`                                                                                                                                                                                                                                                         | No change                                                                                                                                                                                                                                                                   | No change                                                                              |
+| **32**    | Added 3 solvers: `objective_lb_search_max_lp`, `objective_lb_search_no_lp`          | Added 8 solvers: `fj_long_lin_default`, `fj_long_lin_random`, `fj_long_random`, `fj_short_lin_random`, `fj_short_random`, `fs_random_no_lp`, `fs_random_quick_restart_no_lp`                                                                                                                   | No change                                                                                                                                                                                                                                                                   |
+| **64**    | No change                                                                           | Added 11 solvers: `fj_long_default(2)`, `fj_long_lin_default(2)`, `fj_long_lin_random(2)`, `fj_long_random(2)`, `fj_short_default(2)`, `fj_short_lin_default(2)`, `fj_short_random(2)`, `fs_random(6)`, `fs_random_no_lp(6)`, `fs_random_quick_restart(6)`, `fs_random_quick_restart_no_lp(5)` | Added 1 solver: `violation_ls(7)`                                                                                                                                                                                                                                           |
 
 Important steps:
 
