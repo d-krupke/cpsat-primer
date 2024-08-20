@@ -924,13 +924,13 @@ You can find the full code here:
 |      Deciding feasibility of packing rectangles with rotations       |  [./evaluations/packing/solver/packing_with_rotations.py](https://github.com/d-krupke/cpsat-primer/blob/main/evaluations/packing/solver/packing_with_rotations.py)  |
 |  Finding the largest possible packing of rectangles with rotations   | [./evaluations/packing/solver/knapsack_with_rotations.py](https://github.com/d-krupke/cpsat-primer/blob/main/evaluations/packing/solver/knapsack_with_rotations.py) |
 
-CP-SAT is good at finding a feasible packing, but incapable of proofing
+CP-SAT is good at finding a feasible packing, but incapable of proving
 infeasibility in most cases. When using the knapsack variant, it can still pack
 most of the rectangles even for the larger instances.
 
 |                           ![./images/packing_plot_solved.png](https://github.com/d-krupke/cpsat-primer/blob/main/images/packing_plot_solved.png)                            |
 | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
-| The number of solved instances for the packing problem (90s time limit). Rotations make things slightly more difficult. None of the used instances were proofed infeasible. |
+| The number of solved instances for the packing problem (90s time limit). Rotations make things slightly more difficult. None of the used instances were proved infeasible. |
 |                            ![./images/packing_percentage.png](https://github.com/d-krupke/cpsat-primer/blob/main/images/packing_percentage.png)                             |
 |                                            However, CP-SAT is able to pack nearly all rectangles even for the largest instances.                                            |
 
