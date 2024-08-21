@@ -87,12 +87,12 @@ class PiecewiseConstantConstraint:
         model: cp_model.CpModel,
         x_var: cp_model.IntVar,
         f: PiecewiseConstantFunction,
-        restrict_domain: bool = True,
+        restrict_domain: bool = False,
     ):
         self.x = x_var
         self.f = f
         self.model = model
-        restrict_domain = False
+
         if restrict_domain:
             self.y_domain = cp_model.Domain.FromValues(list(set(f.ys)))
             self.y = model.NewIntVarFromDomain(self.y_domain, "y")
