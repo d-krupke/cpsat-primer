@@ -300,18 +300,20 @@ infeasible as it does not end in a final state.
 
 Sometimes, we need to keep the balance between inflows and outflows of a
 reservoir. The name giving example is a water reservoir, where we need to keep
-the water level between a minimum and a maximum level.
-The reservoir constraint takes a list of time variables,
-a list of integer level changes, and the minimum and maximum level of the reservoir.
-If the affine expression `times[i]` is assigned a value `t`, then the current
-level changes by `level_changes[i]`. Note that at the moment, variable level changes are not supported, which means
-level changes are constant at time `t`. The constraint ensures that the level stays between the minimum and maximum
-level at all time, i.e. `sum(level_changes[i] if times[i] <= t) in [min_level, max_level]`.
+the water level between a minimum and a maximum level. The reservoir constraint
+takes a list of time variables, a list of integer level changes, and the minimum
+and maximum level of the reservoir. If the affine expression `times[i]` is
+assigned a value `t`, then the current level changes by `level_changes[i]`. Note
+that at the moment, variable level changes are not supported, which means level
+changes are constant at time `t`. The constraint ensures that the level stays
+between the minimum and maximum level at all time, i.e.
+`sum(level_changes[i] if times[i] <= t) in [min_level, max_level]`.
 
-There are many other examples apart from water reservoirs, where you need to balance demands and supplies,
-such as maintaining a certain stock level in a warehouse, or
-ensuring a certain staffing level in a clinic. The `add_reservoir_constraint`
-constraint in CP-SAT allows you to model such problems easily.
+There are many other examples apart from water reservoirs, where you need to
+balance demands and supplies, such as maintaining a certain stock level in a
+warehouse, or ensuring a certain staffing level in a clinic. The
+`add_reservoir_constraint` constraint in CP-SAT allows you to model such
+problems easily.
 
 In the following example, `times[i]` represents the time at which the change
 `level_changes[i]` will be applied, thus both lists needs to be of the same
@@ -332,11 +334,11 @@ model.add_reservoir_constraint(
 
 Additionally, the `add_reservoir_constraint_with_active` constraint allows you
 to model a reservoir with _optional_ changes. Here, we additionally have a list
-of Boolean variables `actives`, where `actives[i]` indicates if the
-change `level_changes[i]` takes place, i.e. if
+of Boolean variables `actives`, where `actives[i]` indicates if the change
+`level_changes[i]` takes place, i.e. if
 `sum(level_changes[i] * actives[i] if times[i] <= t) in [min_level, max_level]`
-If a change is not active, it is as if it does not exist, and the reservoir level remains the same, independent of the
-time and change values.
+If a change is not active, it is as if it does not exist, and the reservoir
+level remains the same, independent of the time and change values.
 
 ```python
 times = [model.new_int_var(0, 10, f"time_{i}") for i in range(10)]
@@ -352,12 +354,13 @@ model.add_reservoir_constraint_with_active(
 )
 ```
 
-To illustrate the usage of the reservoir constraint, we look at an example for scheduling nurses in a clinic.
-For the full example, take a look at the 
+To illustrate the usage of the reservoir constraint, we look at an example for
+scheduling nurses in a clinic. For the full example, take a look at the
 [notebook](https://github.com/d-krupke/cpsat-primer/blob/main/examples/add_reservoir.ipynb).
 
-The clinic needs to ensure that there are always enough nurses available without over-staffing too much.
-For a 12-hour work day, we model the demands for nurses as integers for each hour of the day.
+The clinic needs to ensure that there are always enough nurses available without
+over-staffing too much. For a 12-hour work day, we model the demands for nurses
+as integers for each hour of the day.
 
 ```python
 # a positive number means we need more nurses, a negative number means we need fewer nurses.
@@ -365,7 +368,8 @@ demand_change_at_t = [3, 0, 0, 0, 2, 0, 0, 0, -1, 0, -1, 0, -3]
 demand_change_times = list(range(len(demand_change_at_t)))  # [0, 1, ..., 12]
 ```
 
-We have a list of nurses, each with an individual availability as well as a maximum shift length.
+We have a list of nurses, each with an individual availability as well as a
+maximum shift length.
 
 ```python
 max_shift_length = 5
@@ -380,18 +384,18 @@ nurse_availabilities = 2 * [
     (5, 12),
     (7, 12),
     (0, 12),
-    (4, 12)
+    (4, 12),
 ]
 ```
 
-We now initialize all relevant variables of the model. Each nurse is assigned a start and end time of their shift
-as well as a Boolean variable indicating if they are working at all.
+We now initialize all relevant variables of the model. Each nurse is assigned a
+start and end time of their shift as well as a Boolean variable indicating if
+they are working at all.
 
 ```python
 # boolean variable to indicate if a nurse is scheduled
 nurse_scheduled = [
-    model.new_bool_var(f"nurse_{i}_scheduled")
-    for i in range(len(nurse_availabilities))
+    model.new_bool_var(f"nurse_{i}_scheduled") for i in range(len(nurse_availabilities))
 ]
 
 # model the begin and end of each shift
@@ -414,21 +418,27 @@ for begin, end in zip(shifts_begin, shifts_end):
     model.add(end - begin <= max_shift_length)  # make sure, the shifts are not too long
 ```
 
-Our reservoir level is the number of nurses scheduled at any time minus the demand for nurses up until that point.
-We can now add the reservoir constraint to ensure that we have enough nurses available at all times while not having
-too many nurses scheduled (i.e., the reservoir level is between 0 and 2). We have three types of changes in the
-reservoir:
+Our reservoir level is the number of nurses scheduled at any time minus the
+demand for nurses up until that point. We can now add the reservoir constraint
+to ensure that we have enough nurses available at all times while not having too
+many nurses scheduled (i.e., the reservoir level is between 0 and 2). We have
+three types of changes in the reservoir:
 
-1. The demand for nurses changes at the beginning of each hour. For these we use fixed integer times and activate all
-   changes. Note that the demand changes are negated, as an increase in demand lowers the reservoir level.
-2. If a nurse begins a shift, we increase the reservoir level by 1. We use the `shifts_begin` variables as times and
-   change the reservoir level only if the nurse is scheduled.
-3. Once a nurse ends a shift, we decrease the reservoir level by 1. We use the `shifts_end` variables as times and
-   change the reservoir level only if the nurse is scheduled.
+1. The demand for nurses changes at the beginning of each hour. For these we use
+   fixed integer times and activate all changes. Note that the demand changes
+   are negated, as an increase in demand lowers the reservoir level.
+2. If a nurse begins a shift, we increase the reservoir level by 1. We use the
+   `shifts_begin` variables as times and change the reservoir level only if the
+   nurse is scheduled.
+3. Once a nurse ends a shift, we decrease the reservoir level by 1. We use the
+   `shifts_end` variables as times and change the reservoir level only if the
+   nurse is scheduled.
 
 ```python
 times = demand_change_times
-demands = [-demand for demand in demand_change_at_t]  # an increase in demand lowers the reservoir
+demands = [
+    -demand for demand in demand_change_at_t
+]  # an increase in demand lowers the reservoir
 actives = [1] * len(demand_change_times)
 
 times += list(shifts_begin)

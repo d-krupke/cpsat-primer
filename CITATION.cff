@@ -1,7 +1,7 @@
 # YAML 1.2
 ---
 cff-version: "1.1.0"
-message: "You are free to use material from this primer. If so, please cite it."
+message: "You are free to use material from this primer. If so, please cite or refert to it."
 title: "The CP-SAT Primer: Using and Understanding Google OR-Tools' CP-SAT Solver"
 abstract: "The CP-SAT Primer: Using and Understanding Google OR-Tools' CP-SAT Solver"
 authors:
@@ -9,5 +9,10 @@ authors:
     family-names: Krupke
     given-names: Dominik
     orcid: "https://orcid.org/0000-0003-1573-3496"
+  - family-names: Lan
+    given-names: Leon
+  - family-names: Perk
+    given-names: Michael
+  - family-names: and others
 license: CC-BY-4.0
 repository-code: "https://github.com/d-krupke/cpsat-primer"
