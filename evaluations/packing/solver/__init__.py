@@ -8,6 +8,7 @@ from .packing_wo_rotations import RectanglePackingWithoutRotationsModel
 from .packing_with_rotations import RectanglePackingWithRotationsModel
 from .knapsack_with_rotations import RectangleKnapsackWithRotationsModel
 from .knapsack_wo_rotations import RectangleKnapsackWithoutRotationsModel
+from .smallestbox_wo_rotations import RectangleSqueezingWithoutRotationsModel
 from ._plotting import plot_solution
 
 __all__ = [
@@ -20,5 +21,6 @@ __all__ = [
     "RectanglePackingWithRotationsModel",
     "RectangleKnapsackWithRotationsModel",
     "RectangleKnapsackWithoutRotationsModel",
+    "RectangleSqueezingWithoutRotationsModel",
     "plot_solution",
 ]
