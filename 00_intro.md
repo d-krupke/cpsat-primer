@@ -8,7 +8,8 @@
 
 <!-- STOP_SKIP_FOR_README -->
 
-_By [Dominik Krupke](https://krupke.cc), TU Braunschweig_
+_By [Dominik Krupke](https://krupke.cc), TU Braunschweig, with contributions
+from Leon Lan, Michael Perk, and others._
 
 <!-- Introduction Paragraph --->
 
@@ -149,7 +150,7 @@ to coding; rather, it originates from an earlier usage of the word "program",
 which denoted a plan of action or a schedule. If this distinction is new to you,
 it is a strong indication that you would benefit from reading this article.
 
-> **About the Main Author:** [Dr. Dominik Krupke](https://krupke.cc) is a
+> **About the Lead Author:** [Dr. Dominik Krupke](https://krupke.cc) is a
 > postdoctoral researcher with the
 > [Algorithms Division](https://www.ibr.cs.tu-bs.de/alg) at TU Braunschweig. He
 > specializes in practical solutions to NP-hard problems. Initially focused on
@@ -157,6 +158,13 @@ it is a strong indication that you would benefit from reading this article.
 > once deemed impossible, frequently with the help of CP-SAT. This primer on
 > CP-SAT, first developed as course material for his students, has been extended
 > in his spare time to cater to a wider audience.
+>
+> **Contributors:** This primer has been enriched by the contributions of
+> several individuals. Notably, Leon Lan played a key role in restructuring the
+> content and offering critical feedback, while Michael Perk significantly
+> enhanced the section on the reservoir constraint. I also extend my gratitude
+> to all other contributors who identified and corrected errors, improved the
+> text, and offered valuable insights.
 
 > **Found a mistake?** Please open an issue or a pull request. You can also just
 > write me a quick mail to `krupked@gmail.com`.
