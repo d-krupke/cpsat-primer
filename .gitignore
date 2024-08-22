@@ -1,3 +1,9 @@
+# ignore thine self
+.gitignore
+
+# ignore requirements because the maintainer didn't add one
+requirements.txt
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -104,6 +110,7 @@ celerybeat.pid
 # Environments
 .env
 .venv
+cpenv/
 env/
 venv/
 ENV/

@@ -11,13 +11,13 @@ class RectangleKnapsackWithoutRotationsModel:
         # We have to create the variable for the bottom left corner of the boxes.
         # We directly limit their range, such that the boxes are inside the container
         self.x_vars = [
-            self.model.NewIntVar(
+            self.model.new_int_var(
                 0, instance.container.width - box.width, name=f"x1_{i}"
             )
             for i, box in enumerate(instance.rectangles)
         ]
         self.y_vars = [
-            self.model.NewIntVar(
+            self.model.new_int_var(
                 0, instance.container.height - box.height, name=f"y1_{i}"
             )
             for i, box in enumerate(instance.rectangles)
@@ -25,14 +25,14 @@ class RectangleKnapsackWithoutRotationsModel:
 
         # The packed variable is a boolean variable that is true if the rectangle is packed
         self.packed_vars = [
-            self.model.NewBoolVar(f"packed_{i}")
+            self.model.new_bool_var(f"packed_{i}")
             for i in range(len(instance.rectangles))
         ]
 
         # Interval variables are actually more like constraint containers, that are then passed to the no overlap constraint
         # Note that we could also make size and end variables, but we don't need them here
         x_interval_vars = [
-            self.model.NewOptionalFixedSizeIntervalVar(
+            self.model.new_optional_fixed_size_interval_var(
                 start=self.x_vars[i],  # the x value of the bottom left corner
                 size=box.width,  # the width of the rectangle
                 is_present=self.packed_vars[i],  # whether the rectangle is packed
@@ -41,7 +41,7 @@ class RectangleKnapsackWithoutRotationsModel:
             for i, box in enumerate(instance.rectangles)
         ]
         y_interval_vars = [
-            self.model.NewOptionalFixedSizeIntervalVar(
+            self.model.new_optional_fixed_size_interval_var(
                 start=self.y_vars[i],  # the y value of the bottom left corner
                 size=box.height,  # the height of the rectangle
                 is_present=self.packed_vars[i],  # whether the rectangle is packed
@@ -50,10 +50,10 @@ class RectangleKnapsackWithoutRotationsModel:
             for i, box in enumerate(instance.rectangles)
         ]
         # Enforce that no two rectangles overlap
-        self.model.AddNoOverlap2D(x_interval_vars, y_interval_vars)
+        self.model.add_no_overlap_2d(x_interval_vars, y_interval_vars)
 
         # maximize the number of packed rectangles
-        self.model.Maximize(
+        self.model.maximize(
             sum(
                 box.value * self.packed_vars[i]
                 for i, box in enumerate(instance.rectangles)
@@ -65,9 +65,9 @@ class RectangleKnapsackWithoutRotationsModel:
             return None
         placements = []
         for i, box in enumerate(self.instance.rectangles):
-            if solver.Value(self.packed_vars[i]):
-                x = solver.Value(self.x_vars[i])
-                y = solver.Value(self.y_vars[i])
+            if solver.value(self.packed_vars[i]):
+                x = solver.value(self.x_vars[i])
+                y = solver.value(self.y_vars[i])
                 placements.append(Placement(x=x, y=y))
             else:
                 placements.append(None)
@@ -78,8 +78,8 @@ class RectangleKnapsackWithoutRotationsModel:
         solver.parameters.log_search_progress = True
         solver.parameters.max_time_in_seconds = time_limit
         solver.parameters.relative_gap_limit = opt_tol
-        self.status = solver.Solve(self.model)
+        self.status = solver.solve(self.model)
         self.solution = self._extract_solution(solver)
-        self.upper_bound = solver.BestObjectiveBound()
-        self.objective_value = solver.ObjectiveValue()
+        self.upper_bound = solver.best_objective_bound
+        self.objective_value = solver.objective_value
         return self.status
