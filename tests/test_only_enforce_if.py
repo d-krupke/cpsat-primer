@@ -41,6 +41,4 @@ def test_only_enforce_if_list_with_negation():
     b2 = model.new_bool_var("b2")
     b3 = model.new_bool_var("b3")
 
-    model.add(x + z == 10).only_enforce_if(
-        [b2, b3.Not()]
-    )  # only enforce if b2 AND NOT b3
+    model.add(x + z == 10).only_enforce_if([b2, ~b3])  # only enforce if b2 AND NOT b3

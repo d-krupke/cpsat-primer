@@ -94,18 +94,18 @@ class PiecewiseConstantConstraint:
         self.model = model
 
         if restrict_domain:
-            self.y_domain = cp_model.Domain.FromValues(list(set(f.ys)))
-            self.y = model.NewIntVarFromDomain(self.y_domain, "y")
+            self.y_domain = cp_model.Domain.from_values(list(set(f.ys)))
+            self.y = self.model.new_int_var_from_domain(self.y_domain, "y")
         else:
-            self.y = model.NewIntVar(min(f.ys), max(f.ys), "y")
+            self.y = self.model.new_int_var(min(f.ys), max(f.ys), "y")
         # Limit the range of x.
-        self.model.Add(self.x >= self.f.xs[0])
-        self.model.Add(self.x <= self.f.xs[-1] - 1)
+        self.model.add(self.x >= self.f.xs[0])
+        self.model.add(self.x <= self.f.xs[-1] - 1)
         # Create a boolean variable for each step
         # The i-th step will force y=ys[i].
         # If no step is made, y=ys[0].
         self._step_var = [
-            self.model.NewBoolVar(f"interval_{i}") for i in range(len(self.f.ys) - 1)
+            self.model.new_bool_var(f"interval_{i}") for i in range(len(self.f.ys) - 1)
         ]
         self._enforce_step_order()
 
@@ -114,14 +114,14 @@ class PiecewiseConstantConstraint:
             step * (self.f.ys[i + 1] - self.f.ys[i])
             for i, step in enumerate(self._step_var)
         )
-        self.model.Add(self.y == self.y_expr)
+        self.model.add(self.y == self.y_expr)
         self._enforce_steps_for_x()
 
     def _enforce_step_order(self):
         # Enforce that the second step is only made if the first step is made
         for i in range(len(self._step_var) - 1):
             # All previous steps need to be made, too.
-            self.model.Add(self._step_var[i] >= self._step_var[i + 1])
+            self.model.add(self._step_var[i] >= self._step_var[i + 1])
 
     def _enforce_steps_for_x(self):
         # Enforce that exactly the right number of steps is made
@@ -129,7 +129,7 @@ class PiecewiseConstantConstraint:
         # If no step is made: x >= xs[0]
         # If one step is made x >= xs[0] + (xs[1] - xs[0]) = xs[1]
         # ...
-        self.model.Add(
+        self.model.add(
             self.x
             >= self.f.xs[0]
             + sum(
@@ -140,7 +140,7 @@ class PiecewiseConstantConstraint:
         # If no step is made: x+1 <= self.xs[1]
         # If one step is made x+1 <= xs[1] + (xs[2] - xs[1]) = xs[2]
         # ...
-        self.model.Add(
+        self.model.add(
             self.x + 1
             <= self.f.xs[1]
             + sum(
@@ -166,19 +166,19 @@ class PiecewiseConstantConstraint:
 
 def test_stairs():
     model = cp_model.CpModel()
-    x = model.NewIntVar(0, 10, "x")
+    x = model.new_int_var(0, 10, "x")
     f_ = PiecewiseConstantFunction(xs=[0, 1, 2, 3], ys=[0, 1, 2])
     f = PiecewiseConstantConstraint(
         model,
         x,
         f_,
     )
-    model.Maximize(f.y)
+    model.maximize(f.y)
     solver = cp_model.CpSolver()
-    status = solver.Solve(model)
+    status = solver.solve(model)
     assert status == cp_model.OPTIMAL
-    assert solver.Value(x) == 2
-    assert solver.Value(f.y) == 2
+    assert solver.value(x) == 2
+    assert solver.value(f.y) == 2
     assert f(2) == 2
     assert f(0) == 0
     assert f(1) == 1
@@ -187,57 +187,57 @@ def test_stairs():
 
 def test_stairs_min():
     model = cp_model.CpModel()
-    x = model.NewIntVar(0, 10, "x")
+    x = model.new_int_var(0, 10, "x")
     f_ = PiecewiseConstantFunction(xs=[0, 1, 2, 3], ys=[0, 1, 2])
     f = PiecewiseConstantConstraint(
         model,
         x,
         f_,
     )
-    model.Minimize(f.y)
+    model.minimize(f.y)
     solver = cp_model.CpSolver()
-    status = solver.Solve(model)
+    status = solver.solve(model)
     assert status == cp_model.OPTIMAL
-    assert solver.Value(x) == 0
-    assert solver.Value(f.y) == 0
+    assert solver.value(x) == 0
+    assert solver.value(f.y) == 0
     assert f(0) == 0
     assert f.is_monotonous()
 
 
 def test_pyramid():
     model = cp_model.CpModel()
-    x = model.NewIntVar(0, 10, "x")
+    x = model.new_int_var(0, 10, "x")
     f_ = PiecewiseConstantFunction(xs=[0, 1, 2, 3], ys=[0, 1, 0])
     f = PiecewiseConstantConstraint(
         model,
         x,
         f_,
     )
-    model.Maximize(f.y)
+    model.maximize(f.y)
     solver = cp_model.CpSolver()
-    status = solver.Solve(model)
+    status = solver.solve(model)
     assert status == cp_model.OPTIMAL
-    assert solver.Value(x) == 1
-    assert solver.Value(f.y) == 1
+    assert solver.value(x) == 1
+    assert solver.value(f.y) == 1
     assert f(1) == 1
     assert not f.is_monotonous()
 
 
 def test_larger_pyramid():
     model = cp_model.CpModel()
-    x = model.NewIntVar(0, 10, "x")
+    x = model.new_int_var(0, 10, "x")
     f_ = PiecewiseConstantFunction(xs=[0, 1, 2, 3, 4, 5], ys=[0, 1, 5, 1, 0])
     f = PiecewiseConstantConstraint(
         model,
         x,
         f_,
     )
-    model.Maximize(f.y)
+    model.maximize(f.y)
     solver = cp_model.CpSolver()
-    status = solver.Solve(model)
+    status = solver.solve(model)
     assert status == cp_model.OPTIMAL
-    assert solver.Value(x) == 2
-    assert solver.Value(f.y) == 5
+    assert solver.value(x) == 2
+    assert solver.value(f.y) == 5
     assert f(2) == 5
     assert f(3) == 1
     assert not f.is_monotonous()
@@ -258,20 +258,20 @@ class PiecewiseConstantConstraintViaOnlyIf:
         self.x = x_var
         self.f = f
         self.model = model
-        self.y_domain = cp_model.Domain.FromValues(list(set(f.ys)))
-        self.y = model.NewIntVarFromDomain(self.y_domain, "y")
+        self.y_domain = cp_model.Domain.from_values(list(set(f.ys)))
+        self.y = model.new_int_var_from_domain(self.y_domain, "y")
         # Limit the range of x.
-        self.model.Add(self.x >= self.f.xs[0])
-        self.model.Add(self.x <= self.f.xs[-1] - 1)
+        self.model.add(self.x >= self.f.xs[0])
+        self.model.add(self.x <= self.f.xs[-1] - 1)
         # Create a boolean variable for each interval
-        ivars = [model.NewBoolVar(f"interval_{i}") for i in range(len(self.f.ys))]
+        ivars = [model.new_bool_var(f"interval_{i}") for i in range(len(self.f.ys))]
         # Enforce that exactly one interval is active
-        model.AddExactlyOne(ivars)
+        model.add_exactly_one(ivars)
         # Match y to the corresponding interval.
         for i, ivar in enumerate(ivars):
-            model.Add(self.y == self.f.ys[i]).OnlyEnforceIf(ivar)
-            model.Add(self.x >= self.f.xs[i]).OnlyEnforceIf(ivar)
-            model.Add(self.x <= self.f.xs[i + 1] - 1).OnlyEnforceIf(ivar)
+            model.add(self.y == self.f.ys[i]).only_enforce_if(ivar)
+            model.add(self.x >= self.f.xs[i]).only_enforce_if(ivar)
+            model.add(self.x <= self.f.xs[i + 1] - 1).only_enforce_if(ivar)
 
     def __call__(self, x: int) -> int:
         """
@@ -290,19 +290,19 @@ class PiecewiseConstantConstraintViaOnlyIf:
 
 def test_stairs_onlyif():
     model = cp_model.CpModel()
-    x = model.NewIntVar(0, 10, "x")
+    x = model.new_int_var(0, 10, "x")
     f_ = PiecewiseConstantFunction(xs=[0, 1, 2, 3], ys=[0, 1, 2])
     f = PiecewiseConstantConstraintViaOnlyIf(
         model,
         x,
         f_,
     )
-    model.Maximize(f.y)
+    model.maximize(f.y)
     solver = cp_model.CpSolver()
-    status = solver.Solve(model)
+    status = solver.solve(model)
     assert status == cp_model.OPTIMAL
-    assert solver.Value(x) == 2
-    assert solver.Value(f.y) == 2
+    assert solver.value(x) == 2
+    assert solver.value(f.y) == 2
     assert f(2) == 2
     assert f(0) == 0
     assert f(1) == 1
@@ -311,57 +311,57 @@ def test_stairs_onlyif():
 
 def test_stairs_min_onlyif():
     model = cp_model.CpModel()
-    x = model.NewIntVar(0, 10, "x")
+    x = model.new_int_var(0, 10, "x")
     f_ = PiecewiseConstantFunction(xs=[0, 1, 2, 3], ys=[0, 1, 2])
     f = PiecewiseConstantConstraintViaOnlyIf(
         model,
         x,
         f_,
     )
-    model.Minimize(f.y)
+    model.minimize(f.y)
     solver = cp_model.CpSolver()
-    status = solver.Solve(model)
+    status = solver.solve(model)
     assert status == cp_model.OPTIMAL
-    assert solver.Value(x) == 0
-    assert solver.Value(f.y) == 0
+    assert solver.value(x) == 0
+    assert solver.value(f.y) == 0
     assert f(0) == 0
     assert f.is_monotonous()
 
 
 def test_pyramid_onlyif():
     model = cp_model.CpModel()
-    x = model.NewIntVar(0, 10, "x")
+    x = model.new_int_var(0, 10, "x")
     f_ = PiecewiseConstantFunction(xs=[0, 1, 2, 3], ys=[0, 1, 0])
     f = PiecewiseConstantConstraintViaOnlyIf(
         model,
         x,
         f_,
     )
-    model.Maximize(f.y)
+    model.maximize(f.y)
     solver = cp_model.CpSolver()
-    status = solver.Solve(model)
+    status = solver.solve(model)
     assert status == cp_model.OPTIMAL
-    assert solver.Value(x) == 1
-    assert solver.Value(f.y) == 1
+    assert solver.value(x) == 1
+    assert solver.value(f.y) == 1
     assert f(1) == 1
     assert not f.is_monotonous()
 
 
 def test_larger_pyramid_onlyif():
     model = cp_model.CpModel()
-    x = model.NewIntVar(0, 10, "x")
+    x = model.new_int_var(0, 10, "x")
     f_ = PiecewiseConstantFunction(xs=[0, 1, 2, 3, 4, 5], ys=[0, 1, 5, 1, 0])
     f = PiecewiseConstantConstraintViaOnlyIf(
         model,
         x,
         f_,
     )
-    model.Maximize(f.y)
+    model.maximize(f.y)
     solver = cp_model.CpSolver()
-    status = solver.Solve(model)
+    status = solver.solve(model)
     assert status == cp_model.OPTIMAL
-    assert solver.Value(x) == 2
-    assert solver.Value(f.y) == 5
+    assert solver.value(x) == 2
+    assert solver.value(f.y) == 5
     assert f(2) == 5
     assert f(3) == 1
     assert not f.is_monotonous()

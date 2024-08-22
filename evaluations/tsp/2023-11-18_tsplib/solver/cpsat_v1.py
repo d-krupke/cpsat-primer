@@ -1,5 +1,5 @@
 """
-This file provides a simple TSP implementation using CP-SAT's AddCircuit constraint.
+This file provides a simple TSP implementation using CP-SAT's add_circuit constraint.
 """
 
 import networkx as nx
@@ -18,18 +18,18 @@ class CpSatTspSolverV1:
         # Variables
         edge_vars = dict()
         for u, v in G.edges:
-            edge_vars[u, v] = self._model.NewBoolVar(f"edge_{u}_{v}")
-            edge_vars[v, u] = self._model.NewBoolVar(f"edge_{v}_{u}")
+            edge_vars[u, v] = self._model.new_bool_var(f"edge_{u}_{v}")
+            edge_vars[v, u] = self._model.new_bool_var(f"edge_{v}_{u}")
 
         # Constraints
         # Because the nodes in the graph a indices 0, 1, ..., n-1, we can use the
         # indices directly in the constraints. Otherwise, we would have to use
         # a mapping from the nodes to indices.
         circuit = [(u, v, x) for (u, v), x in edge_vars.items()]
-        self._model.AddCircuit(circuit)
+        self._model.add_circuit(circuit)
 
         # Objective
-        self._model.Minimize(
+        self._model.minimize(
             sum(x * G[u][v]["weight"] for (u, v), x in edge_vars.items())
         )
         self.logger.info("Model built.")
@@ -45,9 +45,9 @@ class CpSatTspSolverV1:
         solver.parameters.log_search_progress = True
         solver.log_callback = lambda s: self.logger.info(s)
         solver.parameters.relative_gap_limit = opt_tol
-        status = solver.Solve(self._model)
+        status = solver.solve(self._model)
         if status in (cp_model.OPTIMAL, cp_model.FEASIBLE):
-            return solver.ObjectiveValue(), solver.BestObjectiveBound()
+            return solver.objective_value, solver.best_objective_bound
         # Check that the only reason for stopping before optimality is the time limit.
         assert status in (
             cp_model.FEASIBLE,

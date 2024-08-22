@@ -11,7 +11,7 @@ def test_bool_constraints():
 
     model.add_bool_or(b1, b2, b3)  # b1 or b2 or b3 (at least one)
     model.add_at_least_one([b1, b2, b3])  # alternative notation
-    model.add_bool_and(b1, b2.Not(), b3.Not())  # b1 and not b2 and not b3 (all)
+    model.add_bool_and(b1, ~b2, ~b3)  # b1 and not b2 and not b3 (all)
     model.add_bool_and(b1, ~b2, ~b3)  # Alternative notation for `Not()`
     model.add_bool_xor(b1, b2, b3)  # b1 xor b2 xor b3
     model.add_exactly_one([b1, b2, b3])  # exactly one of them
@@ -106,7 +106,7 @@ def test_integer_cannot_be_used_in_boolean_logic():
 
     x = model.new_int_var(0, 100, "x")
     with pytest.raises(TypeError):
-        x.Not()  # This should raise an error because x is an integer variable
+        ~x  # This should raise an error because x is an integer variable
 
     b1 = model.new_bool_var("b1")
     with pytest.raises(TypeError):

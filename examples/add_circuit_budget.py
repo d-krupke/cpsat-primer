@@ -36,9 +36,9 @@ if __name__ == "__main__":
 
     model = cp_model.CpModel()
     # Variables: Binary decision variables for the edges
-    edge_vars = {(u, v): model.NewBoolVar(f"e_{u}_{v}") for (u, v) in dgraph.keys()}
+    edge_vars = {(u, v): model.new_bool_var(f"e_{u}_{v}") for (u, v) in dgraph.keys()}
     # Variables: Binary decision variables for the vertices
-    vertex_vars = {u: model.NewBoolVar(f"v_{u}") for u in range(n)}
+    vertex_vars = {u: model.new_bool_var(f"v_{u}") for u in range(n)}
     # Constraints: Add Circuit constraint
     # We need to tell CP-SAT which variable corresponds to which edge.
     # This is done by passing a list of tuples (u,v,var) to AddCircuit.
@@ -49,36 +49,36 @@ if __name__ == "__main__":
     # Add skipping variables to the circuit. CP-SAT will detect them by
     # v==v and not force v to be in the circuit, if the variable is false.
     circuit += [
-        (v, v, var.Not())  # Not() such that var==True <=> v in circuit
+        (v, v, ~var)  # ~var such that var==True <=> v in circuit
         for v, var in vertex_vars.items()
     ]
-    model.AddCircuit(circuit)
+    model.add_circuit(circuit)
 
     # Constraints: Budget constraint
     tour_cost = sum(dgraph[(u, v)] * x for (u, v), x in edge_vars.items())
-    model.Add(tour_cost <= budget)
+    model.add(tour_cost <= budget)
 
     # Objective: Maximize the number of visited nodes
     obj = sum(vertex_vars.values())
-    model.Maximize(obj)
+    model.maximize(obj)
 
     # Solve
     solver = cp_model.CpSolver()
     solver.parameters.max_time_in_seconds = 60.0
     solver.parameters.log_search_progress = True
-    status = solver.Solve(model)
+    status = solver.solve(model)
 
     # Print solution
     if status == cp_model.OPTIMAL:  # Found an optimal solution
-        tour = [(u, v) for (u, v), x in edge_vars.items() if solver.Value(x)]
+        tour = [(u, v) for (u, v), x in edge_vars.items() if solver.value(x)]
         print("Optimal tour is: ", sorted(tour))
-        print("Number of vertices in the tour:", solver.ObjectiveValue())
+        print("Number of vertices in the tour:", solver.objective_value)
         print("Cost of tour:", sum(dgraph[(u, v)] for (u, v) in tour))
     elif status == cp_model.FEASIBLE:  # Found a feasible solution
         tour = [(u, v) for (u, v), x in edge_vars.items() if solver.Value(x)]
         print("Feasible tour is: ", sorted(tour))
-        print("Number of vertices in the tour:", solver.ObjectiveValue())
-        print("The upper bound is: ", solver.BestObjectiveBound())
+        print("Number of vertices in the tour:", solver.objective_value)
+        print("The upper bound is: ", solver.best_objective_bound)
         print("Cost of tour:", sum(dgraph[(u, v)] for (u, v) in tour))
     else:  # No solution found
         print("No solution found.")

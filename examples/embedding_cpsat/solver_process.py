@@ -36,8 +36,8 @@ class InterprocessCallback(cp_model.CpSolverSolutionCallback):
 
     def on_solution_callback(self):
         """Called when the solver finds a new solution."""
-        self.shared_objective_value.value = self.ObjectiveValue()
-        self.shared_bound_value.value = self.BestObjectiveBound()
+        self.shared_objective_value.value = self.objective_value
+        self.shared_bound_value.value = self.best_objective_bound
 
         def get_value(var):
             return self.Value(var)

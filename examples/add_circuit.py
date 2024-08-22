@@ -1,5 +1,5 @@
 """
-This example shows how to use the AddCircuit constraint to model a TSP.
+This example shows how to use the add_circuit constraint to model a TSP.
 It can solve instances of reasonable size to optimality.
 The performance may depend on the weights of the edges, with
 euclidean distances probably being the easiest instances.
@@ -31,7 +31,7 @@ if __name__ == "__main__":
 
     model = cp_model.CpModel()
     # Variables: Binary decision variables for the edges
-    edge_vars = {(u, v): model.NewBoolVar(f"e_{u}_{v}") for (u, v) in dgraph.keys()}
+    edge_vars = {(u, v): model.new_bool_var(f"e_{u}_{v}") for (u, v) in dgraph.keys()}
     # Constraints: Add Circuit constraint
     # We need to tell CP-SAT which variable corresponds to which edge.
     # This is done by passing a list of tuples (u,v,var) to AddCircuit.
@@ -39,27 +39,27 @@ if __name__ == "__main__":
         (u, v, var)  # (source, destination, variable)
         for (u, v), var in edge_vars.items()
     ]
-    model.AddCircuit(circuit)
+    model.add_circuit(circuit)
 
     # Objective: minimize the total cost of edges
     obj = sum(dgraph[(u, v)] * x for (u, v), x in edge_vars.items())
-    model.Minimize(obj)
+    model.minimize(obj)
 
     # Solve
     solver = cp_model.CpSolver()
     solver.parameters.max_time_in_seconds = 60.0
     solver.parameters.log_search_progress = True
-    status = solver.Solve(model)
+    status = solver.solve(model)
 
     # Print solution
     if status == cp_model.OPTIMAL:
-        tour = [(u, v) for (u, v), x in edge_vars.items() if solver.Value(x)]
+        tour = [(u, v) for (u, v), x in edge_vars.items() if solver.value(x)]
         print("Optimal tour is: ", sorted(tour))
-        print("The cost of the tour is: ", solver.ObjectiveValue())
+        print("The cost of the tour is: ", solver.objective_value)
     elif status == cp_model.FEASIBLE:
-        tour = [(u, v) for (u, v), x in edge_vars.items() if solver.Value(x)]
+        tour = [(u, v) for (u, v), x in edge_vars.items() if solver.value(x)]
         print("Feasible tour is: ", sorted(tour))
-        print("The cost of the tour is: ", solver.ObjectiveValue())
-        print("The lower bound of the tour is: ", solver.BestObjectiveBound())
+        print("The cost of the tour is: ", solver.objective_value)
+        print("The lower bound of the tour is: ", solver.best_objective_bound)
     else:
         print("No solution found.")

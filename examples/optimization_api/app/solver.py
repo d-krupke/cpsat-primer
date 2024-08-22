@@ -11,6 +11,7 @@ if you are working in a team, the API may be maintained by a
 different team than the optimization algorithm, so separating
 the two can make the development process more efficient.
 """
+
 from typing import Callable
 
 from ortools.sat.python import cp_model
@@ -89,7 +90,7 @@ class TspSolver:
         if log_callback:
             solver.parameters.log_search_progress = True
             solver.log_callback = log_callback
-        status = solver.Solve(self.model)
+        status = solver.solve(self.model)
         if status in (cp_model.OPTIMAL, cp_model.FEASIBLE):
             return TspSolution(
                 node_order=[

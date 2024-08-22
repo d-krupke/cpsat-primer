@@ -417,11 +417,11 @@ class PiecewiseLinearConstraint:
             # This is efficient but not necessarily what you want.
             # However, we need some lower bound to define the variable.
             if upper_bound:
-                self.y = model.NewIntVar(
+                self.y = model.new_int_var(
                     min(f.ys) if y_bound is None else y_bound, max(f.ys), "y"
                 )
             else:
-                self.y = model.NewIntVar(
+                self.y = model.new_int_var(
                     min(f.ys), max(f.ys) if y_bound is None else y_bound, "y"
                 )
         else:
@@ -431,8 +431,8 @@ class PiecewiseLinearConstraint:
         # restrict range of x, just to be sure it is not forgotten
         # The preprocessing will deal with this constraint easily and just
         # restrict the domain of x to the bounds of the function.
-        self.model.Add(x >= f.xs[0])
-        self.model.Add(x <= f.xs[-1])
+        self.model.add(x >= f.xs[0])
+        self.model.add(x <= f.xs[-1])
 
         # A partition of the function into convex parts.
         # The fewer parts, the better.
@@ -469,9 +469,9 @@ class PiecewiseLinearConstraint:
         for (x1, y1), (x2, y2) in self.f.segments():
             a, b, c = generate_integer_linear_expression_from_two_points(x1, y1, x2, y2)
             if self.upper_bound:
-                self.model.Add(self.y * a <= (b * self.x + c))  # type: ignore
+                self.model.add(self.y * a <= (b * self.x + c))  # type: ignore
             else:
-                self.model.Add(self.y * a >= (b * self.x + c))  # type: ignore
+                self.model.add(self.y * a >= (b * self.x + c))  # type: ignore
             self.num_constraints += 1
 
     def _add_multiple_convex_parts_constraint(self):
@@ -490,12 +490,12 @@ class PiecewiseLinearConstraint:
                     x1, y1, x2, y2
                 )
                 if self.upper_bound:  # <= if upper_bound, >= if lower_bound
-                    self.model.Add((self.y * a) <= (b * self.x + c)).OnlyEnforceIf(var)  # type: ignore
+                    self.model.add((self.y * a) <= (b * self.x + c)).OnlyEnforceIf(var)  # type: ignore
                 else:
-                    self.model.Add((self.y * a) >= (b * self.x + c)).OnlyEnforceIf(var)  # type: ignore
+                    self.model.add((self.y * a) >= (b * self.x + c)).OnlyEnforceIf(var)  # type: ignore
                 # x must be within the bounds of the convex part
-                self.model.Add(self.x <= f.get_bounds()[1]).OnlyEnforceIf(var)
-                self.model.Add(self.x >= f.get_bounds()[0]).OnlyEnforceIf(var)
+                self.model.add(self.x <= f.get_bounds()[1]).OnlyEnforceIf(var)
+                self.model.add(self.x >= f.get_bounds()[0]).OnlyEnforceIf(var)
                 # We could save two constraints here, but they won't make much of a difference
                 # The bespoken two constraints are the left-most and right-most x-values of
                 # the first and the last convex part.
@@ -510,52 +510,52 @@ class PiecewiseLinearConstraint:
         for (x1, y1), (x2, y2) in self.envelope.segments():
             a, b, c = generate_integer_linear_expression_from_two_points(x1, y1, x2, y2)
             if self.upper_bound:
-                self.model.Add(a * self.y <= (b * self.x + c))  # type: ignore
+                self.model.add(a * self.y <= (b * self.x + c))  # type: ignore
             else:
-                self.model.Add(a * self.y >= (b * self.x + c))  # type: ignore
+                self.model.add(a * self.y >= (b * self.x + c))  # type: ignore
             self.num_constraints += 1
 
 
 def test_piecewise_linear_upper_bound_constraint():
     model = cp_model.CpModel()
-    x = model.NewIntVar(0, 20, "x")
+    x = model.new_int_var(0, 20, "x")
     f = PiecewiseLinearFunction(xs=[0, 10, 20], ys=[0, 10, 5])
     c = PiecewiseLinearConstraint(model, x, f, upper_bound=True)
-    model.Maximize(c.y)
+    model.maximize(c.y)
     solver = cp_model.CpSolver()
-    assert solver.Solve(model) == cp_model.OPTIMAL
-    assert solver.Value(c.y) == 10
-    assert solver.Value(x) == 10
+    assert solver.solve(model) == cp_model.OPTIMAL
+    assert solver.value(c.y) == 10
+    assert solver.value(x) == 10
     assert c.num_auxiliary_variables == 0
     assert c.num_constraints == 2
 
     model = cp_model.CpModel()
-    x = model.NewIntVar(0, 20, "x")
+    x = model.new_int_var(0, 20, "x")
     f = PiecewiseLinearFunction(xs=[0, 10, 20], ys=[0, 10, 50])
     c = PiecewiseLinearConstraint(model, x, f, upper_bound=True)
-    model.Maximize(c.y)
+    model.maximize(c.y)
     solver = cp_model.CpSolver()
-    assert solver.Solve(model) == cp_model.OPTIMAL
-    assert solver.Value(c.y) == 50
-    assert solver.Value(x) == 20
+    assert solver.solve(model) == cp_model.OPTIMAL
+    assert solver.value(c.y) == 50
+    assert solver.value(x) == 20
     assert c.num_auxiliary_variables == 2
 
     model = cp_model.CpModel()
-    x = model.NewIntVar(0, 20, "x")
+    x = model.new_int_var(0, 20, "x")
     f = PiecewiseLinearFunction(xs=[0, 10, 20], ys=[0, 10, 50])
     c = PiecewiseLinearConstraint(model, x, f, upper_bound=False)
-    model.Minimize(c.y)
+    model.minimize(c.y)
     solver = cp_model.CpSolver()
-    assert solver.Solve(model) == cp_model.OPTIMAL
-    assert solver.Value(c.y) == 0
-    assert solver.Value(x) == 0
+    assert solver.solve(model) == cp_model.OPTIMAL
+    assert solver.value(c.y) == 0
+    assert solver.value(x) == 0
 
     model = cp_model.CpModel()
-    x = model.NewIntVar(0, 20, "x")
+    x = model.new_int_var(0, 20, "x")
     f = PiecewiseLinearFunction(xs=[0, 10, 20, 30], ys=[20, 10, 50, 40])
     c = PiecewiseLinearConstraint(model, x, f, upper_bound=False)
-    model.Minimize(c.y)
+    model.minimize(c.y)
     solver = cp_model.CpSolver()
-    assert solver.Solve(model) == cp_model.OPTIMAL
-    assert solver.Value(c.y) == 10
-    assert solver.Value(x) == 10
+    assert solver.solve(model) == cp_model.OPTIMAL
+    assert solver.value(c.y) == 10
+    assert solver.value(x) == 10

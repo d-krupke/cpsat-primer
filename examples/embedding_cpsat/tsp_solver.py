@@ -124,7 +124,7 @@ class EdgeVariables:
             model (cp_model.CpModel): The CP-SAT model.
         """
         self.vars = {
-            (u, v): model.NewBoolVar(f"edge_{u}_{v}") for (u, v) in edges.keys()
+            (u, v): model.new_bool_var(f"edge_{u}_{v}") for (u, v) in edges.keys()
         }
 
     def __getitem__(self, key: Tuple[int, int]):
@@ -171,12 +171,12 @@ class TspSolver:
         """
         self.edge_vars = EdgeVariables(self.graph.edges, self.model)
         circuit = [(u, v, var) for ((u, v), var) in self.edge_vars.items()]
-        self.model.AddCircuit(circuit)
+        self.model.add_circuit(circuit)
 
         def weight(u, v):
             return self.graph.edges[u, v]
 
-        self.model.Minimize(
+        self.model.minimize(
             sum(weight(u, v) * var for (u, v), var in self.edge_vars.items())
         )
 
@@ -196,7 +196,7 @@ class TspSolver:
             Tuple[int, Optional[Tour]]: The status of the solver and the tour if found.
         """
         self.solver.parameters.max_time_in_seconds = max_time
-        status = self.solver.Solve(self.model, callback)
+        status = self.solver.solve(self.model, callback)
         if status in (cp_model.OPTIMAL, cp_model.FEASIBLE):
             return status, self.edge_vars.extract_tour(self.solver.Value)
         return status, None
