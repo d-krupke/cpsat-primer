@@ -1535,16 +1535,15 @@ within their domain. However, they also need more explanation on the correct
 usage.
 
 - [Tour Constraints](#04-modelling-circuit): `add_circuit`,
-  `add_multiple_circuit`
-- [Automaton Constraints](#04-modelling-automaton): `add_automaton`
-- [Reservoir Constraints](#04-modelling-reservoir): `add_reservoir_constraint`,
-  `add_reservoir_constraint_with_active`
+  `add_multiple_circuit`, `add_reservoir_constraint_with_active`
 - [Intervals](#04-modelling-intervals): `new_interval_var`,
   `new_interval_var_series`, `new_fixed_size_interval_var`,
   `new_optional_interval_var`, `new_optional_interval_var_series`,
   `new_optional_fixed_size_interval_var`,
   `new_optional_fixed_size_interval_var_series`,
   `add_no_overlap`,`add_no_overlap_2d`, `add_cumulative`
+- [Automaton Constraints](#04-modelling-automaton): `add_automaton`
+- [Reservoir Constraints](#04-modelling-reservoir): `add_reservoir_constraint`,
 - [Piecewise Linear Constraints](#04-modelling-pwl): Not officially part of
   CP-SAT, but we provide some free copy&pasted code to do it.
 
@@ -1760,231 +1759,6 @@ in CP-SAT. Nevertheless, both formulations perform significantly worse than the
 `add_circuit` constraint for handling tours and paths in such problems. Unlike
 end users, the `add_circuit` constraint can utilize lazy constraints internally,
 offering a substantial advantage in solving the TSP.
-
-<a name="04-modelling-automaton"></a>
-
-### Automaton Constraints
-
-Automaton constraints model finite state machines, enabling the representation
-of feasible transitions between states. This is particularly useful in software
-verification, where it is essential to ensure that a program follows a specified
-sequence of states. Given the critical importance of verification in research,
-there is likely a dedicated audience that appreciates this constraint. However,
-others may prefer to proceed to the next section.
-
-|                  ![Automaton Example](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/automaton.png)                   |
-| :----------------------------------------------------------------------------------------------------------------------------------------: |
-| An example of a finite state machine with four states and seven transitions. State 0 is the initial state, and state 3 is the final state. |
-
-The automaton operates as follows: We have a list of integer variables
-`transition_variables` that represent the transition values. Starting from the
-`starting_state`, the next state is determined by the transition triple
-`(state, transition_value, next_state)` matching the first transition variable.
-If no such triple is found, the model is infeasible. This process repeats for
-each subsequent transition variable. It is crucial that the final transition
-leads to a final state (possibly via a loop); otherwise, the model remains
-infeasible.
-
-The state machine from the example can be modeled as follows:
-
-```python
-model = cp_model.CpModel()
-
-transition_variables = [model.new_int_var(0, 2, f"transition_{i}") for i in range(4)]
-transition_triples = [
-    (0, 0, 1),  # If in state 0 and the transition value is 0, go to state 1
-    (1, 0, 1),  # If in state 1 and the transition value is 0, stay in state 1
-    (1, 1, 2),  # If in state 1 and the transition value is 1, go to state 2
-    (2, 0, 0),  # If in state 2 and the transition value is 0, go to state 0
-    (2, 1, 1),  # If in state 2 and the transition value is 1, go to state 1
-    (2, 2, 3),  # If in state 2 and the transition value is 2, go to state 3
-    (3, 0, 3),  # If in state 3 and the transition value is 0, stay in state 3
-]
-
-model.add_automaton(
-    transition_variables=transition_variables,
-    starting_state=0,
-    final_states=[3],
-    transition_triples=transition_triples,
-)
-```
-
-The assignment `[0, 1, 2, 0]` would be a feasible solution for this model,
-whereas the assignment `[1, 0, 1, 2]` would be infeasible because state 0 has no
-transition for value 1. Similarly, the assignment `[0, 0, 1, 1]` would be
-infeasible as it does not end in a final state.
-
-<a name="04-modelling-reservoir"></a>
-
-### Reservoir Constraints
-
-Sometimes, we need to keep the balance between inflows and outflows of a
-reservoir. The name giving example is a water reservoir, where we need to keep
-the water level between a minimum and a maximum level. The reservoir constraint
-takes a list of time variables, a list of integer level changes, and the minimum
-and maximum level of the reservoir. If the affine expression `times[i]` is
-assigned a value `t`, then the current level changes by `level_changes[i]`. Note
-that at the moment, variable level changes are not supported, which means level
-changes are constant at time `t`. The constraint ensures that the level stays
-between the minimum and maximum level at all time, i.e.
-`sum(level_changes[i] if times[i] <= t) in [min_level, max_level]`.
-
-There are many other examples apart from water reservoirs, where you need to
-balance demands and supplies, such as maintaining a certain stock level in a
-warehouse, or ensuring a certain staffing level in a clinic. The
-`add_reservoir_constraint` constraint in CP-SAT allows you to model such
-problems easily.
-
-In the following example, `times[i]` represents the time at which the change
-`level_changes[i]` will be applied, thus both lists needs to be of the same
-length. The reservoir level starts at 0, and the minimum level has to be
-$\leq 0$ and the maximum level has to be $\geq 0$.
-
-```python
-times = [model.new_int_var(0, 10, f"time_{i}") for i in range(10)]
-level_changes = [1] * 10
-
-model.add_reservoir_constraint(
-    times=times,
-    level_changes=level_changes,
-    min_level=-10,
-    max_level=10,
-)
-```
-
-Additionally, the `add_reservoir_constraint_with_active` constraint allows you
-to model a reservoir with _optional_ changes. Here, we additionally have a list
-of Boolean variables `actives`, where `actives[i]` indicates if the change
-`level_changes[i]` takes place, i.e. if
-`sum(level_changes[i] * actives[i] if times[i] <= t) in [min_level, max_level]`
-If a change is not active, it is as if it does not exist, and the reservoir
-level remains the same, independent of the time and change values.
-
-```python
-times = [model.new_int_var(0, 10, f"time_{i}") for i in range(10)]
-level_changes = [1] * 10
-actives = [model.new_bool_var(f"active_{i}") for i in range(10)]
-
-model.add_reservoir_constraint_with_active(
-    times=times,
-    level_changes=level_changes,
-    actives=actives,
-    min_level=-10,
-    max_level=10,
-)
-```
-
-To illustrate the usage of the reservoir constraint, we look at an example for
-scheduling nurses in a clinic. For the full example, take a look at the
-[notebook](https://github.com/d-krupke/cpsat-primer/blob/main/examples/add_reservoir.ipynb).
-
-The clinic needs to ensure that there are always enough nurses available without
-over-staffing too much. For a 12-hour work day, we model the demands for nurses
-as integers for each hour of the day.
-
-```python
-# a positive number means we need more nurses, a negative number means we need fewer nurses.
-demand_change_at_t = [3, 0, 0, 0, 2, 0, 0, 0, -1, 0, -1, 0, -3]
-demand_change_times = list(range(len(demand_change_at_t)))  # [0, 1, ..., 12]
-```
-
-We have a list of nurses, each with an individual availability as well as a
-maximum shift length.
-
-```python
-max_shift_length = 5
-
-# begin and end of the availability of each nurse
-nurse_availabilities = 2 * [
-    (0, 7),
-    (0, 4),
-    (0, 8),
-    (2, 9),
-    (1, 5),
-    (5, 12),
-    (7, 12),
-    (0, 12),
-    (4, 12),
-]
-```
-
-We now initialize all relevant variables of the model. Each nurse is assigned a
-start and end time of their shift as well as a Boolean variable indicating if
-they are working at all.
-
-```python
-# boolean variable to indicate if a nurse is scheduled
-nurse_scheduled = [
-    model.new_bool_var(f"nurse_{i}_scheduled") for i in range(len(nurse_availabilities))
-]
-
-# model the begin and end of each shift
-shifts_begin = [
-    model.new_int_var(begin, end, f"begin_nurse_{i}")
-    for i, (begin, end) in enumerate(nurse_availabilities)
-]
-
-shifts_end = [
-    model.new_int_var(begin, end, f"end_nurse_{i}")
-    for i, (begin, end) in enumerate(nurse_availabilities)
-]
-```
-
-We now add some basic constraints to ensure that the shifts are valid.
-
-```python
-for begin, end in zip(shifts_begin, shifts_end):
-    model.add(end >= begin)  # make sure the end is after the begin
-    model.add(end - begin <= max_shift_length)  # make sure, the shifts are not too long
-```
-
-Our reservoir level is the number of nurses scheduled at any time minus the
-demand for nurses up until that point. We can now add the reservoir constraint
-to ensure that we have enough nurses available at all times while not having too
-many nurses scheduled (i.e., the reservoir level is between 0 and 2). We have
-three types of changes in the reservoir:
-
-1. The demand for nurses changes at the beginning of each hour. For these we use
-   fixed integer times and activate all changes. Note that the demand changes
-   are negated, as an increase in demand lowers the reservoir level.
-2. If a nurse begins a shift, we increase the reservoir level by 1. We use the
-   `shifts_begin` variables as times and change the reservoir level only if the
-   nurse is scheduled.
-3. Once a nurse ends a shift, we decrease the reservoir level by 1. We use the
-   `shifts_end` variables as times and change the reservoir level only if the
-   nurse is scheduled.
-
-```python
-times = demand_change_times
-demands = [
-    -demand for demand in demand_change_at_t
-]  # an increase in demand lowers the reservoir
-actives = [1] * len(demand_change_times)
-
-times += list(shifts_begin)
-demands += [1] * len(shifts_begin)  # a nurse begins a shift
-actives += list(nurse_scheduled)
-
-times += list(shifts_end)
-demands += [-1] * len(shifts_end)  # a nurse ends a shift
-actives += list(nurse_scheduled)
-
-model.add_reservoir_constraint_with_active(
-    times=times,
-    level_changes=demands,
-    min_level=0,
-    max_level=2,
-    actives=actives,
-)
-```
-
-> [!NOTE]
->
-> The reservoir constraints can express conditions that are difficult to model
-> "by hand". However, while I do not have much experience with them, I would not
-> expect them to be particularly easy to optimize. Let me know if you have
-> either good or bad experiences with them in practice and for which problem
-> scales they work well.
 
 <a name="04-modelling-intervals"></a>
 
@@ -2604,6 +2378,231 @@ solver.parameters.use_pairwise_reasoning_in_no_overlap_2d = True
 
 With the latest version of CP-SAT, I did not notice a significant difference in
 performance when using these parameters.
+
+<a name="04-modelling-automaton"></a>
+
+### Automaton Constraints
+
+Automaton constraints model finite state machines, enabling the representation
+of feasible transitions between states. This is particularly useful in software
+verification, where it is essential to ensure that a program follows a specified
+sequence of states. Given the critical importance of verification in research,
+there is likely a dedicated audience that appreciates this constraint. However,
+others may prefer to proceed to the next section.
+
+|                  ![Automaton Example](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/automaton.png)                   |
+| :----------------------------------------------------------------------------------------------------------------------------------------: |
+| An example of a finite state machine with four states and seven transitions. State 0 is the initial state, and state 3 is the final state. |
+
+The automaton operates as follows: We have a list of integer variables
+`transition_variables` that represent the transition values. Starting from the
+`starting_state`, the next state is determined by the transition triple
+`(state, transition_value, next_state)` matching the first transition variable.
+If no such triple is found, the model is infeasible. This process repeats for
+each subsequent transition variable. It is crucial that the final transition
+leads to a final state (possibly via a loop); otherwise, the model remains
+infeasible.
+
+The state machine from the example can be modeled as follows:
+
+```python
+model = cp_model.CpModel()
+
+transition_variables = [model.new_int_var(0, 2, f"transition_{i}") for i in range(4)]
+transition_triples = [
+    (0, 0, 1),  # If in state 0 and the transition value is 0, go to state 1
+    (1, 0, 1),  # If in state 1 and the transition value is 0, stay in state 1
+    (1, 1, 2),  # If in state 1 and the transition value is 1, go to state 2
+    (2, 0, 0),  # If in state 2 and the transition value is 0, go to state 0
+    (2, 1, 1),  # If in state 2 and the transition value is 1, go to state 1
+    (2, 2, 3),  # If in state 2 and the transition value is 2, go to state 3
+    (3, 0, 3),  # If in state 3 and the transition value is 0, stay in state 3
+]
+
+model.add_automaton(
+    transition_variables=transition_variables,
+    starting_state=0,
+    final_states=[3],
+    transition_triples=transition_triples,
+)
+```
+
+The assignment `[0, 1, 2, 0]` would be a feasible solution for this model,
+whereas the assignment `[1, 0, 1, 2]` would be infeasible because state 0 has no
+transition for value 1. Similarly, the assignment `[0, 0, 1, 1]` would be
+infeasible as it does not end in a final state.
+
+<a name="04-modelling-reservoir"></a>
+
+### Reservoir Constraints
+
+Sometimes, we need to keep the balance between inflows and outflows of a
+reservoir. The name giving example is a water reservoir, where we need to keep
+the water level between a minimum and a maximum level. The reservoir constraint
+takes a list of time variables, a list of integer level changes, and the minimum
+and maximum level of the reservoir. If the affine expression `times[i]` is
+assigned a value `t`, then the current level changes by `level_changes[i]`. Note
+that at the moment, variable level changes are not supported, which means level
+changes are constant at time `t`. The constraint ensures that the level stays
+between the minimum and maximum level at all time, i.e.
+`sum(level_changes[i] if times[i] <= t) in [min_level, max_level]`.
+
+There are many other examples apart from water reservoirs, where you need to
+balance demands and supplies, such as maintaining a certain stock level in a
+warehouse, or ensuring a certain staffing level in a clinic. The
+`add_reservoir_constraint` constraint in CP-SAT allows you to model such
+problems easily.
+
+In the following example, `times[i]` represents the time at which the change
+`level_changes[i]` will be applied, thus both lists needs to be of the same
+length. The reservoir level starts at 0, and the minimum level has to be
+$\leq 0$ and the maximum level has to be $\geq 0$.
+
+```python
+times = [model.new_int_var(0, 10, f"time_{i}") for i in range(10)]
+level_changes = [1] * 10
+
+model.add_reservoir_constraint(
+    times=times,
+    level_changes=level_changes,
+    min_level=-10,
+    max_level=10,
+)
+```
+
+Additionally, the `add_reservoir_constraint_with_active` constraint allows you
+to model a reservoir with _optional_ changes. Here, we additionally have a list
+of Boolean variables `actives`, where `actives[i]` indicates if the change
+`level_changes[i]` takes place, i.e. if
+`sum(level_changes[i] * actives[i] if times[i] <= t) in [min_level, max_level]`
+If a change is not active, it is as if it does not exist, and the reservoir
+level remains the same, independent of the time and change values.
+
+```python
+times = [model.new_int_var(0, 10, f"time_{i}") for i in range(10)]
+level_changes = [1] * 10
+actives = [model.new_bool_var(f"active_{i}") for i in range(10)]
+
+model.add_reservoir_constraint_with_active(
+    times=times,
+    level_changes=level_changes,
+    actives=actives,
+    min_level=-10,
+    max_level=10,
+)
+```
+
+To illustrate the usage of the reservoir constraint, we look at an example for
+scheduling nurses in a clinic. For the full example, take a look at the
+[notebook](https://github.com/d-krupke/cpsat-primer/blob/main/examples/add_reservoir.ipynb).
+
+The clinic needs to ensure that there are always enough nurses available without
+over-staffing too much. For a 12-hour work day, we model the demands for nurses
+as integers for each hour of the day.
+
+```python
+# a positive number means we need more nurses, a negative number means we need fewer nurses.
+demand_change_at_t = [3, 0, 0, 0, 2, 0, 0, 0, -1, 0, -1, 0, -3]
+demand_change_times = list(range(len(demand_change_at_t)))  # [0, 1, ..., 12]
+```
+
+We have a list of nurses, each with an individual availability as well as a
+maximum shift length.
+
+```python
+max_shift_length = 5
+
+# begin and end of the availability of each nurse
+nurse_availabilities = 2 * [
+    (0, 7),
+    (0, 4),
+    (0, 8),
+    (2, 9),
+    (1, 5),
+    (5, 12),
+    (7, 12),
+    (0, 12),
+    (4, 12),
+]
+```
+
+We now initialize all relevant variables of the model. Each nurse is assigned a
+start and end time of their shift as well as a Boolean variable indicating if
+they are working at all.
+
+```python
+# boolean variable to indicate if a nurse is scheduled
+nurse_scheduled = [
+    model.new_bool_var(f"nurse_{i}_scheduled") for i in range(len(nurse_availabilities))
+]
+
+# model the begin and end of each shift
+shifts_begin = [
+    model.new_int_var(begin, end, f"begin_nurse_{i}")
+    for i, (begin, end) in enumerate(nurse_availabilities)
+]
+
+shifts_end = [
+    model.new_int_var(begin, end, f"end_nurse_{i}")
+    for i, (begin, end) in enumerate(nurse_availabilities)
+]
+```
+
+We now add some basic constraints to ensure that the shifts are valid.
+
+```python
+for begin, end in zip(shifts_begin, shifts_end):
+    model.add(end >= begin)  # make sure the end is after the begin
+    model.add(end - begin <= max_shift_length)  # make sure, the shifts are not too long
+```
+
+Our reservoir level is the number of nurses scheduled at any time minus the
+demand for nurses up until that point. We can now add the reservoir constraint
+to ensure that we have enough nurses available at all times while not having too
+many nurses scheduled (i.e., the reservoir level is between 0 and 2). We have
+three types of changes in the reservoir:
+
+1. The demand for nurses changes at the beginning of each hour. For these we use
+   fixed integer times and activate all changes. Note that the demand changes
+   are negated, as an increase in demand lowers the reservoir level.
+2. If a nurse begins a shift, we increase the reservoir level by 1. We use the
+   `shifts_begin` variables as times and change the reservoir level only if the
+   nurse is scheduled.
+3. Once a nurse ends a shift, we decrease the reservoir level by 1. We use the
+   `shifts_end` variables as times and change the reservoir level only if the
+   nurse is scheduled.
+
+```python
+times = demand_change_times
+demands = [
+    -demand for demand in demand_change_at_t
+]  # an increase in demand lowers the reservoir
+actives = [1] * len(demand_change_times)
+
+times += list(shifts_begin)
+demands += [1] * len(shifts_begin)  # a nurse begins a shift
+actives += list(nurse_scheduled)
+
+times += list(shifts_end)
+demands += [-1] * len(shifts_end)  # a nurse ends a shift
+actives += list(nurse_scheduled)
+
+model.add_reservoir_constraint_with_active(
+    times=times,
+    level_changes=demands,
+    min_level=0,
+    max_level=2,
+    actives=actives,
+)
+```
+
+> [!NOTE]
+>
+> The reservoir constraints can express conditions that are difficult to model
+> "by hand". However, while I do not have much experience with them, I would not
+> expect them to be particularly easy to optimize. Let me know if you have
+> either good or bad experiences with them in practice and for which problem
+> scales they work well.
 
 <a name="04-modelling-pwl"></a>
 
