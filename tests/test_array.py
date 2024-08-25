@@ -49,7 +49,7 @@ def test_feasible_assignments():
         model.add(value_at_index_var == value_at_index_value)
 
         # Solve the model
-        status = solver.Solve(model)
+        status = solver.solve(model)
 
         # Check the solution
         assert status == cp_model.OPTIMAL
@@ -82,7 +82,7 @@ def test_inverse_constraint():
             model.add(w[i] == w_values[i])
 
         # Solve the model
-        status = solver.Solve(model)
+        status = solver.solve(model)
 
         assert (
             status == cp_model.OPTIMAL

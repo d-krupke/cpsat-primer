@@ -2,6 +2,7 @@
 This file provides a simple implementation of a TSP solver using CP-SAT and the Dantzig-Fulkerson-Johnson formulation.
 Because the CP-SAT solver does not support lazy constraints, we have to run the solver multiple times.
 """
+
 import networkx as nx
 from ortools.sat.python import cp_model
 import typing
@@ -13,7 +14,9 @@ class _EdgeVars:
     def __init__(self, model: cp_model.CpModel, graph: nx.Graph) -> None:
         self._model = model
         self._graph = graph
-        self._vars = {(u, v): model.NewBoolVar(f"edge_{u}_{v}") for u, v in graph.edges}
+        self._vars = {
+            (u, v): model.new_bool_var(f"edge_{u}_{v}") for u, v in graph.edges
+        }
 
     def x(self, v, w):
         if (v, w) in self._vars:
@@ -65,10 +68,10 @@ class _SubtourCallback(cp_model.CpSolverSolutionCallback):
         if len(connected_components) > 1:
             self.subtours += connected_components
             if self.early_abort:
-                self.StopSearch()
+                self.stop_search()
         else:
             # update best solution
-            obj = self.ObjectiveValue()
+            obj = self.objective_value
             if obj < self.best_objective:
                 self.best_objective = obj
                 self.best_solution = solution
@@ -96,10 +99,10 @@ class CpSatTspSolverDantzig:
         self.best_bound = 0
 
         for v in G.nodes:
-            self._model.Add(sum(x for _, x in self._edge_vars.incident_edges(v)) == 2)
+            self._model.add(sum(x for _, x in self._edge_vars.incident_edges(v)) == 2)
 
         # Objective
-        self._model.Minimize(
+        self._model.minimize(
             sum(x * G[u][v]["weight"] for (u, v), x in self._edge_vars)
         )
         self.logger.info("Model built.")
@@ -122,8 +125,8 @@ class CpSatTspSolverDantzig:
         solver.parameters.log_search_progress = True
         solver.parameters.relative_gap_limit = opt_tol
         solver.log_callback = lambda s: self.logger.info(s)
-        status = solver.Solve(self._model, callback)
-        self.best_bound = max(self.best_bound, solver.BestObjectiveBound())
+        status = solver.solve(self._model, callback)
+        self.best_bound = max(self.best_bound, solver.best_objective_bound)
 
         # The following part is more complex. Here we repeatedly add constraints
         # and solve the model again, until we find a solution without subtours.
@@ -135,21 +138,21 @@ class CpSatTspSolverDantzig:
                     outgoing_edges = sum(
                         x for _, x in self._edge_vars.outgoing_edges(comp)
                     )
-                    self._model.Add(outgoing_edges >= 2)
+                    self._model.add(outgoing_edges >= 2)
                 callback.reset()
 
                 tour_cost = sum(
                     x * self.graph[u][v]["weight"] for (u, v), x in self._edge_vars
                 )
-                self._model.Add(
+                self._model.add(
                     tour_cost >= int(self.best_bound)
                 )  # help with lower bound
                 solver.parameters.max_time_in_seconds = remaining_time()
                 if remaining_time() <= 0:
                     # Time limit reached without
                     return callback.best_objective, self.best_bound
-                status = solver.Solve(self._model, callback)
-                self.best_bound = max(self.best_bound, solver.BestObjectiveBound())
+                status = solver.solve(self._model, callback)
+                self.best_bound = max(self.best_bound, solver.best_objective_bound)
             else:
                 break
         if status in (cp_model.OPTIMAL, cp_model.FEASIBLE):

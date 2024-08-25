@@ -45,26 +45,26 @@ if __name__ == "__main__":
 
     # Create start time variables for each meeting
     start_time_vars = {
-        meeting: model.NewIntVarFromDomain(
-            cp_model.Domain.FromIntervals(times), f"start_{meeting}"
+        meeting: model.new_int_var_from_domain(
+            cp_model.Domain.from_intervals(times), f"start_{meeting}"
         )
         for meeting, times in possible_meeting_times.items()
     }
 
     # Create interval variables for each meeting
     interval_vars = {
-        meeting: model.NewFixedSizeIntervalVar(
+        meeting: model.new_fixed_size_interval_var(
             start=start_time_vars[meeting], size=duration, name=f"interval_{meeting}"
         )
         for meeting, duration in meeting_durations.items()
     }
 
     # Add the no-overlap constraint to the model
-    model.AddNoOverlap(list(interval_vars.values()))
+    model.add_no_overlap(list(interval_vars.values()))
 
     # Solve the model
     solver = cp_model.CpSolver()
-    status = solver.Solve(model)
+    status = solver.solve(model)
 
     # Function to convert time index to human-readable format
     def convert_to_timepoint(timepoint):
@@ -76,7 +76,7 @@ if __name__ == "__main__":
     scheduled_times = {}
     if status in (cp_model.OPTIMAL, cp_model.FEASIBLE):
         for meeting, interval in interval_vars.items():
-            start_time = solver.Value(start_time_vars[meeting])
+            start_time = solver.value(start_time_vars[meeting])
             scheduled_times[meeting] = start_time
             print(f"{meeting} starts at {convert_to_timepoint(start_time)}")
     else:
@@ -95,9 +95,11 @@ if __name__ == "__main__":
                 color="red",
                 linestyle="-",
                 marker="o",
-                label="Possible Times"
-                if meeting == "meeting_a" and time_range == times[0]
-                else "",
+                label=(
+                    "Possible Times"
+                    if meeting == "meeting_a" and time_range == times[0]
+                    else ""
+                ),
             )
 
     # Plot scheduled times as blue bars
