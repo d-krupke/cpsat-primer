@@ -817,11 +817,11 @@ CP-SAT is good at finding a feasible packing, but incapable of proving
 infeasibility in most cases. When using the knapsack variant, it can still pack
 most of the rectangles even for the larger instances.
 
-|                           ![./images/packing_plot_solved.png](https://github.com/d-krupke/cpsat-primer/blob/main/images/packing_plot_solved.png)                            |
-| :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+|                           ![./images/packing_plot_solved.png](https://github.com/d-krupke/cpsat-primer/blob/main/images/packing_plot_solved.png)                           |
+| :------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
 | The number of solved instances for the packing problem (90s time limit). Rotations make things slightly more difficult. None of the used instances were proved infeasible. |
-|                            ![./images/packing_percentage.png](https://github.com/d-krupke/cpsat-primer/blob/main/images/packing_percentage.png)                             |
-|                                            However, CP-SAT is able to pack nearly all rectangles even for the largest instances.                                            |
+|                            ![./images/packing_percentage.png](https://github.com/d-krupke/cpsat-primer/blob/main/images/packing_percentage.png)                            |
+|                                           However, CP-SAT is able to pack nearly all rectangles even for the largest instances.                                            |
 
 #### Resolution and Parameters
 

@@ -2337,11 +2337,11 @@ CP-SAT is good at finding a feasible packing, but incapable of proving
 infeasibility in most cases. When using the knapsack variant, it can still pack
 most of the rectangles even for the larger instances.
 
-|                           ![./images/packing_plot_solved.png](https://github.com/d-krupke/cpsat-primer/blob/main/images/packing_plot_solved.png)                            |
-| :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+|                           ![./images/packing_plot_solved.png](https://github.com/d-krupke/cpsat-primer/blob/main/images/packing_plot_solved.png)                           |
+| :------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
 | The number of solved instances for the packing problem (90s time limit). Rotations make things slightly more difficult. None of the used instances were proved infeasible. |
-|                            ![./images/packing_percentage.png](https://github.com/d-krupke/cpsat-primer/blob/main/images/packing_percentage.png)                             |
-|                                            However, CP-SAT is able to pack nearly all rectangles even for the largest instances.                                            |
+|                            ![./images/packing_percentage.png](https://github.com/d-krupke/cpsat-primer/blob/main/images/packing_percentage.png)                            |
+|                                           However, CP-SAT is able to pack nearly all rectangles even for the largest instances.                                            |
 
 #### Resolution and Parameters
 
@@ -6242,7 +6242,7 @@ This example highlights common challenges in benchmarking and strategies to
 address them. A key obstacle in solving NP-hard problems is the variability in
 solver performance across different instances. For instance, a solver might
 easily handle a large instance but struggle with a smaller one, and vice versa.
-Consequently, it's crucial to ensure that your benchmark encompasses a
+Consequently, it is crucial to ensure that your benchmark encompasses a
 representative variety of instances. This diversity is vital for drawing
 meaningful conclusions, such as the maximum size of a TSP instance that can be
 solved or the most effective solver to use.
@@ -6254,13 +6254,13 @@ which offers an in-depth discussion on this topic.
 
 ### Distinguishing Exploratory and Workhorse Studies in Benchmarking
 
-Before diving into comprehensive benchmarking, it’s essential to conduct
+Before diving into comprehensive benchmarking, it is essential to conduct
 preliminary investigations to assess your model’s capabilities and identify any
 foundational issues. This phase, known as _exploratory studies_, is crucial for
 establishing the basis for more detailed benchmarking, subsequently termed as
 _workhorse studies_. These latter studies aim to provide reliable answers to
-specific research questions and are often the core of academic publications.
-It's important to explicitly differentiate between these two study types and
+specific research questions and are often the core of academic publications. It
+is important to explicitly differentiate between these two study types and
 maintain their distinct purposes: exploratory studies for initial understanding
 and flexibility, and workhorse studies for rigorous, reproducible research.
 
@@ -6329,8 +6329,8 @@ evaluations.
 Ideally, a robust benchmark would consist of a large set of real-world
 instances, closely reflecting the actual performance of your solver. Real-world
 instances, however, are often limited in quantity and may not provide enough
-data for a statistically significant benchmark. In such cases, it's advisable to
-explore existing benchmarks from literature, like the
+data for a statistically significant benchmark. In such cases, it is advisable
+to explore existing benchmarks from literature, like the
 [TSPLIB](http://comopt.ifi.uni-heidelberg.de/software/TSPLIB95/) for TSP.
 Leveraging established benchmarks allows for comparison with prior studies, but
 be cautious about their quality, as not all are equally well-constructed. For
@@ -6411,9 +6411,9 @@ and research questions. Here are some strategies to keep things organized:
   access, especially for plotting and sharing.
 - **Data Storage**: Save all your data, even if it seems insignificant at the
   time. This ensures you have a comprehensive dataset for later analysis or
-  unexpected inquiries. Because this can become a lot of data, it's advisable to
-  have two folders: One with all data and one with a selection of data that you
-  want to share.
+  unexpected inquiries. Because this can become a lot of data, it is advisable
+  to have two folders: One with all data and one with a selection of data that
+  you want to share.
 - **Experiment Flexibility**: Design experiments to be interruptible and
   extendable, allowing for easy resumption or modification. This is especially
   important for exploratory studies, where you may need to make frequent
@@ -6554,8 +6554,8 @@ in solving instances, and a closer performance alignment between the
 | :------------------------------------------------------------------------------------------------------------------------------------------------: |
 |                Cactus plots maintain clarity and relevance, and show a performance differences between TSPLib and random instances.                |
 
-However, since cactus plots do not offer insights into individual instances,
-it's beneficial to complement them with a detailed table of results for the
+However, since cactus plots do not offer insights into individual instances, it
+is beneficial to complement them with a detailed table of results for the
 specific model you are focusing on. This approach ensures a more nuanced
 understanding of model performance across varied instances. The following table
 provides the results for the `add_circuit`-model.
@@ -6609,22 +6609,6 @@ Benchmarking solvers for NP-hard problems is not as straightforward as it might
 seem at first. There are many pitfalls and often there is no perfect solution.
 On the example of the TSP, we have seen how we can still get some useful results
 and nice plots on which we can base our decisions.
-
-> If you want to make an automated decision on what model/solver to use, things
-> can get complicated. Often, there is none that dominates on all instances. If
-> you want a single metric for comparing the performance, there is no perfect
-> solution. I am actually the technical lead and co-organizer of a yearly
-> challenge on solving hard optimization problems in computational geometry
-> [CG:SHOP](https://cgshop.ibr.cs.tu-bs.de/), which is part of
-> [CG Week](https://apps.utdallas.edu/SOCG23/challenge.html). Here, I am
-> confronted with scoring the solutions of the participants, without having any
-> useful bounds. It turned out that giving a score between zero and one for each
-> instance, based on the squared difference to the best solution, works quite
-> well. While it still has flaws, it is showed to be relatively fair and robust.
-> The general problem of selecting the right strategy for a specific instance is
-> called
-> [Algorithm Selection](https://en.wikipedia.org/wiki/Algorithm_selection)
-> problem and can be surprisingly complex, too.
 
 <!-- This file was generated by the `build.py` script. Do not edit it manually. -->
 <!-- 09_lns.md -->
