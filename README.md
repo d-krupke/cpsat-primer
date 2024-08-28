@@ -6368,9 +6368,11 @@ problem deepens. These studies, unlike exploratory ones, will be the focus of
 your scientific publications, with exploratory studies only referenced for
 justifying certain design decisions.
 
-**Hint: Use the
-[SIGPLAN Empirical Evaluation Checklist](https://raw.githubusercontent.com/SIGPLAN/empirical-evaluation/master/checklist/checklist.pdf)
-if your evaluation has to satisfy academic standards.**
+> [!TIP]
+>
+> Use the
+> [SIGPLAN Empirical Evaluation Checklist](https://raw.githubusercontent.com/SIGPLAN/empirical-evaluation/master/checklist/checklist.pdf)
+> if your evaluation has to satisfy academic standards.
 
 ### Designing a Robust Benchmark for Effective Studies
 
