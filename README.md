@@ -6343,6 +6343,8 @@ determine that our focus should be on instances with 100 to 200 nodes. If you
 encounter fundamental issues with your model at this stage, it’s advisable to
 address these before proceeding to workhorse studies.
 
+> [!WARNING]
+>
 > Occasionally, the primary performance bottleneck in your model may not be
 > CP-SAT but rather the Python segment where the model is being generated. In
 > these instances, identifying the most resource-intensive parts of your Python
@@ -6505,16 +6507,16 @@ following questions:
 - Which solver is the fastest?
 - How does the performance change if we increase the optimality tolerance?
 
-> **Our Benchmarks:** We executed the four solvers with a time limit of 90s and
-> the optimality tolerances [0.1%, 1%, 5%, 10%, 25%] on a random benchmark set
-> and a TSPLIB benchmark set. The random benchmark set consists of 10 instances
-> for each number of nodes
-> `[25, 50, 75, 100, 150, 200, 250, 300, 350, 400, 450, 500]`. The weights were
-> chosen based on randomly embedding the nodes into a 2D plane and using the
-> Euclidean distances. The TSPLIB benchmark consists of all Euclidean instances
-> with less than 500 nodes. It is critical to have a time limit, as otherwise,
-> the benchmarks would take forever. You can find all find the whole experiment
-> [here](https://github.com/d-krupke/cpsat-primer/blob/main/evaluations/tsp/).
+**Our Benchmarks:** We executed the four solvers with a time limit of 90s and
+the optimality tolerances [0.1%, 1%, 5%, 10%, 25%] on a random benchmark set and
+a TSPLIB benchmark set. The random benchmark set consists of 10 instances for
+each number of nodes
+`[25, 50, 75, 100, 150, 200, 250, 300, 350, 400, 450, 500]`. The weights were
+chosen based on randomly embedding the nodes into a 2D plane and using the
+Euclidean distances. The TSPLIB benchmark consists of all Euclidean instances
+with less than 500 nodes. It is critical to have a time limit, as otherwise, the
+benchmarks would take forever. You can find all find the whole experiment
+[here](https://github.com/d-krupke/cpsat-primer/blob/main/evaluations/tsp/).
 
 Let us first look at the results of the random benchmark, as they are easier to
 interpret. We will then compare them to the TSPLIB benchmark.
