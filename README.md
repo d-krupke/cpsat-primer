@@ -6692,8 +6692,8 @@ Scatter plots are particularly valuable when you cannot rely on a single metric
 to compare the two versions but need to understand the overall impact of the
 changes and the trade-offs made. The following figure shows an example from an
 imaginary delivery optimization problem, where the new algorithm is able to
-improve on the currently worst-performing instances but slightly degrades on the
-average instances. Based on this data, you can then decide with the manager if
+reduce the longest delivery tours but slightly degrades on the average tours of
+a delivery schedule. Based on this data, you can then decide with the manager if
 the trade-off is acceptable.
 
 |                                                                                                                                                                                              ![Scatter Plot](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/scatter_performance_zones.png)                                                                                                                                                                                               |
