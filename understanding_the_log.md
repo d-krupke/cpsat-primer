@@ -16,10 +16,12 @@ The log consists of different parts. Let us go through them step by step.
 
 > [!TIP]
 >
-> Use the Log Analyzer to get your own logs explained to you.
-
-[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://cpsat-log-analyzer.streamlit.app/)
-[![d-krupke - CP-SAT Log Analyzer](https://img.shields.io/badge/d--krupke-CP--SAT%20Log%20Analyzer-blue?style=for-the-badge&logo=github)](https://github.com/d-krupke/CP-SAT-Log-Analyzer)
+> Use the [Log Analyzer](https://cpsat-log-analyzer.streamlit.app/) to get your
+> own logs explained to you.
+>
+> [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://cpsat-log-analyzer.streamlit.app/)
+>
+> [![d-krupke - CP-SAT Log Analyzer](https://img.shields.io/badge/d--krupke-CP--SAT%20Log%20Analyzer-blue?style=for-the-badge&logo=github)](https://github.com/d-krupke/CP-SAT-Log-Analyzer)
 
 ### Initialization
 
