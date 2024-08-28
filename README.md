@@ -6531,6 +6531,12 @@ model is capable of handling efficiently.
 | :-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
 | The runtimes are sigmoidal instead of exponential because the time limit skews the results. The runtime can frequently exceed the time limit, because of expensive model building, etc. Thus, a pure runtime plot says surprisingly little (or is misleading) and can usually be discarded. |
 
+Instead of just cutting off the runtime, a common metric is PAR10, which sets
+the runtime to 10 times the time limit if the solver does not finish within the
+time limit, and will actually penalize timeouts. However, it still does not
+solve the problem that we actually do not know the true runtime such that these
+plots will always lie.
+
 To gain a more accurate insight into the capacities of your model, consider
 plotting the proportion of instances of a certain size that your model
 successfully solves. This method requires a well-structured benchmark to yield
