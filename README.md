@@ -6666,6 +6666,43 @@ scale or aggregate.
 This should highlight that often you need a combination of different benchmarks
 and plots to get a good understanding of the performance of your model.
 
+### Comparing Production with Development Versions on Multiple Metrics
+
+In applied benchmarking, a common task is evaluating whether the latest version
+of your algorithm is actually better than the previous one, particularly when
+you do not have a single, clear metric for comparison. Once your implementation
+reaches a certain level of maturity, improving all aspects simultaneously
+becomes challenging, and trade-offs are often necessary. Additionally, if
+business requirements change, new constraints might be introduced that could
+negatively impact some metrics, which managers may not fully understand. In such
+cases, it is useful to directly compare how various metrics change between the
+two versions.
+
+One effective method for this comparison is using scatter plots, where the
+x-axis represents the metric values from the old version, and the y-axis
+represents the values from the new version. Points on the diagonal indicate
+instances where nothing has changed, points above the diagonal show where the
+metric increased, and points below the diagonal indicate a decrease. This visual
+representation gives you a clear overview of where improvements have been made
+and where performance has declined, highlighting the trade-offs involved. This
+information can help you determine whether you are moving in the right
+direction.
+
+Scatter plots are particularly valuable when you cannot rely on a single metric
+to compare the two versions but need to understand the overall impact of the
+changes and the trade-offs made. The following figure shows an example from an
+imaginary delivery optimization problem, where the new algorithm is able to
+improve on the currently worst-performing instances but slightly degrades on the
+average instances. Based on this data, you can then decide with the manager if
+the trade-off is acceptable.
+
+|                                                                                                                                                                                              ![Scatter Plot](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/scatter_performance_zones.png)                                                                                                                                                                                               |
+| :-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+| These scatter plots illustrate how metrics change between two versions of an algorithm and where trade-offs are necessary. They also help identify outliers—for example, if you have generally improved but see a significant degradation for certain individual instances. However, this type of plot is most effective for comparing two versions and can become less readable if the differences between the versions are too substantial. Consider these as exploratory tools that reveal general trends. |
+
+The code for this scatter plot is available
+[here](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/examples/a_b_comparison/scatter_with_performance_zones.py).
+
 ### Conclusion
 
 Benchmarking solvers for NP-hard problems is not as straightforward as it might
