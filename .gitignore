@@ -153,3 +153,4 @@ evaluations/tsp/2023-11-18_tsplib/PRIVATE_DATA
 .mdbook/04B_advanced_modelling.md
 .mdbook/understanding_the_log.md
 .mdbook/building_an_optimization_api.md
+.DS_Store

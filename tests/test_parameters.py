@@ -142,3 +142,12 @@ def test_bad_hints():
     solver.parameters.max_time_in_seconds = 10
     solver.parameters.debug_crash_on_bad_hint = True
     status = solver.solve(model)  # noqa: F841
+
+
+def test_presolve_parameters_exist():
+    model = cp_model.CpModel()
+    solver = cp_model.CpSolver()
+    solver.parameters.cp_model_presolve = False
+    solver.parameters.max_presolve_iterations = 3
+    solver.parameters.cp_model_probing_level = 1
+    solver.parameters.presolve_probing_deterministic_time_limit = 5

@@ -271,6 +271,15 @@ solver.parameters.log_search_progress = True  # Enable logging
 solver.log_callback = lambda msg: print("LOG:", msg)  # (str) -> None
 ```
 
+> [!WARNING]
+>
+> Be careful when using callbacks, as they can slow down the solver
+> significantly. Callbacks are often called frequently, forcing a switch back to
+> the slower Python layer. I have often seen students frustrated by slow solver
+> performance, only to discover that most of the solver's time is spent in the
+> callback function. Even if the operations within the callback are not complex,
+> the time spent can add up quickly and affect overall performance.
+
 ### Parallelization
 
 CP-SAT is a portfolio-solver that uses different techniques to solve the
@@ -282,12 +291,23 @@ also increase the chance of running the right technique. Predicting which
 technique will be the best for a specific problem is often hard, thus, this
 parallelization can be quite useful.
 
-By default, CP-SAT leverages all available cores. You can control the
-parallelization of CP-SAT by setting the number of search workers.
+By default, CP-SAT leverages all available cores (including hyperthreading). You
+can control the parallelization of CP-SAT by setting the number of search
+workers.
 
 ```python
 solver.parameters.num_workers = 8  # use 8 cores
 ```
+
+> [!INFO]
+>
+> For many models, you can boost performance by manually reducing the number of
+> workers to match the number of physical cores, or even fewer. This can be
+> beneficial for several reasons: it allows the remaining workers to run at a
+> higher frequency, provides more memory bandwidth, and reduces potential
+> interference between workers. However, be aware that reducing the number of
+> workers might also decrease the overall chance of one of them making progress,
+> as there are fewer directions being explored simultaneously.
 
 Here are the solvers used by CP-SAT 9.9 on different parallelization levels for
 an optimization problem and no additional specifications (e.g., decision
@@ -568,6 +588,49 @@ model.clear_assumptions()  # clear all assumptions
 > While incremental SAT solvers can reuse learned clauses from previous runs
 > despite changing assumptions, CP-SAT does not support this feature.
 > Assumptions in CP-SAT only help avoid model duplication.
+
+### Presolve
+
+The CP-SAT solver includes a presolve step that simplifies the model before
+solving it. This step can significantly reduce the search space and enhance
+performance. However, presolve can be time-consuming, particularly for large
+models. If your model is relatively simple—meaning there are few genuinely
+challenging decisions for CP-SAT to make—and you notice that presolve is taking
+a long time while the search itself is fast, you might consider reducing the
+presolve effort.
+
+For example, you can disable presolve entirely with:
+
+```python
+solver.parameters.cp_model_presolve = False
+```
+
+However, this approach might be too drastic, so you may prefer to limit presolve
+rather than disabling it completely.
+
+To reduce the number of presolve iterations, you can use:
+
+```python
+solver.parameters.max_presolve_iterations = 3
+```
+
+You can also limit specific presolve techniques. For instance, you can constrain
+the time or intensity of probing, which is a technique that tries to fix
+variables and observe the outcome. Although probing can be powerful, it is also
+time-intensive.
+
+```python
+solver.parameters.cp_model_probing_level = 1
+solver.parameters.presolve_probing_deterministic_time_limit = 5
+```
+
+There are additional parameters available to control presolve. Before making
+adjustments, I recommend reviewing the solver log to identify which aspects of
+presolve are causing long runtimes.
+
+Keep in mind that reducing presolve increases the risk of failing to solve more
+complex models. Ensure that you are not sacrificing performance on more
+challenging instances just to speed up simpler cases.
 
 ### Decision Strategy
 
