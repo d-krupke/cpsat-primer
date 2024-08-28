@@ -3103,7 +3103,7 @@ workers.
 solver.parameters.num_workers = 8  # use 8 cores
 ```
 
-> [!INFO]
+> [!TIP]
 >
 > For many models, you can boost performance by manually reducing the number of
 > workers to match the number of physical cores, or even fewer. This can be
