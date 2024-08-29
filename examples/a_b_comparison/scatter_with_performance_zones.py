@@ -3,6 +3,10 @@ This module contains functions to plot a scatter comparison of baseline and new 
 
 You can freely use and distribute this code under the MIT license.
 
+Changelog:
+    2024-08-27: First version
+    2024-08-29: Added lines to the diagonal to help with reading the plot
+
 (c) 2024 Dominik Krupke, https://github.com/d-krupke/cpsat-primer
 """
 
@@ -87,20 +91,61 @@ def plot_performance_scatter(
             marker="s",
             color=scatter_kwargs["color"],
             label="NA Values",
+            zorder=2,
         )
 
     # add the rest of the data points
-    ax.scatter(baseline[~na_indices], new_values[~na_indices], **scatter_kwargs)
+    ax.scatter(
+        baseline[~na_indices], new_values[~na_indices], **scatter_kwargs, zorder=2
+    )
 
-    ax.plot([min_val, max_val], [min_val, max_val], **line_kwargs)
+    ax.plot([min_val, max_val], [min_val, max_val], zorder=1, **line_kwargs)
 
     x = np.linspace(min_val, max_val, 500)
     if lower_is_better:
-        ax.fill_between(x, min_val, x, **fill_improve_kwargs)
-        ax.fill_between(x, x, max_val, **fill_decline_kwargs)
+        ax.fill_between(x, min_val, x, zorder=0, **fill_improve_kwargs)
+        ax.fill_between(x, x, max_val, zorder=0, **fill_decline_kwargs)
     else:
-        ax.fill_between(x, x, max_val, **fill_improve_kwargs)
-        ax.fill_between(x, min_val, x, **fill_decline_kwargs)
+        ax.fill_between(x, x, max_val, zorder=0, **fill_improve_kwargs)
+        ax.fill_between(x, min_val, x, zorder=0, **fill_decline_kwargs)
+
+    # draw thin lines to the diagonal to help with reading the plot.
+    # A problem without lines is that one tends to use the distance
+    # to the diagonal as a measure of performance, which is not correct.
+    # Instead, it is `y-x` that should be used.
+    for old_val, new_val in zip(baseline[~na_indices], new_values[~na_indices]):
+        if lower_is_better and new_val < old_val:
+            ax.plot(
+                [old_val, new_val],
+                [new_val, new_val],
+                color="green",
+                linewidth=1.0,
+                zorder=1,
+            )
+        elif not lower_is_better and new_val > old_val:
+            ax.plot(
+                [old_val, old_val],
+                [old_val, new_val],
+                color="green",
+                linewidth=1.0,
+                zorder=1,
+            )
+        elif lower_is_better and new_val > old_val:
+            ax.plot(
+                [old_val, old_val],
+                [old_val, new_val],
+                color="red",
+                linewidth=1.0,
+                zorder=1,
+            )
+        elif not lower_is_better and new_val < old_val:
+            ax.plot(
+                [old_val, new_val],
+                [new_val, new_val],
+                color="red",
+                linewidth=1.0,
+                zorder=1,
+            )
 
     ax.set_xlim(min_val, max_val)
     ax.set_ylim(min_val, max_val)
