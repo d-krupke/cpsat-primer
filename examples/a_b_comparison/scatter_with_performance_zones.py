@@ -116,8 +116,8 @@ def plot_performance_scatter(
     for old_val, new_val in zip(baseline[~na_indices], new_values[~na_indices]):
         if lower_is_better and new_val < old_val:
             ax.plot(
+                [old_val, old_val],
                 [old_val, new_val],
-                [new_val, new_val],
                 color="green",
                 linewidth=1.0,
                 zorder=1,
@@ -140,8 +140,8 @@ def plot_performance_scatter(
             )
         elif not lower_is_better and new_val < old_val:
             ax.plot(
+                [old_val, old_val],
                 [old_val, new_val],
-                [new_val, new_val],
                 color="red",
                 linewidth=1.0,
                 zorder=1,
