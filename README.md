@@ -3436,6 +3436,60 @@ Keep in mind that reducing presolve increases the risk of failing to solve more
 complex models. Ensure that you are not sacrificing performance on more
 challenging instances just to speed up simpler cases.
 
+### Adding Your Own Subsolver to the Portfolio
+
+As we have seen, CP-SAT uses a portfolio of different subsolvers, each
+configured with varying settings (e.g., different levels of linearization) to
+solve the model. You can also define your own subsolver with a specific
+configuration. It is important not to modify the parameters at the top level, as
+this would affect all subsolvers, including the LNS-workers. Doing so could
+disrupt the balance of the portfolio, potentially activating costly techniques
+for the LNS-workers, which could slow them down to the point of being
+ineffective.
+
+For example, in packing problems, certain expensive propagation techniques can
+significantly speed up the search but can also drastically slow it down if
+misused. To handle this, you can add a single subsolver that applies these
+techniques. If the parameters do not help, only one worker will be slowed down,
+while the rest of the portfolio remains unaffected. However, if the parameters
+are beneficial, that worker can share its solutions and (variable) bounds with
+the rest of the portfolio, boosting overall performance.
+
+Here is how you can define and add a custom subsolver:
+
+```python
+from ortools.sat import sat_parameters_pb2
+
+packing_subsolver = sat_parameters_pb2.SatParameters()
+packing_subsolver.name = "MyPackingSubsolver"
+packing_subsolver.use_area_energetic_reasoning_in_no_overlap_2d = True
+packing_subsolver.use_energetic_reasoning_in_no_overlap_2d = True
+packing_subsolver.use_timetabling_in_no_overlap_2d = True
+packing_subsolver.max_pairs_pairwise_reasoning_in_no_overlap_2d = 5_000
+
+# Add the subsolver to the portfolio
+solver.parameters.subsolver_params.append(packing_subsolver)  # Define the subsolver
+solver.parameters.extra_subsolvers.append(
+    packing_subsolver.name
+)  # Activate the subsolver
+```
+
+After adding the subsolver, you can check the log to verify that it is included
+in the list of active subsolvers:
+
+```
+8 full problem subsolvers: [MyPackingSubsolver, default_lp, max_lp, no_lp, probing, probing_max_lp, quick_restart, quick_restart_no_lp]
+```
+
+> [!TIP]
+>
+> You can also overwrite the parameters of an existing subsolver by using the
+> same name. Only the parameters you explicitly change will be updated, while
+> the others will remain as they are. Additionally, you can add multiple
+> subsolvers to the portfolio, but keep in mind that doing so might push some
+> predefined subsolvers out of the portfolio if there are not enough workers
+> available.
+
 ### Decision Strategy
 
 In the end of this section, a more advanced parameter that looks interesting for
