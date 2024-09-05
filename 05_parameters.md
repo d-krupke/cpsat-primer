@@ -641,7 +641,10 @@ configuration. It is important not to modify the parameters at the top level, as
 this would affect all subsolvers, including the LNS-workers. Doing so could
 disrupt the balance of the portfolio, potentially activating costly techniques
 for the LNS-workers, which could slow them down to the point of being
-ineffective.
+ineffective. Additionally, you risk creating a default subsolver incompatible
+with your model - such as one that requires an objective function - causing
+CP-SAT to exclude most or all subsolvers from the portfolio, resulting in a
+solver that is either inefficient or nonfunctional.
 
 For example, in packing problems, certain expensive propagation techniques can
 significantly speed up the search but can also drastically slow it down if
@@ -671,11 +674,17 @@ solver.parameters.extra_subsolvers.append(
 ```
 
 After adding the subsolver, you can check the log to verify that it is included
-in the list of active subsolvers:
+in the list of active subsolvers. If it is not shown, you probably used
+parameters incompatible with the model, causing the subsolver to be excluded.
 
 ```
 8 full problem subsolvers: [MyPackingSubsolver, default_lp, max_lp, no_lp, probing, probing_max_lp, quick_restart, quick_restart_no_lp]
 ```
+
+If you want to find out how the existing subsolvers are configured, you can
+check out the
+[cp_model_search.cc](https://github.com/google/or-tools/blob/stable/ortools/sat/cp_model_search.cc)
+file in the OR-Tools repository.
 
 > [!TIP]
 >
