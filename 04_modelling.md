@@ -445,6 +445,19 @@ multiplying all terms by 3. However, this requires manual intervention, which
 undermines the idea of using a solver. These limitations are important to
 consider, although such scenarios are rare in practical applications.
 
+> [!TIP]
+>
+> If you have long sums of variables and coefficients, it can be more efficient to
+> use the sum-methods of LinearExpr than to use Python's sum-function. Note that
+> this function does currently not support generators.
+>
+> ```python
+> xs = [model.NewIntVar(0, 10, f"x{i}") for i in range(5)]
+> weights = [i for i in range(5)]
+> model.add(cp_model.LinearExpr.sum(xs) >= 1)
+> model.minimize(cp_model.LinearExpr.weighted_sum(xs, weights))
+> ```
+
 If you have a lower and an upper bound for a linear expression, you can also use
 the `add_linear_constraint`-method, which allows you to specify both bounds in
 one go.
