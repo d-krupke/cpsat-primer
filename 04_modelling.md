@@ -447,9 +447,9 @@ consider, although such scenarios are rare in practical applications.
 
 > [!TIP]
 >
-> If you have long sums of variables and coefficients, it can be more efficient to
-> use the sum-methods of LinearExpr than to use Python's sum-function. Note that
-> this function does currently not support generators.
+> If you have long sums of variables and coefficients, it can be more efficient
+> to use the sum-methods of LinearExpr than to use Python's sum-function. Note
+> that this function does currently not support generators.
 >
 > ```python
 > xs = [model.NewIntVar(0, 10, f"x{i}") for i in range(5)]

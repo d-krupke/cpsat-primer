@@ -20,14 +20,13 @@ def test_lin_constraints():
     model.add(x < y + z)
     model.add(y > 300 - 4 * z)
 
+
 def test_lin_constraint_sum():
     model = cp_model.CpModel()
     vars = [model.NewIntVar(0, 10, f"x{i}") for i in range(5)]
     weights = [i for i in range(5)]
     model.add(cp_model.LinearExpr.sum(vars) >= 1)
     model.minimize(cp_model.LinearExpr.weighted_sum(vars, weights))
-    
-
 
 
 def test_infeasible_intersection():
