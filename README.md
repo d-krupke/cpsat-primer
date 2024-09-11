@@ -39,6 +39,50 @@ than a few thousand variables and constraints. However, the relatively new
 the weaknesses and provides a viable alternative to MIP-solvers, being
 competitive for many problems and sometimes even superior.
 
+As a quick demonstration of CP-SAT's capabilities - particularly for those less
+familiar with optimization frameworks - let us solve an instance of the NP-hard
+Knapsack Problem. This classic optimization problem requires selecting a subset
+of items, each with a specific weight and value, to maximize the total value
+without exceeding a weight limit. Although a recursive algorithm is easy to
+implement, 100 items yield approximately $2^{100} \approx 10^{30}$ possible
+solutions. Even with a supercomputer performing $10^{18}$ operations per second,
+it would take more than 31,000 years to evaluate all possibilities.
+
+Here is how you can solve it using CP-SAT:
+
+```python
+from ortools.sat.python import cp_model  # pip install -U ortools
+
+# Specifying the input
+weights = [395, 658, 113, 185, 336, 494, 294, 295, 256, 530, 311, 321, 602, 855, 209, 647, 520, 387, 743, 26, 54, 420, 667, 971, 171, 354, 962, 454, 589, 131, 342, 449, 648, 14, 201, 150, 602, 831, 941, 747, 444, 982, 732, 350, 683, 279, 667, 400, 441, 786, 309, 887, 189, 119, 209, 532, 461, 420, 14, 788, 691, 510, 961, 528, 538, 476, 49, 404, 761, 435, 729, 245, 204, 401, 347, 674, 75, 40, 882, 520, 692, 104, 512, 97, 713, 779, 224, 357, 193, 431, 442, 816, 920, 28, 143, 388, 23, 374, 905, 942]
+values = [71, 15, 100, 37, 77, 28, 71, 30, 40, 22, 28, 39, 43, 61, 57, 100, 28, 47, 32, 66, 79, 70, 86, 86, 22, 57, 29, 38, 83, 73, 91, 54, 61, 63, 45, 30, 51, 5, 83, 18, 72, 89, 27, 66, 43, 64, 22, 23, 22, 72, 10, 29, 59, 45, 65, 38, 22, 68, 23, 13, 45, 34, 63, 34, 38, 30, 82, 33, 64, 100, 26, 50, 66, 40, 85, 71, 54, 25, 100, 74, 96, 62, 58, 21, 35, 36, 91, 7, 19, 32, 77, 70, 23, 43, 78, 98, 30, 12, 76, 38]
+capacity = 2000
+
+# Now we solve the problem
+model = cp_model.CpModel()
+xs = [model.new_bool_var(f"x_{i}") for i in range(len(weights))]
+
+model.add(sum(x * w for x, w in zip(xs, weights)) <= capacity)
+model.maximize(sum(x * v for x, v in zip(xs, values)))
+
+solver = cp_model.CpSolver()
+solver.solve(model)
+
+print("Optimal selection: ", [i for i, x in enumerate(xs) if solver.value(x)])
+```
+
+```
+Optimal selection: [2, 14, 19, 20, 29, 33, 52, 53, 54, 58, 66, 72, 76, 77, 81, 86, 93, 94, 96]
+```
+
+How long did CP-SAT take? On my machine, it found the provably best solution
+from $2^{100}$ possibilities in just 0.01 seconds. Feel free to try it on yours.
+CP-SAT does not evaluate all solutions; it uses advanced techniques to make
+deductions and prune the search space. While more efficient approaches than a
+naive recursive algorithm exist, matching CP-SAT’s performance would require
+significant time and effort. And this is just the beginning - CP-SAT can tackle
+much more complex problems, as we will see in this primer.
+
 ### Content
 
 Whether you are from the MIP community seeking alternatives or CP-SAT is your
