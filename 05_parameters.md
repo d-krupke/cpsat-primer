@@ -218,6 +218,21 @@ An
 [official example using callbacks](https://github.com/google/or-tools/blob/stable/ortools/sat/samples/stop_after_n_solutions_sample_sat.py)
 is available.
 
+> [!WARNING]
+>
+> Bounds in optimization can be a double-edged sword. On one hand, they indicate
+> how close you are to the optimal solution within your chosen model, and they
+> allow you to terminate the optimization process early if the solution is
+> sufficiently close. On the other hand, they can be misleading for two key
+> reasons. First, the bounds pertain to the optimization model and may give a
+> false sense of quality, as neither the model nor the data are typically
+> perfect. Second, in some cases, obtaining good bounds within a reasonable time
+> may be impossible, yet the solution might still be good—you simply may not
+> realize it. This can lead to wasted resources as you pursue tighter models or
+> better approaches with little to no real benefit. While bounds are extremely
+> useful, it is important to understand their origin and limitations, and not
+> regard them as the final determinant of solution quality.
+
 Besides querying the objective value of the best solution and the best known
 bound, you can also access internal metrics such as `self.num_booleans`,
 `self.num_branches`, and `self.num_conflicts`. These metrics will be discussed
