@@ -17,11 +17,15 @@ optimization problems can, despite their proven theoretical hardness, be solved
 reasonably well in practice. The most successful approach is to use
 [Mixed Integer Linear Programming](https://en.wikipedia.org/wiki/Integer_programming)
 (MIP) to model the problem and then use a solver to find a solution. The most
-successful solvers for MIPs are, e.g., [Gurobi](https://www.gurobi.com/) and
-[CPLEX](https://www.ibm.com/analytics/cplex-optimizer), which are both
-commercial and expensive (though, free for academics). There are also some open
-source solvers, but they are often not as powerful as the commercial ones.
-However, even when investing in such a solver, the underlying techniques
+successful solvers for MIPs are, e.g., [Gurobi](https://www.gurobi.com/),
+[CPLEX](https://www.ibm.com/analytics/cplex-optimizer),
+[COPT Cardinal Solver](https://www.copt.de/), and
+[FICO Xpress Optimization](https://www.fico.com/en/products/fico-xpress-optimization),
+which are all commercial and expensive (though, mostly free for academics).
+There are also some open source solvers (e.g., [SCIP](https://www.scipopt.org/)
+and [HiGHS](https://highs.dev/)), but they are often not as powerful as the
+commercial ones (yet). However, even when investing in such a solver, the
+underlying techniques
 ([Branch and Bound](https://en.wikipedia.org/wiki/Branch_and_bound) &
 [Cut](https://en.wikipedia.org/wiki/Branch_and_cut) on
 [Linear Relaxations](https://en.wikipedia.org/wiki/Linear_programming_relaxation))
