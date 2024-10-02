@@ -4255,7 +4255,14 @@ and I will consider including them.
     Python interface. Although not as efficient or user-friendly as Gurobi, SCIP
     allows extensive customization and is ideal for research and development,
     especially for experts needing to implement advanced decomposition
-    techniques.
+    techniques. If you know how to use it, you can achieve better performance
+    than any other solver for certain problems (especially with Branch and
+    Price).
+  - [FICO Xpress Optimization](https://www.fico.com/en/products/fico-xpress-optimization):
+    Another popular commercial solver. A lot of the SCIP developers seem to end
+    up either at Gurobi or Xpress.
+  - [COPT Cardinal Solver](https://www.copt.de/): A relatively new commercial
+    solver that seems to be very strong for some problem classes.
   - [HiGHS](https://highs.dev/): A newer solver licensed under MIT, presenting
     an interesting alternative to SCIP. It is possibly faster and features a
     more user-friendly interface, but is less versatile. For performance
@@ -4314,9 +4321,12 @@ and I will consider including them.
   nonlinear constraints, as people noticed that some techniques are actually
   more general than just for linear constraints, e.g., interior points methods
   can also solve second-order cone problems. However, you will notice serious
-  performance downgrades. If your constraints and objectives get too complex,
-  they may also no longer be a viable option. If you have smaller optimization
-  problems of (nearly) any kind, you may want to look into:
+  performance downgrades as these non-linearity is much more difficult to
+  handle. If your constraints and objectives get too complex, they may also no
+  longer be a viable option. Luckily, there currently is a lot of movement in
+  this area and you can expect that the big solvers (like Gurobi, COPT, Xpress,
+  etc.) will get better and better in handling these problems. If you have
+  smaller optimization problems of (nearly) any kind, you may want to look into:
   - [SciPy](https://docs.scipy.org/doc/scipy/reference/optimize.html): SciPy is
     a Python library that offers a wide range of optimization algorithms. Do not
     expect it to get anywhere near the performance of a specialized solver, but
