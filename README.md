@@ -4421,28 +4421,66 @@ in many - is remarkable for a tool that is both free and open-source.
 ## Coding Patterns for Optimization Problems
 
 
-In this section, we will explore various coding patterns that are essential for
-structuring implementations for optimization problems using CP-SAT. While we
-will not delve into the modeling of specific problems, our focus will be on
-demonstrating how to organize your code to enhance its readability and
-maintainability. These practices are crucial for developing robust and scalable
-optimization solutions that can be easily understood, modified, and extended by
-other developers. We will concentrate on basic patterns, as more complex
-patterns are better understood within the context of larger problems and are
-beyond the scope of this primer.
+In this chapter, we will explore various coding patterns that help you structure
+your implementations for optimization problems using CP-SAT. These patterns
+become especially useful when working on complex problems that need to be solved
+continuously and potentially under changing requirements.
 
-> [!WARNING]
->
-> The naming conventions for patterns in optimization problems are not
-> standardized. There is no comprehensive guide on coding patterns for
-> optimization issues, and my insights are primarily based on personal
-> experience. Most online examples tend to focus solely on the model, often
-> presented as Jupyter notebooks or sequential scripts. The
-> [gurobi-optimods](https://github.com/Gurobi/gurobi-optimods) provide the
-> closest examples to production-ready code that I am aware of, yet they offer
-> limited guidance on code structuring. I aim to address this gap, which many
-> find challenging, though it is important to note that my approach is **highly
-> opinionated**.
+In many cases, specifying the model and solving it is sufficient without the
+need for careful structuring. However, there are situations where your models
+are complex and require frequent iteration, either for performance reasons or
+due to changing requirements. In such cases, it is crucial to have a good
+structure in place to ensure that you can easily modify and extend your code
+without breaking it, as well as to facilitate testing and comprehension. Imagine
+you have a complex model and need to adapt a constraint due to new requirements.
+If your code is not modular and your test suite is only able to test the entire
+model, this small change will force you to rewrite all your tests. After a few
+iterations, you might end up skipping the tests altogether, which is a dangerous
+path to follow.
+
+Another common issue in complex optimization models is the risk of forgetting to
+add some trivial constraints to interlink auxiliary variables, which can render
+parts of the model dysfunctional. If the dysfunctional part concerns
+feasibility, you might still notice it if you have separately checked the
+feasibility of the solution. However, if it involves the objective, such as
+penalizing certain combinations, you may not easily notice that your solution is
+suboptimal, as the penalties are not applied. Furthermore, implementing complex
+constraints can be challenging, and a modular structure allows you to test these
+constraints separately to ensure they work as intended. Test-driven development
+(TDD) is an effective approach for implementing complex constraints quickly and
+reliably.
+
+The field of optimization is highly heterogeneous, and the percentage of
+optimizers with a professional software engineering background seems
+surprisingly low. Much of the optimization work is done by mathematicians,
+physicists, and engineers who have deep expertise in their fields but limited
+experience in software engineering. They are usually highly skilled and can
+create excellent models, but their code is often not very maintainable and does
+not follow software engineering best practices. Many problems are similar enough
+that minimal explanation or structure is deemed sufficient—much like creating
+plots by copying, pasting, and adjusting a familiar template. While this
+approach may not be very readable, it is familiar enough for most people in the
+field to understand. Additionally, it is typical for mathematicians to first
+document the model and then implement it. From a software engineering
+perspective, this workflow resembles the waterfall model, which lacks agility.
+
+There appears to be a lack of literature on agile software development in
+optimization, which this chapter seeks to address by presenting some patterns I
+have found useful in my work. I asked a few senior colleagues in the field, and
+unfortunately, they could not provide any useful resources either or did not
+even see the need for such resources. For many use cases, the simple approach is
+indeed sufficient. However, I have found that these patterns make my agile,
+test-driven workflow much easier, faster, and more enjoyable. Note that this
+chapter is largely based on my personal experience due to the limited
+availability of references. I would be happy to hear about your experiences and
+the patterns you have found useful in your work.
+
+In the following sections, we will start with the basic function-based pattern
+and then introduce further concepts and patterns that I have found valuable. We
+will work on simple examples where the benefits of these patterns may not be
+immediately apparent, but I hope you will see their potential in more complex
+problems. The alternative would have been to provide complex examples, which
+might have distracted from the patterns themselves.
 
 ### Simple Function
 
@@ -4493,6 +4531,67 @@ def solve_knapsack(
         else []
     )
 ```
+
+You can also add some more flexibility by allowing any solver parameters to be
+passed to the solver.
+
+```python
+def solve_knapsack(
+    weights: List[int],
+    values: List[int],
+    capacity: int,
+    *,
+    time_limit: int = 900,
+    opt_tol: float = 0.01,
+    **kwargs,
+) -> List[int]:
+    # initialize the model
+    model = cp_model.CpModel()
+    # ...
+    # Solve the model
+    solver = cp_model.CpSolver()
+    solver.parameters.max_time_in_seconds = time_limit  # Solver time limit
+    solver.parameters.relative_gap_limit = opt_tol  # Solver optimality tolerance
+    for key, value in kwargs.items():
+        setattr(solver.parameters, key, value)
+    # ...
+```
+
+Add some unit tests in some separate file (e.g., `test_knapsack.py`) to ensure
+that the model works as expected.
+
+> [!TIP]
+>
+> Write the tests before you write the code. This approach is known as
+> test-driven development (TDD) and can help you to structure your code better
+> and to ensure that your code works as expected. It also helps you to think
+> about the API of your function before you start implementing it.
+
+```python
+# Make sure you have a proper project structure and can import your function
+from myknapsacksolver import solve_knapsack
+
+def test_knapsack_empty():
+    # Always good to have a test for the trivial case. The more trivial the
+    # case, the more likely it is that you forget it.
+    assert solve_knapsack([], [], 0) == []
+
+def test_knapsack_nothing_fits():
+    # If nothing fits, we should get an empty solution
+    assert solve_knapsack([10, 20, 30], [1, 2, 3], 5) == []
+
+def test_knapsack_one_item():
+    # If only one item fits, we should get this item
+    assert solve_knapsack([10, 20, 30], [1, 2, 3], 10) == [0]
+
+def test_knapsack_all_items():
+    # If all items fit, we should get all items
+    assert solve_knapsack([10, 20, 30], [1, 2, 3], 100) == [0, 1, 2]
+```
+
+Using pytest, you can run all tests in the project with `pytest .`. Check
+[Real Python](https://realpython.com/pytest-python-testing/) for a good tutorial
+on pytest.
 
 ### Logging the Model Building
 
