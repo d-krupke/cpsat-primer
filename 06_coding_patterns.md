@@ -566,7 +566,7 @@ hint if it is infeasible. By increasing
 `solver.parameters.hint_conflict_limit = 10`, you can control how much CP-SAT
 should try before giving up.
 
-> ![WARNING]
+> [!WARNING]
 >
 > A common mistake when trying to improve the performance of iterative
 > optimization is adding the previous bound as a constraint. Although this
