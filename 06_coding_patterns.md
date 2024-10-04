@@ -556,15 +556,67 @@ solution = solver.solve(time_limit=5)
 print(solution)
 ```
 
-In the next section, we show how to warm-start the solver with the previous
-solution (besides using multiple objectives), which can significantly speed up
-the solving process. When adding constraints, the previous solution may become
-infeasible, but usually the new solution will look similar to the previous one,
-making it still a good starting point. You can set
-`solver.parameters.repair_hint = True` to enable CP-SAT to try to repair the
-hint if it is infeasible. By increasing
-`solver.parameters.hint_conflict_limit = 10`, you can control how much CP-SAT
-should try before giving up.
+### Improving Performance with Warm-Starts
+
+In optimization, while a simple function does not retain a state, the solver
+class can optimize both model building and the solving process when working on
+the same problem iteratively. One effective technique is using the previous
+solution as a starting point or "hint" for the next solution. This method, known
+as warm-starting, can significantly speed up the solving process. Even if you
+introduce a new constraint that makes the previous solution infeasible, the new
+solution is often similar enough that the solver can use the previous one as a
+good starting point for repair.
+
+Because repairing an infeasible hint can be computationally expensive, CP-SAT
+handles this process carefully. You can instruct CP-SAT to attempt repairing the
+hint by setting `solver.parameters.repair_hint = True`. Additionally, you can
+adjust the limit on how much effort CP-SAT should spend repairing the hint using
+`solver.parameters.hint_conflict_limit`. For example, setting
+`solver.parameters.hint_conflict_limit = 10` controls how many conflicts CP-SAT
+will resolve before giving up.
+
+Here is an example of how to implement this in code:
+
+```python
+class KnapsackSolver:
+    # ...
+
+    def _set_solution_as_hint(self):
+        """Use the current solution as a hint for the next solve."""
+        for i, v in enumerate(self.model.proto.variables):
+            v_ = self.model.get_int_var_from_proto_index(i)
+            assert v.name == v_.name, "Variable names should match"
+            self.model.add_hint(v_, self.solver.value(v_))
+        # Tell CP-SAT to repair the hint if it is infeasible
+        self.solver.parameters.repair_hint = True
+        self.solver.parameters.hint_conflict_limit = 20
+
+    def solve(self, time_limit: float | None = None) -> KnapsackSolution:
+        self.solver.parameters.max_time_in_seconds = time_limit if time_limit else self.config.time_limit
+        self.solver.parameters.relative_gap_limit = self.config.opt_tol
+        self.solver.parameters.log_search_progress = self.config.log_search_progress
+        status = self.solver.solve(self.model)
+        if status in [cp_model.OPTIMAL, cp_model.FEASIBLE]:
+            # There is a solution, set it as a hint for the next solve
+            self._set_solution_as_hint()
+            return KnapsackSolution(
+                selected_items=[
+                    i for i in range(self.n) if self.solver.value(self.x[i])
+                ],
+                objective=self.solver.objective_value,
+                upper_bound=self.solver.best_objective_bound,
+            )
+        return KnapsackSolution(
+            selected_items=[], objective=0, upper_bound=float("inf")
+        )
+
+    # ...
+```
+
+To further improve this approach, you could add a heuristic to repair the hint.
+A feasible hint is much more valuable than one that needs significant repair.
+For instance, if the hint is infeasible due to a prohibited combination of
+items, you could simply drop the least valuable item to make the hint valid.
 
 > [!WARNING]
 >
@@ -605,10 +657,8 @@ tackled using similar approaches.
 
 A challenge with this method is avoiding the creation of multiple models and
 restarting from scratch in each phase. Since we have a solution close to the new
-one, we can use it as a starting point. This technique, known as warm-starting,
-is common in optimization and significantly reduces the time needed to find a
-solution. Additionally, reusing the model can improve code readability and
-performance.
+one and changing the objective does not influence feasibility, it is an
+excellent opportunity to use the current solution as a hint for the next solve.
 
 The following code demonstrates how to extend a solver class to support
 exchangeable objectives. It includes fixing the current objective value to
