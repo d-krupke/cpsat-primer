@@ -4692,22 +4692,21 @@ consider adding it to your code.
 ### Custom Data Classes for Instances, Configurations, and Solutions
 
 Incorporating serializable data classes based on strict schema to manage
-instances, configurations, and solutions significantly enhances the readability
-and maintainability of your code. These classes also facilitate the
-documentation process, testing, and ensure data consistency across larger
-projects where data exchange among different components is necessary.
+instances, configurations, and solutions significantly enhances code readability
+and maintainability. These classes also facilitate documentation, testing, and
+ensure data consistency across larger projects where data exchange among
+different components is necessary.
 
-One very popular library for this purpose is
-[Pydantic](https://docs.pydantic.dev/latest/). It is extremely easy to use and
-provides a lot of functionality out of the box. The following code will
-introduce data classes for the instance, configuration, and solution of the
-knapsack problem. While the duck typing of Python is great for quickly writing
-your internal data flow, it is terrible for interfaces. People will always blame
-you if they use the interface wrong, and they will use it wrong in the most
-unexpected ways. Pydantic will protect you from a lot of these issues, by
-providing a clear interface and by validating the input data. As a bonus, you
-can easily create an API for your code by using FastAPI, which is built on top
-of Pydantic.
+One popular library for this purpose is
+[Pydantic](https://docs.pydantic.dev/latest/). It is easy to use and provides
+substantial functionality out of the box. The following code introduces data
+classes for the instance, configuration, and solution of the knapsack problem.
+While Python's duck typing is great for rapidly developing internal data flow,
+it can be problematic for interfaces. Users will often misuse the interface in
+unexpected ways, and you will be blamed for it. Pydantic helps mitigate these
+issues by providing a clear interface and validating input data. Additionally,
+you can create an API for your code effortlessly using FastAPI, which is built
+on top of Pydantic.
 
 ```python
 from pydantic import (
@@ -4751,8 +4750,7 @@ class KnapsackSolution(BaseModel):
     selected_items: list[int] = Field(..., description="Indices of selected items.")
     objective: float = Field(..., description="Objective value of the solution.")
     upper_bound: float = Field(
-        ...,
-        description="Upper bound of the solution, i.e., a proven limit on how good a solution could be.",
+        ..., description="Upper bound of the solution, i.e., a proven limit on how good a solution could be."
     )
 ```
 
@@ -4775,7 +4773,7 @@ def solve_knapsack(
     solver.parameters.max_time_in_seconds = config.time_limit
     solver.parameters.relative_gap_limit = config.opt_tol
     solver.parameters.log_search_progress = config.log_search_progress
-    # solve the model and return the solution
+    # Solve the model and return the solution
     status = solver.solve(model)
     if status in [cp_model.OPTIMAL, cp_model.FEASIBLE]:
         return KnapsackSolution(
@@ -4787,10 +4785,10 @@ def solve_knapsack(
 ```
 
 You can use the serialization and deserialization capabilities of Pydantic to
-quickly generate test cases based on real data. While you cannot surely say that
-your code is correct with such tests, you will at least be notified if the logic
-of your code changes. If you are refactoring your code, you will immediately see
-if you accidentally changed the behavior of your code.
+quickly generate test cases based on real data. While you cannot be certain that
+your code is correct with such tests, they will at least notify you if the logic
+changes unexpectedly. If you refactor your code, you will immediately see if its
+behavior changes accidentally.
 
 ```python
 from datetime import datetime
@@ -4801,7 +4799,6 @@ from pathlib import Path
 def add_test_case(instance: KnapsackInstance, config: KnapsackSolverConfig):
     """
     Quickly generate a test case based on the instance and configuration.
-    Be aware that the difficult models that are
     """
     test_folder = Path(__file__).parent / "test_data"
     unique_id = (
@@ -4841,9 +4838,9 @@ def test_saved_test_cases():
         # Do not test for the selected items, as the solver might return a different solution of the same quality
 ```
 
-You can now easily generate test cases and test them with the following code.
-Best of course if you are using real instances for this, potentially by simply
-automatically saving 1% of the instances you are using in production.
+You can now easily generate test cases and validate them with the following
+code. Ideally, you should use real instances for this, potentially by
+automatically saving 1% of the instances used in production.
 
 ```python
 # Define a knapsack instance
@@ -4862,23 +4859,21 @@ solution = solve_knapsack(instance, config)
 add_test_case(instance, config)
 ```
 
-You can also easily maintain backward compatibility by adding default values to
+You can also maintain backward compatibility easily by adding default values to
 any new fields you add to the data classes.
 
-> [!TIP]
->
-> One challenge I often face is designing data classes to be as generic as
-> possible so that they can be used with multiple solvers and remain compatible
-> throughout various stages of the optimization process. For instance, a graph
-> might be represented as an edge list, an adjacency matrix, or an adjacency
-> list, each with its own pros and cons, complicating the decision of which
-> format is optimal for all stages. However, converting between different data
-> class formats is typically straightforward, often requiring only a few lines
-> of code and having a negligible impact compared to the optimization process
-> itself. Therefore, I recommend focusing on functionality with your current
-> solver without overcomplicating this aspect. There is little harm in having to
-> call a few convert functions because you created separate specialized data
-> classes.
+> [!TIP] One challenge I often face is designing data classes to be as generic
+> as possible so that they can be used with multiple solvers and remain
+> compatible throughout various stages of the optimization process. For
+> instance, a graph might be represented as an edge list, an adjacency matrix,
+> or an adjacency list, each with its own pros and cons, complicating the
+> decision of which format is optimal for all stages. However, converting
+> between different data class formats is typically straightforward, often
+> requiring only a few lines of code and having a negligible impact compared to
+> the optimization process itself. Therefore, I recommend focusing on
+> functionality with your current solver without overcomplicating this aspect.
+> There is little harm in having to call a few conversion functions because you
+> created separate specialized data classes.
 
 ### Solver Class
 
