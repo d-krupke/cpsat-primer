@@ -474,10 +474,13 @@ become apparent after presenting an initial solution to a user or another
 algorithm. In such cases, flexibility is crucial, making it beneficial to
 encapsulate both the model and the solver within a single class. This setup
 facilitates the dynamic addition of constraints and subsequent re-solving
-without needing to rebuild the entire model.
+without needing to rebuild the entire model, potentially even utilizing
+warm-starting techniques to improve performance.
 
-**Implemented Changes:** We introduce the `KnapsackSolver` class, which
-encapsulates the entire setup and solving process of the knapsack problem:
+We introduce the `KnapsackSolver` class, which encapsulates the entire setup and
+solving process of the knapsack problem. We also use the opportunity to directly
+split the model-building into smaller methods, which can be useful for more
+complex models.
 
 ```python
 class KnapsackSolver:
@@ -505,8 +508,8 @@ class KnapsackSolver:
         self._add_constraints()
         self._add_objective()
 
-    def solve(self) -> KnapsackSolution:
-        self.solver.parameters.max_time_in_seconds = self.config.time_limit
+    def solve(self, time_limit: float | None = None) -> KnapsackSolution:
+        self.solver.parameters.max_time_in_seconds = time_limit if time_limit else self.config.time_limit
         self.solver.parameters.relative_gap_limit = self.config.opt_tol
         self.solver.parameters.log_search_progress = self.config.log_search_progress
         status = self.solver.solve(self.model)
@@ -524,39 +527,63 @@ class KnapsackSolver:
 
     def prohibit_combination(self, item_a: int, item_b: int):
         """
-        Prohibit the combination of two items in the solution,
-        without having to know the actual model, e.g., if they
-        do not follow clean rules but after presenting the solution
-        to the user, the user decides that these two items should
-        not be packed together. After calling this method, you can
-        simply call `solve` again to get a new solution obeying
-        this constraint.
+        Prohibit the combination of two items in the solution.
+        This can be useful if, after presenting the solution to the user, they decide that these two items should not be packed together. After calling this method, you can simply call `solve` again to get a new solution obeying this constraint.
         """
         self.model.add(self.x[item_a] + self.x[item_b] <= 1)
-
-
-if __name__ == "__main__":
-    instance = KnapsackInstance(weights=[1, 2, 3], values=[4, 5, 6], capacity=3)
-    config = KnapsackSolverConfig(time_limit=10, opt_tol=0.01, log_search_progress=True)
-    solver = KnapsackSolver(instance, config)
-    solution = solver.solve()
-    print(solution)
-    solver.prohibit_combination(0, 1)
-    solution = solver.solve()
-    print(solution)
 ```
 
-**Key Benefits:**
+At first glance, this may look like a cumbersome interface, as we first have to
+create a solver object for a specific instance and then call the `solve` method.
+However, this structure accommodates many use cases, and I use variations of it
+for most of my projects. Additionally, I sometimes add a simple function that
+wraps the solver class to make it easier to use for simple cases.
 
-- **Incremental Model Building and Re-solving**: The class structure not only
-  facilitates incremental additions of constraints for iterative model
-  modifications without starting from scratch but also supports multiple
-  invocations of the `solve` method. This allows for iterative refinement of the
-  solution by adjusting constraints or solver parameters such as time limits and
-  optimality tolerance.
-- **Direct Model and Solver Access**: Provides direct member-access to the model
-  and solver, enhancing flexibility for advanced operations and debugging, a
-  capability not exposed in the function-based approach.
+```python
+instance = KnapsackInstance(weights=[1, 2, 3], values=[4, 5, 6], capacity=3)
+config = KnapsackSolverConfig(time_limit=10, opt_tol=0.01, log_search_progress=True)
+solver = KnapsackSolver(instance, config)
+solution = solver.solve()
+print(solution)
+
+# Prohibit the combination of the first two items, assuming that our simulation
+# showed that they should not be packed together.
+solver.prohibit_combination(0, 1)
+
+# Solve the problem again with the new constraint, but this time
+# only allow 5 seconds for the solver.
+solution = solver.solve(time_limit=5)
+print(solution)
+```
+
+In the next section, we show how to warm-start the solver with the previous
+solution (besides using multiple objectives), which can significantly speed up
+the solving process. When adding constraints, the previous solution may become
+infeasible, but usually the new solution will look similar to the previous one,
+making it still a good starting point. You can set
+`solver.parameters.repair_hint = True` to enable CP-SAT to try to repair the
+hint if it is infeasible. By increasing
+`solver.parameters.hint_conflict_limit = 10`, you can control how much CP-SAT
+should try before giving up.
+
+> ![WARNING]
+>
+> A common mistake when trying to improve the performance of iterative
+> optimization is adding the previous bound as a constraint. Although this
+> approach might let CP-SAT resume directly from the previous bound, it often
+> limits CP-SAT's ability to find better solutions. This happens because it adds
+> a strong constraint unrelated to the problem's feasibility, which can
+> interfere with various internal algorithms (such as reducing the effectiveness
+> of linear relaxation).
+>
+> If bounds significantly affect performance, consider using a callback to check
+> if the current objective is sufficiently close to the previous bound and stop
+> the search if it is. This approach avoids interfering with CP-SAT's
+> optimization capabilities, though callbacks do introduce some overhead.
+>
+> As an exercise to understand why reusing bounds is challenging, try
+> implementing a branch-and-bound algorithm for a simple problem like the
+> Knapsack Problem - it is a relatively straightforward way to gain insight.
 
 ### Exchangeable Objective
 
@@ -587,12 +614,12 @@ The following code demonstrates how to extend a solver class to support
 exchangeable objectives. It includes fixing the current objective value to
 prevent degeneration and using the current solution as a hint.
 
-**Implemented Changes:** We created a member `_objective` to store the current
-objective function and added methods to set the objective to maximize value or
-minimize weight. We also introduced methods to set the solution as a hint for
-the next solve which will automatically be called if the `solve` found a
-feasible solution. To not degenerate on previous objectives, we added a method
-to fix the current objective value based on some ratio.
+We created a member `_objective` to store the current objective function and
+added methods to set the objective to maximize value or minimize weight. We also
+introduced methods to set the solution as a hint for the next solve which will
+automatically be called if the `solve` found a feasible solution. To not
+degenerate on previous objectives, we added a method to fix the current
+objective value based on some ratio.
 
 ```python
 class MultiObjectiveKnapsackSolver:
@@ -650,9 +677,9 @@ class MultiObjectiveKnapsackSolver:
         self._add_constraints()
         self.set_maximize_value_objective()
 
-    def solve(self) -> KnapsackSolution:
+    def solve(self, time_limit: float | None = None) -> KnapsackSolution:
         """Solve the knapsack problem and return the solution."""
-        self.solver.parameters.max_time_in_seconds = self.config.time_limit
+        self.solver.parameters.max_time_in_seconds = time_limit if time_limit else self.config.time_limit
         self.solver.parameters.relative_gap_limit = self.config.opt_tol
         self.solver.parameters.log_search_progress = self.config.log_search_progress
         status = self.solver.solve(self.model)
@@ -681,18 +708,8 @@ solution_1 = solver.solve()
 solver.fix_current_objective(0.95)
 # change the objective to minimize the weight
 solver.set_minimize_weight_objective()
-solution_2 = solver.solve()
+solution_2 = solver.solve(time_limit=10)
 ```
-
-**Key Benefits:**
-
-- **Objective Flexibility**: The ability to exchange objectives and fix the
-  current objective value enhances the solver's adaptability to changing
-  requirements and constraints, enabling the exploration of multiple objectives
-  and trade-offs.
-- **Warm-Starting**: By using the current solution as a hint for the next solve,
-  the solver can leverage the existing solution to find a new one more quickly,
-  reducing computational overhead and improving performance.
 
 ### Variable Containers
 
