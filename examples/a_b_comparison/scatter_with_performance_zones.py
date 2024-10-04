@@ -10,7 +10,6 @@ Changelog:
 (c) 2024 Dominik Krupke, https://github.com/d-krupke/cpsat-primer
 """
 
-
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd

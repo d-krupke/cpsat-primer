@@ -4595,9 +4595,9 @@ on pytest.
 
 ### Logging the Model Building
 
-When working with more complex optimization problems, logging the model-building
+When working with larger optimization problems, logging the model-building
 process can be essential to find and fix issues. Often, the problem lies not
-within the solver but in the model itself.
+within the solver but in the model building itself.
 
 In the following example, we add some basic logging to the solver function to
 give us some insights into the model-building process. This logging can be
@@ -4608,12 +4608,19 @@ If you do not know about the logging framework of Python, this is an excellent
 moment to learn about it. I consider it an essential skill for production code
 and this and similar frameworks are used for most production code in any
 language. The official Python documentation contains a
-[good tutorial](https://docs.python.org/3/howto/logging.html).
+[good tutorial](https://docs.python.org/3/howto/logging.html). There are people
+that prefer other logging frameworks, but it comes with Python and is good
+enough for most use cases, definitely better than using the badly configurable
+`print` statement.
 
 ```python
 import logging
 from ortools.sat.python import cp_model
 from typing import List
+
+# Configure the logging framework if it is not already configured.
+# We are setting it to debug level, as we are still developing the code.
+logging.basicConfig(format="%(asctime)s - %(message)s", level=logging.DEBUG)
 
 _logger = logging.getLogger(__name__)  # get a logger for the current module
 
@@ -4632,15 +4639,17 @@ def solve_knapsack(
     n = len(weights)  # Number of items
     _logger.debug("Number of items: %d", n)
     if n > 0:
-        _logger.debug(
-            "Min/Mean/Max weight: %d/%.2f/%d",
-            min(weights),
-            sum(weights) / n,
-            max(weights),
-        )
-        _logger.debug(
-            "Min/Mean/Max value: %d/%.2f/%d", min(values), sum(values) / n, max(values)
-        )
+        if _logger.isEnabledFor(logging.DEBUG):
+            # Only calculate min, mean, and max if we actually log it
+            _logger.debug(
+                "Min/Mean/Max weight: %d/%.2f/%d",
+                min(weights),
+                sum(weights) / n,
+                max(weights),
+            )
+            _logger.debug(
+                "Min/Mean/Max value: %d/%.2f/%d", min(values), sum(values) / n, max(values)
+            )
     # Decision variables for items
     x = [model.new_bool_var(f"x_{i}") for i in range(n)]
     # Capacity constraint
@@ -4682,43 +4691,40 @@ consider adding it to your code.
 
 ### Custom Data Classes for Instances, Configurations, and Solutions
 
-Incorporating serializable data classes to manage instances, configurations, and
-solutions significantly enhances the readability and maintainability of your
-code. These classes also facilitate the documentation process, testing, and
-ensure data consistency across larger projects where data exchange among
-different components is necessary.
+Incorporating serializable data classes based on strict schema to manage
+instances, configurations, and solutions significantly enhances the readability
+and maintainability of your code. These classes also facilitate the
+documentation process, testing, and ensure data consistency across larger
+projects where data exchange among different components is necessary.
 
-**Implemented Changes:** We introduce data classes using
-[Pydantic](https://docs.pydantic.dev/latest/), a popular Python library that
-supports data validation and settings management through Python type
-annotations. The changes include:
-
-- **Instance Class**: Defines the knapsack problem with attributes for weights,
-  values, and capacity. It includes a validation method to ensure that the
-  number of weights matches the number of values, thereby enhancing data
-  integrity.
-- **Configuration Class**: Manages solver settings such as time limits and
-  optimality tolerance, allowing for easy adjustments and fine-tuning of the
-  solver’s performance. Default values ensure backward compatibility,
-  facilitating the seamless integration of older configurations with new
-  parameters.
-- **Solution Class**: Captures the outcome of the optimization process,
-  including which items were selected, the objective value, and the upper bound
-  of the solution. This class allows us to add additional information, instead
-  of just returning the pure solution. It also allows us to later extend the
-  attached information without breaking the API, by just making the new entries
-  optional or providing a default value. For example, you may be interested in
-  the solution time that was required to find the solution.
+One very popular library for this purpose is
+[Pydantic](https://docs.pydantic.dev/latest/). It is extremely easy to use and
+provides a lot of functionality out of the box. The following code will
+introduce data classes for the instance, configuration, and solution of the
+knapsack problem. While the duck typing of Python is great for quickly writing
+your internal data flow, it is terrible for interfaces. People will always blame
+you if they use the interface wrong, and they will use it wrong in the most
+unexpected ways. Pydantic will protect you from a lot of these issues, by
+providing a clear interface and by validating the input data. As a bonus, you
+can easily create an API for your code by using FastAPI, which is built on top
+of Pydantic.
 
 ```python
-from ortools.sat.python import cp_model
-from pydantic import BaseModel, PositiveInt, NonNegativeFloat
+from pydantic import (
+    BaseModel,
+    PositiveInt,
+    NonNegativeFloat,
+    PositiveFloat,
+    Field,
+    model_validator,
+)
 
 
 class KnapsackInstance(BaseModel):
-    weights: list[PositiveInt]  # the weight of each item
-    values: list[PositiveInt]  # the value of each item
-    capacity: PositiveInt  # the capacity of the knapsack
+    # Defines the knapsack instance to be solved.
+    weights: list[PositiveInt] = Field(..., description="The weight of each item.")
+    values: list[PositiveInt] = Field(..., description="The value of each item.")
+    capacity: PositiveInt = Field(..., description="The capacity of the knapsack.")
 
     @model_validator(mode="after")
     def check_lengths(cls, v):
@@ -4728,15 +4734,32 @@ class KnapsackInstance(BaseModel):
 
 
 class KnapsackSolverConfig(BaseModel):
-    time_limit: PositiveInt = 900  # Solver time limit in seconds
-    opt_tol: NonNegativeFloat = 0.01  # Optimality tolerance (1% gap allowed)
-    log_search_progress: bool = False  # Whether to log search progress
+    # Defines the configuration for the knapsack solver.
+    time_limit: PositiveFloat = Field(
+        default=900.0, description="Time limit in seconds."
+    )
+    opt_tol: NonNegativeFloat = Field(
+        default=0.01, description="Optimality tolerance (1% gap allowed)."
+    )
+    log_search_progress: bool = Field(
+        default=False, description="Whether to log the search progress."
+    )
 
 
 class KnapsackSolution(BaseModel):
-    selected_items: list[int]  # Indices of the selected items
-    objective: float  # Objective value of the solution
-    upper_bound: float  # Upper bound of the solution
+    # Defines the solution of the knapsack problem.
+    selected_items: list[int] = Field(..., description="Indices of selected items.")
+    objective: float = Field(..., description="Objective value of the solution.")
+    upper_bound: float = Field(
+        ...,
+        description="Upper bound of the solution, i.e., a proven limit on how good a solution could be.",
+    )
+```
+
+The original code needs to be adapted to use these data classes.
+
+```python
+from ortools.sat.python import cp_model
 
 
 def solve_knapsack(
@@ -4763,23 +4786,84 @@ def solve_knapsack(
     return KnapsackSolution(selected_items=[], objective=0, upper_bound=0)
 ```
 
-**Key Benefits:**
+You can use the serialization and deserialization capabilities of Pydantic to
+quickly generate test cases based on real data. While you cannot surely say that
+your code is correct with such tests, you will at least be notified if the logic
+of your code changes. If you are refactoring your code, you will immediately see
+if you accidentally changed the behavior of your code.
 
-- **Structured Data Handling**: Defining explicit structures for each aspect of
-  the problem ensures robust data handling and minimizes errors, facilitating
-  easier integration and API exposition.
-- **Easy Serialization**: Pydantic models support straightforward conversion to
-  and from JSON, simplifying the storage and transmission of configurations and
-  results.
-- **Enhanced Testing and Documentation**: Clear data definitions make it easier
-  to generate documentation and conduct tests that confirm the model and
-  solver's behavior.
-- **Backward Compatibility**: Default values in data classes enable seamless
-  integration of older configurations with new software versions, accommodating
-  new parameters without disrupting existing setups.
-- **Type Hinting**: Type annotations in data classes provide a clear
-  specification of the expected data types, enhancing code readability and
-  enabling static type checkers to catch potential errors early.
+```python
+from datetime import datetime
+from hashlib import md5
+from pathlib import Path
+
+
+def add_test_case(instance: KnapsackInstance, config: KnapsackSolverConfig):
+    """
+    Quickly generate a test case based on the instance and configuration.
+    Be aware that the difficult models that are
+    """
+    test_folder = Path(__file__).parent / "test_data"
+    unique_id = (
+        datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+        + "_"
+        + md5(
+            (instance.model_dump_json() + config.model_dump_json()).encode()
+        ).hexdigest()
+    )
+    subfolder = test_folder / "knapsack" / unique_id
+    subfolder.mkdir(parents=True, exist_ok=True)
+    with open(subfolder / "instance.json", "w") as f:
+        f.write(instance.model_dump_json())
+    with open(subfolder / "config.json", "w") as f:
+        f.write(config.model_dump_json())
+    solution = solve_knapsack(instance, config)
+    with open(subfolder / "solution.json", "w") as f:
+        f.write(solution.model_dump_json())
+
+
+def test_saved_test_cases():
+    test_folder = Path(__file__).parent / "test_data"
+    for subfolder in test_folder.glob("knapsack/*"):
+        with open(subfolder / "instance.json") as f:
+            instance = KnapsackInstance.model_validate_json(f.read())
+        with open(subfolder / "config.json") as f:
+            config = KnapsackSolverConfig.model_validate_json(f.read())
+        with open(subfolder / "solution.json") as f:
+            solution = KnapsackSolution.model_validate_json(f.read())
+        new_solution = solve_knapsack(instance, config)
+        assert (
+            new_solution.objective <= solution.upper_bound
+        ), "New solution is better than the previous upper bound: One has to be wrong."
+        assert (
+            solution.objective <= new_solution.upper_bound
+        ), "Old solution is better than the new upper bound: One has to be wrong."
+        # Do not test for the selected items, as the solver might return a different solution of the same quality
+```
+
+You can now easily generate test cases and test them with the following code.
+Best of course if you are using real instances for this, potentially by simply
+automatically saving 1% of the instances you are using in production.
+
+```python
+# Define a knapsack instance
+instance = KnapsackInstance(
+    weights=[23, 31, 29, 44, 53, 38, 63, 85, 89, 82],
+    values=[92, 57, 49, 68, 60, 43, 67, 84, 87, 72],
+    capacity=165,
+)
+# Define a solver configuration
+config = KnapsackSolverConfig(
+    time_limit=10.0, opt_tol=0.01, log_search_progress=False
+)
+# Solve the knapsack problem
+solution = solve_knapsack(instance, config)
+# Add the test case to the test data folder
+add_test_case(instance, config)
+```
+
+You can also easily maintain backward compatibility by adding default values to
+any new fields you add to the data classes.
 
 > [!TIP]
 >

@@ -14,6 +14,7 @@ CAVEAT: This app allows to start many solver processes in parallel, which
 can overload the system. For a production system, you would have to extract
 the solver to a separate service which can queue and manage the requests.
 """
+
 import streamlit as st
 import matplotlib.pyplot as plt
 import time
