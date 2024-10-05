@@ -3,6 +3,7 @@ Having a separate file for the configuration of paths and constants allows
 you to, e.g., quickly change the database without having to overwrite the
 old data.
 """
+
 from pathlib import Path
 from solver import (
     GurobiTspSolver,

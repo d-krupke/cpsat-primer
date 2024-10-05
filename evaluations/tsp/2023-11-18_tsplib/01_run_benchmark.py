@@ -5,7 +5,6 @@ Slurminade: This script uses the slurminade package to distribute the benchmark 
 AlgBench: This script uses the AlgBench package to capture and manage the results
 """
 
-
 import logging
 import random
 
