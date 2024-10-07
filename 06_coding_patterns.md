@@ -637,7 +637,7 @@ items, you could simply drop the least valuable item to make the hint valid.
 > implementing a branch-and-bound algorithm for a simple problem like the
 > Knapsack Problem - it is a relatively straightforward way to gain insight.
 
-### Exchangeable Objective
+### Exchangeable Objective / Multi-Objective Optimization
 
 In real-world scenarios, objectives are often not clearly defined. Typically,
 there are multiple objectives with different priorities, making it challenging
@@ -760,6 +760,23 @@ solver.fix_current_objective(0.95)
 solver.set_minimize_weight_objective()
 solution_2 = solver.solve(time_limit=10)
 ```
+
+There are more advanced and precise methods for computing the
+[Pareto front](https://en.wikipedia.org/wiki/Pareto_front), but
+[multi-objective optimization](https://en.wikipedia.org/wiki/Multi-objective_optimization)
+is a complex field of research in its own right. If your problem is already
+challenging with a single objective, adding more objectives will only increase
+the difficulty.
+
+Using the shown approach of lexicographic optimization (with relaxation) or
+combining multiple objectives into a single one, for example by adding them with
+different weights, is often a reasonable compromise. You could also use
+heuristics to explore the solution space around an initial solution obtained
+with CP-SAT.
+
+However, multi-objective optimization remains a challenging topic, and even
+experts rely on significant trial and error to achieve satisfactory results, as
+compromises are often unavoidable.
 
 ### Variable Containers
 
