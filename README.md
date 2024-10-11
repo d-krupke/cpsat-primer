@@ -5466,9 +5466,9 @@ class KnapsackSolver:
 >
 > If we are sure to only call `add_bonus` for a pair of items once, we could
 > also save us the trouble of storing the bonus variables and just create and
-> them to the objective function directly in the `add_bonus` method. There is no
-> need to store the variable handle if we do not need it later, as CP-SAT will
-> take care of the variable's lifecycle.
+> add them to the objective function directly in the `add_bonus` method. There
+> is no need to store the variable handle if we do not need it later, as CP-SAT
+> will take care of the variable's lifecycle.
 
 ### Submodels
 
