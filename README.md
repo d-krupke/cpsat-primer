@@ -5370,6 +5370,14 @@ class KnapsackSolver:
         self.model.maximize(self._knapsack_a.packed_value() + self._knapsack_b.packed_value())
 ```
 
+> [!WARNING]
+>
+> Do not create such a container class for simple models where the container
+> would only wrap a list or a dictionary without adding any additional
+> functionality. In such cases, directly using the list or dictionary is
+> preferable, as it is more concise and easier to understand. The same is true
+> for individual variables that do not need a container at all.
+
 ### Lazy Variable Construction
 
 In models with numerous auxiliary variables, often only a subset is actually
@@ -5453,6 +5461,14 @@ class KnapsackSolver:
         bonus_var = self._bonus_vars[(item_a, item_b)]
         self._objective_terms.append(bonus * bonus_var)
 ```
+
+> [!TIP]
+>
+> If we are sure to only call `add_bonus` for a pair of items once, we could
+> also save us the trouble of storing the bonus variables and just create and
+> them to the objective function directly in the `add_bonus` method. There is no
+> need to store the variable handle if we do not need it later, as CP-SAT will
+> take care of the variable's lifecycle.
 
 ### Submodels
 
