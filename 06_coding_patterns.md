@@ -73,6 +73,24 @@ immediately apparent, but I hope you will see their potential in more complex
 problems. The alternative would have been to provide complex examples, which
 might have distracted from the patterns themselves.
 
+> [!TIP]
+>
+> The following patterns focus on details specific to computational
+> optimization. However, many optimization engineers come from mathematics or
+> physics backgrounds and may not have professional Python or software
+> engineering experience. If you are among them, I recommend familiarizing
+> yourself with
+> [basic data structures and their mathematical comprehensions](https://docs.python.org/3/tutorial/datastructures.html)
+> and elegant loops using
+> [itertools](https://docs.python.org/3/library/itertools.html). These tools
+> allow you to express your mathematical ideas in Python more elegantly.
+>
+> Additionally, there are excellent tools to automatically format, check, and
+> improve your code, such as [ruff](https://docs.astral.sh/ruff/tutorial/).
+> Regularly running `ruff check --fix` and `ruff format` can enhance your code
+> quality with minimal effort. Optimally, you will integrate it via a
+> [pre-commit hook](https://pre-commit.com/).
+
 ### Simple Function
 
 For straightforward optimization problems, encapsulating the model creation and

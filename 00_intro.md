@@ -73,11 +73,13 @@ model.maximize(sum(x * v for x, v in zip(xs, values)))
 solver = cp_model.CpSolver()
 solver.solve(model)
 
-print("Optimal selection: ", [i for i, x in enumerate(xs) if solver.value(x)])
+print("Optimal selection:", [i for i, x in enumerate(xs) if solver.value(x)])
+print("Total packed value:", solver.objective_value)
 ```
 
 ```
 Optimal selection: [2, 14, 19, 20, 29, 33, 52, 53, 54, 58, 66, 72, 76, 77, 81, 86, 93, 94, 96]
+Total packed value: 1161.0
 ```
 
 How long did CP-SAT take? On my machine, it found the provably best solution

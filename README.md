@@ -72,11 +72,13 @@ model.maximize(sum(x * v for x, v in zip(xs, values)))
 solver = cp_model.CpSolver()
 solver.solve(model)
 
-print("Optimal selection: ", [i for i, x in enumerate(xs) if solver.value(x)])
+print("Optimal selection:", [i for i, x in enumerate(xs) if solver.value(x)])
+print("Total packed value:", solver.objective_value)
 ```
 
 ```
 Optimal selection: [2, 14, 19, 20, 29, 33, 52, 53, 54, 58, 66, 72, 76, 77, 81, 86, 93, 94, 96]
+Total packed value: 1161.0
 ```
 
 How long did CP-SAT take? On my machine, it found the provably best solution
@@ -4481,6 +4483,24 @@ will work on simple examples where the benefits of these patterns may not be
 immediately apparent, but I hope you will see their potential in more complex
 problems. The alternative would have been to provide complex examples, which
 might have distracted from the patterns themselves.
+
+> [!TIP]
+>
+> The following patterns focus on details specific to computational
+> optimization. However, many optimization engineers come from mathematics or
+> physics backgrounds and may not have professional Python or software
+> engineering experience. If you are among them, I recommend familiarizing
+> yourself with
+> [basic data structures and their mathematical comprehensions](https://docs.python.org/3/tutorial/datastructures.html)
+> and elegant loops using
+> [itertools](https://docs.python.org/3/library/itertools.html). These tools
+> allow you to express your mathematical ideas in Python more elegantly.
+>
+> Additionally, there are excellent tools to automatically format, check, and
+> improve your code, such as [ruff](https://docs.astral.sh/ruff/tutorial/).
+> Regularly running `ruff check --fix` and `ruff format` can enhance your code
+> quality with minimal effort. Optimally, you will integrate it via a
+> [pre-commit hook](https://pre-commit.com/).
 
 ### Simple Function
 
