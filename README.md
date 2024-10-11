@@ -5373,24 +5373,23 @@ class KnapsackSolver:
 ### Lazy Variable Construction
 
 In models with numerous auxiliary variables, often only a subset is actually
-used by the constraints. You can now try to only create the variables that may
-actually be needed later on, but this can require some complex code to ensure
-that exactly the right variables are created. If the model is extended later on,
-things can get even more complicated as you may not know which variables are
-needed upfront. This is where lazy variable construction comes into play. Here,
-we create variables only when they are accessed, ensuring that only necessary
-variables are generated, reducing memory usage and computational overhead. This
-can be more expensive that just creating a vector with all variables, when in
-the end most variables are needed anyway, but it can save a lot of memory and
-computation time if only a small subset is actually used.
+used by the constraints. Attempting to create only the variables that are needed
+can require complex code to ensure that exactly the right variables are
+generated. If the model is extended later, this process becomes even more
+complicated, as you may not know upfront which variables will be needed. This is
+where lazy variable construction comes into play. By creating variables only
+when they are accessed, we ensure that only necessary variables are generated,
+reducing memory usage and computational overhead. While this approach might be
+more expensive if most variables end up being used anyway, it can save
+significant resources when only a small subset is actually needed.
 
-To show an example of such a lazy container, we introduce the new class
-`_CombiVariables` that manages auxiliary variables indicating that a pair of
-items were packed, allowing to give additional bonuses for packing certain items
-together. Theoretically, there is a square number of possible combinations, but
-there will probably only be a handful of them that are actually used. By
-creating the variables only when they are accessed, we can reduce memory usage
-and computational overhead.
+To illustrate this concept, we introduce the `_CombiVariables` class. This class
+manages auxiliary variables that indicate when a pair of items is packed
+together, allowing us to assign additional bonuses for packing certain items
+together. Theoretically, the number of possible item combinations is quadratic
+in the number of items, but in practice, only a few may be relevant. By creating
+these variables lazily—only when they are accessed—we reduce memory usage and
+computational overhead.
 
 ```python
 class _CombiVariables:
@@ -5398,29 +5397,30 @@ class _CombiVariables:
         self,
         instance: KnapsackInstance,
         model: cp_model.CpModel,
-        item_vars: _ItemVariables,
+        item_vars: _ItemSelectionVars,
     ):
         self.instance = instance
         self.model = model
         self.item_vars = item_vars
-        self.bonus = {}
+        self.bonus_vars = {}
 
-    def __getitem__(self, i, j):
-        i, j = min(i, j), max(i, j)
-        if (i, j) not in self.bonus:
-            self.bonus[(i, j)] = self.model.new_bool_var(f"bonus_{i}_{j}")
-            self.model.add(
-                self.item_vars.packs_item(i) + self.item_vars.packs_item(j) >= 2 * self.bonus[(i, j)]
+    def __getitem__(self, item_pair):
+        i, j = sorted(item_pair)
+        if (i, j) not in self.bonus_vars:
+            var = self.model.NewBoolVar(f"bonus_{i}_{j}")
+            self.model.Add(
+                self.item_vars.packs_item(i) + self.item_vars.packs_item(j) >= 2 * var
             )
-        return self.bonus[(i, j)]
+            self.bonus_vars[(i, j)] = var
+        return self.bonus_vars[(i, j)]
 ```
 
-In the `KnapsackSolver`, we can now just act as if all variables are already
-created, and do not have to care about this optimization. Note that we moved the
-creation of the objective function into solve as adding a bonus for a
-combination of items will change the objective function. Also note how nicely we
-can use the item variables in this new container thanks to packing them into a
-separate class, making it easy to pass them around.
+In the `KnapsackSolver`, we can now treat these variables as if they were all
+pre-created, without worrying about the underlying optimization. Note that we
+have moved the creation of the objective function into the `solve` method, as
+adding bonuses for item combinations will modify the objective function. Also,
+by encapsulating item variables into a separate class (`_ItemSelectionVars`), we
+can easily pass them around and use them in other components.
 
 ```python
 class KnapsackSolver:
@@ -5428,51 +5428,59 @@ class KnapsackSolver:
         self.instance = instance
         self.config = config
         self.model = cp_model.CpModel()
-        self._item_vars = _ItemVariables(instance, self.model)
+        self._item_vars = _ItemSelectionVars(instance, self.model)
         self._bonus_vars = _CombiVariables(instance, self.model, self._item_vars)
-        self._objective = self._item_vars.packed_value()  # Initial objective setup
+        self._objective_terms = [self._item_vars.packed_value()]  # Initial objective terms
         self.solver = cp_model.CpSolver()
 
     def solve(self) -> KnapsackSolution:
-        self.model.maximize(self._objective)
+        self.model.Maximize(sum(self._objective_terms))
         self.solver.parameters.max_time_in_seconds = self.config.time_limit
         self.solver.parameters.relative_gap_limit = self.config.opt_tol
         self.solver.parameters.log_search_progress = self.config.log_search_progress
-        status = self.solver.solve(self.model)
+        status = self.solver.Solve(self.model)
         if status in [cp_model.OPTIMAL, cp_model.FEASIBLE]:
             return KnapsackSolution(
                 selected_items=self._item_vars.extract_packed_items(self.solver),
-                objective=self.solver.objective_value,
-                upper_bound=self.solver.best_objective_bound,
+                objective=self.solver.ObjectiveValue(),
+                upper_bound=self.solver.BestObjectiveBound(),
             )
         return KnapsackSolution(
             selected_items=[], objective=0, upper_bound=float("inf")
         )
 
     def add_bonus(self, item_a: int, item_b: int, bonus: int):
-        self._objective += bonus * self._bonus_vars[item_a, item_b]
+        bonus_var = self._bonus_vars[(item_a, item_b)]
+        self._objective_terms.append(bonus * bonus_var)
 ```
 
 ### Submodels
 
-As optimization models increase in complexity, it may be beneficial to divide
-the overall model into smaller, more manageable submodels. These submodels can
-encapsulate specific parts of the problem, communicating with the main model via
-shared variables but hiding internal details like auxiliary variables.
+We can further enhance our modeling approach by encapsulating entire sections of
+the model—not just individual variables—into separate submodels. This technique
+is particularly useful for complex models where different components are loosely
+connected. By partitioning the model into smaller, more manageable submodels, we
+improve modularity and maintainability. Submodels communicate with the main
+model through shared variables, effectively hiding internal details like
+auxiliary variables. If requirements change, we can often reconfigure or replace
+specific submodels without affecting the rest of the model. In larger contexts,
+it is also common for logic to repeat in different optimization problems of the
+system, so building a collection of submodels allows us to quickly assemble new
+models using reusable components.
 
-For instance, piecewise linear functions can be modeled as submodels, as done
-for `PiecewiseLinearConstraint` in
-[./utils/piecewise_functions/piecewise_linear_function.py](https://github.com/d-krupke/cpsat-primer/blob/main/utils/piecewise_functions/piecewise_linear_function.py).
+For instance, piecewise linear functions can be modeled as submodels, as
+demonstrated with the `PiecewiseLinearConstraint` class in
+[piecewise_linear_function.py](https://github.com/d-krupke/cpsat-primer/blob/main/utils/piecewise_functions/piecewise_linear_function.py).
 Each submodel handles a piecewise linear function independently, interfacing
 with the main model through shared `x` and `y` variables. By encapsulating the
-logic for each piecewise function in a dedicated class, we standardize and reuse
-the logic across multiple instances, enhancing modularity and maintainability.
+logic for each piecewise function in a dedicated class, we make it reusable and
+testable in isolation.
 
 ```python
+from ortools.sat.python import cp_model
+
 requirements_1 = (3, 5, 2)
 requirements_2 = (2, 1, 3)
-
-from ortools.sat.python import cp_model
 
 model = cp_model.CpModel()
 buy_1 = model.new_int_var(0, 1_500, "buy_1")
@@ -5486,14 +5494,14 @@ model.add(produce_1 * requirements_1[0] + produce_2 * requirements_2[0] <= buy_1
 model.add(produce_1 * requirements_1[1] + produce_2 * requirements_2[1] <= buy_2)
 model.add(produce_1 * requirements_1[2] + produce_2 * requirements_2[2] <= buy_3)
 
-# You can find this code it ./utils!
+# You can find the PiecewiseLinearFunction and PiecewiseLinearConstraint classes in the utils directory
 from piecewise_functions import PiecewiseLinearFunction, PiecewiseLinearConstraint
 
 # Define the functions for the costs
 costs_1 = [(0, 0), (1000, 400), (1500, 1300)]
 costs_2 = [(0, 0), (300, 300), (700, 500), (1200, 600), (1500, 1100)]
 costs_3 = [(0, 0), (200, 400), (500, 700), (1000, 900), (1500, 1500)]
-# PiecewiseLinearFunction is a pydantic model and can be serialized easily!
+
 f_costs_1 = PiecewiseLinearFunction(
     xs=[x for x, y in costs_1], ys=[y for x, y in costs_1]
 )
@@ -5504,59 +5512,94 @@ f_costs_3 = PiecewiseLinearFunction(
     xs=[x for x, y in costs_3], ys=[y for x, y in costs_3]
 )
 
-# Define the functions for the gain
-gain_1 = [(0, 0), (100, 800), (200, 1600), (300, 2_000)]
-gain_2 = [(0, 0), (80, 1_000), (150, 1_300), (200, 1_400), (300, 1_500)]
-f_gain_1 = PiecewiseLinearFunction(xs=[x for x, y in gain_1], ys=[y for x, y in gain_1])
-f_gain_2 = PiecewiseLinearFunction(xs=[x for x, y in gain_2], ys=[y for x, y in gain_2])
+# Define the functions for the gains
+gain_1 = [(0, 0), (100, 800), (200, 1600), (300, 2000)]
+gain_2 = [(0, 0), (80, 1000), (150, 1300), (200, 1400), (300, 1500)]
 
-# Create y>=f(x) constraints for the costs
+f_gain_1 = PiecewiseLinearFunction(
+    xs=[x for x, y in gain_1], ys=[y for x, y in gain_1]
+)
+f_gain_2 = PiecewiseLinearFunction(
+    xs=[x for x, y in gain_2], ys=[y for x, y in gain_2]
+)
+
+# Create y >= f(x) constraints for the costs
 x_costs_1 = PiecewiseLinearConstraint(model, buy_1, f_costs_1, upper_bound=False)
 x_costs_2 = PiecewiseLinearConstraint(model, buy_2, f_costs_2, upper_bound=False)
 x_costs_3 = PiecewiseLinearConstraint(model, buy_3, f_costs_3, upper_bound=False)
 
-# Create y<=f(x) constraints for the gain
+# Create y <= f(x) constraints for the gains
 x_gain_1 = PiecewiseLinearConstraint(model, produce_1, f_gain_1, upper_bound=True)
 x_gain_2 = PiecewiseLinearConstraint(model, produce_2, f_gain_2, upper_bound=True)
 
-# Maximize the gain minus the costs
+# Maximize the gains minus the costs
 model.maximize(x_gain_1.y + x_gain_2.y - (x_costs_1.y + x_costs_2.y + x_costs_3.y))
 ```
 
-**Key Benefits:**
+Testing complex optimization models is often challenging because outputs can be
+sensitive to small changes in the model. Even with a good test case, detected
+errors may be difficult to trace. By extracting elements into submodels, you can
+test these submodels independently, ensuring they work correctly before
+integrating them into the main model.
 
-- **Testing**: Testing complex optimization models is often very difficult as
-  the outputs are often sensitive to small changes in the model. Even if you
-  have a good test case with predictable results, detected errors may be very
-  difficult to track down. If you extracted elements into submodels, you can
-  test these submodels independently, ensuring that they work correctly before
-  integrating them into the main model.
-  ```python
-  def test_piecewise_linear_upper_bound_constraint():
-      model = cp_model.CpModel()
-      # Defining the input. Note that for some problems it may be
-      # easier to fix variables to a specific value and then just
-      # test feasibility.
-      x = model.new_int_var(0, 20, "x")
-      f = PiecewiseLinearFunction(xs=[0, 10, 20], ys=[0, 10, 5])
-      # Using the submodel
-      c = PiecewiseLinearConstraint(model, x, f, upper_bound=True)
-      model.maximize(c.y)
-      # Checking its behavior
-      solver = cp_model.CpSolver()
-      assert solver.solve(model) == cp_model.OPTIMAL
-      assert solver.value(c.y) == 10
-      assert solver.value(x) == 10
-  ```
-- **Modularity**: Submodels allow for the encapsulation of complex logic into
-  smaller, more manageable components, enhancing code organization and
-  readability.
-- **Reusability**: By defining submodels for common functions or constraints,
-  you can reuse these components across multiple instances of the main model,
-  promoting code reuse and reducing redundancy.
-- **Abstraction**: Submodels abstract the internal details of specific
-  functions, enabling users to interact with them at a higher level without
-  needing to understand the underlying implementation.
+Submodels are usually much simpler than the overall problem, making them easy to
+optimize and, thus, fast to test their optimal solution.
+
+```python
+from ortools.sat.python import cp_model
+
+def test_piecewise_linear_upper_bound_constraint():
+    model = cp_model.CpModel()
+    x = model.new_int_var(0, 20, "x")
+    f = PiecewiseLinearFunction(xs=[0, 10, 20], ys=[0, 10, 5])
+
+    # Using the submodel
+    c = PiecewiseLinearConstraint(model, x, f, upper_bound=True)
+    model.Maximize(c.y)
+
+    # Checking its behavior
+    solver = cp_model.CpSolver()
+    status = solver.Solve(model)
+    assert status == cp_model.OPTIMAL
+    assert solver.Value(c.y) == 10
+    assert solver.Value(x) == 10
+```
+
+Alternatively, testing for feasibility or infeasibility can be a good choice,
+especially if the submodel does not directly correspond to an optimization
+problem on its own.
+
+```python
+from ortools.sat.python import cp_model
+
+def test_piecewise_linear_upper_bound_constraint_via_fixation():
+    model = cp_model.CpModel()
+    x = model.new_int_var(0, 20, "x")
+    f = PiecewiseLinearFunction(xs=[0, 10, 20], ys=[0, 10, 5])
+    c = PiecewiseLinearConstraint(model, x, f, upper_bound=True)
+
+    # Fix the variables to specific values
+    model.Add(x == 10)
+    model.Add(c.y == 10)
+
+    solver = cp_model.CpSolver()
+    status = solver.Solve(model)
+    assert status == cp_model.OPTIMAL, "The model should be feasible"
+
+def test_piecewise_linear_upper_bound_constraint_via_fixation_infeasible():
+    model = cp_model.CpModel()
+    x = model.new_int_var(0, 20, "x")
+    f = PiecewiseLinearFunction(xs=[0, 10, 20], ys=[0, 10, 5])
+    c = PiecewiseLinearConstraint(model, x, f, upper_bound=True)
+
+    # Fix the variables to specific values that violate the constraint
+    model.Add(x == 10)
+    model.Add(c.y == 11)
+
+    solver = cp_model.CpSolver()
+    status = solver.Solve(model)
+    assert status == cp_model.INFEASIBLE, "The model should be infeasible"
+```
 
 ### Embedding CP-SAT in an Application via multiprocessing
 
