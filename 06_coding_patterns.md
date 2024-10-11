@@ -997,7 +997,7 @@ class _CombiVariables:
         i, j = sorted(item_pair)
         if (i, j) not in self.bonus_vars:
             var = self.model.NewBoolVar(f"bonus_{i}_{j}")
-            self.model.Add(
+            self.model.add(
                 self.item_vars.packs_item(i) + self.item_vars.packs_item(j) >= 2 * var
             )
             self.bonus_vars[(i, j)] = var
@@ -1023,16 +1023,16 @@ class KnapsackSolver:
         self.solver = cp_model.CpSolver()
 
     def solve(self) -> KnapsackSolution:
-        self.model.Maximize(sum(self._objective_terms))
+        self.model.maximize(sum(self._objective_terms))
         self.solver.parameters.max_time_in_seconds = self.config.time_limit
         self.solver.parameters.relative_gap_limit = self.config.opt_tol
         self.solver.parameters.log_search_progress = self.config.log_search_progress
-        status = self.solver.Solve(self.model)
+        status = self.solver.solve(self.model)
         if status in [cp_model.OPTIMAL, cp_model.FEASIBLE]:
             return KnapsackSolution(
                 selected_items=self._item_vars.extract_packed_items(self.solver),
-                objective=self.solver.ObjectiveValue(),
-                upper_bound=self.solver.BestObjectiveBound(),
+                objective=self.solver.objective_value,
+                upper_bound=self.solver.best_objective_bound,
             )
         return KnapsackSolution(
             selected_items=[], objective=0, upper_bound=float("inf")
@@ -1144,14 +1144,14 @@ def test_piecewise_linear_upper_bound_constraint():
 
     # Using the submodel
     c = PiecewiseLinearConstraint(model, x, f, upper_bound=True)
-    model.Maximize(c.y)
+    model.maximize(c.y)
 
     # Checking its behavior
     solver = cp_model.CpSolver()
-    status = solver.Solve(model)
+    status = solver.solve(model)
     assert status == cp_model.OPTIMAL
-    assert solver.Value(c.y) == 10
-    assert solver.Value(x) == 10
+    assert solver.value(c.y) == 10
+    assert solver.value(x) == 10
 ```
 
 Alternatively, testing for feasibility or infeasibility can be a good choice,
@@ -1168,11 +1168,11 @@ def test_piecewise_linear_upper_bound_constraint_via_fixation():
     c = PiecewiseLinearConstraint(model, x, f, upper_bound=True)
 
     # Fix the variables to specific values
-    model.Add(x == 10)
-    model.Add(c.y == 10)
+    model.add(x == 10)
+    model.add(c.y == 10)
 
     solver = cp_model.CpSolver()
-    status = solver.Solve(model)
+    status = solver.solve(model)
     assert status == cp_model.OPTIMAL, "The model should be feasible"
 
 def test_piecewise_linear_upper_bound_constraint_via_fixation_infeasible():
@@ -1182,11 +1182,11 @@ def test_piecewise_linear_upper_bound_constraint_via_fixation_infeasible():
     c = PiecewiseLinearConstraint(model, x, f, upper_bound=True)
 
     # Fix the variables to specific values that violate the constraint
-    model.Add(x == 10)
-    model.Add(c.y == 11)
+    model.add(x == 10)
+    model.add(c.y == 11)
 
     solver = cp_model.CpSolver()
-    status = solver.Solve(model)
+    status = solver.solve(model)
     assert status == cp_model.INFEASIBLE, "The model should be infeasible"
 ```
 
