@@ -4426,7 +4426,9 @@ in many - is remarkable for a tool that is both free and open-source.
 In this chapter, we will explore various coding patterns that help you structure
 your implementations for optimization problems using CP-SAT. These patterns
 become especially useful when working on complex problems that need to be solved
-continuously and potentially under changing requirements.
+continuously and potentially under changing requirements. While we specifically
+focus on CP-SAT's Python API, many patterns can be adapted to other solvers and
+languages.
 
 In many cases, specifying the model and solving it is sufficient without the
 need for careful structuring. However, there are situations where your models
@@ -4494,7 +4496,8 @@ might have distracted from the patterns themselves.
 > [basic data structures and their _comprehensions_](https://docs.python.org/3/tutorial/datastructures.html)
 > and elegant loops using
 > [itertools](https://docs.python.org/3/library/itertools.html). These tools
-> allow you to express your mathematical ideas in Python more elegantly.
+> allow you to express your mathematical ideas in Python more elegantly in
+> general, and they are especially useful for optimization problems.
 >
 > Additionally, there are excellent tools to automatically format, check, and
 > improve your code, such as [ruff](https://docs.astral.sh/ruff/tutorial/).
@@ -4622,7 +4625,8 @@ within the solver but in the model building itself.
 In the following example, we add some basic logging to the solver function to
 give us some insights into the model-building process. This logging can be
 easily activated or deactivated by the logging framework, allowing us to use it
-not only during development but also in production.
+not only during development but also in production, where you usually deactivate
+a lot of logging to save resources.
 
 If you do not know about the logging framework of Python, this is an excellent
 moment to learn about it. I consider it an essential skill for production code
@@ -4649,7 +4653,7 @@ def solve_knapsack(
     weights: List[int],
     values: List[int],
     capacity: int,
-    *,
+    *,  # Make the following arguments keyword-only
     time_limit: int = 900,
     opt_tol: float = 0.01,
 ) -> List[int]:
@@ -4729,6 +4733,7 @@ you can create an API for your code effortlessly using FastAPI, which is built
 on top of Pydantic.
 
 ```python
+# pip install pydantic
 from pydantic import (
     BaseModel,
     PositiveInt,
@@ -4900,11 +4905,12 @@ any new fields you add to the data classes.
 In many real-world optimization scenarios, problems may require iterative
 refinement of the model and solution. For instance, new constraints might only
 become apparent after presenting an initial solution to a user or another
-algorithm. In such cases, flexibility is crucial, making it beneficial to
-encapsulate both the model and the solver within a single class. This setup
-facilitates the dynamic addition of constraints and subsequent re-solving
-without needing to rebuild the entire model, potentially even utilizing
-warm-starting techniques to improve performance.
+algorithm (like a physics simulation, which is to complex to optimize directly
+on). In such cases, flexibility is crucial, making it beneficial to encapsulate
+both the model and the solver within a single class. This setup facilitates the
+dynamic addition of constraints and subsequent re-solving without needing to
+rebuild the entire model, potentially even utilizing warm-starting techniques to
+improve performance.
 
 We introduce the `KnapsackSolver` class, which encapsulates the entire setup and
 solving process of the knapsack problem. We also use the opportunity to directly
@@ -4973,10 +4979,12 @@ instance = KnapsackInstance(weights=[1, 2, 3], values=[4, 5, 6], capacity=3)
 config = KnapsackSolverConfig(time_limit=10, opt_tol=0.01, log_search_progress=True)
 solver = KnapsackSolver(instance, config)
 solution = solver.solve()
-print(solution)
 
-# Prohibit the combination of the first two items, assuming that our simulation
-# showed that they should not be packed together.
+print(solution)
+# Check the solution in a more realistic simulation.
+# Assume that the simulation now notices that for some more complex reason,
+# we could not express in the optimization model, the first two items should
+# not be packed together. We can now prohibit this combination and solve again.
 solver.prohibit_combination(0, 1)
 
 # Solve the problem again with the new constraint, but this time
@@ -4985,16 +4993,25 @@ solution = solver.solve(time_limit=5)
 print(solution)
 ```
 
+Although reusing the solver class primarily spares us from rebuilding the model,
+each call to `solve` still initiates a new search from scratch. However,
+iteratively refining the model within the same solver instance is more intuitive
+to code than treating each iteration as an entirely new problem. Moreover, as we
+will demonstrate next, this pattern allows us to improve performance by
+leveraging features like warm-starting — offering advantages over stateless
+optimization functions.
+
 ### Improving Performance with Warm-Starts
 
-In optimization, while a simple function does not retain a state, the solver
-class can optimize both model building and the solving process when working on
-the same problem iteratively. One effective technique is using the previous
-solution as a starting point or "hint" for the next solution. This method, known
-as warm-starting, can significantly speed up the solving process. Even if you
-introduce a new constraint that makes the previous solution infeasible, the new
-solution is often similar enough that the solver can use the previous one as a
-good starting point for repair.
+As the solver class retains a state and can remember the previous iterations, we
+can easily add optimizations that would be cumbersome to implement in a
+stateless function. One such optimization is warm-starting, where the solver
+uses the previous solution as a starting point or "hint" for the next iteration.
+This technique can significantly speed up the solving process, as the solver can
+often use the previous solution as a good starting point for repair, even if the
+previous solution becomes infeasible due to a newly added constraint. This will
+of course only have an advantage if the added constraint does not change the
+problem fundamentally but only requires a part of the solution to be changed.
 
 Because repairing an infeasible hint can be computationally expensive, CP-SAT
 handles this process carefully. You can instruct CP-SAT to attempt repairing the
@@ -5227,7 +5244,7 @@ and manageability of constraints. Readable constraints, free from complex
 variable access patterns, ensure that the constraints accurately reflect the
 intended model.
 
-**Implemented Changes:** We introduce the `_ItemVariables` class to the
+In the following code, we introduce the `_ItemVariables` class to the
 `KnapsackSolver`, which acts as a container for the decision variables
 associated with the knapsack items. This class not only creates these variables
 but also offers several utility methods to interact with them, improving the
@@ -5237,12 +5254,15 @@ clarity and maintainability of the code.
 from typing import Generator, Tuple
 
 
-class _ItemVariables:
-    def __init__(self, instance: KnapsackInstance, model: cp_model.CpModel):
+class _ItemSelectionVars:
+    def __init__(self, instance: KnapsackInstance, model: cp_model.CpModel, var_name: str = "x"):
         self.instance = instance
-        self.x = [model.new_bool_var(f"x_{i}") for i in range(len(instance.weights))]
+        self.x = [model.new_bool_var(f"{var_name}_{i}") for i in range(len(instance.weights))]
 
     def __getitem__(self, i):
+        return self.x[i]
+
+    def packs_item(self, i: int) -> cp_model.IntVar:
         return self.x[i]
 
     def extract_packed_items(self, solver: cp_model.CpSolver) -> List[int]:
@@ -5261,20 +5281,29 @@ class _ItemVariables:
         value_lb: float = 0.0,
         value_ub: float = float("inf"),
     ) -> Generator[Tuple[int, cp_model.BoolVar], None, None]:
+        """
+        An example for a more complex query method, which would allow use to
+        iterate over all items that fulfill certain conditions.
+        """
         for i, (weight, x_i) in enumerate(zip(self.instance.weights, self.x)):
             if (
                 weight_lb <= weight <= weight_ub
                 and value_lb <= self.instance.values[i] <= value_ub
             ):
                 yield i, x_i
+```
 
+This class can be used in the `KnapsackSolver` that handles the higher level
+logic, i.e., the high level specification of what the model should do, while
+details can be hidden in the container class.
 
+```python
 class KnapsackSolver:
     def __init__(self, instance: KnapsackInstance, config: KnapsackSolverConfig):
         self.instance = instance
         self.config = config
         self.model = cp_model.CpModel()
-        self._item_vars = _ItemVariables(instance, self.model)
+        self._item_vars = _ItemSelectionVars(instance, self.model)
         self._build_model()
         self.solver = cp_model.CpSolver()
 
@@ -5304,18 +5333,125 @@ class KnapsackSolver:
         )
 
     def prohibit_combination(self, item_a: int, item_b: int):
-        self.model.add(self._item_vars[item_a] + self._item_vars[item_b] <= 1)
+        self.model.add_at_most_one(self._item_vars.packs_item(item_a),
+        self._item_vars.packs_item(item_b))
 ```
 
-**Key Benefits:**
+For example,
+`self.model.add(self._item_vars.used_weight() <= self.instance.capacity)` now
+directly expresses what the constraint does, making the code more readable and
+less error-prone. You can actually hide additional optimizations in the
+container class, without influencing the higher-level code in the actual solver.
+For example, the container class could decide to automatically replace all item
+variables that cannot fit into the knapsack due to their weight with a constant.
 
-- **Enhanced Readability**: By encapsulating the item variables and their
-  interactions within a dedicated class, the main solver class becomes more
-  focused and easier to understand.
-- **Improved Modularity**: The `_ItemVariables`-class allows to easily hand over
-  the variables to a function that may create complex constraints, without
-  creating a cyclic dependency. The model can now be split over multiple files
-  without any issues.
+You can also reuse the variable type, e.g., if you suddenly have two knapsacks
+to fill. The following code demonstrates how to quickly extend the solver to
+handle two knapsacks, without sacrificing readability or maintainability.
+
+```python
+class KnapsackSolver:
+    def __init__(self, # ...
+    ):
+        #...
+        self._knapsack_a = _ItemSelectionVars(instance, self.model, var_name="x1")
+        self._knapsack_b = _ItemSelectionVars(instance, self.model, var_name="x2")
+        #...
+
+    def _add_constraints(self):
+        self.model.add(self._knapsack_a.used_weight() <= self.instance.capacity_1)
+        self.model.add(self._knapsack_b.used_weight() <= self.instance.capacity_2)
+        self.model.add(self._knapsack_a.used_weight() + self._knapsack_b.used_weight() <= self.instance.capacity_total)
+        # Add a constraint that items cannot be packed in both knapsacks
+        for i in range(len(instance.weights)):
+            self.model.add_at_most_one(self._knapsack_a.packs_item(i), self._knapsack_b.packs_item(i))
+
+    def _add_objective(self):
+        self.model.maximize(self._knapsack_a.packed_value() + self._knapsack_b.packed_value())
+```
+
+### Lazy Variable Construction
+
+In models with numerous auxiliary variables, often only a subset is actually
+used by the constraints. You can now try to only create the variables that may
+actually be needed later on, but this can require some complex code to ensure
+that exactly the right variables are created. If the model is extended later on,
+things can get even more complicated as you may not know which variables are
+needed upfront. This is where lazy variable construction comes into play. Here,
+we create variables only when they are accessed, ensuring that only necessary
+variables are generated, reducing memory usage and computational overhead. This
+can be more expensive that just creating a vector with all variables, when in
+the end most variables are needed anyway, but it can save a lot of memory and
+computation time if only a small subset is actually used.
+
+To show an example of such a lazy container, we introduce the new class
+`_CombiVariables` that manages auxiliary variables indicating that a pair of
+items were packed, allowing to give additional bonuses for packing certain items
+together. Theoretically, there is a square number of possible combinations, but
+there will probably only be a handful of them that are actually used. By
+creating the variables only when they are accessed, we can reduce memory usage
+and computational overhead.
+
+```python
+class _CombiVariables:
+    def __init__(
+        self,
+        instance: KnapsackInstance,
+        model: cp_model.CpModel,
+        item_vars: _ItemVariables,
+    ):
+        self.instance = instance
+        self.model = model
+        self.item_vars = item_vars
+        self.bonus = {}
+
+    def __getitem__(self, i, j):
+        i, j = min(i, j), max(i, j)
+        if (i, j) not in self.bonus:
+            self.bonus[(i, j)] = self.model.new_bool_var(f"bonus_{i}_{j}")
+            self.model.add(
+                self.item_vars.packs_item(i) + self.item_vars.packs_item(j) >= 2 * self.bonus[(i, j)]
+            )
+        return self.bonus[(i, j)]
+```
+
+In the `KnapsackSolver`, we can now just act as if all variables are already
+created, and do not have to care about this optimization. Note that we moved the
+creation of the objective function into solve as adding a bonus for a
+combination of items will change the objective function. Also note how nicely we
+can use the item variables in this new container thanks to packing them into a
+separate class, making it easy to pass them around.
+
+```python
+class KnapsackSolver:
+    def __init__(self, instance: KnapsackInstance, config: KnapsackSolverConfig):
+        self.instance = instance
+        self.config = config
+        self.model = cp_model.CpModel()
+        self._item_vars = _ItemVariables(instance, self.model)
+        self._bonus_vars = _CombiVariables(instance, self.model, self._item_vars)
+        self._objective = self._item_vars.packed_value()  # Initial objective setup
+        self.solver = cp_model.CpSolver()
+
+    def solve(self) -> KnapsackSolution:
+        self.model.maximize(self._objective)
+        self.solver.parameters.max_time_in_seconds = self.config.time_limit
+        self.solver.parameters.relative_gap_limit = self.config.opt_tol
+        self.solver.parameters.log_search_progress = self.config.log_search_progress
+        status = self.solver.solve(self.model)
+        if status in [cp_model.OPTIMAL, cp_model.FEASIBLE]:
+            return KnapsackSolution(
+                selected_items=self._item_vars.extract_packed_items(self.solver),
+                objective=self.solver.objective_value,
+                upper_bound=self.solver.best_objective_bound,
+            )
+        return KnapsackSolution(
+            selected_items=[], objective=0, upper_bound=float("inf")
+        )
+
+    def add_bonus(self, item_a: int, item_b: int, bonus: int):
+        self._objective += bonus * self._bonus_vars[item_a, item_b]
+```
 
 ### Submodels
 
@@ -5421,121 +5557,6 @@ model.maximize(x_gain_1.y + x_gain_2.y - (x_costs_1.y + x_costs_2.y + x_costs_3.
 - **Abstraction**: Submodels abstract the internal details of specific
   functions, enabling users to interact with them at a higher level without
   needing to understand the underlying implementation.
-
-### Lazy Variable Construction
-
-In models with numerous auxiliary variables, often only a subset is actually
-used by the constraints. You can now try to only create the variables that may
-actually be needed later on, but this can require some complex code to ensure
-that exactly the right variables are created. If the model is extended later on,
-things can get even more complicated as you may not know which variables are
-needed upfront. This is where lazy variable construction comes into play. Here,
-we create variables only when they are accessed, ensuring that only necessary
-variables are generated, reducing memory usage and computational overhead. While
-this can be more expensive that just creating a vector with all variables, when
-in the end most variables are needed anyway, but it can save a lot of memory and
-computation time if only a small subset is actually used.
-
-**Implemented Changes:** We introduce the new class `_CombiVariables` that
-manages auxiliary variables indicating that a pair of items were packed,
-allowing to give additional bonuses for packing certain items together.
-Theoretically, there is a square number of possible combinations, but there will
-probably only be a handful of them that are actually used. By creating the
-variables only when they are accessed, we can reduce memory usage and
-computational overhead.
-
-```python
-class _ItemVariables:
-    def __init__(self, instance: KnapsackInstance, model: cp_model.CpModel):
-        self.instance = instance
-        self.x = [model.new_bool_var(f"x_{i}") for i in range(len(instance.weights))]
-
-    def __getitem__(self, i):
-        return self.x[i]
-
-    def extract_packed_items(self, solver: cp_model.CpSolver) -> List[int]:
-        return [i for i, x_i in enumerate(self.x) if solver.value(x_i)]
-
-    def used_weight(self) -> cp_model.LinearExpr:
-        return sum(weight * x_i for weight, x_i in zip(self.instance.weights, self.x))
-
-    def packed_value(self) -> cp_model.LinearExpr:
-        return sum(value * x_i for value, x_i in zip(self.instance.values, self.x))
-
-    def iter_items(
-        self,
-        weight_lb: float = 0.0,
-        weight_ub: float = float("inf"),
-        value_lb: float = 0.0,
-        value_ub: float = float("inf"),
-    ) -> Generator[Tuple[int, cp_model.BoolVar], None, None]:
-        for i, (weight, x_i) in enumerate(zip(self.instance.weights, self.x)):
-            if (
-                weight_lb <= weight <= weight_ub
-                and value_lb <= self.instance.values[i] <= value_ub
-            ):
-                yield i, x_i
-
-
-class _CombiVariables:
-    def __init__(
-        self,
-        instance: KnapsackInstance,
-        model: cp_model.CpModel,
-        item_vars: _ItemVariables,
-    ):
-        self.instance = instance
-        self.model = model
-        self.item_vars = item_vars
-        self.bonus = {}
-
-    def __getitem__(self, i, j):
-        i, j = min(i, j), max(i, j)
-        if (i, j) not in self.bonus:
-            self.bonus[(i, j)] = self.model.new_bool_var(f"bonus_{i}_{j}")
-            self.model.add(
-                self.item_vars[i] + self.item_vars[j] >= 2 * self.bonus[(i, j)]
-            )
-        return self.bonus[(i, j)]
-
-
-class KnapsackSolver:
-    def __init__(self, instance: KnapsackInstance, config: KnapsackSolverConfig):
-        self.instance = instance
-        self.config = config
-        self.model = cp_model.CpModel()
-        self._item_vars = _ItemVariables(instance, self.model)
-        self._bonus_vars = _CombiVariables(instance, self.model, self._item_vars)
-        self._objective = self._item_vars.packed_value()  # Initial objective setup
-        self.solver = cp_model.CpSolver()
-
-    def solve(self) -> KnapsackSolution:
-        self.model.maximize(self._objective)
-        self.solver.parameters.max_time_in_seconds = self.config.time_limit
-        self.solver.parameters.relative_gap_limit = self.config.opt_tol
-        self.solver.parameters.log_search_progress = self.config.log_search_progress
-        status = self.solver.solve(self.model)
-        if status in [cp_model.OPTIMAL, cp_model.FEASIBLE]:
-            return KnapsackSolution(
-                selected_items=self._item_vars.extract_packed_items(self.solver),
-                objective=self.solver.objective_value,
-                upper_bound=self.solver.best_objective_bound,
-            )
-        return KnapsackSolution(
-            selected_items=[], objective=0, upper_bound=float("inf")
-        )
-
-    def add_bonus(self, item_a: int, item_b: int, bonus: int):
-        self._objective += bonus * self._bonus_vars[item_a, item_b]
-```
-
-**Key Benefits:**
-
-- **Efficiency**: Lazy construction of variables ensures that only necessary
-  variables are created, reducing memory usage and computational overhead.
-- **Simplicity**: By just creating the variables when accessed, we do not need
-  any logic to decide which variables are needed upfront, simplifying the model
-  construction process.
 
 ### Embedding CP-SAT in an Application via multiprocessing
 
