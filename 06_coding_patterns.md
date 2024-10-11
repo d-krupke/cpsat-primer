@@ -79,8 +79,8 @@ might have distracted from the patterns themselves.
 > optimization. However, many optimization engineers come from mathematics or
 > physics backgrounds and may not have professional Python or software
 > engineering experience. If you are among them, I recommend familiarizing
-> yourself with
-> [basic data structures and their mathematical comprehensions](https://docs.python.org/3/tutorial/datastructures.html)
+> yourself in especially with
+> [basic data structures and their _comprehensions_](https://docs.python.org/3/tutorial/datastructures.html)
 > and elegant loops using
 > [itertools](https://docs.python.org/3/library/itertools.html). These tools
 > allow you to express your mathematical ideas in Python more elegantly.
