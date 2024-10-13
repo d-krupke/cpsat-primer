@@ -5251,7 +5251,7 @@ but also offers several utility methods to interact with them, improving the
 clarity and maintainability of the code.
 
 ```python
-from typing import Generator, Tuple
+from typing import Generator, Tuple, List
 
 
 class _ItemSelectionVars:
@@ -5259,7 +5259,7 @@ class _ItemSelectionVars:
         self.instance = instance
         self.x = [model.new_bool_var(f"{var_name}_{i}") for i in range(len(instance.weights))]
 
-    def __getitem__(self, i):
+    def __getitem__(self, i: int) -> cp_model.IntVar:
         return self.x[i]
 
     def packs_item(self, i: int) -> cp_model.IntVar:
@@ -5268,10 +5268,10 @@ class _ItemSelectionVars:
     def extract_packed_items(self, solver: cp_model.CpSolver) -> List[int]:
         return [i for i, x_i in enumerate(self.x) if solver.value(x_i)]
 
-    def used_weight(self) -> cp_model.LinearExpr:
+    def used_weight(self) -> cp_model.LinearExprT:
         return sum(weight * x_i for weight, x_i in zip(self.instance.weights, self.x))
 
-    def packed_value(self) -> cp_model.LinearExpr:
+    def packed_value(self) -> cp_model.LinearExprT:
         return sum(value * x_i for value, x_i in zip(self.instance.values, self.x))
 
     def iter_items(
@@ -5280,7 +5280,7 @@ class _ItemSelectionVars:
         weight_ub: float = float("inf"),
         value_lb: float = 0.0,
         value_ub: float = float("inf"),
-    ) -> Generator[Tuple[int, cp_model.BoolVar], None, None]:
+    ) -> Generator[Tuple[int, cp_model.IntVar], None, None]:
         """
         An example for a more complex query method, which would allow use to
         iterate over all items that fulfill certain conditions.
@@ -5291,6 +5291,7 @@ class _ItemSelectionVars:
                 and value_lb <= self.instance.values[i] <= value_ub
             ):
                 yield i, x_i
+
 ```
 
 This class can be used in the `KnapsackSolver` that handles the higher level
@@ -5412,7 +5413,7 @@ class _CombiVariables:
         self.item_vars = item_vars
         self.bonus_vars = {}
 
-    def __getitem__(self, item_pair):
+    def __getitem__(self, item_pair: Tuple[int, int]) -> cp_model.IntVar:
         i, j = sorted(item_pair)
         if (i, j) not in self.bonus_vars:
             var = self.model.NewBoolVar(f"bonus_{i}_{j}")
