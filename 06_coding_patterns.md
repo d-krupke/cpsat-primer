@@ -368,6 +368,15 @@ class KnapsackSolution(BaseModel):
     )
 ```
 
+> [!WARNING]
+>
+> Your data schema should be fully prepared for the optimization process,
+> requiring no further preprocessing. Data preparation and optimization are both
+> complex tasks, and combining them can significantly increase complexity,
+> making your code difficult to maintain. Ideally, your optimization code should
+> simply iterate over the data and add the corresponding constraints and
+> objectives to the model.
+
 The original code needs to be adapted to use these data classes.
 
 ```python
