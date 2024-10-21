@@ -3447,6 +3447,35 @@ intricate constraints without model duplication. For temporary complex
 constraints, model copying using `model.CopyFrom` may still be necessary, along
 with variable copying.
 
+## Reinforcing the Model
+
+For advanced users working with CP-SAT incrementally—i.e., modifying and solving
+the model multiple times—the following parameter may be of interest:
+
+```python
+solver.parameters.fill_tightened_domains_in_response = True
+```
+
+When you remove the objective function and solve the feasibility version of your
+model, the solver returns tightened domains for the variables. This can
+significantly reduce the search space, improving solver performance, especially
+when solving the model multiple times with different objectives or additional
+constraints.
+
+However, if the objective function is left in place, feasible solutions may be
+excluded from the search space. These solutions might become relevant if the
+objective or constraints are altered later.
+
+Enabling this parameter does not modify the model itself; rather, it provides a
+list of tightened variable domains in the response object which you can then use
+in your model.
+
+```python
+# Example after solving the model
+for i, v in enumerate(self.model.proto.variables):
+    print(f"Tightened domain for variable {i} '{v.name}' is {solver.response_proto.tightened_variables[i].domain}")
+```
+
 ### Assumptions
 
 Another way to explore the impact of forcing certain variables to specific
@@ -3633,11 +3662,13 @@ lowest color available. Whether this will actually help, has to be evaluated:
 CP-SAT will probably notice by itself which vertices are the critical ones after
 some conflicts.
 
-> :warning: I played around a little with selecting a manual search strategy.
-> But even for the coloring, where this may even seem smart, it only gave an
-> advantage for a bad model and after improving the model by symmetry breaking,
-> it performed worse. Further, I assume that CP-SAT can learn the best strategy
-> (Gurobi does such a thing, too) much better dynamically on its own.
+> [!WARNING]
+>
+> I played around a little with selecting a manual search strategy. But even for
+> the coloring, where this may even seem smart, it only gave an advantage for a
+> bad model and after improving the model by symmetry breaking, it performed
+> worse. Further, I assume that CP-SAT can learn the best strategy (Gurobi does
+> such a thing, too) much better dynamically on its own.
 
 ---
 
