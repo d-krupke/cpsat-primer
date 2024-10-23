@@ -158,13 +158,15 @@ What actually happens when you execute `solver.solve(model)`?
      different LNS strategies, which are applied via a Round Robin strategy.
      Whenever, a worker thread finishes, it will perform an LNS iteration with
      the next strategy in the list. In an LNS iteration it will:
-     1. Take a solution from the pool of solutions.
-     2. Remove a subset of variables from the solution. This subset is called
-        the neighborhood and its selection is one of the most important
-        differences between the different LNS strategies.
-     3. Fix the other variables of the solution to their values.
-     4. Presolve the model with the fixed variables. The fixations are likely to
-        significantly simplify the model.
+     1. Copy the model and take a solution from the pool of solutions.
+     2. Remove a subset of variables from the solution. This selection of this
+        subset is one of the most important differences between the different
+        LNS strategies. The solution space over these variable is the
+        neighborhood that will be searched for a better solution.
+     3. Fix the other variables of the solution to their values in the copied
+        model.
+     4. Presolve the copied model with the fixed variables. The fixations are
+        likely to significantly simplify the model.
      5. Solve the simplified model with complete strategy (as the full
         subsolvers do) but isolated on this thread and with a very short time
         limit.
