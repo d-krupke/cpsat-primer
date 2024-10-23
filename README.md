@@ -7527,18 +7527,33 @@ to dynamically select the most effective one.
 
 #### Multi-Armed Bandit: Exploration vs. Exploitation
 
-Having multiple strategies for each iteration of your LNS available is great,
-but how do you decide which one to use? You could just pick one randomly, but
-this is not very efficient as it is unlikely to select the best one. You could
-also use the strategy that worked best in the past, but maybe there is a better
-one you have not tried yet. This is the so-called exploration vs. exploitation
-dilemma. You want to exploit the strategies that worked well in the past, but
-you also want to explore new strategies to find even better ones. Luckily, this
-problem has been studied extensively as the
-[Multi-Armed Bandit Problem](https://en.wikipedia.org/wiki/Multi-armed_bandit)
-for decades, and there are many good solutions. One of the most popular ones is
-the Upper Confidence Bound (UCB1) algorithm, which is also used by CP-SAT. In
-the following, you can see the a LNS-statistic of the CP-SATs strategies.
+Having multiple strategies for each iteration of your Large Neighborhood Search
+(LNS) is beneficial, but how do you decide which one to use? While you could
+select a strategy at random, this approach is inefficient because it is unlikely
+to choose the best one. Alternatively, you could stick to the strategy that
+performed well in the past, but there may be a better option you have not tried
+yet. This brings us to the classic exploration vs. exploitation dilemma. On one
+hand, you want to exploit strategies that have proven successful, but on the
+other, you need to explore new strategies to discover potentially better ones.
+
+Fortunately, this issue has been widely studied as the
+[Multi-Armed Bandit Problem](https://en.wikipedia.org/wiki/Multi-armed_bandit),
+and there are numerous effective solutions available. One popular approach is
+the Upper Confidence Bound (UCB1) algorithm. I wanted to highlight this dilemma
+to make you aware that many experts have already tackled it and developed
+sophisticated strategies.
+
+In practice, CP-SAT schedules its LNS strategies using a simple round-robin
+method, as reflected by their equal number of calls in the logs. Whenever a
+worker thread finishes its work, it will execute an iteration with the next
+strategy in the list, leading to a fair distribution of calls. In this case, we
+can see that the `'routing_path_lns'` strategy was the most successful,
+improving the incumbent solution 41 times out of 65 calls. There might be room
+for performance improvements by employing a more advanced strategy selection
+algorithm. However, it is important to recognize the relatively low number of
+calls to each strategy in combination with diminishing and noisy returns. If you
+only have a few iterations, a more advanced algorithm may not have enough data
+to make reliable decisions.
 
 ```
 LNS stats                Improv/Calls  Closed  Difficulty  TimeLimit
@@ -7552,11 +7567,4 @@ LNS stats                Improv/Calls  Closed  Difficulty  TimeLimit
     'routing_path_lns':         41/65     48%        0.10       0.10
   'routing_random_lns':         24/65     52%        0.26       0.10
 ```
-
-We will not dig into the details of the algorithm here, but if you are
-interested, you can find many good resources online. I just wanted to make you
-aware of the exploration vs. exploitation dilemma and that many smart people
-have already thought about it.
-
-> TODO: Continue...
 
