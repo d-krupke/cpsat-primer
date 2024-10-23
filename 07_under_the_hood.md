@@ -113,66 +113,83 @@ need to understand the constraint programming part of CP-SAT.
 > could have written. You can find a backup of the old version
 > [here](https://github.com/d-krupke/cpsat-primer/blob/main/old_how_does_it_work.md).
 
-### What happens in CP-SAT on solve?
+### What Happens in CP-SAT During Solve?
 
-What actually happens when you execute `solver.solve(model)`?
+What exactly happens when you run `solver.solve(model)`?
 
-1. The model is read from its protobuf representation.
-2. The model is verified.
-3. Preprocessing (multiple iterations, you can control the number of iterations
-   with `max_presolve_iterations`):
-   1. Presolve (domain reduction) - Check
-      [this video for SAT preprocessing](https://www.youtube.com/watch?v=ez9ArInp8w4),
-      [this video for MaxSAT preprocessing](https://www.youtube.com/watch?v=xLg4hbM8ooM),
-      and
-      [this paper for MIP presolving](https://opus4.kobv.de/opus4-zib/frontdoor/index/index/docId/6037).
-   2. Expanding higher-level constraints to lower-level constraints. See also
-      the analogous
-      [FlatZinc and Flattening](https://www.minizinc.org/doc-2.5.5/en/flattening.html).
-   3. Detection of equivalent variables and
-      [affine relations](https://personal.math.ubc.ca/~cass/courses/m309-03a/a1/olafson/affine_fuctions.htm).
-   4. Substitute these by canonical representations. Right now only affine
-      relations (a\*x + b = y) are supported.
-   5. Probe some variables to detect if they are actually fixed or detect
-      further equivalences.
-4. Load the preprocessed model into the underlying solver and create the linear
-   relaxations.
-5. **Search for solutions and bounds with the different solvers until the lower
-   and upper bound match or another termination criterion is reached (e.g., time
-   limit)**
-   - A number of full subsolvers (aka complete strategies) will each block a
-     thread during the whole search. Each solver will use a different strategy,
-     mainly defined by some parameters, increasing the likelihood that one of
-     them will be the right choice for the problem at hand. For example, some
-     will work on a more linearized model, some will do more aggressive
-     restarts, some will focus on the lower bound, some on the upper bound, etc.
-     Theoretically, each of them should be able to find the optimal solution,
-     though, some will be much faster than others.
-   - Further, a number of first solution searchers will be started on the
-     remaining threads. These will be stopped as soon as a feasible solution is
-     found.
-   - As soon as a feasible solution is found, incomplete subsolvers take over
-     the free threads. These will try to improve the solution by using local
-     search heuristics, such as Large Neighborhood Search (LNS), which reuse a
-     lot of the techniques from the complete subsolvers. There are a lot of
-     different LNS strategies, which are applied via a Round Robin strategy.
-     Whenever, a worker thread finishes, it will perform an LNS iteration with
-     the next strategy in the list. In an LNS iteration it will:
-     1. Copy the model and take a solution from the pool of solutions.
-     2. Remove a subset of variables from the solution. This selection of this
-        subset is one of the most important differences between the different
-        LNS strategies. The solution space over these variable is the
-        neighborhood that will be searched for a better solution.
-     3. Fix the other variables of the solution to their values in the copied
+1. **Model Loading and Verification:**
+
+   - The model is read from its protobuf representation.
+   - The model is verified for correctness.
+
+2. **Preprocessing (multiple iterations, controlled by
+   `max_presolve_iterations`):**
+
+   1. **Presolve (domain reduction):**
+      - This step reduces the problem size by simplifying variable domains. For
+        more on this, check out:
+        - [Video on SAT preprocessing](https://www.youtube.com/watch?v=ez9ArInp8w4)
+        - [Video on MaxSAT preprocessing](https://www.youtube.com/watch?v=xLg4hbM8ooM)
+        - [Paper on MIP presolving](https://opus4.kobv.de/opus4-zib/frontdoor/index/index/docId/6037)
+   2. **Expansion of higher-level constraints:**
+      - Higher-level constraints are expanded into lower-level constraints,
+        CP-SAT actually can propagate efficiently, but which are less
+        comfortable for you to write. See
+        [FlatZinc and Flattening](https://www.minizinc.org/doc-2.5.5/en/flattening.html)
+        for a similar process.
+   3. **Detection of equivalent variables and affine relations:**
+      - Affine relations, such as `a * x + b = y`, are identified. Read more
+        about
+        [affine relations here](https://personal.math.ubc.ca/~cass/courses/m309-03a/a1/olafson/affine_fuctions.htm).
+   4. **Substitution with canonical representations:**
+      - Detected affine relations are replaced with canonical representations.
+   5. **Variable probing:**
+      - Some variables are tested to determine if they can be fixed or if
+        further equivalences can be identified.
+
+3. **Loading and Relaxation:**
+
+   - The preprocessed model is loaded into the underlying solver, and linear
+     relaxations are created.
+
+4. **Solution Search:**
+
+   - The solver searches for solutions and bounds until the lower and upper
+     bounds converge or another stopping criterion is met (e.g., time limit).
+   - Several full subsolvers, each using a unique strategy, are run across
+     different threads. These strategies may include:
+     - More linearized models
+     - Aggressive restarts
+     - Focus on either the lower or upper bound
+   - Each subsolver can theoretically find the optimal solution, but some are
+     faster than others.
+
+5. **First Solution Search and Local Search:**
+
+   - Additional "first solution searchers" are launched on remaining threads.
+     These stop once a feasible solution is found.
+   - Once a feasible solution is discovered, incomplete subsolvers take over,
+     applying local search heuristics such as Large Neighborhood Search (LNS).
+     These subsolvers attempt to improve the solution by iterating through
+     various strategies via a Round Robin approach.
+   - During each LNS iteration:
+     1. A copy of the model is made, and a solution is selected from the pool of
+        solutions.
+     2. A subset of variables is removed from the solution (the method for
+        choosing this subset varies between strategies). The neighborhood of
+        these variables is then explored for a better solution.
+     3. The remaining variables are fixed to their current values in the copied
         model.
-     4. Presolve the copied model with the fixed variables. The fixations are
-        likely to significantly simplify the model.
-     5. Solve the simplified model with complete strategy (as the full
-        subsolvers do) but isolated on this thread and with a very short time
-        limit.
-     6. If a solution is found, it will be added to the pool of solutions.
-6. Transform solution back to the original model, such that you can query the
-   values of the variables in your original model.
+     4. The simplified model is presolved with the fixed variables, which often
+        makes the model much easier to solve.
+     5. The simplified model is then solved using a complete strategy, but with
+        a short time limit and on a single thread.
+     6. If a new solution is found, it’s added to the pool of solutions.
+
+6. **Solution Transformation:**
+   - The final solution is transformed back into the original model format,
+     allowing you to query the values of the variables as defined in your
+     original model.
 
 This is taken from [this talk](https://youtu.be/lmy1ddn4cyw?t=434) and slightly
 extended.
