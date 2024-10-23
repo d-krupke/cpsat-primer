@@ -4159,11 +4159,12 @@ need to understand the constraint programming part of CP-SAT.
 
 ### What happens in CP-SAT on solve?
 
-What actually happens when you execute `solver.Solve(model)`?
+What actually happens when you execute `solver.solve(model)`?
 
-1. The model is read.
+1. The model is read from its protobuf representation.
 2. The model is verified.
-3. Preprocessing (multiple iterations):
+3. Preprocessing (multiple iterations, you can control the number of iterations
+   with `max_presolve_iterations`):
    1. Presolve (domain reduction) - Check
       [this video for SAT preprocessing](https://www.youtube.com/watch?v=ez9ArInp8w4),
       [this video for MaxSAT preprocessing](https://www.youtube.com/watch?v=xLg4hbM8ooM),
@@ -4174,7 +4175,8 @@ What actually happens when you execute `solver.Solve(model)`?
       [FlatZinc and Flattening](https://www.minizinc.org/doc-2.5.5/en/flattening.html).
    3. Detection of equivalent variables and
       [affine relations](https://personal.math.ubc.ca/~cass/courses/m309-03a/a1/olafson/affine_fuctions.htm).
-   4. Substitute these by canonical representations
+   4. Substitute these by canonical representations. Right now only affine
+      relations (a\*x + b = y) are supported.
    5. Probe some variables to detect if they are actually fixed or detect
       further equivalences.
 4. Load the preprocessed model into the underlying solver and create the linear
@@ -4182,7 +4184,37 @@ What actually happens when you execute `solver.Solve(model)`?
 5. **Search for solutions and bounds with the different solvers until the lower
    and upper bound match or another termination criterion is reached (e.g., time
    limit)**
-6. Transform solution back to original model.
+   - A number of full subsolvers (aka complete strategies) will each block a
+     thread during the whole search. Each solver will use a different strategy,
+     mainly defined by some parameters, increasing the likelihood that one of
+     them will be the right choice for the problem at hand. For example, some
+     will work on a more linearized model, some will do more aggressive
+     restarts, some will focus on the lower bound, some on the upper bound, etc.
+     Theoretically, each of them should be able to find the optimal solution,
+     though, some will be much faster than others.
+   - Further, a number of first solution searchers will be started on the
+     remaining threads. These will be stopped as soon as a feasible solution is
+     found.
+   - As soon as a feasible solution is found, incomplete subsolvers take over
+     the free threads. These will try to improve the solution by using local
+     search heuristics, such as Large Neighborhood Search (LNS), which reuse a
+     lot of the techniques from the complete subsolvers. There are a lot of
+     different LNS strategies, which are applied via a Round Robin strategy.
+     Whenever, a worker thread finishes, it will perform an LNS iteration with
+     the next strategy in the list. In an LNS iteration it will:
+     1. Take a solution from the pool of solutions.
+     2. Remove a subset of variables from the solution. This subset is called
+        the neighborhood and its selection is one of the most important
+        differences between the different LNS strategies.
+     3. Fix the other variables of the solution to their values.
+     4. Presolve the model with the fixed variables. The fixations are likely to
+        significantly simplify the model.
+     5. Solve the simplified model with complete strategy (as the full
+        subsolvers do) but isolated on this thread and with a very short time
+        limit.
+     6. If a solution is found, it will be added to the pool of solutions.
+6. Transform solution back to the original model, such that you can query the
+   values of the variables in your original model.
 
 This is taken from [this talk](https://youtu.be/lmy1ddn4cyw?t=434) and slightly
 extended.
