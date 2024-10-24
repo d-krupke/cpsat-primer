@@ -3366,19 +3366,34 @@ load the model on a different machine and run the solver.
 ```python
 from ortools.sat.python import cp_model
 from google.protobuf import text_format
+from pathlib import Path
 
+def _detect_binary_mode(filename: str) -> bool:
+    if filename.endswith((".txt", ".pbtxt", ".pb.txt")):
+        return False
+    if filename.endswith((".pb", ".bin", ".proto.bin", ".dat")):
+        return True
+    raise ValueError(f"Unknown extension for file: {filename}")
 
-def export_model(model: cp_model.CpModel, filename: str):
-    with open(filename, "w") as file:
-        file.write(text_format.MessageToString(model.Proto()))
+def export_model(model: cp_model.CpModel, filename: str, binary: bool | None = None):
+    binary = _detect_binary_mode(filename) if binary is None else binary
+    if binary:
+        Path(filename).write_bytes(model.Proto().SerializeToString())
+    else:
+        Path(filename).write_text(text_format.MessageToString(model.Proto()))
 
-
-def import_model(filename: str) -> cp_model.CpModel:
+def import_model(filename: str, binary: bool | None = None) -> cp_model.CpModel:
+    binary = _detect_binary_mode(filename) if binary is None else binary
     model = cp_model.CpModel()
-    with open(filename, "r") as file:
-        text_format.Parse(file.read(), model.Proto())
+    if binary:
+        model.Proto().ParseFromString(Path(filename).read_bytes())
+    else:
+        text_format.Parse(Path(filename).read_text(), model.Proto())
     return model
 ```
+
+The binary mode is more efficient and should be used for large models. The text
+mode is human-readable and can be easier shared and compared.
 
 ### Hints
 
