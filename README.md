@@ -548,6 +548,14 @@ Additional resources on mathematical modeling (not CP-SAT specific):
 - [Model Building in Mathematical Programming by H. Paul Williams](https://www.wiley.com/en-us/Model+Building+in+Mathematical+Programming%2C+5th+Edition-p-9781118443330):
   An extensive guide to mathematical modeling techniques.
 
+> [!TIP]
+>
+> For getting started with implementing optimization models in general, I highly
+> recommend the blog post
+> [The Art Of Not Making It An Art](https://www.gurobi.com/resources/optimization-modeling-the-art-of-not-making-it-an-art/).
+> It excellently summarizes the fundamental principles of successfully managing
+> an optimization project, independent of the concrete language or solver.
+
 ---
 
 **Elements:**
@@ -4601,6 +4609,12 @@ might have distracted from the patterns themselves.
 > Regularly running `ruff check --fix` and `ruff format` can enhance your code
 > quality with minimal effort. Optimally, you will integrate it via a
 > [pre-commit hook](https://pre-commit.com/).
+>
+> For getting started with implementing optimization models in general, I highly
+> recommend the blog post
+> [The Art Of Not Making It An Art](https://www.gurobi.com/resources/optimization-modeling-the-art-of-not-making-it-an-art/).
+> It excellently summarizes the fundamental principles of successfully managing
+> an optimization project, independent of the concrete language or solver.
 
 ### Simple Function
 
