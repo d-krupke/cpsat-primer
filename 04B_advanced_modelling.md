@@ -394,12 +394,9 @@ model.add_cumulative(
 > scheduling problem with a fixed number of slots, you can often model this
 > problem much more efficiently using simple Boolean variables and constraints.
 > Especially if you can use domain knowledge to find clusters of meetings that
-> cannot overlap, this can be much more efficient. For an example, see the
-> official
-> [Shift Scheduling Example](https://github.com/google/or-tools/blob/stable/examples/python/shift_scheduling_sat.py).
-> If the scheduling is dominated by the transitions, scheduling problems may
-> actually be routing problems, for which the `add_circuit` constraint is more
-> suitable.
+> cannot overlap, this can be much more efficient. If the scheduling is
+> dominated by the transitions, your scheduling problem may actually be a
+> routing problems, for which the `add_circuit` constraint is more suitable.
 
 Let us examine a few examples of how to use these constraints effectively.
 
