@@ -548,6 +548,14 @@ Additional resources on mathematical modeling (not CP-SAT specific):
 - [Model Building in Mathematical Programming by H. Paul Williams](https://www.wiley.com/en-us/Model+Building+in+Mathematical+Programming%2C+5th+Edition-p-9781118443330):
   An extensive guide to mathematical modeling techniques.
 
+> [!TIP]
+>
+> For getting started with implementing optimization models in general, I highly
+> recommend the blog post
+> [The Art Of Not Making It An Art](https://www.gurobi.com/resources/optimization-modeling-the-art-of-not-making-it-an-art/).
+> It excellently summarizes the fundamental principles of successfully managing
+> an optimization project, independent of the concrete language or solver.
+
 ---
 
 **Elements:**
@@ -1977,7 +1985,12 @@ model.add_cumulative(
 > scheduling problem with a fixed number of slots, you can often model this
 > problem much more efficiently using simple Boolean variables and constraints.
 > Especially if you can use domain knowledge to find clusters of meetings that
-> cannot overlap, this can be much more efficient.
+> cannot overlap, this can be much more efficient. For an example, see the
+> official
+> [Shift Scheduling Example](https://github.com/google/or-tools/blob/stable/examples/python/shift_scheduling_sat.py).
+> If the scheduling is dominated by the transitions, scheduling problems may
+> actually be routing problems, for which the `add_circuit` constraint is more
+> suitable.
 
 Let us examine a few examples of how to use these constraints effectively.
 
@@ -4601,6 +4614,12 @@ might have distracted from the patterns themselves.
 > Regularly running `ruff check --fix` and `ruff format` can enhance your code
 > quality with minimal effort. Optimally, you will integrate it via a
 > [pre-commit hook](https://pre-commit.com/).
+>
+> For getting started with implementing optimization models in general, I highly
+> recommend the blog post
+> [The Art Of Not Making It An Art](https://www.gurobi.com/resources/optimization-modeling-the-art-of-not-making-it-an-art/).
+> It excellently summarizes the fundamental principles of successfully managing
+> an optimization project, independent of the concrete language or solver.
 
 ### Simple Function
 

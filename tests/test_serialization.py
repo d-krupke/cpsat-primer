@@ -13,7 +13,9 @@ def test_serialization():
             return True
         raise ValueError(f"Unknown extension for file: {filename}")
 
-    def export_model(model: cp_model.CpModel, filename: str, binary: bool | None = None):
+    def export_model(
+        model: cp_model.CpModel, filename: str, binary: bool | None = None
+    ):
         binary = _detect_binary_mode(filename) if binary is None else binary
         if binary:
             Path(filename).write_bytes(model.Proto().SerializeToString())
@@ -28,16 +30,15 @@ def test_serialization():
         else:
             text_format.Parse(Path(filename).read_text(), model.Proto())
         return model
-    
+
     def rename_variable_names(model: cp_model.CpModel):
         for i, var in enumerate(model.proto.variables):
             var.name = f"x{i}"
 
-    
     model = cp_model.CpModel()
     x = [model.NewIntVar(0, 10, f"x{i}") for i in range(10)]
-    model.add(sum(x)<=20)
-    model.maximize(sum(i*x[i] for i in range(10)))
+    model.add(sum(x) <= 20)
+    model.maximize(sum(i * x[i] for i in range(10)))
 
     with tempfile.TemporaryDirectory() as tmpdir:
         export_model(model, f"{tmpdir}/model.pb")
