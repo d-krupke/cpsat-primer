@@ -23,6 +23,12 @@ The log consists of different parts. Let us go through them step by step.
 >
 > [![d-krupke - CP-SAT Log Analyzer](https://img.shields.io/badge/d--krupke-CP--SAT%20Log%20Analyzer-blue?style=for-the-badge&logo=github)](https://github.com/d-krupke/CP-SAT-Log-Analyzer)
 
+As a reminder, you activate logging with
+
+```python
+solver.parameters.log_search_progress = True  # Enable logging
+```
+
 ### Initialization
 
 The log starts with the version of CP-SAT, the parameters you set, and how many
