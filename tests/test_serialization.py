@@ -29,6 +29,11 @@ def test_serialization():
             text_format.Parse(Path(filename).read_text(), model.Proto())
         return model
     
+    def rename_variable_names(model: cp_model.CpModel):
+        for i, var in enumerate(model.proto.variables):
+            var.name = f"x{i}"
+
+    
     model = cp_model.CpModel()
     x = [model.NewIntVar(0, 10, f"x{i}") for i in range(10)]
     model.add(sum(x)<=20)
@@ -47,3 +52,9 @@ def test_serialization():
         export_model(model, f"{tmpdir}/model.pb.txt", binary=True)
         model5 = import_model(f"{tmpdir}/model.pb.txt", binary=True)
         assert model.Proto() == model5.Proto()
+        rename_variable_names(model)
+        export_model(model, f"{tmpdir}/model_renamed.pb.txt")
+        model6 = import_model(f"{tmpdir}/model_renamed.pb.txt")
+        solver = cp_model.CpSolver()
+        status = solver.Solve(model6)
+        assert status == cp_model.OPTIMAL
