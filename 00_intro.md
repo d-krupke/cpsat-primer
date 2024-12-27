@@ -9,7 +9,8 @@
 <!-- STOP_SKIP_FOR_README -->
 
 _By [Dominik Krupke](https://krupke.cc), TU Braunschweig, with contributions
-from Leon Lan, Michael Perk, and others._
+from Leon Lan, Michael Perk, and
+[others](https://github.com/d-krupke/cpsat-primer/graphs/contributors)._
 
 <!-- Introduction Paragraph --->
 
@@ -210,11 +211,12 @@ it is a strong indication that you would benefit from reading this article.
 > in his spare time to cater to a wider audience.
 >
 > **Contributors:** This primer has been enriched by the contributions of
-> several individuals. Notably, Leon Lan played a key role in restructuring the
-> content and offering critical feedback, while Michael Perk significantly
-> enhanced the section on the reservoir constraint. I also extend my gratitude
-> to all other contributors who identified and corrected errors, improved the
-> text, and offered valuable insights.
+> [several individuals](https://github.com/d-krupke/cpsat-primer/graphs/contributors).
+> Notably, Leon Lan played a key role in restructuring the content and offering
+> critical feedback, while Michael Perk significantly enhanced the section on
+> the reservoir constraint. I also extend my gratitude to all other contributors
+> who identified and corrected errors, improved the text, and offered valuable
+> insights.
 
 > **Found a mistake?** Please open an issue or a pull request. You can also just
 > write me a quick mail to `krupked@gmail.com`.
