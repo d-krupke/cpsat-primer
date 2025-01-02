@@ -113,7 +113,7 @@ else:
 lb_ub_placeholder = st.empty()
 if "lb_ub" not in st.session_state:
     st.session_state.lb_ub = ""
-lb_ub_placeholder.code(st.session_state.lb_ub, language="text")
+lb_ub_placeholder.markdown(st.session_state.lb_ub)
 
 progress_bar = st.progress(0)
 
@@ -147,7 +147,7 @@ if generate_button:
         st.session_state.lb_ub = (
             f"**Lower bound: {lower_bound}, Upper bound: {upper_bound}**"
         )
-        lb_ub_placeholder.code(st.session_state.lb_ub, language="text")
+        lb_ub_placeholder.markdown(st.session_state.lb_ub)
 
         logs = solver_process.get_log()
         if logs:
