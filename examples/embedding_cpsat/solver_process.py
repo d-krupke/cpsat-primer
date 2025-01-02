@@ -136,7 +136,8 @@ class TspSolverProcess:
     def interrupt(self):
         """Interrupts the optimization process."""
         if self.process.pid and self.process.is_alive():
-            os.kill(self.process.pid, signal.SIGINT)
+            # This sends a SIGINT signal to kill the solver process
+            self.process.terminate()
 
     def is_running(self):
         """Returns True if the optimization process is still running."""

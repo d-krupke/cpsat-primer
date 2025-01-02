@@ -1,0 +1,12 @@
+[project]
+name = "embedding-cpsat"
+version = "0.1.0"
+description = "An example of embedding CPSAT with multiprocessing in a streamlit app"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "matplotlib>=3.10.0",
+    "ortools>=9.11.4210",
+    "pydantic>=2.10.4",
+    "streamlit>=1.41.1",
+]
