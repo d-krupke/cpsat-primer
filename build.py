@@ -271,6 +271,7 @@ if __name__ == "__main__":
         "03_big_picture.md",
         "06_coding_patterns.md",
         "building_an_optimization_api.md",
+        "chapters/machine_learning.md",
         "08_benchmarking.md",
         "09_lns.md",
     ]
@@ -289,6 +290,6 @@ if __name__ == "__main__":
                 f.write(f"<!-- {file} -->\n")
                 f.write(convert_for_readme(content))
                 f.write("\n\n")
-                Path("./.mdbook/").mkdir(parents=True, exist_ok=True)
+                (Path("./.mdbook/") / file).parent.mkdir(parents=True, exist_ok=True)
                 with open(Path("./.mdbook/") / file, "w") as book_file:
                     book_file.write(convert_for_mdbook(content))
