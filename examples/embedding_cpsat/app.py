@@ -81,6 +81,10 @@ def calculate_progress(lower_bound, upper_bound):
 # Title of the app
 st.title("TSP Solving with CP-SAT")
 
+st.markdown("""
+    This app generates a random number of points and solves the [Traveling Salesman Problem (TSP)](https://simple.wikipedia.org/wiki/Travelling_salesman_problem) using the [CP-SAT solver](https://developers.google.com/optimization/cp?hl=fr).
+""")
+
 # Add a field for the number of points and generate/abort buttons with improved layout
 st.sidebar.header("Configuration")
 num_points = st.sidebar.number_input("Number of points", min_value=2, value=100)
@@ -88,10 +92,23 @@ num_points = st.sidebar.number_input("Number of points", min_value=2, value=100)
 generate_button = st.sidebar.button("Generate and run")
 interrupt_button = st.sidebar.button("Abort")
 
+# Reference
+st.sidebar.markdown(
+    """
+    This app is part of a CP-SAT teaching series. It shows how to embed the CP-SAT solver in an app with multiprocessing.
+
+    Learn more about solving hard combinatorial problems [with the CP-SAT primer.](https://github.com/d-krupke/cpsat-primer/tree/main?tab=readme-ov-file)
+    """
+)
+
 plot_placeholder = st.empty()
 if "plot" not in st.session_state:
     st.session_state.plot = None
-plot_placeholder.pyplot(st.session_state.plot)
+if st.session_state.plot is not None:
+    plot_placeholder.pyplot(st.session_state.plot)
+else:
+    # Display instructions
+    st.info("Click 'Generate and run' on the sidebar to start the solver.")
 
 lb_ub_placeholder = st.empty()
 if "lb_ub" not in st.session_state:
@@ -103,7 +120,7 @@ progress_bar = st.progress(0)
 log_placeholder = st.empty()
 if "log_text" not in st.session_state:
     st.session_state.log_text = ""
-log_placeholder.text(st.session_state.log_text)
+log_placeholder.code(st.session_state.log_text, language="text")
 
 
 if generate_button:
@@ -135,7 +152,7 @@ if generate_button:
         logs = solver_process.get_log()
         if logs:
             st.session_state.log_text += "\n".join(logs) + "\n"
-        log_placeholder.text(st.session_state.log_text)
+        log_placeholder.code(st.session_state.log_text, language="text")
 
         progress = calculate_progress(lower_bound, upper_bound)
         progress_bar.progress(progress)
