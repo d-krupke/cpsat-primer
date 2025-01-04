@@ -168,9 +168,11 @@ optimization.
    maintainable algorithms.
 8. [(DRAFT) Building an Optimization API](#building_an_optimization_api) How to
    build a scalable API for long running optimization jobs.
-9. [Large Neighborhood Search](#09-lns): The use of CP-SAT to create more
-   powerful heuristics.
-10. [Benchmarking your Model](#08-benchmarking): How to benchmark your model and
+9. [(DRAFT) CP-SAT vs. ML vs. QC](#chapters-machine-learning): A comparison of
+   CP-SAT with Machine Learning and Quantum Computing.
+10. [Large Neighborhood Search](#09-lns): The use of CP-SAT to create more
+    powerful heuristics.
+11. [Benchmarking your Model](#08-benchmarking): How to benchmark your model and
     how to interpret the results.
 
 ### Background

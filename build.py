@@ -195,6 +195,12 @@ def convert_for_mdbook(content):
                 break
         return f"(./{md_path})" if Path(md_path).exists() else f"(#{match.group(1)})"
 
+    explicit_replacements = {
+        "#chapters-machine-learning": "./chapters/machine_learning.md",
+    }
+    for key, value in explicit_replacements.items():
+        content = content.replace(key, value)
+
     content = re.sub(
         r"\(#(.*?)\)",
         replace_relative,

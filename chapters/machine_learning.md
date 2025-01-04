@@ -1,5 +1,7 @@
 ## Classical Optimization vs. Machine Learning (and the impact of Quantum Computing)
 
+<a name="chapters-machine-learning"></a>
+
 > [!WARNING]
 >
 > This is a draft chapter and may contain inaccuracies or incomplete
