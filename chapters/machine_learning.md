@@ -392,6 +392,10 @@ optimization has proven tricky, though progress continues.
 If you want more perspectives on the topic, the following articles may be of
 interest:
 
+- [Disentangling Hype from Practicality: On Realistically Achieving Quantum Advantage](https://cacm.acm.org/research/disentangling-hype-from-practicality-on-realistically-achieving-quantum-advantage/#R3)
+  Gives strong arguments why it can be hard to achieve quantum advantage in
+  practice, especially why quadratic speedup algorithms like Grover's Algorithm
+  will not suffice.
 - [Quantum advantage for NP approximation? For REAL this time?](https://scottaaronson.blog/?p=8375):
   A blog post by Scott Aaronson, a well-known quantum computing expert, offering
   a critical take on the QAOA algorithm and its claimed advantages.
