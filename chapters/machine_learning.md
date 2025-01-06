@@ -52,12 +52,12 @@ Machine Learning and Optimization:
   speech recognition, and product recommendations—often consumer-facing
   applications. Optimization is leveraged for operational decision-making in
   areas like production planning, scheduling, and shipment routing.
-- **Adaptability**: ML can suffer from “model drift” if the environment changes
+- **Adaptability**: ML can suffer from "model drift" if the environment changes
   significantly, requiring retraining with new data. Optimization models,
   however, can be updated more seamlessly to reflect changes in real time but
   usually need more upfront effort to build.
 - **Maturity**: Both fields have roots tracing back decades, but Optimization
-  has largely settled into a “plateau of productivity,” while ML is currently at
+  has largely settled into a "plateau of productivity," while ML is currently at
   the “peak of inflated expectations” and may face a phase of disillusionment
   before stabilizing into broader adoption.
 
@@ -161,15 +161,15 @@ predictions cause large downstream impacts on the decision.
 
 <!-- Improved Variants -->
 
-To improve decision quality, more advanced, “decision-focused” variants of
-Predict-Then-Optimize incorporate the solver’s objective directly into the ML
+To improve decision quality, more advanced, "decision-focused" variants of
+Predict-Then-Optimize incorporate the solver's objective directly into the ML
 training process. Rather than merely minimizing standard predictive error, these
-methods seek to minimize “regret”—the gap between the cost of the solver’s
+methods seek to minimize "regret"—the gap between the cost of the solver's
 solution under predicted parameters and the cost of the true optimal solution.
 By repeatedly using the solver (or an approximation) during training, they
 compute how prediction mistakes translate into suboptimal decisions, and feed
-this information back to the ML model’s parameters. As a result, the model
-learns to predict in a way that preserves or improves the final solution’s
+this information back to the ML model's parameters. As a result, the model
+learns to predict in a way that preserves or improves the final solution's
 quality, even if the raw predictive accuracy on each parameter is not perfectly
 precise.
 
@@ -178,6 +178,17 @@ precise.
 Check out
 [this great lecture by Elias Khalil](https://www.youtube.com/watch?v=pZqm-i57gxk)
 which was part of a summer school.
+
+> [!TIP]
+>
+> Uncertainty and unknown parameters frequently arise in optimization problems.
+> While the **predict-then-optimize** framework offers a straightforward
+> approach, its more advanced variants can help address some of its limitations.
+> For even greater robustness, techniques such as **robust optimization**,
+> **stochastic programming**, and others provide more effective solutions,
+> especially in highly uncertain environments, though they come with increased
+> complexity. Numerous research studies explore these and additional methods,
+> with the optimal choice depending heavily on the specific application.
 
 ##### Optimization Proxies
 
@@ -240,6 +251,8 @@ commercial products are already exploring this idea:
    ([Quick Overview](https://www.youtube.com/watch?v=8hr_23zdRV4))
 3. [Quantagonia](https://www.quantagonia.com/decisionai) provides a solver you
    can interact with via chat
+4. [Robust and Adaptive Optimization under a Large Language Model Lens](https://arxiv.org/pdf/2501.00568):
+   A research paper exploring using LLMs for robust optimization.
 
 ##### Learning instead of Guessing
 
