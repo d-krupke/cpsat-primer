@@ -6973,12 +6973,12 @@ Machine Learning and Optimization:
   speech recognition, and product recommendations—often consumer-facing
   applications. Optimization is leveraged for operational decision-making in
   areas like production planning, scheduling, and shipment routing.
-- **Adaptability**: ML can suffer from “model drift” if the environment changes
+- **Adaptability**: ML can suffer from "model drift" if the environment changes
   significantly, requiring retraining with new data. Optimization models,
   however, can be updated more seamlessly to reflect changes in real time but
   usually need more upfront effort to build.
 - **Maturity**: Both fields have roots tracing back decades, but Optimization
-  has largely settled into a “plateau of productivity,” while ML is currently at
+  has largely settled into a "plateau of productivity," while ML is currently at
   the “peak of inflated expectations” and may face a phase of disillusionment
   before stabilizing into broader adoption.
 
@@ -7336,6 +7336,9 @@ interest:
 - [Challenges and opportunities in quantum optimization](https://www.nature.com/articles/s42254-024-00770-9):
   A balanced discussion by a group of researchers, highlighting potential
   opportunities without making unfounded claims.
+- [Quantum Annealing versus Digital Computing: An Experimental Comparison](https://www.researchgate.net/publication/353155344_Quantum_Annealing_versus_Digital_Computing_An_Experimental_Comparison):
+  This paper compares quantum annealing to classical computing for optimization
+  problems and found no indication of a quantum advantage.
 - [An in-principle super-polynomial quantum advantage for approximating combinatorial optimization problems via computational learning theory](https://www.science.org/doi/10.1126/sciadv.adj5170):
   Demonstrates a super-polynomial speedup for approximating certain TSP
   instances but emphasizes that classical computers already solve large TSP

@@ -415,6 +415,9 @@ interest:
 - [Challenges and opportunities in quantum optimization](https://www.nature.com/articles/s42254-024-00770-9):
   A balanced discussion by a group of researchers, highlighting potential
   opportunities without making unfounded claims.
+- [Quantum Annealing versus Digital Computing: An Experimental Comparison](https://www.researchgate.net/publication/353155344_Quantum_Annealing_versus_Digital_Computing_An_Experimental_Comparison):
+  This paper compares quantum annealing to classical computing for optimization
+  problems and found no indication of a quantum advantage.
 - [An in-principle super-polynomial quantum advantage for approximating combinatorial optimization problems via computational learning theory](https://www.science.org/doi/10.1126/sciadv.adj5170):
   Demonstrates a super-polynomial speedup for approximating certain TSP
   instances but emphasizes that classical computers already solve large TSP
