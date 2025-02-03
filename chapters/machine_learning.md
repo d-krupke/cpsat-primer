@@ -114,11 +114,12 @@ the following articles:
 - [Why Solving Multi-agent Path Finding with Large Language Models has not Succeeded Yet](https://arxiv.org/pdf/2401.03630)
 - [Look Further Ahead: Testing the Limits of GPT-4 in Path Planning](https://arxiv.org/pdf/2406.12000)
 - [Extracting Problem Structure with LLMs for Optimized SAT Local Search](https://arxiv.org/pdf/2501.14630):
-  This paper shows how an LLM can quickly generate a custom local search
-  heuristic for the **initial phase** of a CDCL solver. The local search does
-  not solve the problem directly but provides a **partial variable assignment**,
-  helping the solver start from a better initial point and enabling it to solve
-  more instances, particularly those with structured encodings.
+  This paper demonstrates how an LLM can be used to automatically generate
+  **start heuristics** from Python code that models a problem as a SAT instance
+  using the PySAT library. These start heuristics provide the **initial phase**
+  for a SAT solver, helping it begin the search from a more promising assignment
+  and enabling it to solve additional instances that would remain unsolved
+  otherwise.
 
 ### Reinforcement Learning
 
