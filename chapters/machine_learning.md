@@ -113,6 +113,12 @@ the following articles:
 
 - [Why Solving Multi-agent Path Finding with Large Language Models has not Succeeded Yet](https://arxiv.org/pdf/2401.03630)
 - [Look Further Ahead: Testing the Limits of GPT-4 in Path Planning](https://arxiv.org/pdf/2406.12000)
+- [Extracting Problem Structure with LLMs for Optimized SAT Local Search](https://arxiv.org/pdf/2501.14630):
+  This paper shows how an LLM can quickly generate a custom local search
+  heuristic for the **initial phase** of a CDCL solver. The local search does
+  not solve the problem directly but provides a **partial variable assignment**,
+  helping the solver start from a better initial point and enabling it to solve
+  more instances, particularly those with structured encodings.
 
 ### Reinforcement Learning
 
@@ -415,7 +421,7 @@ interest:
 - [Challenges and opportunities in quantum optimization](https://www.nature.com/articles/s42254-024-00770-9):
   A balanced discussion by a group of researchers, highlighting potential
   opportunities without making unfounded claims.
-- [Quantum Annealing versus Digital Computing: An Experimental Comparison](https://www.researchgate.net/publication/353155344_Quantum_Annealing_versus_Digital_Computing_An_Experimental_Comparison):
+- [Quantum Annealing versus Digital Computing: An Experimental Comparison](https://www.researchgqate.net/publication/353155344_Quantum_Annealing_versus_Digital_Computing_An_Experimental_Comparison):
   This paper compares quantum annealing to classical computing for optimization
   problems and found no indication of a quantum advantage.
 - [An in-principle super-polynomial quantum advantage for approximating combinatorial optimization problems via computational learning theory](https://www.science.org/doi/10.1126/sciadv.adj5170):
