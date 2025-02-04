@@ -91,6 +91,13 @@ naive recursive algorithm exist, matching CP-SAT’s performance would require
 significant time and effort. And this is just the beginning - CP-SAT can tackle
 much more complex problems, as we will see in this primer.
 
+> [!TIP]
+>
+> Not convinced yet of why CP-SAT is such an amazing tool? Maybe Marco Lübbecke
+> can convince you in his 12-minute TEDx talk
+> [Anything you can do I can do better](https://www.youtube.com/watch?v=Dc38La-Xvog)
+> about mathematical optimization.
+
 ### Content
 
 Whether you are from the MIP community seeking alternatives or CP-SAT is your
