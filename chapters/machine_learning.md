@@ -68,6 +68,12 @@ Machine Learning and Optimization:
 > will make CP-SAT (and similar methods) obsolete any time soon, if ever.
 > However, Machine Learning is a valuable complement to Optimization.
 
+- [ML ain’t your only hammer: adding mathematical optimisation to the data scientist’s toolbox](https://www.youtube.com/watch?v=G0tlyC9Sr3w):
+  This 20-minute talk by Dr. Jack Simpson introduces data scientists with a
+  machine learning focus to mathematical optimization, highlighting how it
+  prescribes optimal decisions under complex constraints and complements ML
+  forecasts.
+
 ### Using GenAI/LLMs for Optimization
 
 <!-- Concrete example of using ChatGPT for optimizing -->
