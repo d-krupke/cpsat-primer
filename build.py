@@ -11,9 +11,9 @@ from pathlib import Path
 
 def _create_pretty_warning_box(msg):
     return f"""
-<table style="width: 100%; border: 1px solid black;">
-  <tr>
-    <td>
+<table style="width: 100%; border: 2px solid #ccc; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+<tr>
+<td style="padding: 10px;">
 <div style="display: flex; justify-content: space-between; align-items: center;">
   <div style="width: 10%;">
     <img src="https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/warning_platypus.webp" alt="Description of image" style="width: 100%;">
@@ -32,9 +32,9 @@ def _create_pretty_warning_box(msg):
 
 def _create_tip_box(msg):
     return f"""
-<table style="width: 100%; border: 1px solid black;">
-  <tr>
-    <td>
+<table style="width: 100%; border: 2px solid #ccc; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+<tr>
+<td style="padding: 10px;">
 <div style="display: flex; justify-content: space-between; align-items: center;">
   <div style="width: 10%;">
     <img src="https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/idea_platypus.webp" alt="Description of image" style="width: 100%;">
@@ -53,10 +53,10 @@ def _create_tip_box(msg):
 
 def _create_info_box(msg):
     return f"""
-<table style="width: 100%; border: 1px solid black;">
-    <tr>
-        <td>
-            <div style="display: flex; justify-content: space-between; align-items: center;">
+<table style="width: 100%; border: 2px solid #ccc; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+<tr>
+<td style="padding: 10px;">
+<div style="display: flex; justify-content: space-between; align-items: center;">
                 <div style="width: 10%;">
                     <img src="https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/info_platypus.webp" alt="Description of image" style="width: 100%;">
                 </div>
@@ -74,10 +74,10 @@ def _create_info_box(msg):
 
 def _create_reference_box(msg):
     return f"""
-<table style="width: 100%; border: 1px solid black;">
-    <tr>
-        <td>
-            <div style="display: flex; justify-content: space-between; align-items: center;">
+<table style="width: 100%; border: 2px solid #ccc; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+<tr>
+<td style="padding: 10px;">
+<div style="display: flex; justify-content: space-between; align-items: center;">
                 <div style="width: 10%;">
                     <img src="https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/book_platypus.webp" alt="Description of image" style="width: 100%;">
                 </div>
@@ -95,21 +95,20 @@ def _create_reference_box(msg):
 
 def _create_video_box(msg):
     return f"""
-<table style="width: 100%; border: 1px solid black;">
-    <tr>
-        <td>
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div style="width: 10%;">
-                    <img src="https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/tv_platypus.webp" alt="Description of image" style="width: 100%;">
-                </div>
-                <div style="width: 90%;">
+<table style="width: 100%; border: 2px solid #ccc; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+<tr>
+<td style="padding: 10px;">
+<div style="display: flex; justify-content: space-between; align-items: center;">
 
+<div style="width: 85%;">
 {msg}
-
-  </div>
 </div>
-    </td>
-  </tr>
+<div style="width: 15%; padding-right: 10px;">
+<img src="https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/tv_platypus.webp" alt="Description of image" style="width: 100%; border-radius: 4px;">
+</div>
+</div>
+</td>
+</tr>
 </table>
     """
 
