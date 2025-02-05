@@ -7221,6 +7221,12 @@ and Andrea Lodi), can be found
 recommend watching it, if you are interested in the topic as I had many "aha"
 moments during this tutorial.
 
+> [!NOTE]
+>
+> - [Machine learning augmented branch and bound for mixed integer linear programming](https://link.springer.com/article/10.1007/s10107-024-02130-y):
+>   This recent paper from 2024 surveys ideas for using machine learning to
+>   improve branch-and-bound solvers for mixed-integer linear programming.
+
 ### Why Quantum Computing Will (Probably) Not Have a Big Impact on Optimization
 
 Before closing this chapter, let us also discuss the impact of Quantum Computing

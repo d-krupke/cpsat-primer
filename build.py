@@ -72,6 +72,56 @@ def _create_info_box(msg):
     """
 
 
+def _create_reference_box(msg):
+    return f"""
+<table style="width: 100%; border: 1px solid black;">
+    <tr>
+        <td>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="width: 10%;">
+                    <img src="https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/book_platypus.webp" alt="Description of image" style="width: 100%;">
+                </div>
+                <div style="width: 90%;">
+
+{msg}
+
+  </div>
+</div>
+    </td>
+  </tr>
+</table>
+    """
+
+
+def replace_reference_boxes(content):
+    """
+    A reference box starts with `> :reference:` and ends with a line that does not start with `>`.
+    For github markdown, it just converts to an info box.
+    """
+    lines = content.split("\n")
+    new_content = ""
+    collect_reference = False
+    reference_msg = ""
+    for line in lines:
+        if line.startswith("> :reference:"):
+            collect_reference = True
+            reference_msg += line[len("> :reference:") :] + "\n"
+        elif collect_reference:
+            if line == ">":
+                continue
+            if line.startswith("> "):
+                reference_msg += line[len("> ") :] + "\n"
+            else:
+                new_content += _create_reference_box(reference_msg)
+                new_content += "\n"
+                collect_reference = False
+                reference_msg = ""
+                new_content += line + "\n"
+        else:
+            new_content += line + "\n"
+    return new_content
+
+
 def replace_warning_boxes(content):
     """
     A warning box starts with `> :warning:` and ends with a line that does not start with `>`.
@@ -259,6 +309,8 @@ def convert_for_readme(content: str) -> str:
         if "<!-- STOP_SKIP_FOR_README -->" in line:
             skip = False
     content = "\n".join(new_lines)
+    # replace all `> :reference:` with `> [!NOTE]`.
+    content = content.replace("> :reference:", "> [!NOTE]")
     return content
 
 
