@@ -698,6 +698,10 @@ goods' value. However, after computing and presenting the solution, we might be
 asked to find an alternative solution that does not fill the truck as much, even
 if it means accepting up to a 5% decrease in value.
 
+|                              [![xkcd grapfruit](https://imgs.xkcd.com/comics/fuck_grapefruit.png)](https://xkcd.com/388/)                              |
+| :----------------------------------------------------------------------------------------------------------------------------------------------------: |
+| Which fruit is the best one? Many problems are multi-objective and there is no clear single objective. By [xkcd](https://xkcd.com/388/) (CC BY-NC 2.5) |
+
 To handle this, we can optimize in two phases. First, we maximize the value
 under the weight constraint. Next, we add a constraint that the value must be at
 least 95% of the initial solution's value and change the objective to minimize
