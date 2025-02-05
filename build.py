@@ -95,7 +95,7 @@ def _create_reference_box(msg):
 
 def _create_video_box(msg):
     return f"""
-    <table style="width: 100%; border: 1px solid black;">
+<table style="width: 100%; border: 1px solid black;">
     <tr>
         <td>
             <div style="display: flex; justify-content: space-between; align-items: center;">

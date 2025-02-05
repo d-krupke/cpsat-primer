@@ -1251,7 +1251,7 @@ signals while the solver is running.
 |                                _Using multiprocessing, one can build a responsive interface for a solver._                                 |
 
 [@oulianov](https://github.com/oulianov) deployed it
-[here](https://cpsat-embeddings-demo.streamlit.app/) for you to try out in you
+[here](https://cpsat-embeddings-demo.streamlit.app/) for you to try out in your
 browser.
 
 ---
