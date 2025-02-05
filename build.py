@@ -93,6 +93,55 @@ def _create_reference_box(msg):
     """
 
 
+def _create_video_box(msg):
+    return f"""
+    <table style="width: 100%; border: 1px solid black;">
+    <tr>
+        <td>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="width: 10%;">
+                    <img src="https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/tv_platypus.webp" alt="Description of image" style="width: 100%;">
+                </div>
+                <div style="width: 90%;">
+
+{msg}
+
+  </div>
+</div>
+    </td>
+  </tr>
+</table>
+    """
+
+
+def replace_video_boxes(content):
+    """
+    A video box starts with `> :video:` and ends with a line that does not start with `>`.
+    """
+    lines = content.split("\n")
+    new_content = ""
+    collect_video = False
+    video_msg = ""
+    for line in lines:
+        if line.startswith("> :video:"):
+            collect_video = True
+            video_msg += line[len("> :video:") :] + "\n"
+        elif collect_video:
+            if line == ">":
+                continue
+            if line.startswith("> "):
+                video_msg += line[len("> ") :] + "\n"
+            else:
+                new_content += _create_video_box(video_msg)
+                new_content += "\n"
+                collect_video = False
+                video_msg = ""
+                new_content += line + "\n"
+        else:
+            new_content += line + "\n"
+    return new_content
+
+
 def replace_reference_boxes(content):
     """
     A reference box starts with `> :reference:` and ends with a line that does not start with `>`.
@@ -232,6 +281,7 @@ def convert_for_mdbook(content):
     content = replace_tip_boxes(content)
     content = replace_info_boxes(content)
     content = replace_reference_boxes(content)
+    content = replace_video_boxes(content)
     # replace all `:warning:` with the unicode character for a warning sign.
     content = content.replace(":warning:", "⚠️")
 
@@ -312,6 +362,7 @@ def convert_for_readme(content: str) -> str:
     content = "\n".join(new_lines)
     # replace all `> :reference:` with `> [!NOTE]`.
     content = content.replace("> :reference:", "> [!NOTE]")
+    content = content.replace("> :video:", "> [!TIP]")
     return content
 
 

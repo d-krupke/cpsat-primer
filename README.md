@@ -92,7 +92,7 @@ much more complex problems, as we will see in this primer.
 
 > [!TIP]
 >
-> Not convinced yet of why CP-SAT is such an amazing tool? Maybe Marco Lübbecke
+> Not convinced yet of why tools like CP-SAT are amazing? Maybe Marco Lübbecke
 > can convince you in his 12-minute TEDx talk
 > [Anything you can do I can do better](https://www.youtube.com/watch?v=Dc38La-Xvog)
 > about mathematical optimization.
