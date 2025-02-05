@@ -231,6 +231,7 @@ def convert_for_mdbook(content):
     content = replace_warning_boxes(content)
     content = replace_tip_boxes(content)
     content = replace_info_boxes(content)
+    content = replace_reference_boxes(content)
     # replace all `:warning:` with the unicode character for a warning sign.
     content = content.replace(":warning:", "⚠️")
 
