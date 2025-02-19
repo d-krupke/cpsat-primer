@@ -426,6 +426,18 @@ optimization has proven tricky, though progress continues.
 If you want more perspectives on the topic, the following articles may be of
 interest:
 
+- [Challenges and Opportunities in Quantum Optimization](https://arxiv.org/pdf/2312.02279):
+  This preprint gives on 72 pages an extensive and well-written overview of the
+  state of the art in quantum optimization. While the conclusion sounds quite
+  optimistic, the paper is very clear about the current limitations and
+  challenges. while it caters a scientific audience, it is still quite
+  accessible.
+- [Understanding instance hardness for optimisation algorithms: Methodologies, open challenges and post-quantum implications](https://www.sciencedirect.com/science/article/pii/S0307904X2500040X):
+  This paper states that "it seems likely that there will be no quantum
+  advantage for the TSP" due to challenges in tuning the parameters of QUBOs to
+  even yield feasible solutions. However, it considers unconstrained
+  optimization problems such as the MAX-CUT to have a higher chance of
+  benefiting from quantum computing.
 - [Disentangling Hype from Practicality: On Realistically Achieving Quantum Advantage](https://cacm.acm.org/research/disentangling-hype-from-practicality-on-realistically-achieving-quantum-advantage/#R3)
   Gives strong arguments why it can be hard to achieve quantum advantage in
   practice, especially why quadratic speedup algorithms like Grover's Algorithm
