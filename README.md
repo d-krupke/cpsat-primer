@@ -7002,7 +7002,7 @@ Machine Learning and Optimization:
 
 > [!TIP]
 >
-> [ML ain’t your only hammer: adding mathematical optimisation to the data scientist’s toolbox](https://www.youtube.com/watch?v=G0tlyC9Sr3w):
+> [ML ain't your only hammer: adding mathematical optimisation to the data scientist's toolbox](https://www.youtube.com/watch?v=G0tlyC9Sr3w):
 > This 20-minute talk by Dr. Jack Simpson introduces data scientists with a
 > machine learning focus to mathematical optimization, highlighting how it
 > prescribes optimal decisions under complex constraints and complements ML
@@ -7051,6 +7051,11 @@ possibilities in the upcoming section on "Model Building with GenAI/LLMs".
 To dig a little deeper into the limitations of LLMs for optimization, consider
 the following articles:
 
+- [LLM-ify me - Optimization edition](https://oberdieck.dk/p/llm-in-optimization/):
+  A blog post exploring the potential of LLMs for optimization.
+- [Mind Evolution and the frontier of LLM-based optimization solvers](https://open.substack.com/pub/feasible/p/64-mind-evolution-and-the-frontier?r=49480z&utm_campaign=post&utm_medium=email):
+  An article from the Feasible newsletter discussing the potential of LLMs for
+  optimization.
 - [Why Solving Multi-agent Path Finding with Large Language Models has not Succeeded Yet](https://arxiv.org/pdf/2401.03630)
 - [Look Further Ahead: Testing the Limits of GPT-4 in Path Planning](https://arxiv.org/pdf/2406.12000)
 - [Extracting Problem Structure with LLMs for Optimized SAT Local Search](https://arxiv.org/pdf/2501.14630):
