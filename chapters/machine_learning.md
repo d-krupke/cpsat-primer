@@ -466,7 +466,6 @@ interest:
   This paper compares quantum annealing to classical computing for optimization
   problems and found no indication of a quantum advantage.
 
-
 <!-- Disclaimer that I am not an expert -->
 
 > [!WARNING] I am not a quantum computing expert, so please treat my arguments
