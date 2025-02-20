@@ -22,7 +22,7 @@
 # Part 2: Advanced Topics
 
 - [Coding Patterns](./06_coding_patterns.md)
-- [(DRAFT) Building an Optimization API](./building_an_optimization_api.md)
-- [(DRAFT) CP-SAT vs. ML vs. QC](./chapters/machine_learning.md)
+- [Building an Optimization API](./building_an_optimization_api.md)
+- [CP-SAT vs. ML vs. QC](./chapters/machine_learning.md)
 - [Large Neighborhood Search](./09_lns.md)
 - [Benchmarking your Model](./08_benchmarking.md)

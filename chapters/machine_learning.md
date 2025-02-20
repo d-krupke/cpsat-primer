@@ -2,13 +2,6 @@
 
 <a name="chapters-machine-learning"></a>
 
-> [!WARNING]
->
-> This is a draft chapter and may contain inaccuracies or incomplete
-> information. Please treat the content with caution. I will extend this chapter
-> with more details and references in the future. Collaboration is welcome, so
-> feel free to suggest improvements or point out errors.
-
 A prevalent discussion in today's landscape revolves around whether Machine
 Learning (ML) or Quantum Computing (QC) could replace classical optimization
 methods such as CP-SAT. In this chapter, we will explore the fundamental
@@ -324,6 +317,15 @@ four nodes.) Unfortunately, such claims usually hinge on a theoretical
 worst-case runtime of around $O(n^2 2^n)$ for the TSP, which is not
 representative of how the problem is handled in practice.
 
+> :reference:
+>
+> For an accessible and insightful discussion on the myths and exaggerated
+> expectations surrounding quantum computing, consult the freely available book
+> [_What You Shouldn't Know About Quantum Computers_](https://arxiv.org/abs/2405.15838)
+> by Chris Ferrie. This resource offers an excellent opportunity to critically
+> examine common misconceptions often perpetuated by science fiction and popular
+> science literature.
+
 <!-- Worst-Case vs. Real-World -->
 
 Although the best-known quantum algorithm runs in $O(1.728^n)$, which is
@@ -343,14 +345,17 @@ a major impact on optimization. Many experts believe that, at best, quantum
 computing might offer only a modest performance advantage in this domain, though
 it may have significant implications for cryptology.
 
-> :reference:
+> [!TIP]
 >
-> For an accessible and insightful discussion on the myths and exaggerated
-> expectations surrounding quantum computing, consult the freely available book
-> [_What You Shouldn't Know About Quantum Computers_](https://arxiv.org/abs/2405.15838)
-> by Chris Ferrie. This resource offers an excellent opportunity to critically
-> examine common misconceptions often perpetuated by science fiction and popular
-> science literature.
+> At a recent consortium meeting, a consultant from a logistics optimization
+> firm made a particularly noteworthy remark. According to them, even with the
+> advent of a fully functional quantum computer equipped with thousands of
+> flawless qubits, its primary utility would lie in marketing. Beyond that, it
+> would be little more than "metal trash," offering no tangible value for their
+> customers' use cases. This statement prompted humorous objections from quantum
+> experts regarding the "metal trash" comment. Nevertheless, the broader
+> sentiment that quantum computing is overhyped in the optimization domain was
+> widely shared.
 
 <!-- Quantum Computers are currently worse than Pen&Paper -->
 
@@ -468,11 +473,10 @@ interest:
 
 <!-- Disclaimer that I am not an expert -->
 
-> [!WARNING] I am not a quantum computing expert, so please treat my arguments
-> accordingly. If you are an expert, I would be happy to include your
-> perspective in this chapter. My experience stems from two projects in which my
-> role was specifically to argue that quantum computing would not significantly
-> impact optimization. This undoubtedly biases my viewpoint, but my discussions
-> with other quantum and optimization experts generally indicate that the
-> so-called "quantum advantage" in optimization is still more buzzword than
-> reality - though it does attract considerable funding.
+> [!WARNING]
+>
+> I do not claim to be an expert in quantum computing, so please interpret my
+> remarks with appropriate caution. This book is an open-source project;
+> therefore, if you have any corrections or suggestions to help improve the
+> material for the community, feel free to open an issue or submit a pull
+> request on [GitHub](https://github.com/d-krupke/cpsat-primer/).
