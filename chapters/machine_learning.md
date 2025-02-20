@@ -333,7 +333,7 @@ quickly. Since the TSP is NP-hard, it is unlikely we will ever discover a
 instance size. Moreover, real-world or average-case performance can be vastly
 different from worst-case performance. In fact, TSP can already be solved
 effectively for large instances on classical computers, so many bold claims
-about quantum computing’s purported advantages in optimization can be misleading
+about quantum computing's purported advantages in optimization can be misleading
 or simply incorrect.
 
 <!-- TL;DR -->
@@ -343,9 +343,18 @@ a major impact on optimization. Many experts believe that, at best, quantum
 computing might offer only a modest performance advantage in this domain, though
 it may have significant implications for cryptology.
 
+> :reference:
+>
+> For an accessible and insightful discussion on the myths and exaggerated
+> expectations surrounding quantum computing, consult the freely available book
+> [_What You Shouldn't Know About Quantum Computers_](https://arxiv.org/abs/2405.15838)
+> by Chris Ferrie. This resource offers an excellent opportunity to critically
+> examine common misconceptions often perpetuated by science fiction and popular
+> science literature.
+
 <!-- Quantum Computers are currently worse than Pen&Paper -->
 
-To put the Traveling Salesman Problem’s difficulty into historical perspective:
+To put the Traveling Salesman Problem's difficulty into historical perspective:
 In the mid-20th century, the TSP attracted attention through challenges offering
 substantial prize money for solving relatively small instances of 33 to 49
 cities - already far larger than those currently tackled by many quantum
