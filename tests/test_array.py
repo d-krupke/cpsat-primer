@@ -13,7 +13,7 @@ def test_element():
     value_at_index_var = model.new_int_var(-100, 100, "value_at_index")
 
     # Bind the variables together with the element constraint.
-    model.add_element(variables=var_array, index=index_var, target=value_at_index_var)
+    model.add_element(expressions=var_array, index=index_var, target=value_at_index_var)
 
 
 def test_feasible_assignments():
@@ -37,7 +37,7 @@ def test_feasible_assignments():
 
         # Bind the variables together with the element constraint.
         model.add_element(
-            variables=var_array, index=index_var, target=value_at_index_var
+            expressions=var_array, index=index_var, target=value_at_index_var
         )
 
         # Apply the test case values
