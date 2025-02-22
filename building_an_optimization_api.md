@@ -908,8 +908,10 @@ can also cancel a job or list all jobs.
 | :------------------------------------------------------------------------------------------------------------------------: |
 |                           By clicking on "try it out" you can directly submit a job to the API.                            |
 
-Here is an instance to try it out
-
+<details>
+<summary>
+Here is an instance to try it out: (click to expand)
+<summary>
 ```json
 {
   "optimization_parameters": {
@@ -1132,3 +1134,4 @@ Here is an instance to try it out
   }
 }
 ```
+</details>
