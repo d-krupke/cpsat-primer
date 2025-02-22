@@ -912,6 +912,7 @@ can also cancel a job or list all jobs.
 <summary>
 Here is an instance to try it out: (click to expand)
 </summary>
+
 ```json
 {
   "optimization_parameters": {
