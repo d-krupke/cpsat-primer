@@ -3,7 +3,7 @@ import networkx as nx
 from ortools.sat.python import cp_model
 
 
-class CapacitatedMultiCircuit:
+class CvrpMultiCircuit:
     """CVRP via CP-SAT multi-circuit constraint."""
 
     def __init__(

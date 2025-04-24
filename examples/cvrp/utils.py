@@ -1,12 +1,47 @@
+"""
+This file provides a set of context managers and utility functions for working with
+Google OR-Tools CP-SAT solver. These context managers help to assert the feasibility,
+infeasibility, optimality, and objective value of CP-SAT models during testing.
+
+It is especially intended to test for the trivial cases of your models, where you
+can still can quickly get an off by one or wrong sign bugs. In some cases, these
+may even remain unnoticed for a while.
+
+Using these utils, you can super quickly write these trivial test cases and safe
+yourself some time.
+```python
+def test_example():
+    with expect_feasible() as model:
+        # build model constraints
+        x = model.new_bool_var("x")
+        y = model.new_int_var(0, 10, "y")
+        model.add(x + y == 1)
+        # This will raise a RuntimeError if the model is infeasible.
+```
+
+Alternatively, you can use `assert_feasible()` and similar functions to check
+the status of a model after solving it. These functions are useful for
+asserting the status of a model without using context managers.
+```python
+def test_example():
+    model = cp_model.CpModel()
+    x = model.new_bool_var("x")
+    y = model.new_int_var(0, 10, "y")
+    model.add(x + y == 1)
+    # This will raise a RuntimeError if the model is infeasible.
+    assert_feasible(model)
+```
+"""
+
 from ortools.sat.python import cp_model
 
 
-class ExpectFeasible:
+class ExpectModelFeasible:
     """
     Context manager that asserts a CP-SAT model is feasible.
 
     Usage:
-        with ExpectFeasible() as model:
+        with ExpectModelFeasible() as model:
             # build model constraints
             x = model.new_bool_var("x")
             y = model.new_int_var(0, 10, "y")
@@ -36,19 +71,19 @@ class ExpectFeasible:
         if exc_type:
             # Propagate exceptions raised inside the with-block
             raise exc_type(exc_val)
-        status = self.solver.Solve(self.model)
+        status = self.solver.solve(self.model)
         if status not in (cp_model.OPTIMAL, cp_model.FEASIBLE):
             raise RuntimeError(
                 f"Expected feasible, but solver returned status {status}."
             )
 
 
-class ExpectInfeasible:
+class ExpectModelInfeasible:
     """
     Context manager that asserts a CP-SAT model is infeasible.
 
     Usage:
-        with ExpectInfeasible() as model:
+        with ExpectModelInfeasible() as model:
             # build model constraints that cannot all be satisfied
             x = model.new_bool_var("x")
             y = model.new_bool_var("y")
@@ -78,19 +113,19 @@ class ExpectInfeasible:
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:
         if exc_type:
             raise exc_type(exc_val)
-        status = self.solver.Solve(self.model)
+        status = self.solver.solve(self.model)
         if status in (cp_model.OPTIMAL, cp_model.FEASIBLE):
             raise RuntimeError(
                 f"Expected infeasible, but solver returned status {status}."
             )
 
 
-class ExpectObjective:
+class ExpectObjectiveValue:
     """
     Context manager that asserts a CP-SAT model's objective value.
 
     Usage:
-        with ExpectObjective(target, tol=1e-6) as model:
+        with ExpectObjectiveValue(target, tol=1e-6) as model:
             # build model, add minimize() or maximize()
             pass
 
@@ -127,14 +162,14 @@ class ExpectObjective:
             raise RuntimeError(
                 f"Expected feasible for objective check, but status {status}."
             )
-        value = self.solver.ObjectiveValue()
+        value = self.solver.objective_value
         if abs(value - self.expected) > self.tol:
             raise RuntimeError(
                 f"Objective {value} differs from expected {self.expected} by more than {self.tol}."
             )
 
 
-class ExpectOptimal:
+class ExpectOptimalWithinTime:
     """
     Context manager that asserts a CP-SAT model solves to optimal within a time limit.
 
@@ -169,7 +204,7 @@ class ExpectOptimal:
         if exc_type:
             raise exc_type(exc_val)
         self.solver.parameters.max_time_in_seconds = self.time_limit
-        status = self.solver.Solve(self.model)
+        status = self.solver.solve(self.model)
         if status != cp_model.OPTIMAL:
             raise RuntimeError(
                 f"Expected optimal within {self.time_limit}s, but status {status}."
@@ -179,7 +214,7 @@ class ExpectOptimal:
 def solve(
     model,
     solver: cp_model.CpSolver | None = None,
-    expect: int = cp_model.OPTIMAL,
+    expect: int | list[int] = cp_model.OPTIMAL,
     time_limit: float | None = None,
 ) -> cp_model.CpSolver:
     """
@@ -198,8 +233,80 @@ def solve(
       AssertionError if the solver’s status != expect.
     """
     solver = cp_model.CpSolver() if solver is None else solver
+    if isinstance(expect, int):
+        expect = [expect]
     if time_limit is not None:
         solver.parameters.max_time_in_seconds = time_limit
     status = solver.solve(model)
-    assert status == expect, f"Expected status={expect}, got {status}"
+    assert status in expect, f"Expected status in {expect}, got {status}"
+    return solver
+
+
+def _solve(model: cp_model.CpModel, solver=None, time_limit=None):
+    solver = solver or cp_model.CpSolver()
+    if time_limit is not None:
+        solver.parameters.max_time_in_seconds = time_limit
+    status = solver.Solve(model)
+    return solver, status
+
+
+def assert_feasible(
+    model: cp_model.CpModel,
+    solver: cp_model.CpSolver | None = None,
+    time_limit: float | None = None,
+):
+    """
+    Solve `model` and assert status is OPTIMAL or FEASIBLE.
+    Returns the solver for further inspection if needed.
+    """
+    solver, status = _solve(model, solver, time_limit)
+    assert status in (
+        cp_model.OPTIMAL,
+        cp_model.FEASIBLE,
+    ), f"Expected feasible or optimal, got {status}"
+    return solver
+
+
+def assert_infeasible(
+    model: cp_model.CpModel,
+    solver: cp_model.CpSolver | None = None,
+    time_limit: float | None = None,
+):
+    """
+    Solve `model` and assert status is INFEASIBLE.
+    """
+    _, status = _solve(model, solver, time_limit)
+    assert status == cp_model.INFEASIBLE, f"Expected infeasible, got {status}"
+
+
+def assert_optimal(
+    model: cp_model.CpModel,
+    solver: cp_model.CpSolver | None = None,
+    time_limit: float | None = None,
+):
+    """
+    Solve `model` and assert status is OPTIMAL.
+    """
+    _, status = _solve(model, solver, time_limit)
+    assert status == cp_model.OPTIMAL, f"Expected optimal, got {status}"
+
+
+def assert_objective(
+    model: cp_model.CpModel,
+    expected: float,
+    tol: float = 1e-8,
+    solver: cp_model.CpSolver | None = None,
+    time_limit: float | None = None,
+):
+    """
+    Solve `model`, assert it's feasible or optimal, then
+    check |ObjectiveValue - expected| <= tol.
+    """
+    solver, status = _solve(model, solver, time_limit)
+    assert status in (
+        cp_model.OPTIMAL,
+        cp_model.FEASIBLE,
+    ), f"Expected feasible or optimal, got {status}"
+    val = solver.objective_value
+    assert abs(val - expected) <= tol, f"Expected objective≈{expected}, got {val}"
     return solver

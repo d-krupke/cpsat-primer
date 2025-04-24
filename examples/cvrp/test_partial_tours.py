@@ -8,7 +8,7 @@ Graph used in all tests: a complete graph on 5 nodes where
 """
 
 import networkx as nx
-from .utils import ExpectFeasible, ExpectInfeasible, ExpectObjective
+from .utils import ExpectModelFeasible, ExpectModelInfeasible, ExpectObjectiveValue
 from .partial_tour import PartialTourWithDepot
 
 
@@ -32,7 +32,7 @@ def test_initial_partial_tour_feasible():
     should be feasible (i.e. the inactive self-loops circuit).
     """
     graph = _generate_test_graph()
-    with ExpectFeasible() as model:
+    with ExpectModelFeasible() as model:
         PartialTourWithDepot(graph, model)
 
 
@@ -42,7 +42,7 @@ def test_set_depot_still_feasible():
     so the model remains feasible.
     """
     graph = _generate_test_graph()
-    with ExpectFeasible() as model:
+    with ExpectModelFeasible() as model:
         tour = PartialTourWithDepot(graph, model)
         tour.set_depot(0)
 
@@ -53,7 +53,7 @@ def test_force_full_visit_without_capacity():
     without any capacity limit, yields a Hamiltonian circuit → feasible.
     """
     graph = _generate_test_graph()
-    with ExpectFeasible() as model:
+    with ExpectModelFeasible() as model:
         tour = PartialTourWithDepot(graph, model)
         tour.set_depot(0)
         for node in graph.nodes():
@@ -65,7 +65,7 @@ def test_full_visit_with_sufficient_capacity():
     Demand sum = 4; setting capacity = 5 allows full visit → feasible.
     """
     graph = _generate_test_graph()
-    with ExpectFeasible() as model:
+    with ExpectModelFeasible() as model:
         tour = PartialTourWithDepot(graph, model)
         tour.set_depot(0)
         tour.set_capacity(5)
@@ -78,7 +78,7 @@ def test_full_visit_with_insufficient_capacity():
     Demand sum = 4; setting capacity = 3 makes full visit infeasible.
     """
     graph = _generate_test_graph()
-    with ExpectInfeasible() as model:
+    with ExpectModelInfeasible() as model:
         tour = PartialTourWithDepot(graph, model)
         tour.set_depot(0)
         tour.set_capacity(3)
@@ -92,7 +92,7 @@ def test_minimize_tour_length():
     the shortest possible circuit has length = 5.
     """
     graph = _generate_test_graph()
-    with ExpectObjective(5) as model:
+    with ExpectObjectiveValue(5) as model:
         tour = PartialTourWithDepot(graph, model)
         tour.set_depot(0)
         tour.set_capacity(4)
@@ -107,7 +107,7 @@ def test_maximize_customers_visited():
     → expect 3.
     """
     graph = _generate_test_graph()
-    with ExpectObjective(3) as model:
+    with ExpectObjectiveValue(3) as model:
         tour = PartialTourWithDepot(graph, model)
         tour.set_depot(0)
         tour.set_capacity(3)

@@ -1,6 +1,6 @@
 import networkx as nx
-from .cvrp_circuit import CvrpModel
-from .utils import ExpectFeasible, ExpectInfeasible, ExpectObjective
+from .cvrp_circuit import CvrpDuplicatedCircuits
+from .utils import ExpectModelFeasible, ExpectModelInfeasible, ExpectObjectiveValue
 
 
 def _generate_test_graph(n: int = 5) -> nx.Graph:
@@ -13,36 +13,42 @@ def _generate_test_graph(n: int = 5) -> nx.Graph:
 
 
 def test_cvrp_feasible_with_sufficient_capacity():
-    with ExpectFeasible() as model:
+    with ExpectModelFeasible() as model:
         graph = _generate_test_graph()
-        _ = CvrpModel(graph, depot=0, vehicle_capacity=5, num_vehicles=2, model=model)
+        _ = CvrpDuplicatedCircuits(
+            graph, depot=0, vehicle_capacity=5, num_vehicles=2, model=model
+        )
 
 
 def test_cvrp_infeasible_with_insufficient_capacity():
-    with ExpectInfeasible() as model:
+    with ExpectModelInfeasible() as model:
         graph = _generate_test_graph()
-        _ = CvrpModel(graph, depot=0, vehicle_capacity=1, num_vehicles=2, model=model)
+        _ = CvrpDuplicatedCircuits(
+            graph, depot=0, vehicle_capacity=1, num_vehicles=2, model=model
+        )
 
 
 def test_cvrp_feasible_with_enough_vehicles():
-    with ExpectFeasible() as model:
+    with ExpectModelFeasible() as model:
         graph = _generate_test_graph()
-        _ = CvrpModel(graph, depot=0, vehicle_capacity=1, num_vehicles=4, model=model)
+        _ = CvrpDuplicatedCircuits(
+            graph, depot=0, vehicle_capacity=1, num_vehicles=4, model=model
+        )
 
 
 def test_cvrp_objective_value():
-    with ExpectObjective(5) as model:
+    with ExpectObjectiveValue(5) as model:
         graph = _generate_test_graph()
-        cvrp = CvrpModel(
+        cvrp = CvrpDuplicatedCircuits(
             graph, depot=0, vehicle_capacity=5, num_vehicles=2, model=model
         )
         cvrp.minimize_weight()
 
 
 def test_cvrp_infeasible_with_multi_visit():
-    with ExpectInfeasible() as model:
+    with ExpectModelInfeasible() as model:
         graph = _generate_test_graph()
-        cvrp = CvrpModel(
+        cvrp = CvrpDuplicatedCircuits(
             graph, depot=0, vehicle_capacity=5, num_vehicles=2, model=model
         )
         model.add(cvrp.subtours[0].is_visited(1) == 1)
@@ -50,9 +56,9 @@ def test_cvrp_infeasible_with_multi_visit():
 
 
 def test_cvrp_objective_with_many_vehicles():
-    with ExpectObjective(8) as model:
+    with ExpectObjectiveValue(8) as model:
         graph = _generate_test_graph()
-        cvrp = CvrpModel(
+        cvrp = CvrpDuplicatedCircuits(
             graph, depot=0, vehicle_capacity=1, num_vehicles=7, model=model
         )
         cvrp.minimize_weight()

@@ -5,7 +5,7 @@ from ortools.sat.python import cp_model
 from .partial_tour import PartialTourWithDepot
 
 
-class CvrpModel:
+class CvrpDuplicatedCircuits:
     """
     Capacitated Vehicle Routing Problem via multiple partial‐tour submodels.
 

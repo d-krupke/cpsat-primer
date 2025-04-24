@@ -10,8 +10,13 @@ Each test uses a small complete graph of 5 nodes:
 import networkx as nx
 from ortools.sat.python import cp_model
 
-from .utils import ExpectFeasible, ExpectInfeasible, ExpectObjective, solve
-from .cvrp_mtz import MtzBasedFormulation
+from .utils import (
+    ExpectModelFeasible,
+    ExpectModelInfeasible,
+    ExpectObjectiveValue,
+    solve,
+)
+from .cvrp_mtz import CvrpVanillaMtz
 
 
 def _generate_test_graph(n: int = 5) -> nx.Graph:
@@ -34,8 +39,8 @@ def test_mtz_feasible_capacity_5():
     With capacity = 5, one vehicle can visit all customers in one tour → feasible.
     """
     graph = _generate_test_graph()
-    with ExpectFeasible() as model:
-        MtzBasedFormulation(graph, depot=0, capacity=5, model=model)
+    with ExpectModelFeasible() as model:
+        CvrpVanillaMtz(graph, depot=0, capacity=5, model=model)
 
 
 def test_mtz_infeasible_capacity_0():
@@ -43,8 +48,8 @@ def test_mtz_infeasible_capacity_0():
     With capacity = 0, the vehicle cannot serve any customer → infeasible.
     """
     graph = _generate_test_graph()
-    with ExpectInfeasible() as model:
-        MtzBasedFormulation(graph, depot=0, capacity=0, model=model)
+    with ExpectModelInfeasible() as model:
+        CvrpVanillaMtz(graph, depot=0, capacity=0, model=model)
 
 
 def test_mtz_feasible_capacity_1():
@@ -52,8 +57,8 @@ def test_mtz_feasible_capacity_1():
     With capacity = 1, each tour serves exactly one customer → still feasible.
     """
     graph = _generate_test_graph()
-    with ExpectFeasible() as model:
-        MtzBasedFormulation(graph, depot=0, capacity=1, model=model)
+    with ExpectModelFeasible() as model:
+        CvrpVanillaMtz(graph, depot=0, capacity=1, model=model)
 
 
 def test_mtz_optimal_weight_capacity_5():
@@ -62,8 +67,8 @@ def test_mtz_optimal_weight_capacity_5():
     one loop through all 4 customers → cost = 5.
     """
     graph = _generate_test_graph()
-    with ExpectObjective(5) as model:
-        mtz = MtzBasedFormulation(graph, depot=0, capacity=5, model=model)
+    with ExpectObjectiveValue(5) as model:
+        mtz = CvrpVanillaMtz(graph, depot=0, capacity=5, model=model)
         model.minimize(mtz.weight(label="weight"))
 
 
@@ -73,8 +78,8 @@ def test_mtz_optimal_weight_capacity_1():
     four separate out‐and‐back tours → cost = 4 × 2 = 8.
     """
     graph = _generate_test_graph()
-    with ExpectObjective(8) as model:
-        mtz = MtzBasedFormulation(graph, depot=0, capacity=1, model=model)
+    with ExpectObjectiveValue(8) as model:
+        mtz = CvrpVanillaMtz(graph, depot=0, capacity=1, model=model)
         model.minimize(mtz.weight(label="weight"))
 
 
@@ -84,8 +89,8 @@ def test_mtz_conflicting_arcs_infeasible():
     violates the MTZ flow constraints → infeasible.
     """
     graph = _generate_test_graph()
-    with ExpectInfeasible() as model:
-        mtz = MtzBasedFormulation(graph, depot=0, capacity=5, model=model)
+    with ExpectModelInfeasible() as model:
+        mtz = CvrpVanillaMtz(graph, depot=0, capacity=5, model=model)
         model.add(mtz.is_arc_used(1, 2) == 1)
         model.add(mtz.is_arc_used(2, 1) == 1)
 
@@ -96,8 +101,8 @@ def test_mtz_conflicting_arcs_direct_feasible():
     allowed by flow + capacity → still feasible.
     """
     graph = _generate_test_graph()
-    with ExpectFeasible() as model:
-        mtz = MtzBasedFormulation(graph, depot=0, capacity=5, model=model)
+    with ExpectModelFeasible() as model:
+        mtz = CvrpVanillaMtz(graph, depot=0, capacity=5, model=model)
         model.add(mtz.is_arc_used(0, 2) == 1)
         model.add(mtz.is_arc_used(2, 0) == 1)
 
@@ -109,7 +114,7 @@ def test_mtz_extract_tours():
     """
     graph = _generate_test_graph()
     model = cp_model.CpModel()
-    mtz = MtzBasedFormulation(graph, depot=0, capacity=1, model=model)
+    mtz = CvrpVanillaMtz(graph, depot=0, capacity=1, model=model)
     mtz.minimize_weight()
     solver = solve(mtz.model)
 

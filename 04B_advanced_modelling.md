@@ -172,20 +172,126 @@ various tour and path problems. Explore further examples:
 
 - [Budget constrained tours](https://github.com/d-krupke/cpsat-primer/blob/main/examples/add_circuit_budget.py):
   Optimize the largest possible tour within a specified budget.
-- [Multiple tours](https://github.com/d-krupke/cpsat-primer/blob/main/examples/add_circuit_multi_tour.py):
-  Solve for $k$ minimal tours covering all vertices.
 
 #### `add_multiple_circuit`
 
-You can model multiple disjoint tours using several `add_circuit` constraints,
-as demonstrated in
-[this example](https://github.com/d-krupke/cpsat-primer/blob/main/examples/add_circuit_multi_tour.py).
-If all tours share a common depot (vertex 0), the `add_multiple_circuit`
-constraint is an alternative. However, this constraint does not allow you to
-specify the number of tours, nor can it determine to which tour a particular
-edge belongs. Therefore, the `add_circuit` constraint is often a superior
-choice. Although the arguments for both constraints are identical, vertex 0
-serves a unique role as the depot where all tours commence and conclude.
+If we have a problem where we need to do multiple tours from a depot, we can
+also utilize the `add_multiple_circuit` constraint. This constraint is similar
+to `add_circuit`, but it allows a depot to be visited multiple times. Without
+any further constraints, visiting any nodes multiple times is rarely optimal (or
+should more efficiently be modelled by simply replacing all edges for which this
+is true by a virtual edge that returns to the depot as this would violate the
+triangle inequality and generally makes it more difficult to optimize). However,
+one can actually connect the arc usage with some resource usage, allowing to,
+e.g., nicely model the Capacitated Vehicle Routing Problem (CVRP), where we have
+a depot and our vehicles can only carry a certain amount of goods. Every node
+comes with a certain demand and we want to minimize the total distance travelled
+while ensuring that we do not have to carry more than the capacity on each trip.
+
+`add_multiple_circuit` also support optional vertices via self-loops, just like
+`add_circuit`.
+
+```python
+from typing import Hashable
+import networkx as nx
+from ortools.sat.python import cp_model
+
+
+class CvrpMultiCircuit:
+    """CVRP via CP-SAT multi-circuit constraint."""
+
+    def __init__(
+        self,
+        graph: nx.Graph,
+        depot: Hashable,
+        capacity: int,
+        demand_label: str = "demand",
+        model: cp_model.CpModel | None = None,
+    ):
+        self.graph, self.depot = graph, depot
+        self.model = model or cp_model.CpModel()
+        self.capacity = capacity
+        self.demand_label = demand_label
+
+        # Vertex list with depot first
+        self.vertices = [depot] + [v for v in graph.nodes() if v != depot]
+        self.index = {v: i for i, v in enumerate(self.vertices)}
+
+        # Boolean arc variables for both directions
+        self.arc_vars = {
+            (i, j): self.model.new_bool_var(f"arc_{i}_{j}")
+            for u, v in graph.edges
+            for i, j in ((self.index[u], self.index[v]), (self.index[v], self.index[u]))
+        }
+        arcs = [(i, j, var) for (i, j), var in self.arc_vars.items()]
+
+        # Multi-circuit constraint
+        self.model.add_multiple_circuit(arcs)
+
+        # Capacity variables and constraints
+        self.cap_vars = [
+            self.model.new_int_var(0, capacity, f"cap_{i}")
+            for i in range(len(self.vertices))
+        ]
+        for i, j, var in arcs:
+            if j == 0:
+                continue
+            demand = graph.nodes[self.vertices[j]].get(demand_label, 0)
+            self.model.add(
+                self.cap_vars[j] >= self.cap_vars[i] + demand
+            ).only_enforce_if(var)
+
+    def is_arc_used(self, u, v) -> cp_model.BoolVarT:
+        return self.arc_vars[(self.index[u], self.index[v])]
+
+    def weight(self, label: str = "weight") -> cp_model.LinearExprT:
+        return sum(
+            var * self.graph[self.vertices[i]][self.vertices[j]][label]
+            for (i, j), var in self.arc_vars.items()
+        )
+
+    def minimize_weight(self, label: str = "weight"):
+        self.model.minimize(self.weight(label=label))
+
+    def extract_tours(self, solver: cp_model.CpSolver) -> list[list]:
+        # Build directed graph of selected arcs
+        dg = nx.DiGraph(
+            [
+                (self.vertices[i], self.vertices[j])
+                for (i, j), var in self.arc_vars.items()
+                if solver.value(var)
+            ]
+        )
+
+        # Eulerian circuit and split at depot
+        euler = nx.eulerian_circuit(dg, source=self.depot)
+        tours, curr = [], [self.depot]
+        for u, v in euler:
+            curr.append(v)
+            if v == self.depot:
+                tours.append(curr)
+                curr = [self.depot]
+        if len(curr) > 1:
+            tours.append(curr)
+        return tours
+```
+
+|                                                                                                 ![CVRP Example](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/cvrp_example.png)                                                                                                 |
+| :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+| The Capacitated Vehicle Routing Problem (CVRP) asks for the shortest possible routes that visits every vertex exactly once and returns to the starting vertex. The depot is the starting point and the end point of the tour. The graph is weighted, with a capacity constraint of 15 on the vehicle. |
+
+> [!WARNING]
+>
+> While the `add_multiple_circuit` constraint enables additional LNS strategies
+> and seem to improve the lower bounds, using the vanilla Miller-Tucker-Zemlin
+> (MTZ) formulation can be more efficient for the CVRP. Both are more efficient
+> than using `add_circuit` on multiple copies of the graph, but `add_ciruit`
+> allows more flexibility when trying to model concrete tours, instead of just a
+> set of tours, e.g., prohibiting that two nodes are visited in the same tour is
+> much more difficult to express with `add_multiple_circuit` because we do not
+> have separate variables per tour (which of course comes at a price). You can
+> find all three implementations for the CVRP
+> [here](https://github.com/d-krupke/cpsat-primer/blob/main/examples/cvrp/).
 
 #### Performance of `add_circuit` for the TSP
 

@@ -1,8 +1,13 @@
 import networkx as nx
 from ortools.sat.python import cp_model
-from .utils import ExpectFeasible, ExpectInfeasible, ExpectObjective
+from .utils import (
+    ExpectModelFeasible,
+    ExpectModelInfeasible,
+    ExpectObjectiveValue,
+    assert_optimal,
+)
 
-from .cvrp_mtz import MtzBasedFormulation
+from .cvrp_mtz import CvrpVanillaMtz
 
 
 def _generate_test_graph(n: int = 5) -> nx.Graph:
@@ -15,59 +20,57 @@ def _generate_test_graph(n: int = 5) -> nx.Graph:
 
 
 def test_mtz_feasibility():
-    with ExpectFeasible() as model:
+    with ExpectModelFeasible() as model:
         graph = _generate_test_graph()
-        _ = MtzBasedFormulation(graph, depot=0, capacity=5, model=model)
+        _ = CvrpVanillaMtz(graph, depot=0, capacity=5, model=model)
 
 
 def test_mtz_infeasible_zero_capacity():
-    with ExpectInfeasible() as model:
+    with ExpectModelInfeasible() as model:
         graph = _generate_test_graph()
-        _ = MtzBasedFormulation(graph, depot=0, capacity=0, model=model)
+        _ = CvrpVanillaMtz(graph, depot=0, capacity=0, model=model)
 
 
 def test_mtz_feasible_minimal_capacity():
-    with ExpectFeasible() as model:
+    with ExpectModelFeasible() as model:
         graph = _generate_test_graph()
-        _ = MtzBasedFormulation(graph, depot=0, capacity=1, model=model)
+        _ = CvrpVanillaMtz(graph, depot=0, capacity=1, model=model)
 
 
 def test_mtz_optimal_objective():
-    with ExpectObjective(5) as model:
+    with ExpectObjectiveValue(5) as model:
         graph = _generate_test_graph()
-        cmc = MtzBasedFormulation(graph, depot=0, capacity=5, model=model)
+        cmc = CvrpVanillaMtz(graph, depot=0, capacity=5, model=model)
         model.minimize(cmc.weight(label="weight"))
 
 
 def test_mtz_conflicting_arcs():
-    with ExpectInfeasible() as model:
+    with ExpectModelInfeasible() as model:
         graph = _generate_test_graph()
-        cmc = MtzBasedFormulation(graph, depot=0, capacity=5, model=model)
+        cmc = CvrpVanillaMtz(graph, depot=0, capacity=5, model=model)
         model.add(cmc.is_arc_used(1, 2) == 1)
         model.add(cmc.is_arc_used(2, 1) == 1)
 
 
 def test_mtz_conflicting_arcs_direct():
-    with ExpectFeasible() as model:
+    with ExpectModelFeasible() as model:
         graph = _generate_test_graph()
-        cmc = MtzBasedFormulation(graph, depot=0, capacity=5, model=model)
+        cmc = CvrpVanillaMtz(graph, depot=0, capacity=5, model=model)
         model.add(cmc.is_arc_used(0, 2) == 1)
         model.add(cmc.is_arc_used(2, 0) == 1)
 
 
 def test_mtz_limited_capacity():
-    with ExpectObjective(8) as model:
+    with ExpectObjectiveValue(8) as model:
         graph = _generate_test_graph()
-        cvrp = MtzBasedFormulation(graph, depot=0, capacity=1, model=model)
+        cvrp = CvrpVanillaMtz(graph, depot=0, capacity=1, model=model)
         model.minimize(cvrp.weight(label="weight"))
 
 
 def test_mtz_extract_tours():
-    model = cp_model.CpModel()
     graph = _generate_test_graph()
-    cvrp = MtzBasedFormulation(graph, depot=0, capacity=1, model=model)
+    cvrp = CvrpVanillaMtz(graph, depot=0, capacity=1)
     solver = cp_model.CpSolver()
-    status = solver.solve(model)
-    assert status == cp_model.OPTIMAL
+    assert_optimal(solver=solver, model=cvrp.model)
     tours = cvrp.extract_tours(solver)
     assert len(tours) == 4, f"Expected 4 tours, but got {len(tours)}."

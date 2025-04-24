@@ -2,7 +2,7 @@ import networkx as nx
 from ortools.sat.python import cp_model
 
 
-class MtzBasedFormulation:
+class CvrpVanillaMtz:
     """CVRP via MTZ-based formulation using CP-SAT."""
 
     def __init__(
