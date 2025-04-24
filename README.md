@@ -1779,21 +1779,34 @@ various tour and path problems. Explore further examples:
 
 #### `add_multiple_circuit`
 
-If we have a problem where we need to do multiple tours from a depot, we can
-also utilize the `add_multiple_circuit` constraint. This constraint is similar
-to `add_circuit`, but it allows a depot to be visited multiple times. Without
-any further constraints, visiting any nodes multiple times is rarely optimal (or
-should more efficiently be modelled by simply replacing all edges for which this
-is true by a virtual edge that returns to the depot as this would violate the
-triangle inequality and generally makes it more difficult to optimize). However,
-one can actually connect the arc usage with some resource usage, allowing to,
-e.g., nicely model the Capacitated Vehicle Routing Problem (CVRP), where we have
-a depot and our vehicles can only carry a certain amount of goods. Every node
-comes with a certain demand and we want to minimize the total distance travelled
-while ensuring that we do not have to carry more than the capacity on each trip.
+When solving problems involving multiple trips starting from a depot, we can use
+the `add_multiple_circuit` constraint. This constraint is similar to
+`add_circuit` but explicitly allows the depot to be visited multiple times. Like
+`add_circuit`, the `add_multiple_circuit` constraint supports optional vertices
+through self-loops.
 
-`add_multiple_circuit` also support optional vertices via self-loops, just like
-`add_circuit`.
+This feature is particularly useful for modeling Vehicle Routing Problems (VRP),
+where multiple tours originate from a single depot. Usually, VRP includes
+additional constraints since, otherwise, returning to the depot unnecessarily is
+suboptimal. While duplicating the graph and applying `add_circuit` on each copy
+is an alternative, using `add_multiple_circuit` avoids the need for multiple
+graph copies and corresponding variable sets, allowing a single set of variables
+and edges.
+
+A disadvantage of this method is that expressing certain constraints, such as
+prohibiting two nodes from being visited during the same trip, becomes more
+complex since all trips share variables. Nevertheless, many constraints can
+still be modeled effectively, such as vehicle capacity in the Capacitated
+Vehicle Routing Problem (CVRP). The CVRP is a classical optimization problem in
+operations research and logistics, which involves determining the shortest
+possible set of routes for a fleet of identical vehicles starting and ending at
+a single depot (this can also be the same vehicle doing multiple trips). Each
+customer must be visited exactly once, with the constraint that the total demand
+serviced on each trip does not exceed the vehicle capacity.
+
+The following code illustrates implementing the CVRP using the
+`add_multiple_circuit` constraint by introducing an additional variable to track
+vehicle capacity at each vertex.
 
 ```python
 from typing import Hashable
@@ -1880,21 +1893,17 @@ class CvrpMultiCircuit:
         return tours
 ```
 
-|                                                                                                 ![CVRP Example](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/cvrp_example.png)                                                                                                 |
-| :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
-| The Capacitated Vehicle Routing Problem (CVRP) asks for the shortest possible routes that visits every vertex exactly once and returns to the starting vertex. The depot is the starting point and the end point of the tour. The graph is weighted, with a capacity constraint of 15 on the vehicle. |
+|                                                                                                                 ![CVRP Example](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/cvrp_example.png)                                                                                                                  |
+| :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+| The Capacitated Vehicle Routing Problem (CVRP) seeks the shortest possible routes that visit every vertex exactly once and return to the starting vertex. The depot acts as the starting and ending point of each tour. The example graph is weighted by roughly its geometric distance, with a vehicle capacity constraint set to 15. |
 
 > [!WARNING]
 >
-> While the `add_multiple_circuit` constraint enables additional LNS strategies
-> and seem to improve the lower bounds, using the vanilla Miller-Tucker-Zemlin
-> (MTZ) formulation can be more efficient for the CVRP. Both are more efficient
-> than using `add_circuit` on multiple copies of the graph, but `add_ciruit`
-> allows more flexibility when trying to model concrete tours, instead of just a
-> set of tours, e.g., prohibiting that two nodes are visited in the same tour is
-> much more difficult to express with `add_multiple_circuit` because we do not
-> have separate variables per tour (which of course comes at a price). You can
-> find all three implementations for the CVRP
+> Although the `add_multiple_circuit` constraint enables additional LNS
+> strategies and may improve lower bounds, using the standard
+> Miller-Tucker-Zemlin (MTZ) formulation can sometimes be more efficient for the
+> CVRP. Both methods outperform the use of `add_circuit` on multiple graph
+> copies. Implementations for all three CVRP modeling strategies can be found
 > [here](https://github.com/d-krupke/cpsat-primer/blob/main/examples/cvrp/).
 
 #### Performance of `add_circuit` for the TSP
