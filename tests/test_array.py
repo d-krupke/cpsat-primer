@@ -84,6 +84,6 @@ def test_inverse_constraint():
         # Solve the model
         status = solver.solve(model)
 
-        assert (
-            status == cp_model.OPTIMAL
-        ), "The model did not solve to optimal even though it should be feasible."
+        assert status == cp_model.OPTIMAL, (
+            "The model did not solve to optimal even though it should be feasible."
+        )

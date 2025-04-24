@@ -45,6 +45,6 @@ def test_automaton_model():
         solver = cp_model.CpSolver()
         status = solver.solve(model)
 
-        assert (
-            status == expected_status
-        ), f"Test failed for solution {solution}. Expected status {expected_status}, got {status}."
+        assert status == expected_status, (
+            f"Test failed for solution {solution}. Expected status {expected_status}, got {status}."
+        )

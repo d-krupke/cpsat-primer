@@ -106,12 +106,12 @@ def test_saved_test_cases():
         with open(subfolder / "solution.json") as f:
             solution = KnapsackSolution.model_validate_json(f.read())
         new_solution = solve_knapsack(instance, config)
-        assert (
-            new_solution.objective <= solution.upper_bound
-        ), "New solution is better than the previous upper bound: One has to be wrong."
-        assert (
-            solution.objective <= new_solution.upper_bound
-        ), "Old solution is better than the new upper bound: One has to be wrong."
+        assert new_solution.objective <= solution.upper_bound, (
+            "New solution is better than the previous upper bound: One has to be wrong."
+        )
+        assert solution.objective <= new_solution.upper_bound, (
+            "Old solution is better than the new upper bound: One has to be wrong."
+        )
         # Do not test for the selected items, as the solver might return a different solution of the same quality
 
 

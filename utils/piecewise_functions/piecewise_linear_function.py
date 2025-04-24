@@ -327,9 +327,9 @@ def generate_integer_linear_expression_from_two_points(
     lcm = math.lcm(abs(a), abs(b))
     assert lcm % a == 0, "There should be no rounding errors"
     y_scaling = lcm // abs(a)
-    assert (
-        y_scaling > 0
-    ), "The scaling factor should be positive as otherwise the direction of the inequality would change"
+    assert y_scaling > 0, (
+        "The scaling factor should be positive as otherwise the direction of the inequality would change"
+    )
     # The gradient by which y increases for each increase in x
     # The true gradient is gradient/y_scaling, but we want things to be integer
     gradient = (a * y_scaling) // b

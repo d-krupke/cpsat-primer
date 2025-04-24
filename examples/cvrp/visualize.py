@@ -145,7 +145,7 @@ def plot_cvrp_solution(
 
         # Add info about this route to legend
         if show_loads:
-            route_label = f"Route {i+1}: Load {tour_demand}"
+            route_label = f"Route {i + 1}: Load {tour_demand}"
             if vehicle_capacity:
                 utilization = tour_demand / vehicle_capacity * 100
                 route_label += f" ({utilization:.1f}%)"
@@ -295,13 +295,13 @@ def plot_cvrp_solution(
 
         stats_lines.append(f"Vehicle Capacity: {vehicle_capacity}")
         stats_lines.append(
-            f"Max Route Load: {max_load} ({max_load/vehicle_capacity*100:.1f}%)"
+            f"Max Route Load: {max_load} ({max_load / vehicle_capacity * 100:.1f}%)"
         )
         stats_lines.append(
-            f"Min Route Load: {min_load} ({min_load/vehicle_capacity*100:.1f}%)"
+            f"Min Route Load: {min_load} ({min_load / vehicle_capacity * 100:.1f}%)"
         )
         stats_lines.append(
-            f"Avg Route Load: {avg_load:.1f} ({avg_load/vehicle_capacity*100:.1f}%)"
+            f"Avg Route Load: {avg_load:.1f} ({avg_load / vehicle_capacity * 100:.1f}%)"
         )
 
     if show_objective:
