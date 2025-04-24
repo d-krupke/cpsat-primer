@@ -33,7 +33,10 @@ def test_cvrp_feasible_with_enough_vehicles():
 def test_cvrp_objective_value():
     with ExpectObjective(5) as model:
         graph = _generate_test_graph()
-        _ = CvrpModel(graph, depot=0, vehicle_capacity=5, num_vehicles=2, model=model)
+        cvrp = CvrpModel(
+            graph, depot=0, vehicle_capacity=5, num_vehicles=2, model=model
+        )
+        cvrp.minimize_weight()
 
 
 def test_cvrp_infeasible_with_multi_visit():
@@ -49,4 +52,7 @@ def test_cvrp_infeasible_with_multi_visit():
 def test_cvrp_objective_with_many_vehicles():
     with ExpectObjective(8) as model:
         graph = _generate_test_graph()
-        _ = CvrpModel(graph, depot=0, vehicle_capacity=1, num_vehicles=7, model=model)
+        cvrp = CvrpModel(
+            graph, depot=0, vehicle_capacity=1, num_vehicles=7, model=model
+        )
+        cvrp.minimize_weight()

@@ -3,108 +3,89 @@ from ortools.sat.python import cp_model
 
 
 class MtzBasedFormulation:
+    """CVRP via MTZ-based formulation using CP-SAT."""
+
     def __init__(
         self,
         graph: nx.Graph,
         depot,
-        vehicle_capacity: int,
+        capacity: int,
         demand_label: str = "demand",
         model: cp_model.CpModel | None = None,
     ):
-        self.graph = graph
-        self.depot = depot
-        self.vehicle_capacity = vehicle_capacity
-        self.model = cp_model.CpModel() if model is None else model
+        self.graph, self.depot = graph, depot
+        self.model = model or cp_model.CpModel()
+        self.capacity = capacity
         self.demand_label = demand_label
 
-        self.vertex_labels = list(graph.nodes())
-        # move depot to the first position
-        if self.vertex_labels[0] != depot:
-            self.vertex_labels.remove(depot)
-            self.vertex_labels.insert(0, depot)
-        self.vertex_indices = {i: v for i, v in enumerate(self.vertex_labels)}
+        # Vertex list with depot first
+        self.vertices = [depot] + [v for v in graph.nodes() if v != depot]
+        self.index = {v: i for i, v in enumerate(self.vertices)}
 
-        # Arc Variables
-        self.arc_vars = {}
-        for v, w in graph.edges:
-            i = self.vertex_indices[v]
-            j = self.vertex_indices[w]
-            assert i != j, "The shouldn't be any self-loops in the graph."
-            x1 = self.model.new_bool_var(f"arc_{i}_{j}")
-            x2 = self.model.new_bool_var(f"arc_{j}_{i}")
-            self.arc_vars[(i, j)] = x1
-            self.arc_vars[(j, i)] = x2
+        # Arc variables for both directions
+        self.arc_vars = {
+            (i, j): self.model.new_bool_var(f"arc_{i}_{j}")
+            for u, v in graph.edges
+            for i, j in ((self.index[u], self.index[v]), (self.index[v], self.index[u]))
+        }
 
-        self._enforce_flow()
-        self._enforce_capacity_via_only_if()
+        # Flow and capacity constraints
+        self._add_flow_constraints()
+        self._add_capacity_constraints()
 
-    def _enforce_flow(self):
-        for v in self.graph.nodes:
+    def _add_flow_constraints(self):
+        for v in self.vertices:
             if v == self.depot:
                 continue
-            # flow conservation
-            nbrs = [self.vertex_indices[nbr] for nbr in self.graph.neighbors(v)]
-            i = self.vertex_indices[v]
-            assert i not in nbrs
+            i = self.index[v]
+            nbrs = [self.index[n] for n in self.graph.neighbors(v)]
             incoming = sum(self.arc_vars[(j, i)] for j in nbrs)
             outgoing = sum(self.arc_vars[(i, j)] for j in nbrs)
             self.model.add(incoming == outgoing)
             self.model.add(incoming == 1)
 
-    def _enforce_capacity_via_only_if(self):
-        # Capacity Variables
-        self.capacity_vars = [
-            self.model.new_int_var(0, self.vehicle_capacity, f"capacity_{i}")
-            for i in range(len(self.vertex_labels))
+    def _add_capacity_constraints(self):
+        self.load = [
+            self.model.new_int_var(0, self.capacity, f"load_{i}")
+            for i in range(len(self.vertices))
         ]
-        # Capacity Constraints
-        for (i, j), x in self.arc_vars.items():
+        for (i, j), var in self.arc_vars.items():
             if j == 0:
-                continue  # depot
-            # We only need to propagate the used capacity from the previous node, the variable limit will enforce the capacity
-            d = self.graph.nodes[self.vertex_labels[j]][self.demand_label]
-            if d <= 0:
+                continue
+            demand = self.graph.nodes[self.vertices[j]].get(self.demand_label)
+            if demand is None or demand <= 0:
                 raise ValueError(
-                    f"Demand for node {self.vertex_labels[j]} is {d}, but it must be positive for MTZ-based formulation."
+                    f"Demand for {self.vertices[j]} must be positive, got {demand}."
                 )
+            self.model.add(self.load[j] >= self.load[i] + demand).only_enforce_if(var)
 
-            self.model.add(
-                self.capacity_vars[j] >= self.capacity_vars[i] + d
-            ).only_enforce_if(x)
-
-    def is_arc_used(self, v, w) -> cp_model.BoolVarT:
-        return self.arc_vars[(self.vertex_indices[v], self.vertex_indices[w])]
+    def is_arc_used(self, u, v) -> cp_model.BoolVarT:
+        return self.arc_vars[(self.index[u], self.index[v])]
 
     def weight(self, label: str = "weight") -> cp_model.LinearExprT:
-        # we get the length from the edge labels on the graph
-        length = sum(
-            self.arc_vars[(i, j)]
-            * self.graph[self.vertex_labels[i]][self.vertex_labels[j]][label]
-            + self.arc_vars[(j, i)]
-            * self.graph[self.vertex_labels[i]][self.vertex_labels[j]][label]
-            for i, j in self.graph.edges
+        return sum(
+            var * self.graph[self.vertices[i]][self.vertices[j]][label]
+            for (i, j), var in self.arc_vars.items()
         )
-        return length
 
-    def extract_tours(self, solver: cp_model.CpSolver) -> list:
-        # computer the euler tour and then split it at the depot to get the subtours.
-        graph = nx.DiGraph()
-        for (i, j), x in self.arc_vars.items():
-            if solver.value(x) == 1:
-                graph.add_edge(self.vertex_labels[i], self.vertex_labels[j])
-        # get the euler tour
-        tour = list(nx.eulerian_circuit(graph, source=self.depot))
-        # split the tour at the depot
-        tours = []
-        current_tour = []
-        for i, j in tour:
-            if i != self.depot or len(current_tour) == 0:
-                current_tour.append(i)
-            if j == self.depot:
-                if len(current_tour) > 0:
-                    current_tour.append(j)
-                    tours.append(current_tour)
-                    current_tour = []
-        if len(current_tour) > 0:  # Handle case where last tour doesn't end at depot
-            tours.append(current_tour)
+    def minimize_weight(self, label: str = "weight"):
+        self.model.minimize(self.weight(label=label))
+
+    def extract_tours(self, solver: cp_model.CpSolver) -> list[list]:
+        dg = nx.DiGraph(
+            [
+                (self.vertices[i], self.vertices[j])
+                for (i, j), var in self.arc_vars.items()
+                if solver.value(var)
+            ]
+        )
+        euler = nx.eulerian_circuit(dg, source=self.depot)
+        tours, curr = [], [self.depot]
+        for u, v in euler:
+            curr.append(v)
+            if v == self.depot:
+                tours.append(curr)
+                curr = [self.depot]
+        if len(curr) > 1:
+            tours.append(curr)
         return tours

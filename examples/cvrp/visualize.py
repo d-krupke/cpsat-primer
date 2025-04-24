@@ -1,24 +1,28 @@
+from typing import Hashable
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import networkx as nx
 import numpy as np
 from matplotlib.patches import Patch
 import matplotlib.cm as cm
+from matplotlib.lines import Line2D
+from matplotlib.figure import Figure
+from matplotlib.axes import Axes
 
 
 def plot_cvrp_solution(
-    G,
-    depot,
-    tours,
-    vehicle_capacity=None,
-    figsize=(14, 10),
-    title=None,
-    show_demands=True,
-    show_loads=True,
-    show_objective=True,
-    node_size=100,
-    show_legend=True,
-):
+    G: nx.Graph,
+    depot: Hashable,
+    tours: list[list[Hashable]],
+    vehicle_capacity: int | None = None,
+    figsize: tuple[int, int] = (14, 10),
+    title: str | None = None,
+    show_demands: bool = True,
+    show_loads: bool = True,
+    show_objective: bool = True,
+    node_size: int = 100,
+    show_legend: bool = True,
+) -> tuple[Figure, Axes]:
     """
     Enhanced visualization of CVRP solution with route-specific coloring,
     demand information shown by node size and color intensity, and route statistics.
@@ -50,7 +54,7 @@ def plot_cvrp_solution(
     route_colors = list(mcolors.TABLEAU_COLORS.values())
 
     # Create a color map for demand values
-    demand_cmap = cm.YlOrRd  # Yellow-Orange-Red colormap
+    demand_cmap = cm.get_cmap("YlOrRd")  # Yellow-Orange-Red colormap
 
     # Calculate min and max demands for scaling
     min_demand = min(demands.values())
@@ -82,10 +86,10 @@ def plot_cvrp_solution(
     )
 
     # Prepare legend for routes
-    route_legend_elements = []
+    route_legend_elements: list[Patch] = []
 
     # Calculate total objective value if requested
-    total_distance = 0
+    total_distance: float = 0
 
     # Draw each tour with a different color
     for i, tour in enumerate(tours):
@@ -110,7 +114,7 @@ def plot_cvrp_solution(
         ax.plot(route_x, route_y, c=route_color, linewidth=2.5, alpha=0.7, zorder=2)
 
         # Calculate route distance if needed
-        route_distance = 0
+        route_distance: float = 0
         if show_objective:
             for j in range(len(full_tour) - 1):
                 u, v = full_tour[j], full_tour[j + 1]
@@ -160,7 +164,7 @@ def plot_cvrp_solution(
 
     # Draw all non-depot nodes with size/color based on demand
     if show_demands:
-        demand_legend_elements = []
+        demand_legend_elements: list = []
 
         # Draw all non-depot nodes with different sizes based on demand
         for node in G.nodes():
@@ -227,17 +231,16 @@ def plot_cvrp_solution(
     # Add legends - Fixed to ensure they always show up
     if show_legend:
         # Create figure legend items
-        legend_items = []
-        legend_labels = []
+        legend_items: list = []
+        legend_labels: list[str] = []
 
         # Add route legend items
         for i, item in enumerate(route_legend_elements):
             legend_items.append(Patch(facecolor=item.get_facecolor(), alpha=0.7))
-            legend_labels.append(item.get_label())
-
+            legend_labels.append(item.get_label())  # type: ignore
         # Add depot legend item
         legend_items.append(
-            plt.Line2D(
+            Line2D(
                 [0],
                 [0],
                 marker="*",
@@ -247,6 +250,7 @@ def plot_cvrp_solution(
                 markeredgecolor="black",
             )
         )
+
         legend_labels.append("Depot")
 
         # Add demand legend if needed
@@ -255,18 +259,18 @@ def plot_cvrp_solution(
                 size_factor = 0.5 + 1.5 * (d - min_demand) / max(
                     1, max_demand - min_demand
                 )
-                color_intensity = (d - min_demand) / max(1, max_demand - min_demand)
                 legend_items.append(
-                    plt.Line2D(
+                    Line2D(
                         [0],
                         [0],
                         marker="o",
                         color="w",
-                        markerfacecolor=demand_cmap(color_intensity),
+                        markerfacecolor=demand_cmap(color_intensity),  # type: ignore
                         markersize=np.sqrt(size_factor) * 5,
                         markeredgecolor="black",
                     )
                 )
+
                 legend_labels.append(f"Demand: {d}")
 
         # Create the legend
@@ -280,7 +284,7 @@ def plot_cvrp_solution(
         )
 
     # Summary statistics
-    stats_lines = []
+    stats_lines: list[str] = []
     stats_lines.append(f"Number of Routes: {len(tours)}")
 
     if vehicle_capacity:
@@ -319,6 +323,6 @@ def plot_cvrp_solution(
     )
 
     # Adjust layout to ensure the legend is visible
-    plt.tight_layout(rect=[0, 0, 0.85, 1])  # Make room for the legend
+    plt.tight_layout(rect=(0, 0, 0.85, 1))  # Make room for the legend
 
     return fig, ax
