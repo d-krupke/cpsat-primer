@@ -7,256 +7,168 @@ use to generate the website.
 import logging
 import re
 from pathlib import Path
+from typing import List, Callable
+
+# Configuration for each box type
+BOX_CONFIG = {
+    "warning": {
+        "tokens": ["> :warning:", "> [!WARNING]"],
+        "icon": "warning_platypus.webp",
+        "img_width": "10%",
+        "content_width": "90%",
+        "img_style": "",
+        "reverse": False,
+    },
+    "tip": {
+        "tokens": ["> [!TIP]"],
+        "icon": "idea_platypus.webp",
+        "img_width": "10%",
+        "content_width": "90%",
+        "img_style": "",
+        "reverse": False,
+    },
+    "info": {
+        "tokens": ["> [!NOTE]"],
+        "icon": "info_platypus.webp",
+        "img_width": "10%",
+        "content_width": "90%",
+        "img_style": "",
+        "reverse": False,
+    },
+    "reference": {
+        "tokens": ["> :reference:"],
+        "icon": "book_platypus.webp",
+        "img_width": "10%",
+        "content_width": "90%",
+        "img_style": "",
+        "reverse": False,
+    },
+    "video": {
+        "tokens": ["> :video:"],
+        "icon": "tv_platypus.webp",
+        "img_width": "15%",
+        "content_width": "85%",
+        "img_style": "padding-right: 10px; border-radius: 4px;",
+        "reverse": True,
+    },
+}
+BASE_URL = "https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/"
+COMMON_TABLE_STYLE = (
+    "width: 100%; border: 2px solid #ccc; border-radius: 8px; "
+    "box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);"
+)
 
 
-def _create_pretty_warning_box(msg):
+def _create_box(msg: str, config: dict) -> str:
+    """
+    Render a generic HTML box.
+    """
+    icon_url = BASE_URL + config["icon"]
+    # build image and content divs
+    img_div = (
+        f'<div style="width: {config["img_width"]}; {config["img_style"]}">'
+        f'<img src="{icon_url}" alt="{config["icon"]}" style="width: 100%;">'
+        f"</div>"
+    )
+    content_div = f'<div style="width: {config["content_width"]};">\n\n{msg}\n</div>'
+    # reverse order if needed (video puts content first)
+    left, right = (
+        (img_div, content_div) if not config["reverse"] else (content_div, img_div)
+    )
+
     return f"""
-<table style="width: 100%; border: 2px solid #ccc; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
-<tr>
-<td style="padding: 10px;">
-<div style="display: flex; justify-content: space-between; align-items: center;">
-  <div style="width: 10%;">
-    <img src="https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/warning_platypus.webp" alt="Description of image" style="width: 100%;">
-  </div>
-  <div style="width: 90%;">
-
-{msg}
-
-  </div>
-</div>
+<table style="{COMMON_TABLE_STYLE}">
+  <tr>
+    <td style="padding: 10px;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        {left}
+        {right}
+      </div>
     </td>
   </tr>
 </table>
+"""
+
+
+def _replace_boxes(
+    content: str, tokens: List[str], create_func: Callable[[str], str]
+) -> str:
     """
-
-
-def _create_tip_box(msg):
-    return f"""
-<table style="width: 100%; border: 2px solid #ccc; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
-<tr>
-<td style="padding: 10px;">
-<div style="display: flex; justify-content: space-between; align-items: center;">
-  <div style="width: 10%;">
-    <img src="https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/idea_platypus.webp" alt="Description of image" style="width: 100%;">
-  </div>
-  <div style="width: 90%;">
-
-{msg}
-
-  </div>
-</div>
-    </td>
-  </tr>
-</table>
+    Generic box replacement logic: collects lines starting with any of the given tokens
+    until a non-quoted line appears, then uses create_func to render.
     """
-
-
-def _create_info_box(msg):
-    return f"""
-<table style="width: 100%; border: 2px solid #ccc; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
-<tr>
-<td style="padding: 10px;">
-<div style="display: flex; justify-content: space-between; align-items: center;">
-                <div style="width: 10%;">
-                    <img src="https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/info_platypus.webp" alt="Description of image" style="width: 100%;">
-                </div>
-                <div style="width: 90%;">
-
-{msg}
-
-  </div>
-</div>
-    </td>
-  </tr>
-</table>
-    """
-
-
-def _create_reference_box(msg):
-    return f"""
-<table style="width: 100%; border: 2px solid #ccc; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
-<tr>
-<td style="padding: 10px;">
-<div style="display: flex; justify-content: space-between; align-items: center;">
-                <div style="width: 10%;">
-                    <img src="https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/book_platypus.webp" alt="Description of image" style="width: 100%;">
-                </div>
-                <div style="width: 90%;">
-
-{msg}
-
-  </div>
-</div>
-    </td>
-  </tr>
-</table>
-    """
-
-
-def _create_video_box(msg):
-    return f"""
-<table style="width: 100%; border: 2px solid #ccc; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
-<tr>
-<td style="padding: 10px;">
-<div style="display: flex; justify-content: space-between; align-items: center;">
-
-<div style="width: 85%;">
-{msg}
-</div>
-<div style="width: 15%; padding-right: 10px;">
-<img src="https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/tv_platypus.webp" alt="Description of image" style="width: 100%; border-radius: 4px;">
-</div>
-</div>
-</td>
-</tr>
-</table>
-    """
-
-
-def replace_video_boxes(content):
-    """
-    A video box starts with `> :video:` and ends with a line that does not start with `>`.
-    """
-    lines = content.split("\n")
-    new_content = ""
-    collect_video = False
-    video_msg = ""
+    lines = content.splitlines(keepends=True)
+    out, collecting, buffer = [], False, []
     for line in lines:
-        if line.startswith("> :video:"):
-            collect_video = True
-            video_msg += line[len("> :video:") :] + "\n"
-        elif collect_video:
-            if line == ">":
+        if not collecting and any(line.startswith(tok) for tok in tokens):
+            collecting = True
+            # strip the matched token
+            for tok in tokens:
+                if line.startswith(tok):
+                    buffer.append(line[len(tok) :].lstrip())
+                    break
+        elif collecting:
+            if line.strip() == ">":
                 continue
             if line.startswith("> "):
-                video_msg += line[len("> ") :] + "\n"
+                buffer.append(line[2:])
             else:
-                new_content += _create_video_box(video_msg)
-                new_content += "\n"
-                collect_video = False
-                video_msg = ""
-                new_content += line + "\n"
+                # end of box block
+                msg = "".join(buffer)
+                out.append(create_func(msg))
+                out.append("\n")
+                collecting = False
+                buffer = []
+                out.append(line)
         else:
-            new_content += line + "\n"
-    return new_content
+            out.append(line)
+    # handle case where content ends while collecting
+    if collecting and buffer:
+        out.append(create_func("".join(buffer)))
+    return "".join(out)
 
 
-def replace_reference_boxes(content):
-    """
-    A reference box starts with `> :reference:` and ends with a line that does not start with `>`.
-    For github markdown, it just converts to an info box.
-    """
-    lines = content.split("\n")
-    new_content = ""
-    collect_reference = False
-    reference_msg = ""
-    for line in lines:
-        if line.startswith("> :reference:"):
-            collect_reference = True
-            reference_msg += line[len("> :reference:") :] + "\n"
-        elif collect_reference:
-            if line == ">":
-                continue
-            if line.startswith("> "):
-                reference_msg += line[len("> ") :] + "\n"
-            else:
-                new_content += _create_reference_box(reference_msg)
-                new_content += "\n"
-                collect_reference = False
-                reference_msg = ""
-                new_content += line + "\n"
-        else:
-            new_content += line + "\n"
-    return new_content
+# Specific replace functions
 
 
-def replace_warning_boxes(content):
-    """
-    A warning box starts with `> :warning:` and ends with a line that does not start with `>`.
-    """
-    lines = content.split("\n")
-    new_content = ""
-    collect_warning = False
-    warning_msg = ""
-    for line in lines:
-        if line.startswith("> :warning:"):
-            collect_warning = True
-            warning_msg += line[len("> :warning:") :] + "\n"
-        elif line.startswith("> [!WARNING]"):
-            collect_warning = True
-            warning_msg += line[len("> [!WARNING]") :] + "\n"
-        elif collect_warning:
-            if line == ">":
-                continue
-            if line.startswith("> "):
-                warning_msg += line[len("> ") :] + "\n"
-            else:
-                new_content += _create_pretty_warning_box(warning_msg)
-                new_content += "\n"
-                collect_warning = False
-                warning_msg = ""
-                new_content += line + "\n"
-        else:
-            new_content += line + "\n"
-    return new_content
+def replace_warning_boxes(content: str) -> str:
+    return _replace_boxes(
+        content,
+        BOX_CONFIG["warning"]["tokens"],
+        lambda msg: _create_box(msg, BOX_CONFIG["warning"]),
+    )
 
 
-def replace_tip_boxes(content):
-    """
-    A tip box starts with `> [!TIP]` and ends with a line that does not start with `>`.
-    """
-    lines = content.split("\n")
-    new_content = ""
-    collect_tip = False
-    tip_msg = ""
-    for line in lines:
-        if line.startswith("> [!TIP]"):
-            collect_tip = True
-            tip_msg += line[len("> [!TIP]") :] + "\n"
-        elif collect_tip:
-            if line == ">":
-                continue
-            if line.startswith("> "):
-                tip_msg += line[len("> ") :] + "\n"
-
-            else:
-                new_content += _create_tip_box(tip_msg)
-                new_content += "\n"
-                collect_tip = False
-                tip_msg = ""
-                new_content += line + "\n"
-        else:
-            new_content += line + "\n"
-    return new_content
+def replace_tip_boxes(content: str) -> str:
+    return _replace_boxes(
+        content,
+        BOX_CONFIG["tip"]["tokens"],
+        lambda msg: _create_box(msg, BOX_CONFIG["tip"]),
+    )
 
 
-def replace_info_boxes(content):
-    """
-    An info box starts with `> [!NOTE]` and ends with a line that does not start with `>`.
-    """
-    lines = content.split("\n")
-    new_content = ""
-    collect_info = False
-    info_msg = ""
-    for line in lines:
-        if line.startswith("> [!NOTE]"):
-            collect_info = True
-            info_msg += line[len("> [!NOTE]") :] + "\n"
-        elif collect_info:
-            if line == ">":
-                continue
-            if line.startswith("> "):
-                info_msg += line[len("> ") :] + "\n"
+def replace_info_boxes(content: str) -> str:
+    return _replace_boxes(
+        content,
+        BOX_CONFIG["info"]["tokens"],
+        lambda msg: _create_box(msg, BOX_CONFIG["info"]),
+    )
 
-            else:
-                new_content += _create_info_box(info_msg)
-                new_content += "\n"
-                collect_info = False
-                info_msg = ""
-                new_content += line + "\n"
-        else:
-            new_content += line + "\n"
-    return new_content
+
+def replace_reference_boxes(content: str) -> str:
+    return _replace_boxes(
+        content,
+        BOX_CONFIG["reference"]["tokens"],
+        lambda msg: _create_box(msg, BOX_CONFIG["reference"]),
+    )
+
+
+def replace_video_boxes(content: str) -> str:
+    return _replace_boxes(
+        content,
+        BOX_CONFIG["video"]["tokens"],
+        lambda msg: _create_box(msg, BOX_CONFIG["video"]),
+    )
 
 
 def convert_for_mdbook(content):
