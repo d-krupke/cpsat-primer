@@ -4,6 +4,7 @@ It also converts the markdown files to a format that can be used by the `mdbook`
 use to generate the website.
 """
 
+import logging
 import os
 import re
 from pathlib import Path
@@ -283,29 +284,6 @@ def convert_for_mdbook(content):
     content = replace_video_boxes(content)
     # replace all `:warning:` with the unicode character for a warning sign.
     content = content.replace(":warning:", "⚠️")
-
-    # replace all anchor links `(#01-installation)` by `(./01_installation.md)`.
-    # you have to replace the `#` with `./` and `-` with `_`, and attach `.md` at the end.
-    def replace_relative(match):
-        md_path = match.group(1).replace("-", "_") + ".md"
-        all_md_files = [f for f in os.listdir() if f.endswith(".md")]
-        for file in all_md_files:
-            if file.endswith(md_path):
-                md_path = file
-                break
-        return f"(./{md_path})" if Path(md_path).exists() else f"(#{match.group(1)})"
-
-    explicit_replacements = {
-        "#chapters-machine-learning": "./chapters/machine_learning.md",
-    }
-    for key, value in explicit_replacements.items():
-        content = content.replace(key, value)
-
-    content = re.sub(
-        r"\(#(.*?)\)",
-        replace_relative,
-        content,
-    )
     # replace in all links that lead to a .png file the `github.com` with `raw.githubusercontent.com`.
     content = re.sub(
         r"\((.*?\.png)\)",
@@ -364,41 +342,178 @@ def convert_for_readme(content: str) -> str:
     content = content.replace("> :video:", "> [!TIP]")
     return content
 
+def collect_anchors(content) -> list[str]:
+    """
+    Collect all anchors in a file an return their names as a list.
+    This is important as we will have to replace the anchors by links in the mdBook version.
+    We only use html anchors of the form `<a name="04-modelling-circuit"></a>` and no markdown anchors.
+    """
+    # ignoring the closing tag `</a>` as we only need the name.
+    anchors = re.findall(r'<a\s+name\s*=\s*"(.*?)"\s*>', content)
+    # find and warn about duplicates
+    duplicates = [x for x in anchors if anchors.count(x) > 1]
+    if duplicates:
+        logging.warning(
+            f"Found duplicate anchors in {file}: {', '.join(duplicates)}. Please check the file for errors."
+        )
+    # warn if any anchor has a bad name
+    for anchor in anchors:
+        if not re.match(r"^[a-zA-Z0-9_-]+$", anchor):
+            logging.warning(
+                f"Anchor {anchor} in {file} has a bad name. Please check the file for errors."
+            )
+    return anchors
+
+def collect_anchor_links(content: str) -> list[str]:
+    """
+    Collect all anchor links in a file and return their names as a list.
+    This is important as we will have to replace the anchors by links in the mdBook version.
+    We only accept markdown links of the form `[text](#04-modelling-circuit)` and no html anchors.
+    """
+    # ignoring the closing tag `</a>` as we only need the name.
+    anchors = re.findall(r'\[.*?\]\(#(.*?)\)', content)
+    # warn if any anchor has a bad name
+    for anchor in anchors:
+        if not re.match(r"^[a-zA-Z0-9_-]+$", anchor):
+            logging.warning(
+                f"Anchor link {anchor} in {file} has a bad name. Please check the file for errors."
+            )
+    return anchors
+
+class MarkdownFile:
+    """
+    A class to represent a markdown file.
+    It has a name and a list of anchors.
+    """
+
+    def __init__(self, path: str, target: str):
+        self.path = path
+        self.target = target
+        self.url = path.replace(".md", ".html")
+        self.content = ""
+        with open(path, "r") as f:
+            self.content = f.read()
+        self.anchors = collect_anchors(self.content)
+        self.anchor_links = collect_anchor_links(self.content)
+
+    def get_anchor_url(self, anchor: str) -> str:
+        """
+        Get the url for an anchor.
+        The url is the path to the file + the anchor name.
+        """
+        if anchor not in self.anchors:
+            raise ValueError(
+                f"Anchor {anchor} not found in {self.path}. Available anchors: {self.anchors}"
+            )
+        return f"{self.url}#{anchor}"
+    
+
+class Document:
+    def __init__(self, files: list[MarkdownFile]):
+        self.files = files
+        self.files_by_name = {file.path: file for file in files}
+        self.anchors: dict[str, MarkdownFile] = {}
+        for file in files:
+            for anchor in file.anchors:
+                if anchor in self.anchors:
+                    raise ValueError(
+                        f"Anchor {anchor} already exists in {self.anchors[anchor]} and {file.path}"
+                    )
+                self.anchors[anchor] = file
+        
+    def get_anchor_url(self, anchor: str) -> str:
+        """
+        Get the url for an anchor.
+        The url is the path to the file + the anchor name.
+        """
+        if anchor not in self.anchors:
+            raise ValueError(
+                f"Anchor {anchor} not found. Available anchors: {self.anchors}"
+            )
+        return self.anchors[anchor].get_anchor_url(anchor)
+    
+    def write_readme(self, path: str):
+        """
+        Write the readme file.
+        The readme file is a concatenation of all files in the document.
+        """
+        with open(path, "w") as f:
+            f.write(
+                "*A book-style version of this primer is available at [https://d-krupke.github.io/cpsat-primer/](https://d-krupke.github.io/cpsat-primer/).*\n\n"
+            )
+            disclaimer = "<!-- This file was generated by the `build.py` script. Do not edit it manually. -->\n"
+            for file in self.files:
+                print(f"Adding {file.path} to README.md")
+                content = file.content
+                f.write(disclaimer)
+                f.write(f"<!-- {file.path} -->\n")
+                f.write(convert_for_readme(content))
+                f.write("\n\n")
+
+    def _replace_anchors_by_urls(self, content: str, anchors: dict[str, str]) -> str:
+        """
+        Replace all anchors in the content with their urls.
+        For this, all md links of the form `[text](#anchor)` are replaced with `[text](url)`.
+        The url is the path to the file + the anchor name.
+        Only the anchors that are in the anchors dict are replaced, as we do not want to replace
+        anchors within the same file.
+        """
+        for anchor, url in anchors.items():
+            # replace all links of the form `[text](#anchor)` with `[text](url)`
+            content = re.sub(
+                rf"\[([^\]]+)\]\(#({anchor})\)",
+                rf"[\1]({url})",
+                content,
+            )
+        return content
+
+    def _get_mdbook_content(self, file: MarkdownFile) -> str:
+        """
+        Get the content of a file for mdbook. This will have multiple parts replaced.
+        """
+        anchors = {
+            anchor: self.get_anchor_url(anchor)
+            for anchor, f in self.anchors.items()
+            if f != file  # skip anchors in the same file
+        }
+        content = file.content
+        content = self._replace_anchors_by_urls(content, anchors)
+        content = convert_for_mdbook(content)
+        return content
+
+    def write_mdbook(self, path: str):
+        """
+        Write the mdbook files.
+        The mdbook files are a concatenation of all files in the document.
+        """
+        for file in self.files:
+            content = self._get_mdbook_content(file)
+            target_path = Path(path) / file.target
+            print(f"Writing {file.path} to {target_path}")
+            target_path.parent.mkdir(parents=True, exist_ok=True)
+            with target_path.open("w") as book_file:
+                book_file.write(content)
+
 
 if __name__ == "__main__":
     # get all markdown files that start with a number
     # [f for f in os.listdir() if f.endswith(".md") and f[0].isdigit()]
-    markdown_files = [
-        "00_intro.md",
-        "01_installation.md",
-        "02_example.md",
-        "04_modelling.md",
-        "04B_advanced_modelling.md",
-        "05_parameters.md",
-        "understanding_the_log.md",
-        "07_under_the_hood.md",
-        "03_big_picture.md",
-        "06_coding_patterns.md",
-        "building_an_optimization_api.md",
-        "chapters/machine_learning.md",
-        "08_benchmarking.md",
-        "09_lns.md",
-    ]
-
-    # concat them and write them to `README.md`
-    with open("README.md", "w") as f:
-        f.write(
-            "*A book-style version of this primer is available at [https://d-krupke.github.io/cpsat-primer/](https://d-krupke.github.io/cpsat-primer/).*\n\n"
-        )
-        disclaimer = "<!-- This file was generated by the `build.py` script. Do not edit it manually. -->\n"
-        for file in markdown_files:
-            print(f"Adding {file} to README.md")
-            with open(file, "r") as current_file:
-                content = current_file.read()
-                f.write(disclaimer)
-                f.write(f"<!-- {file} -->\n")
-                f.write(convert_for_readme(content))
-                f.write("\n\n")
-                (Path("./.mdbook/") / file).parent.mkdir(parents=True, exist_ok=True)
-                with open(Path("./.mdbook/") / file, "w") as book_file:
-                    book_file.write(convert_for_mdbook(content))
+    document = Document([
+        MarkdownFile("00_intro.md", "00_intro.md"),
+        MarkdownFile("01_installation.md", "01_installation.md"),
+        MarkdownFile("02_example.md", "02_example.md"),
+        MarkdownFile("04_modelling.md", "04_modelling.md"),
+        MarkdownFile("04B_advanced_modelling.md", "04B_advanced_modelling.md"),
+        MarkdownFile("05_parameters.md", "05_parameters.md"),
+        MarkdownFile("understanding_the_log.md", "understanding_the_log.md"),
+        MarkdownFile("07_under_the_hood.md", "07_under_the_hood.md"),
+        MarkdownFile("03_big_picture.md", "03_big_picture.md"),
+        MarkdownFile("06_coding_patterns.md", "06_coding_patterns.md"),
+        MarkdownFile("building_an_optimization_api.md", "building_an_optimization_api.md"),
+        MarkdownFile("chapters/machine_learning.md", "chapters/machine_learning.md"),
+        MarkdownFile("08_benchmarking.md", "08_benchmarking.md"),
+        MarkdownFile("09_lns.md", "09_lns.md"),
+    ])
+    document.write_readme("README.md")
+    # write the mdbook files to the .mdbook directory
+    document.write_mdbook("./.mdbook/")
