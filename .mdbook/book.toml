@@ -5,7 +5,7 @@ multilingual = false
 src = "."
 title = "The CP-SAT Primer - Using and Understanding Google OR-Tools' CP-SAT Solver"
 [output.html]
-site-url = "cpsat-primer"
+site-url = "/cpsat-primer/"
 mathjax-support = true
 edit-url-template = "https://github.com/d-krupke/cpsat-primer/edit/main/{path}"
 git-repository-url = "https://github.com/d-krupke/cpsat-primer/"
