@@ -155,3 +155,4 @@ evaluations/tsp/2023-11-18_tsplib/PRIVATE_DATA
 .mdbook/building_an_optimization_api.md
 .DS_Store
 tests/test_data/knapsack
+.mdbook/chapters/machine_learning.md

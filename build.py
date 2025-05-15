@@ -5,7 +5,6 @@ use to generate the website.
 """
 
 import logging
-import os
 import re
 from pathlib import Path
 
@@ -342,6 +341,7 @@ def convert_for_readme(content: str) -> str:
     content = content.replace("> :video:", "> [!TIP]")
     return content
 
+
 def collect_anchors(content) -> list[str]:
     """
     Collect all anchors in a file an return their names as a list.
@@ -354,15 +354,16 @@ def collect_anchors(content) -> list[str]:
     duplicates = [x for x in anchors if anchors.count(x) > 1]
     if duplicates:
         logging.warning(
-            f"Found duplicate anchors in {file}: {', '.join(duplicates)}. Please check the file for errors."
+            f"Found duplicate anchors: {', '.join(duplicates)}. Please check the file for errors."
         )
     # warn if any anchor has a bad name
     for anchor in anchors:
         if not re.match(r"^[a-zA-Z0-9_-]+$", anchor):
             logging.warning(
-                f"Anchor {anchor} in {file} has a bad name. Please check the file for errors."
+                f"Anchor {anchor} has a bad name. Please check the file for errors."
             )
     return anchors
+
 
 def collect_anchor_links(content: str) -> list[str]:
     """
@@ -371,14 +372,15 @@ def collect_anchor_links(content: str) -> list[str]:
     We only accept markdown links of the form `[text](#04-modelling-circuit)` and no html anchors.
     """
     # ignoring the closing tag `</a>` as we only need the name.
-    anchors = re.findall(r'\[.*?\]\(#(.*?)\)', content)
+    anchors = re.findall(r"\[.*?\]\(#(.*?)\)", content)
     # warn if any anchor has a bad name
     for anchor in anchors:
         if not re.match(r"^[a-zA-Z0-9_-]+$", anchor):
             logging.warning(
-                f"Anchor link {anchor} in {file} has a bad name. Please check the file for errors."
+                f"Anchor link {anchor} has a bad name. Please check the file for errors."
             )
     return anchors
+
 
 class MarkdownFile:
     """
@@ -389,7 +391,7 @@ class MarkdownFile:
     def __init__(self, path: str, target: str):
         self.path = path
         self.target = target
-        self.url = path.replace(".md", ".html")
+        self.url = target.replace(".md", ".html")
         self.content = ""
         with open(path, "r") as f:
             self.content = f.read()
@@ -406,7 +408,7 @@ class MarkdownFile:
                 f"Anchor {anchor} not found in {self.path}. Available anchors: {self.anchors}"
             )
         return f"{self.url}#{anchor}"
-    
+
 
 class Document:
     def __init__(self, files: list[MarkdownFile]):
@@ -420,7 +422,7 @@ class Document:
                         f"Anchor {anchor} already exists in {self.anchors[anchor]} and {file.path}"
                     )
                 self.anchors[anchor] = file
-        
+
     def get_anchor_url(self, anchor: str) -> str:
         """
         Get the url for an anchor.
@@ -431,7 +433,7 @@ class Document:
                 f"Anchor {anchor} not found. Available anchors: {self.anchors}"
             )
         return self.anchors[anchor].get_anchor_url(anchor)
-    
+
     def write_readme(self, path: str):
         """
         Write the readme file.
@@ -498,22 +500,31 @@ class Document:
 if __name__ == "__main__":
     # get all markdown files that start with a number
     # [f for f in os.listdir() if f.endswith(".md") and f[0].isdigit()]
-    document = Document([
-        MarkdownFile("00_intro.md", "00_intro.md"),
-        MarkdownFile("01_installation.md", "01_installation.md"),
-        MarkdownFile("02_example.md", "02_example.md"),
-        MarkdownFile("04_modelling.md", "04_modelling.md"),
-        MarkdownFile("04B_advanced_modelling.md", "04B_advanced_modelling.md"),
-        MarkdownFile("05_parameters.md", "05_parameters.md"),
-        MarkdownFile("understanding_the_log.md", "understanding_the_log.md"),
-        MarkdownFile("07_under_the_hood.md", "07_under_the_hood.md"),
-        MarkdownFile("03_big_picture.md", "03_big_picture.md"),
-        MarkdownFile("06_coding_patterns.md", "06_coding_patterns.md"),
-        MarkdownFile("building_an_optimization_api.md", "building_an_optimization_api.md"),
-        MarkdownFile("chapters/machine_learning.md", "chapters/machine_learning.md"),
-        MarkdownFile("08_benchmarking.md", "08_benchmarking.md"),
-        MarkdownFile("09_lns.md", "09_lns.md"),
-    ])
+    document = Document(
+        [
+            MarkdownFile("./chapters/00_intro.md", "00_intro.md"),
+            MarkdownFile("./chapters/01_installation.md", "01_installation.md"),
+            MarkdownFile("./chapters/02_example.md", "02_example.md"),
+            MarkdownFile("./chapters/04_modelling.md", "04_modelling.md"),
+            MarkdownFile(
+                "./chapters/04B_advanced_modelling.md", "04B_advanced_modelling.md"
+            ),
+            MarkdownFile("./chapters/05_parameters.md", "05_parameters.md"),
+            MarkdownFile("understanding_the_log.md", "understanding_the_log.md"),
+            MarkdownFile("./chapters/07_under_the_hood.md", "07_under_the_hood.md"),
+            MarkdownFile("./chapters/03_big_picture.md", "03_big_picture.md"),
+            MarkdownFile("./chapters/06_coding_patterns.md", "06_coding_patterns.md"),
+            MarkdownFile(
+                "./chapters/building_an_optimization_api.md",
+                "building_an_optimization_api.md",
+            ),
+            MarkdownFile(
+                "chapters/machine_learning.md", "chapters/machine_learning.md"
+            ),
+            MarkdownFile("./chapters/08_benchmarking.md", "08_benchmarking.md"),
+            MarkdownFile("./chapters/09_lns.md", "09_lns.md"),
+        ]
+    )
     document.write_readme("README.md")
     # write the mdbook files to the .mdbook directory
     document.write_mdbook("./.mdbook/")
