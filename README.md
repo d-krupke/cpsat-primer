@@ -391,20 +391,24 @@ instance, you would of course create a dictionary or list of variables and use
 something like `model.add(sum(vars)<=n)`, because you do not want to create the
 model by hand for larger instances.
 
+The solver can return five different statuses:
+
+| Status          | Code | Description                                                                                                                                                                           |
+| --------------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `UNKNOWN`       | 0    | The solver has not run for long enough.                                                                                                                                               |
+| `MODEL_INVALID` | 1    | The model is invalid. You will rarely see that status.                                                                                                                                |
+| `FEASIBLE`      | 2    | The model has a feasible, but not necessarily optimal, solution. If your model does not have an objective, every feasible model will return `OPTIMAL`, which may be counterintuitive. |
+| `INFEASIBLE`    | 3    | The model has no feasible solution. This means that your constraints are too restrictive.                                                                                             |
+| `OPTIMAL`       | 4    | The model has an optimal solution. If your model does not have an objective, `OPTIMAL` is returned instead of `FEASIBLE`.                                                             |
+
 > [!TIP]
 >
-> The solver can return five different statuses:
->
-> | Status          | Code | Description                                                                                                                                                                           |
-> | --------------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-> | `UNKNOWN`       | 0    | The solver has not run for long enough.                                                                                                                                               |
-> | `MODEL_INVALID` | 1    | The model is invalid. You will rarely see that status.                                                                                                                                |
-> | `FEASIBLE`      | 2    | The model has a feasible, but not necessarily optimal, solution. If your model does not have an objective, every feasible model will return `OPTIMAL`, which may be counterintuitive. |
-> | `INFEASIBLE`    | 3    | The model has no feasible solution. This means that your constraints are too restrictive.                                                                                             |
-> | `OPTIMAL`       | 4    | The model has an optimal solution. If your model does not have an objective, `OPTIMAL` is returned instead of `FEASIBLE`.                                                             |
-
-The status `UNBOUNDED` does _not_ exist, as CP-SAT does not have unbounded
-variables.
+> The status `UNBOUNDED` does _not_ exist, as CP-SAT does not have unbounded
+> variables. Classical MIP solvers allow unbounded variables, which can lead to
+> unbounded solutions, meaning that the objective function can grow indefinitely
+> without reaching a maximum or minimum value. In constraint programming,
+> unbounded domains are usually neither allowed nor useful. However, in linear
+> programming, they are important, e.g., when exploiting duality.
 
 For larger models, CP-SAT will unfortunately not always able to compute an
 optimal solution. However, the good news is that the solver will likely still
