@@ -8282,3 +8282,17 @@ LNS stats                Improv/Calls  Closed  Difficulty  TimeLimit
   'routing_random_lns':         24/65     52%        0.26       0.10
 ```
 
+> [!TIP]
+>
+> We have found the following simple procedure effective:
+>
+>     -	Begin with a strategy optimized for low-hanging fruit, i.e., a relatively fast-converging method.
+>     -	If progress stalls, randomly select a new strategy from your predefined pool.
+>
+> Predicting the optimal strategy at each stage is challenging as the best
+> strategy changes during the search, and may not be worth the effort. This
+> simple approach exploits a working strategy until it stalls, then explores a
+> new one, automatically favoring strategies that yield progress. To avoid
+> fixation on a slowly converging method, optionally enforce a switch after a
+> predetermined number of iterations.
+
