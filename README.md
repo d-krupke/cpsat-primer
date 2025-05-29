@@ -8286,8 +8286,10 @@ LNS stats                Improv/Calls  Closed  Difficulty  TimeLimit
 >
 > We have found the following simple procedure effective:
 >
->     -	Begin with a strategy optimized for low-hanging fruit, i.e., a relatively fast-converging method.
->     -	If progress stalls, randomly select a new strategy from your predefined pool.
+> - Begin with a strategy optimized for low-hanging fruit, i.e., a relatively
+>   fast-converging method.
+> - If progress stalls, randomly select a new strategy from your predefined
+>   pool.
 >
 > Predicting the optimal strategy at each stage is challenging as the best
 > strategy changes during the search, and may not be worth the effort. This
