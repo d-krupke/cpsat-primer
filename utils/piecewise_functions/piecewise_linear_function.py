@@ -324,15 +324,20 @@ def generate_integer_linear_expression_from_two_points(
     b = x1 - x0
     # Multiplying all y-values by this factor will make the line integer
     # for all integral x-values.
-    lcm = math.lcm(abs(a), abs(b))
-    assert lcm % a == 0, "There should be no rounding errors"
-    y_scaling = lcm // abs(a)
-    assert y_scaling > 0, (
-        "The scaling factor should be positive as otherwise the direction of the inequality would change"
-    )
-    # The gradient by which y increases for each increase in x
-    # The true gradient is gradient/y_scaling, but we want things to be integer
-    gradient = (a * y_scaling) // b
+    if a != 0:
+        lcm = math.lcm(abs(a), abs(b))
+        assert lcm % a == 0, "There should be no rounding errors"
+        y_scaling = lcm // abs(a)
+        assert y_scaling > 0, (
+            "The scaling factor should be positive as otherwise the direction of the inequality would change"
+        )
+        # The gradient by which y increases for each increase in x
+        # The true gradient is gradient/y_scaling, but we want things to be integer
+        gradient = (a * y_scaling) // b
+    else:
+        #otherwise if graph is flat between these two points then the gradient is 0
+        y_scaling = 1
+        gradient = 0
     assert (a * y_scaling) % b == 0, "There should be no rounding errors"
     # The y-intercept of the line, providing us the constant term
     y_intersection = y0 * y_scaling - gradient * x0
