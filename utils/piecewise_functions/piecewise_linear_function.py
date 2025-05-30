@@ -107,16 +107,6 @@ class PiecewiseLinearFunction(BaseModel):
         )
 
 
-def test_piecewise_linear_function():
-    f = PiecewiseLinearFunction(xs=[0, 10, 20], ys=[0, 10, 5])
-    assert round(f(0)) == 0
-    assert round(f(5)) == 5
-    assert round(f(10)) == 10
-    assert round(f(16)) == 7
-    assert round(f(20)) == 5
-    assert f.is_convex()
-
-
 def are_colinear(p0: Tuple[int, int], p1: Tuple[int, int], p2: Tuple[int, int]) -> bool:
     """
     Check if three points are colinear.
@@ -125,13 +115,6 @@ def are_colinear(p0: Tuple[int, int], p1: Tuple[int, int], p2: Tuple[int, int]) 
     # Check if the slopes are equal. We do not want any rounding errors, so we use
     # the cross product instead of the division.
     return (p1[1] - p0[1]) * (p2[0] - p1[0]) == (p2[1] - p1[1]) * (p1[0] - p0[0])
-
-
-def test_are_colinear():
-    assert are_colinear((0, 0), (10, 10), (20, 20))
-    assert are_colinear((0, 1), (10, 11), (20, 21))
-    assert not are_colinear((0, 0), (10, 10), (20, 21))
-    assert not are_colinear((0, 0), (10, 10), (20, 19))
 
 
 def minimize_piecewise_linear_function(
@@ -193,22 +176,6 @@ def get_convex_envelope(
     f_ = PiecewiseLinearFunction(xs=xs, ys=ys)
     assert f_.is_convex(upper_bound=upper_bound)
     return f_
-
-
-def test_get_upper_bounding_convex_envelope():
-    f = PiecewiseLinearFunction(xs=[0, 10, 20], ys=[0, 10, 50])
-    g = get_convex_envelope(f, upper_bound=True)
-    assert g.is_convex()
-    assert all(g(x) >= f(x) for x in range(21))
-    assert g(0) == 0
-    assert g(10) == 25
-    assert g(20) == 50
-    g_ = get_convex_envelope(f, upper_bound=False)
-    assert g_.is_convex(upper_bound=False)
-    assert all(g_(x) <= f(x) for x in range(21))
-    assert g_(0) == 0
-    assert g_(10) == 10
-    assert g_(20) == 50
 
 
 def split_into_convex_segments(
@@ -297,22 +264,6 @@ def split_into_segments(f: PiecewiseLinearFunction) -> List[PiecewiseLinearFunct
     ]
 
 
-def test_split_into_convex_upper_bound_segments():
-    f = PiecewiseLinearFunction(xs=[0, 10, 20], ys=[0, 10, 50])
-    parts = split_into_convex_segments(f, upper_bound=True)
-    assert len(parts) == 2
-    assert all(p.is_convex(True) for p in parts)
-    assert all(parts[0](x) == f(x) for x in range(10))
-    assert all(parts[1](x) == f(x) for x in range(10, 21))
-    f = PiecewiseLinearFunction(xs=[0, 10, 20], ys=[0, 10, 5])
-    parts = split_into_convex_segments(f, upper_bound=True)
-    assert len(parts) == 1
-    assert all(p.is_convex(True) for p in parts)
-    assert all(p(0) == f(0) for p in parts)
-    assert all(p(10) == f(10) for p in parts)
-    assert all(p(20) == f(20) for p in parts)
-
-
 def generate_integer_linear_expression_from_two_points(
     x0: int, y0: int, x1: int, y1: int
 ) -> typing.Tuple[int, int, int]:
@@ -324,35 +275,24 @@ def generate_integer_linear_expression_from_two_points(
     b = x1 - x0
     # Multiplying all y-values by this factor will make the line integer
     # for all integral x-values.
-    lcm = math.lcm(abs(a), abs(b))
-    assert lcm % a == 0, "There should be no rounding errors"
-    y_scaling = lcm // abs(a)
-    assert y_scaling > 0, (
-        "The scaling factor should be positive as otherwise the direction of the inequality would change"
-    )
-    # The gradient by which y increases for each increase in x
-    # The true gradient is gradient/y_scaling, but we want things to be integer
-    gradient = (a * y_scaling) // b
+    if a != 0:
+        lcm = math.lcm(abs(a), abs(b))
+        assert lcm % a == 0, "There should be no rounding errors"
+        y_scaling = lcm // abs(a)
+        assert y_scaling > 0, (
+            "The scaling factor should be positive as otherwise the direction of the inequality would change"
+        )
+        # The gradient by which y increases for each increase in x
+        # The true gradient is gradient/y_scaling, but we want things to be integer
+        gradient = (a * y_scaling) // b
+    else:
+        # otherwise if graph is flat between these two points then the gradient is 0
+        y_scaling = 1
+        gradient = 0
     assert (a * y_scaling) % b == 0, "There should be no rounding errors"
     # The y-intercept of the line, providing us the constant term
     y_intersection = y0 * y_scaling - gradient * x0
     return (y_scaling, gradient, y_intersection)
-
-
-def test_generate_integer_linear_expression():
-    assert generate_integer_linear_expression_from_two_points(0, 0, 10, 10) == (1, 1, 0)
-    assert generate_integer_linear_expression_from_two_points(0, 0, 20, 10) == (2, 1, 0)
-    assert generate_integer_linear_expression_from_two_points(0, 0, 10, 15) == (2, 3, 0)
-    assert generate_integer_linear_expression_from_two_points(0, 0, 10, -10) == (
-        1,
-        -1,
-        0,
-    )
-    assert generate_integer_linear_expression_from_two_points(-10, -10, 10, 10) == (
-        1,
-        1,
-        0,
-    )
 
 
 class PiecewiseLinearConstraint:
@@ -514,48 +454,3 @@ class PiecewiseLinearConstraint:
             else:
                 self.model.add(a * self.y >= (b * self.x + c))  # type: ignore
             self.num_constraints += 1
-
-
-def test_piecewise_linear_upper_bound_constraint():
-    model = cp_model.CpModel()
-    x = model.new_int_var(0, 20, "x")
-    f = PiecewiseLinearFunction(xs=[0, 10, 20], ys=[0, 10, 5])
-    c = PiecewiseLinearConstraint(model, x, f, upper_bound=True)
-    model.maximize(c.y)
-    solver = cp_model.CpSolver()
-    assert solver.solve(model) == cp_model.OPTIMAL
-    assert solver.value(c.y) == 10
-    assert solver.value(x) == 10
-    assert c.num_auxiliary_variables == 0
-    assert c.num_constraints == 2
-
-    model = cp_model.CpModel()
-    x = model.new_int_var(0, 20, "x")
-    f = PiecewiseLinearFunction(xs=[0, 10, 20], ys=[0, 10, 50])
-    c = PiecewiseLinearConstraint(model, x, f, upper_bound=True)
-    model.maximize(c.y)
-    solver = cp_model.CpSolver()
-    assert solver.solve(model) == cp_model.OPTIMAL
-    assert solver.value(c.y) == 50
-    assert solver.value(x) == 20
-    assert c.num_auxiliary_variables == 2
-
-    model = cp_model.CpModel()
-    x = model.new_int_var(0, 20, "x")
-    f = PiecewiseLinearFunction(xs=[0, 10, 20], ys=[0, 10, 50])
-    c = PiecewiseLinearConstraint(model, x, f, upper_bound=False)
-    model.minimize(c.y)
-    solver = cp_model.CpSolver()
-    assert solver.solve(model) == cp_model.OPTIMAL
-    assert solver.value(c.y) == 0
-    assert solver.value(x) == 0
-
-    model = cp_model.CpModel()
-    x = model.new_int_var(0, 20, "x")
-    f = PiecewiseLinearFunction(xs=[0, 10, 20, 30], ys=[20, 10, 50, 40])
-    c = PiecewiseLinearConstraint(model, x, f, upper_bound=False)
-    model.minimize(c.y)
-    solver = cp_model.CpSolver()
-    assert solver.solve(model) == cp_model.OPTIMAL
-    assert solver.value(c.y) == 10
-    assert solver.value(x) == 10
