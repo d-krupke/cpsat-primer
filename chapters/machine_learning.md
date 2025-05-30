@@ -451,6 +451,10 @@ interest:
   optimistic, the paper is very clear about the current limitations and
   challenges. while it caters a scientific audience, it is still quite
   accessible.
+- [The travelling salesperson problem and the challenges of near-term quantum advantage](https://iopscience.iop.org/article/10.1088/2058-9565/add61d):
+  In this paper, Smith-Miles et al. argue why the TSP is unlikely to benefit
+  from quantum computing in the foreseeable future. They also draw parallels to
+  the failed attempts to solve the TSP with neural networks.
 - [Understanding instance hardness for optimisation algorithms: Methodologies, open challenges and post-quantum implications](https://www.sciencedirect.com/science/article/pii/S0307904X2500040X):
   This paper states that "it seems likely that there will be no quantum
   advantage for the TSP" due to challenges in tuning the parameters of QUBOs to
