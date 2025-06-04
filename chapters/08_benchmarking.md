@@ -10,6 +10,36 @@
 
 <!-- STOP_SKIP_FOR_README -->
 
+This chapter explores methods for comparing the performance of different models applied to complex problems, where the basic model leaves room for improvement - either in runtime or in solution quality, especially when the model cannot always be solved to optimality.
+As a scientist writing a paper on a new model (or, more likely, a new algorithm that internally uses a model), this will be the default case as research on a problem that can already be solved well is hard to publish.
+Whether you aim merely to evaluate whether your new approach outperforms the current one or intend to prepare a formal scientific publication, you face the same challenges; in the latter case, however, the process becomes more extensive and formalized (but this may also be true for the first case depending on your manager).
+
+During the explorative phase, when you probe different ideas, you will likely select one to five instances that you can run quickly and compare.
+However, for most applications, this number is insufficient, and you risk overfitting your model to these instances - gaining performance improvements on them but sacrificing performance on others.
+You may even limit your model’s ability to solve certain instances.
+
+A classic example involves deactivating specific CP-SAT search strategies or preprocessing steps that have not yielded benefits on the selected instances.
+If your instance set is large enough, the risk is low; however, if you have only a few instances, you may remove the single strategy necessary to solve a particular class of problems.
+Modern solvers include features that impose a modest overhead on simple instances but enable solving otherwise intractable cases.
+This trade-off is worthwhile: do not sacrifice the ability to solve complex instances for a marginal performance gain on simple ones.
+Therefore, always benchmark your changes properly before deploying them to production, even if you do not plan to publish your results scientifically.
+
+The no‐free‐lunch theorem and timeouts complicate benchmarking more than you might have anticipated.
+The no‐free‐lunch theorem asserts that no single algorithm outperforms all others across every instance, which is especially true for NP‐hard problems.
+Consequently, improving performance on some instances often coincides with degradations on others.
+It is essential to assess whether the gains justify the losses.
+
+Another challenge arises when imposing a time limit to prevent any individual instance from running indefinitely; without it, benchmarks can take prohibitively long.
+Yet comparing aborted runs to those that complete within the time limit poses a dilemma: disqualifying models that time out may leave no viable candidate, since with sufficient instances, any solver will be unlucky at least once.
+Thus, simple exclusion is not an option for most applications.
+Timeouts introduce "unknowns" into your results: a solver might have succeeded given just one more millisecond, or it might have been trapped in an endless loop.
+This uncertainty complicates the computation of accurate statistics.
+
+Fortunately, there are established patterns to mitigate these issues, which I outline in this chapter.
+By adopting these methods, you can produce evaluations superior to those in many of my earlier publications.
+
+---
+
 Benchmarking is an essential step if your model is not yet meeting the
 performance standards of your application or if you are aiming for an academic
 publication. This process involves analyzing your model's performance,
