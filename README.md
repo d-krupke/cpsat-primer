@@ -7599,6 +7599,91 @@ Timeouts introduce "unknowns" into your results: a solver might have succeeded
 given just one more millisecond, or it might have been trapped in an endless
 loop. This uncertainty complicates the computation of accurate statistics.
 
+Let us examine the performance of CP-SAT, Gurobi, and Hexaly on a Nurse
+Rostering Problem. Nurse rostering is a complex yet common problem in which
+nurses must be assigned to shifts while satisfying a variety of constraints.
+Since CP-SAT, Gurobi, and Hexaly differ significantly in their underlying
+algorithms, the comparison reveals pronounced performance differences. However,
+such patterns can also be observed when using the same solver across instances,
+albeit usually not as pronounced.
+
+The following two plots illustrate the value of the incumbent solution (i.e.,
+the best solution found so far) and the best proven lower bound during the
+search. These are challenging instances, and only Gurobi is able to find an
+optimal solution.
+
+Notably, the best-performing solver changes depending on the allotted
+computation time. For this problem, Hexaly excels at finding good initial
+solutions quickly but tends to stall thereafter. CP-SAT requires slightly more
+time to get started but demonstrates steady progress. In contrast, Gurobi begins
+slowly but eventually makes substantial improvements.
+
+So, which solver is best for this problem?
+
+|:--------------:| |
+![NRP Instance 19](https://github.com/d-krupke/cpsat-primer/blob/main/images/nrp_19.png?raw=true)
+| | Performance comparison of CP-SAT, Gurobi, and Hexaly on instance 19 of the
+Nurse Rostering Problem Benchmark. Hexaly starts strong but is eventually
+overtaken by CP-SAT. Gurobi surpasses Hexaly near the end by a small margin.
+CP-SAT and Gurobi converge to nearly the same lower bound. |
+
+|:--------------:| |
+![NRP Instance 20](https://github.com/d-krupke/cpsat-primer/blob/main/images/nrp_20.png?raw=true)
+| | Performance comparison of CP-SAT, Gurobi, and Hexaly on instance 20 of the
+Nurse Rostering Problem Benchmark. Hexaly again performs well early but is
+outperformed by CP-SAT. Gurobi maintains a poor incumbent value for most of the
+runtime but eventually makes a significant improvement and proves optimality.
+The optimal solution is visibly superior to CP-SAT's best solution. CP-SAT is
+unable to prove a meaningful lower bound for this instance. |
+
+> [!WARNING]
+>
+> These two plots - and even this specific problem - are insufficient to draw
+> definitive conclusions about the overall performance of the solvers.
+> Nevertheless, it is remarkable that our beloved open-source solver, CP-SAT,
+> performs so well against the commercial solvers Gurobi and Hexaly in this
+> context.
+
+If provably optimal solutions are required, Gurobi may be the most suitable
+choice; however, the likelihood of achieving optimality is low for most
+instances. If your instances are expected to grow in size and require fast
+solutions, Hexaly might be preferable, as it appears highly effective at finding
+good solutions quickly. This observation is also supported by preliminary
+results on larger instances, for which neither CP-SAT nor Gurobi find any
+feasible solution. CP-SAT, by contrast, offers a strong compromise between the
+two: although it starts more slowly, it maintains consistent progress throughout
+the search.
+
+The first step is to determine your specific requirements and how best to
+measure solver performance accordingly. It is not feasible to manually plot
+performance for every instance and assign scores based on subjective
+impressions; such an approach does not scale and lacks objectivity and
+reproducibility. Instead, you should define a concrete metric that accurately
+reflects your goals. One strategy is to carefully select benchmark instances
+that are still likely to be solved to optimality, with the expectation that
+performance trends will generalize to larger instances. While no evaluation
+method will be perfect, it is essential to remain aware of potential threats to
+the validity of your results.
+
+Here are the two, probably most common, approaches:
+
+1. Select the instance within a range to have a realistic chance of being solved
+   to proven optimality (or within a certain optimality tolerance), and then
+   measure the time it takes to solve it. You probably still need a timeout as
+   if you are able to solve all instances, the instances are probably too easy
+   or there may not really be the need to improve the model further. If you are
+   able to solve all instances and the instances are representative,
+   congratulations, you can just compare the average time and have a wonderful
+   benchmark. No need to read any further. Otherwise, you will have the metric
+   of how many instances have been solved within the time limit and the average
+   time for the other instances.
+2. Run the instances with a timeout and measure the objective value of the best
+   solution found and, if interesting, the best bound. Additionally, save the
+   time if there is a chance that the solver might terminate early with an
+   optimal solution. If all instances need the full time limit and always find
+   at least a feasible solution, things are reasonably simple. You can just
+   compare the relative performance .... TODO
+
 Fortunately, there are established patterns to mitigate these issues, which I
 outline in this chapter. By adopting these methods, you can produce evaluations
 superior to those in many of my earlier publications. We will first go through a
