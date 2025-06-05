@@ -7552,6 +7552,128 @@ interest:
 ## Benchmarking your Model
 
 
+This chapter explores methods for comparing the performance of different models
+applied to complex problems, where the basic model leaves room for improvement -
+either in runtime or in solution quality, especially when the model cannot
+always be solved to optimality. As a scientist writing a paper on a new model
+(or, more likely, a new algorithm that internally uses a model), this will be
+the default case as research on a problem that can already be solved well is
+hard to publish. Whether you aim merely to evaluate whether your new approach
+outperforms the current one or intend to prepare a formal scientific
+publication, you face the same challenges; in the latter case, however, the
+process becomes more extensive and formalized (but this may also be true for the
+first case depending on your manager).
+
+During the explorative phase, when you probe different ideas, you will likely
+select one to five instances that you can run quickly and compare. However, for
+most applications, this number is insufficient, and you risk overfitting your
+model to these instances - gaining performance improvements on them but
+sacrificing performance on others. You may even limit your model’s ability to
+solve certain instances.
+
+A classic example involves deactivating specific CP-SAT search strategies or
+preprocessing steps that have not yielded benefits on the selected instances. If
+your instance set is large enough, the risk is low; however, if you have only a
+few instances, you may remove the single strategy necessary to solve a
+particular class of problems. Modern solvers include features that impose a
+modest overhead on simple instances but enable solving otherwise intractable
+cases. This trade-off is worthwhile: do not sacrifice the ability to solve
+complex instances for a marginal performance gain on simple ones. Therefore,
+always benchmark your changes properly before deploying them to production, even
+if you do not plan to publish your results scientifically.
+
+The no‐free‐lunch theorem and timeouts complicate benchmarking more than you
+might have anticipated. The no‐free‐lunch theorem asserts that no single
+algorithm outperforms all others across every instance, which is especially true
+for NP‐hard problems. Consequently, improving performance on some instances
+often coincides with degradations on others. It is essential to assess whether
+the gains justify the losses.
+
+Another challenge arises when imposing a time limit to prevent any individual
+instance from running indefinitely; without it, benchmarks can take
+prohibitively long. Yet comparing aborted runs to those that complete within the
+time limit poses a dilemma: disqualifying models that time out may leave no
+viable candidate, since with sufficient instances, any solver will be unlucky at
+least once. Thus, simple exclusion is not an option for most applications.
+Timeouts introduce "unknowns" into your results: a solver might have succeeded
+given just one more millisecond, or it might have been trapped in an endless
+loop. This uncertainty complicates the computation of accurate statistics.
+
+Fortunately, there are established patterns to mitigate these issues, which I
+outline in this chapter. By adopting these methods, you can produce evaluations
+superior to those in many of my earlier publications. We will first go through a
+simple case of comparing a single new model against a single old model, as this
+is the most common case in practice. This will show you already the fundamental
+ideas before we go step by step into more complex scenarios, which however are
+likely only appreciated once you have struggled yourself with a benchmark
+blowing up in complexity.
+
+## A Simple Benchmarking Example
+
+Let us assume we try to solve the Traveling Salesman Problem (TSP) without the
+`add_circuit` constraint and This is obviously a bad idea, but both ar
+
+| instance_name | strategy             | runtime |   objective | lower_bound |
+| :------------ | :------------------- | ------: | ----------: | ----------: |
+| att48         | Iterative Dantzig    | 89.8327 |       33522 |       33522 |
+| att48         | Miller-Tucker-Zemlin |      90 |       33522 |       33369 |
+| eil101        | Iterative Dantzig    |      90 |         629 |         629 |
+| eil101        | Miller-Tucker-Zemlin | 43.8567 |         629 |         629 |
+| eil51         | Iterative Dantzig    | 84.8225 |         426 |         426 |
+| eil51         | Miller-Tucker-Zemlin | 3.05334 |         426 |         426 |
+| eil76         | Iterative Dantzig    |      90 |         538 |         538 |
+| eil76         | Miller-Tucker-Zemlin | 4.09839 |         538 |         538 |
+| gil262        | Iterative Dantzig    |      90 |       13817 |        2368 |
+| gil262        | Miller-Tucker-Zemlin |      90 |        3141 |        2240 |
+| kroA100       | Iterative Dantzig    |      90 |       21282 |       21282 |
+| kroA100       | Miller-Tucker-Zemlin |      90 |       22037 |       20269 |
+| kroA150       | Iterative Dantzig    |      90 |       27249 |       26420 |
+| kroA150       | Miller-Tucker-Zemlin |      90 |       27777 |       24958 |
+| kroA200       | Iterative Dantzig    |      90 |      176678 |       29205 |
+| kroA200       | Miller-Tucker-Zemlin |      90 |       32749 |       27467 |
+| kroB100       | Iterative Dantzig    |      90 |       22141 |       22141 |
+| kroB100       | Miller-Tucker-Zemlin |      90 |       22729 |       21520 |
+| kroB150       | Iterative Dantzig    |      90 |      128751 |       26016 |
+| kroB150       | Miller-Tucker-Zemlin |      90 |       26891 |       25142 |
+| kroB200       | Iterative Dantzig    |      90 |      183078 |       29334 |
+| kroB200       | Miller-Tucker-Zemlin |      90 |       34481 |       27708 |
+| kroC100       | Iterative Dantzig    |      90 |       20749 |       20749 |
+| kroC100       | Miller-Tucker-Zemlin |      90 |       21118 |       20125 |
+| kroD100       | Iterative Dantzig    |      90 |       21294 |       21294 |
+| kroD100       | Miller-Tucker-Zemlin |      90 |       21294 |       20267 |
+| kroE100       | Iterative Dantzig    |      90 |       22068 |       22053 |
+| kroE100       | Miller-Tucker-Zemlin |      90 |       22341 |       21626 |
+| lin105        | Iterative Dantzig    |      90 |       14379 |       14379 |
+| lin105        | Miller-Tucker-Zemlin |      90 |       14379 |       13955 |
+| lin318        | Iterative Dantzig    |      90 |      282458 |       41384 |
+| lin318        | Miller-Tucker-Zemlin |      90 |      103190 |       39016 |
+| linhp318      | Iterative Dantzig    |      90 |         nan |       41412 |
+| linhp318      | Miller-Tucker-Zemlin |      90 |       84918 |       39016 |
+| pr107         | Iterative Dantzig    |      90 |       44303 |       44303 |
+| pr107         | Miller-Tucker-Zemlin |      90 |       45114 |       27784 |
+| pr124         | Iterative Dantzig    |      90 |       59167 |       58879 |
+| pr124         | Miller-Tucker-Zemlin |      90 |       60760 |       52392 |
+| pr136         | Iterative Dantzig    |      90 |       96781 |       96772 |
+| pr136         | Miller-Tucker-Zemlin |      90 |       98850 |       89369 |
+| pr144         | Iterative Dantzig    |      90 |       58537 |       58492 |
+| pr144         | Miller-Tucker-Zemlin |      90 |       59167 |       33809 |
+| pr152         | Iterative Dantzig    |      90 |       73682 |       73682 |
+| pr152         | Miller-Tucker-Zemlin |      90 |       79325 |       46604 |
+| pr226         | Iterative Dantzig    |      90 | 1.19724e+06 |       74474 |
+| pr226         | Miller-Tucker-Zemlin |      90 |      103271 |       55998 |
+| pr264         | Iterative Dantzig    |      90 |      736226 |       41020 |
+| pr264         | Miller-Tucker-Zemlin |      90 |       68802 |       37175 |
+| pr299         | Iterative Dantzig    |      90 |         nan |       47375 |
+| pr299         | Miller-Tucker-Zemlin |      90 |      120489 |       45594 |
+| pr439         | Iterative Dantzig    |      90 |         nan |       95411 |
+| pr439         | Miller-Tucker-Zemlin |      90 |      834126 |       93868 |
+| pr76          | Iterative Dantzig    |      90 |      108159 |      107727 |
+| pr76          | Miller-Tucker-Zemlin |      90 |      110331 |      105340 |
+| st70          | Iterative Dantzig    |      90 |         675 |         675 |
+| st70          | Miller-Tucker-Zemlin |      90 |         675 |         663 |
+
+---
+
 Benchmarking is an essential step if your model is not yet meeting the
 performance standards of your application or if you are aiming for an academic
 publication. This process involves analyzing your model's performance,

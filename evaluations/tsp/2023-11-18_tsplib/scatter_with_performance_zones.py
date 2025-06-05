@@ -112,7 +112,13 @@ def plot_performance_scatter(
     # A problem without lines is that one tends to use the distance
     # to the diagonal as a measure of performance, which is not correct.
     # Instead, it is `y-x` that should be used.
-    for old_val, new_val in zip(baseline[~na_indices], new_values[~na_indices]):
+    for old_val, new_val in zip(baseline, new_values):
+        if pd.isna(old_val) and pd.isna(new_val):
+            continue
+        if pd.isna(old_val):
+            old_val = min_val if lower_is_better else max_val
+        if pd.isna(new_val):
+            new_val = min_val if lower_is_better else max_val
         if lower_is_better and new_val < old_val:
             ax.plot(
                 [old_val, old_val],
@@ -162,7 +168,7 @@ def plot_comparison_grid(
     n_cols: int = 4,
     figsize: tuple[int, int] | None = None,
     suptitle: str = "",
-    subplot_kwargs: dict|None = None,
+    subplot_kwargs: dict | None = None,
     **kwargs,
 ):
     """
