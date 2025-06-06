@@ -7624,15 +7624,9 @@ So, which solver is best for this problem?
 | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
 | Performance comparison of CP-SAT, Gurobi, and Hexaly on instance 19 of the Nurse Rostering Problem Benchmark. Hexaly starts strong but is eventually overtaken by CP-SAT. Gurobi surpasses Hexaly near the end by a small margin. CP-SAT and Gurobi converge to nearly the same lower bound. |
 
-| ![NRP Instance 20](https://github.com/d-krupke/cpsat-primer/blob/main/images/nrp_20.png?raw=true) |
-| :-----------------------------------------------------------------------------------------------: |
-|            Performance comparison of CP-SAT, Gurobi, and Hexaly on instance 20 of the             |
-
-Nurse Rostering Problem Benchmark. Hexaly again performs well early but is
-outperformed by CP-SAT. Gurobi maintains a poor incumbent value for most of the
-runtime but eventually makes a significant improvement and proves optimality.
-The optimal solution is visibly superior to CP-SAT's best solution. CP-SAT is
-unable to prove a meaningful lower bound for this instance. |
+|                                                                                                                                                                               ![NRP Instance 20](https://github.com/d-krupke/cpsat-primer/blob/main/images/nrp_20.png?raw=true)                                                                                                                                                                               |
+| :-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+| Performance comparison of CP-SAT, Gurobi, and Hexaly on instance 20 of the Nurse Rostering Problem Benchmark. Hexaly again performs well early but is outperformed by CP-SAT. Gurobi maintains a poor incumbent value for most of the runtime but eventually makes a significant improvement and proves optimality. The optimal solution is visibly superior to CP-SAT's best solution. CP-SAT is unable to prove a meaningful lower bound for this instance. |
 
 > [!WARNING]
 >
@@ -7664,6 +7658,47 @@ method will be perfect, it is essential to remain aware of potential threats to
 the validity of your results. Let us go through some common scenarios.
 
 ## Common Benchmarking Scenarios
+
+Several common benchmarking scenarios arise in practice. To choose the
+appropriate visualization or evaluation method, it is useful to take a moment to
+identify which scenario applies to your case—and to recognize which tools are
+best suited to other situations. Do not simply go for the prettiest and most
+complex plot; instead, select the one that best fits your needs.
+
+1. **Instances are always solved to optimality, and only runtime matters.** This
+   is the simplest benchmarking scenario. If every instance can be solved to
+   optimality and your only concern is runtime, you can summarize performance
+   using the mean runtime or visualize it using a basic box plot. The primary
+   challenge here lies in choosing the appropriate type of mean (e.g.,
+   arithmetic, geometric, harmonic) and selecting representative instances that
+   reflect production-like conditions. For this case, the rest of the chapter
+   may be skipped.
+
+2. **Optimal or feasible solutions are sought, but may not always be found
+   within the time limit.** When timeouts occur, runtimes for unsolved instances
+   become unknown, making traditional means unreliable. In such cases, **cactus
+   plots** are an effective way to visualize solver performance, even in the
+   presence of incomplete data.
+
+3. **The goal is to find the best possible solution within a fixed time limit.**
+   Here, the focus is on **solution quality under time constraints**, rather
+   than on whether optimality is reached. **Performance plots** are especially
+   suitable for this purpose, as they reveal how closely each solver or model
+   approaches the best-known solution across the benchmark set.
+
+4. **Scalability analysis: how performance evolves with instance size.** If you
+   are analyzing how well a model scales—i.e., how large an instance it can
+   solve to optimality and how the optimality gap grows thereafter—**split
+   plots** are a good choice. They show runtime for solved instances and
+   optimality gap for those that exceed the time limit, allowing for a unified
+   view of scalability.
+
+5. **Multi-metric performance comparison against a baseline.** When you want a
+   quick, intuitive overview of how your model performs across several
+   metrics—such as runtime, objective value, and lower bound—**scatter plots
+   with performance zones** are ideal. They provide a clear comparative
+   visualization, making it easy to spot outliers and trade-offs across
+   dimensions.
 
 ### Quickly Comparing to a Baseline Using Scatter Plots
 
@@ -8320,6 +8355,14 @@ instances are included or if multiple models are compared simultaneously.
 |                                                                                                  ![Split Plot](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/split_plot.png)                                                                                                   |
 | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
 | Split plot illustrating runtime (for solved instances) and optimality gap (for unsolved instances). The y-axis is divided into two regions: one showing actual runtimes for instances solved within the time limit, and one showing optimality gaps for instances where the time limit was exceeded. |
+
+> [!WARNIGN]
+>
+> For many problems, there is no single instance size metric to compare over.
+> Usually, you can still classify the instances into size categories. However,
+> for especially complex problems, it may be best to just provide a table with
+> the results for the largest instances to give an idea of the model's
+> scalability.
 
 ## A Complete Benchmarking Example
 
