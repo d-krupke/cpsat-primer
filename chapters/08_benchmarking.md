@@ -781,15 +781,6 @@ instances are included or if multiple models are compared simultaneously.
 
 ## A Complete Benchmarking Example
 
-Benchmarking is an essential step if your model is not yet meeting the
-performance standards of your application or if you are aiming for an academic
-publication. This process involves analyzing your model's performance,
-especially important if your model has adjustable parameters. Running your model
-on a set of predefined instances (a benchmark) allows you to fine-tune these
-parameters and compare results. Moreover, if alternative models exist,
-benchmarking helps you ascertain whether your model truly outperforms these
-competitors.
-
 Designing an effective benchmark is a nuanced task that demands expertise. This
 section aims to guide you in creating a reliable benchmark suitable for
 publication purposes.
