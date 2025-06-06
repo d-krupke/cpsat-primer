@@ -8339,6 +8339,11 @@ def plot_performance_profile(
 
 </details>
 
+> [!NOTE]
+>
+> Tangi Migot has written an excellent article on
+> [Performnace Plots](https://tmigot.github.io/posts/2024/06/teaching/)
+
 ### Analyzing the Scalability of a Single Model
 
 When working with a single model and aiming to analyze its **scalability**, a
@@ -8356,7 +8361,7 @@ instances are included or if multiple models are compared simultaneously.
 | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
 | Split plot illustrating runtime (for solved instances) and optimality gap (for unsolved instances). The y-axis is divided into two regions: one showing actual runtimes for instances solved within the time limit, and one showing optimality gaps for instances where the time limit was exceeded. |
 
-> [!WARNIGN]
+> [!WARNING]
 >
 > For many problems, there is no single instance size metric to compare over.
 > Usually, you can still classify the instances into size categories. However,
