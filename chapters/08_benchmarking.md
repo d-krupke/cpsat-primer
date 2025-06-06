@@ -573,6 +573,12 @@ best on 90% of instances, the remaining 10% may be better handled by
 alternatives. The greater the gap between the best actual solver and the virtual
 best, the stronger the case for a portfolio approach.
 
+> :reference:
+>
+> A more detailed discussion on this type of plot can be found in the referenced
+> academic paper:
+> [Benchmarking Solvers, SAT-style by Brain, Davenport, and Griggio](http://www.sc-square.org/CSA/workshop2-papers/RP3-FinalVersion.pdf)
+
 ### Performance Plots for Solution Quality within a Time Limit
 
 When dealing with instances that typically cannot be solved to optimality,
