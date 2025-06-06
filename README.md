@@ -7657,6 +7657,12 @@ performance trends will generalize to larger instances. While no evaluation
 method will be perfect, it is essential to remain aware of potential threats to
 the validity of your results. Let us go through some common scenarios.
 
+> [!TIP]
+>
+> Use the
+> [SIGPLAN Empirical Evaluation Checklist](https://raw.githubusercontent.com/SIGPLAN/empirical-evaluation/master/checklist/checklist.pdf)
+> if your evaluation has to satisfy academic standards.
+
 ## Common Benchmarking Scenarios
 
 Several common benchmarking scenarios arise in practice. To choose the
@@ -8375,39 +8381,7 @@ instances are included or if multiple models are compared simultaneously.
 > the results for the largest instances to give an idea of the model's
 > scalability.
 
-## A Complete Benchmarking Example
-
-Designing an effective benchmark is a nuanced task that demands expertise. This
-section aims to guide you in creating a reliable benchmark suitable for
-publication purposes.
-
-Given the breadth and complexity of benchmarking, our focus will be on the
-basics, particularly through the lens of the Traveling Salesman Problem (TSP),
-as previously discussed in the `add_circuit` section. We refer to the different
-model implementations as 'solvers', and we'll explore four specific types:
-
-- A solver employing the `add_circuit` approach.
-- A solver based on the Miller-Tucker-Zemlin formulation.
-- A solver utilizing the Dantzig-Fulkerson-Johnson formulation with iterative
-  addition of subtour constraints until a connected tour is achieved.
-- A Gurobi-based solver applying the Dantzig-Fulkerson-Johnson formulation via
-  Lazy Constraints, which are not supported by CP-SAT.
-
-This example highlights common challenges in benchmarking and strategies to
-address them. A key obstacle in solving NP-hard problems is the variability in
-solver performance across different instances. For instance, a solver might
-easily handle a large instance but struggle with a smaller one, and vice versa.
-Consequently, it is crucial to ensure that your benchmark encompasses a
-representative variety of instances. This diversity is vital for drawing
-meaningful conclusions, such as the maximum size of a TSP instance that can be
-solved or the most effective solver to use.
-
-For a comprehensive exploration of benchmarking, I highly recommend Catherine C.
-McGeoch's book,
-["A Guide to Experimental Algorithmics"](https://www.cambridge.org/core/books/guide-to-experimental-algorithmics/CDB0CB718F6250E0806C909E1D3D1082),
-which offers an in-depth discussion on this topic.
-
-### Distinguishing Exploratory and Workhorse Studies in Benchmarking
+## Distinguishing Exploratory and Workhorse Studies in Benchmarking
 
 Before diving into comprehensive benchmarking, it is essential to conduct
 preliminary investigations to assess your model’s capabilities and identify any
@@ -8419,7 +8393,14 @@ is important to explicitly differentiate between these two study types and
 maintain their distinct purposes: exploratory studies for initial understanding
 and flexibility, and workhorse studies for rigorous, reproducible research.
 
-#### Exploratory Studies: Foundation Building
+> [!NOTE]
+>
+> For a comprehensive exploration of benchmarking, I highly recommend Catherine
+> C. McGeoch's book,
+> ["A Guide to Experimental Algorithmics"](https://www.cambridge.org/core/books/guide-to-experimental-algorithmics/CDB0CB718F6250E0806C909E1D3D1082),
+> which offers an in-depth discussion on this topic.
+
+### Exploratory Studies: Foundation Building
 
 Exploratory studies serve as an introduction to both your model and the problem
 it addresses. This phase is about gaining preliminary understanding and
@@ -8444,7 +8425,7 @@ address these before proceeding to workhorse studies.
 > [Scalene](https://github.com/plasma-umass/scalene) to be well-suited to
 > investigate and pinpoint these bottlenecks.
 
-#### Workhorse Studies: Conducting In-depth Evaluations
+### Workhorse Studies: Conducting In-depth Evaluations
 
 Workhorse studies follow the exploratory phase, characterized by more structured
 and meticulous approaches. This stage is vital for a comprehensive evaluation of
@@ -8462,13 +8443,7 @@ problem deepens. These studies, unlike exploratory ones, will be the focus of
 your scientific publications, with exploratory studies only referenced for
 justifying certain design decisions.
 
-> [!TIP]
->
-> Use the
-> [SIGPLAN Empirical Evaluation Checklist](https://raw.githubusercontent.com/SIGPLAN/empirical-evaluation/master/checklist/checklist.pdf)
-> if your evaluation has to satisfy academic standards.
-
-### Designing a Robust Benchmark for Effective Studies
+## Designing a Robust Benchmark for Effective Studies
 
 When undertaking both exploratory and workhorse studies, the creation of a
 well-designed benchmark is a critical step. This benchmark is the basis upon
@@ -8534,7 +8509,7 @@ deterministic, their use can inadvertently lead to irreproducible results.
 Sharing benchmarks is also more straightforward when you can distribute the
 instances themselves, rather than the code used to generate them.
 
-### Efficiently Managing Your Benchmarks
+## Efficiently Managing Your Benchmarks
 
 Managing benchmark data can become complex, especially with multiple experiments
 and research questions. Here are some strategies to keep things organized:
@@ -8589,175 +8564,6 @@ experiments on a cluster via a simple decorator. However, there may be better
 tools out there, now, especially from the Machine Learning community. Drop me a
 quick mail if you have found some tools you are happy with, and I will take a
 look myself.
-
-### Analyzing the results
-
-Let us now come to the actual analysis of the results. We will focus on the
-following questions:
-
-- Up to which size can we solve TSP instances with the different solvers?
-- Which solver is the fastest?
-- How does the performance change if we increase the optimality tolerance?
-
-**Our Benchmarks:** We executed the four solvers with a time limit of 90s and
-the optimality tolerances [0.1%, 1%, 5%, 10%, 25%] on a random benchmark set and
-a TSPLIB benchmark set. The random benchmark set consists of 10 instances for
-each number of nodes
-`[25, 50, 75, 100, 150, 200, 250, 300, 350, 400, 450, 500]`. The weights were
-chosen based on randomly embedding the nodes into a 2D plane and using the
-Euclidean distances. The TSPLIB benchmark consists of all Euclidean instances
-with less than 500 nodes. It is critical to have a time limit, as otherwise, the
-benchmarks would take forever. You can find all find the whole experiment
-[here](https://github.com/d-krupke/cpsat-primer/blob/main/evaluations/tsp/).
-
-Let us first look at the results of the random benchmark, as they are easier to
-interpret. We will then compare them to the TSPLIB benchmark.
-
-#### Random Instances
-
-A common, yet simplistic method to assess a model's performance involves
-plotting its runtime against the size of the instances it processes. However,
-this approach can often lead to inaccurate interpretations, particularly because
-time-limited cutoffs can disproportionately affect the results. Instead of the
-expected exponential curves, you will get skewed sigmoidal curves. Consequently,
-such plots might not provide a clear understanding of the instance sizes your
-model is capable of handling efficiently.
-
-|                                                                             ![Runtime](https://github.com/d-krupke/cpsat-primer/blob/main/evaluations/tsp/2023-11-18_random_euclidean/PUBLIC_DATA/runtime.png)                                                                              |
-| :-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
-| The runtimes are sigmoidal instead of exponential because the time limit skews the results. The runtime can frequently exceed the time limit, because of expensive model building, etc. Thus, a pure runtime plot says surprisingly little (or is misleading) and can usually be discarded. |
-
-Instead of just cutting off the runtime, a common metric is PAR10, which sets
-the runtime to 10 times the time limit if the solver does not finish within the
-time limit, and will actually penalize timeouts. However, it still does not
-solve the problem that we actually do not know the true runtime such that these
-plots will always lie.
-
-To gain a more accurate insight into the capacities of your model, consider
-plotting the proportion of instances of a certain size that your model
-successfully solves. This method requires a well-structured benchmark to yield
-meaningful statistics for each data point. Without this structure, the resulting
-curve may appear erratic, making it challenging to draw dependable conclusions.
-
-| ![Solved over size](https://github.com/d-krupke/cpsat-primer/blob/main/evaluations/tsp/2023-11-18_random_euclidean/PUBLIC_DATA/solved_over_size.png) |
-| :--------------------------------------------------------------------------------------------------------------------------------------------------: |
-|                            For each x-value: What are the chances (y-values) that a model of this size (x) can be solved?                            |
-
-Furthermore, if the pursuit is not limited to optimal solutions but extends to
-encompass solutions of acceptable quality, the analysis can be expanded. One can
-plot the number of instances that the model solves within a defined optimality
-tolerance, as demonstrated in the subsequent figure:
-
-| ![Solved over size with optimality tolerance](https://github.com/d-krupke/cpsat-primer/blob/main/evaluations/tsp/2023-11-18_random_euclidean/PUBLIC_DATA/solved_over_size_opt_tol.png) |
-| :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
-|                              For each x-value: What are the chances (y-values) that a model of this size (x) can be solved to what quality (line style)?                               |
-
-For a comparative analysis across various models against an arbitrary benchmark,
-cactus plots emerge as a potent tool. These plots illustrate the number of
-instances solved over time, providing a clear depiction of a model's efficiency.
-For example, a coordinate of $x=10, y=20$ on such a plot signifies that 20
-instances were solved within a span of 10 seconds each. It is important to note,
-however, that these plots do not facilitate predictions for any specific
-instance unless the benchmark set is thoroughly familiar. They do allow for an
-estimation of which model is quicker for simpler instances and which can handle
-more challenging instances within a reasonable timeframe. The question of what
-exactly is a simple or challenging instance, however, is better answered by the
-previous plots.
-
-Cactus plots are notably prevalent in the evaluation of SAT-solvers, where
-instance size is a poor indicator of difficulty. A more detailed discussion on
-this subject can be found in the referenced academic paper:
-[Benchmarking Solvers, SAT-style by Brain, Davenport, and Griggio](http://www.sc-square.org/CSA/workshop2-papers/RP3-FinalVersion.pdf)
-
-| ![Cactus Plot 1](https://github.com/d-krupke/cpsat-primer/blob/main/evaluations/tsp/2023-11-18_random_euclidean/PUBLIC_DATA/cactus_plot.png) |
-| :------------------------------------------------------------------------------------------------------------------------------------------: |
-|                  For each x-value: How many (y) of the benchmark instances could have been solved with this time limit (x)?                  |
-
-Additionally, the analysis can be refined to account for different quality
-tolerances. This requires either multiple experimental runs or tracking the
-progression of the lower and upper bounds within the solver. In the context of
-CP-SAT, for instance, this tracking can be implemented via the Solution
-Callback, although its activation is may depend on updates to the objective
-rather than the bounds.
-
-| ![Cactus Plot 1](https://github.com/d-krupke/cpsat-primer/blob/main/evaluations/tsp/2023-11-18_random_euclidean/PUBLIC_DATA/cactus_plot_opt_tol.png) |
-| :--------------------------------------------------------------------------------------------------------------------------------------------------: |
-|    For each x-value: How many (y) of the benchmark instances could have been solved to a specific quality (line style) with this time limit (x)?     |
-
-Instead of plotting the number of solved instances, one can also plot the number
-of unsolved instances over time. This can be easier to read and additionally
-indicates the number of instances in the benchmark. However, I personally do not
-have a preference for one or the other, and would recommend using the one that
-is more intuitive to read for you.
-
-#### TSPLIB
-
-Our second benchmark for the Traveling Salesman Problem leverages the TSPLIB, a
-set of instances based on real-world data. This will introduce two challenges:
-
-1. The difficulty in aggregating benchmark data due to its limited size and
-   heterogeneous nature.
-2. Notable disparities in results, arising from the differing characteristics of
-   random and real-world instances.
-
-The irregularity in instance sizes makes traditional plotting methods, like
-plotting the number of solved instances over time, less effective. While data
-smoothing methods, such as rolling averages, are available, they too have their
-limitations.
-
-| ![Variation in Data](https://github.com/d-krupke/cpsat-primer/blob/main/evaluations/tsp/2023-11-18_tsplib/PUBLIC_DATA/solved_over_size.png) |
-| :-----------------------------------------------------------------------------------------------------------------------------------------: |
-|       Such a plot may prove inefficient when dealing with high variability, particularly when some data points are underrepresented.        |
-
-In contrast, the cactus plot still provides a clear and comprehensive
-perspective of various model performances. An interesting observation we can
-clearly see in it, is the diminished capability of the "Iterative Dantzig" model
-in solving instances, and a closer performance alignment between the
-`add_circuit` and Gurobi models.
-
-| ![Effective Cactus Plot](https://github.com/d-krupke/cpsat-primer/blob/main/evaluations/tsp/2023-11-18_tsplib/PUBLIC_DATA/cactus_plot_opt_tol.png) |
-| :------------------------------------------------------------------------------------------------------------------------------------------------: |
-|                Cactus plots maintain clarity and relevance, and show a performance differences between TSPLib and random instances.                |
-
-However, since cactus plots do not offer insights into individual instances, it
-is beneficial to complement them with a detailed table of results for the
-specific model you are focusing on. This approach ensures a more nuanced
-understanding of model performance across varied instances. The following table
-provides the results for the `add_circuit`-model.
-
-| Instance | # nodes | runtime | lower bound | objective | opt. gap |
-| :------- | ------: | ------: | ----------: | --------: | -------: |
-| att48    |      48 |    0.47 |       33522 |     33522 |        0 |
-| eil51    |      51 |    0.69 |         426 |       426 |        0 |
-| st70     |      70 |     0.8 |         675 |       675 |        0 |
-| eil76    |      76 |    2.49 |         538 |       538 |        0 |
-| pr76     |      76 |   54.36 |      108159 |    108159 |        0 |
-| kroD100  |     100 |    9.72 |       21294 |     21294 |        0 |
-| kroC100  |     100 |    5.57 |       20749 |     20749 |        0 |
-| kroB100  |     100 |     6.2 |       22141 |     22141 |        0 |
-| kroE100  |     100 |    9.06 |       22049 |     22068 |        0 |
-| kroA100  |     100 |    8.41 |       21282 |     21282 |        0 |
-| eil101   |     101 |    2.24 |         629 |       629 |        0 |
-| lin105   |     105 |    1.37 |       14379 |     14379 |        0 |
-| pr107    |     107 |     1.2 |       44303 |     44303 |        0 |
-| pr124    |     124 |    33.8 |       59009 |     59030 |        0 |
-| pr136    |     136 |   35.98 |       96767 |     96861 |        0 |
-| pr144    |     144 |   21.27 |       58534 |     58571 |        0 |
-| kroB150  |     150 |   58.44 |       26130 |     26130 |        0 |
-| kroA150  |     150 |   90.94 |       26498 |     26977 |       2% |
-| pr152    |     152 |   15.28 |       73682 |     73682 |        0 |
-| kroA200  |     200 |   90.99 |       29209 |     29459 |       1% |
-| kroB200  |     200 |   31.69 |       29437 |     29437 |        0 |
-| pr226    |     226 |   74.61 |       80369 |     80369 |        0 |
-| gil262   |     262 |   91.58 |        2365 |      2416 |       2% |
-| pr264    |     264 |   92.03 |       49121 |     49512 |       1% |
-| pr299    |     299 |   92.18 |       47709 |     49217 |       3% |
-| linhp318 |     318 |   92.45 |       41915 |     52032 |      19% |
-| lin318   |     318 |   92.43 |       41915 |     52025 |      19% |
-| pr439    |     439 |   94.22 |      105610 |    163452 |      35% |
-
-This should highlight that often you need a combination of different benchmarks
-and plots to get a good understanding of the performance of your model.
 
 <!-- This file was generated by the `build.py` script. Do not edit it manually. -->
 <!-- ./chapters/09_lns.md -->
