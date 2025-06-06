@@ -121,7 +121,416 @@ reflects your goals. One strategy is to carefully select benchmark instances
 that are still likely to be solved to optimality, with the expectation that
 performance trends will generalize to larger instances. While no evaluation
 method will be perfect, it is essential to remain aware of potential threats to
-the validity of your results.
+the validity of your results. Let us go through some common scenarios.
+
+## Common Benchmarking Scenarios
+
+### Quickly Comparing to a Baseline Using Scatter Plots
+
+Scatter plots with performance zones are, in my experience, highly effective for
+quickly comparing the performance of a prototype against a baseline across
+multiple metrics. While these plots do not provide a formal quantitative
+evaluation, they offer a clear visual overview of how performance has shifted.
+Their key advantages are their intuitive readability and their ability to
+accommodate `NaN` values. They are particularly useful for identifying outliers,
+though they can be less effective when too many points overlap or when data
+ranges vary significantly.
+
+Consider the following example table, which compares a basic optimization model
+with a prototype model in terms of runtime, objective value, and lower bound.
+The runtime is capped at 90 seconds, and if no optimal solution is found within
+this limit, the objective value is set to `NaN`. A run only terminates before
+the time limit if an optimal solution is found.
+
+<details><summary>Example Data</summary>
+
+| instance_name | strategy  | runtime |   objective | lower_bound |
+| :------------ | :-------- | ------: | ----------: | ----------: |
+| att48         | Prototype | 89.8327 |       33522 |       33522 |
+| att48         | Baseline  | 90.1308 |       33522 |       33369 |
+| eil101        | Prototype | 90.0948 |         629 |         629 |
+| eil101        | Baseline  | 43.8567 |         629 |         629 |
+| eil51         | Prototype | 84.8225 |         426 |         426 |
+| eil51         | Baseline  | 3.05334 |         426 |         426 |
+| eil76         | Prototype | 90.2696 |         538 |         538 |
+| eil76         | Baseline  | 4.09839 |         538 |         538 |
+| gil262        | Prototype | 90.3314 |       13817 |        2368 |
+| gil262        | Baseline  | 90.8782 |        3141 |        2240 |
+| kroA100       | Prototype | 90.5127 |       21282 |       21282 |
+| kroA100       | Baseline  | 90.0241 |       22037 |       20269 |
+| kroA150       | Prototype |  90.531 |       27249 |       26420 |
+| kroA150       | Baseline  | 90.3025 |       27777 |       24958 |
+| kroA200       | Prototype | 90.0019 |      176678 |       29205 |
+| kroA200       | Baseline  | 90.7658 |       32749 |       27467 |
+| kroB100       | Prototype | 90.1334 |       22141 |       22141 |
+| kroB100       | Baseline  | 90.5845 |       22729 |       21520 |
+| kroB150       | Prototype | 90.7107 |      128751 |       26016 |
+| kroB150       | Baseline  | 90.9659 |       26891 |       25142 |
+| kroB200       | Prototype | 90.7931 |      183078 |       29334 |
+| kroB200       | Baseline  | 90.3594 |       34481 |       27708 |
+| kroC100       | Prototype | 90.5131 |       20749 |       20749 |
+| kroC100       | Baseline  | 90.3035 |       21118 |       20125 |
+| kroD100       | Prototype | 90.0728 |       21294 |       21294 |
+| kroD100       | Baseline  | 90.2563 |       21294 |       20267 |
+| kroE100       | Prototype | 90.4515 |       22068 |       22053 |
+| kroE100       | Baseline  | 90.6112 |       22341 |       21626 |
+| lin105        | Prototype | 90.4714 |       14379 |       14379 |
+| lin105        | Baseline  | 90.6532 |       14379 |       13955 |
+| lin318        | Prototype | 90.8489 |      282458 |       41384 |
+| lin318        | Baseline  | 90.5955 |      103190 |       39016 |
+| linhp318      | Prototype | 90.9566 |         nan |       41412 |
+| linhp318      | Baseline  | 90.7038 |       84918 |       39016 |
+| pr107         | Prototype | 90.3708 |       44303 |       44303 |
+| pr107         | Baseline  | 90.4465 |       45114 |       27784 |
+| pr124         | Prototype | 90.1689 |       59167 |       58879 |
+| pr124         | Baseline  | 90.8673 |       60760 |       52392 |
+| pr136         | Prototype | 90.0296 |       96781 |       96772 |
+| pr136         | Baseline  | 90.2636 |       98850 |       89369 |
+| pr144         | Prototype | 90.3141 |       58537 |       58492 |
+| pr144         | Baseline  | 90.6465 |       59167 |       33809 |
+| pr152         | Prototype | 90.4742 |       73682 |       73682 |
+| pr152         | Baseline  | 90.8629 |       79325 |       46604 |
+| pr226         | Prototype | 90.1845 | 1.19724e+06 |       74474 |
+| pr226         | Baseline  | 90.6676 |      103271 |       55998 |
+| pr264         | Prototype | 90.4012 |      736226 |       41020 |
+| pr264         | Baseline  | 90.9642 |       68802 |       37175 |
+| pr299         | Prototype | 90.3325 |         nan |       47375 |
+| pr299         | Baseline  |   90.19 |      120489 |       45594 |
+| pr439         | Prototype | 90.5761 |         nan |       95411 |
+| pr439         | Baseline  |  90.459 |      834126 |       93868 |
+| pr76          | Prototype | 90.2718 |      108159 |      107727 |
+| pr76          | Baseline  | 90.2951 |      110331 |      105340 |
+| st70          | Prototype | 90.2824 |         675 |         675 |
+| st70          | Baseline  | 90.1484 |         675 |         663 |
+
+</details>
+
+From the table, we can already spot some fundamental issues — for example, the
+prototype fails on three instances, and several instances yield significantly
+worse results than the baseline. However, when we turn to the scatter plots with
+performance zones, such anomalies become immediately apparent.
+
+|                                                                                                                                              ![Scatter Plot with Performance Zones](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/scatter_tsp.png)                                                                                                                                              |
+| :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+| Scatter plot comparing the performance of a prototype model against a baseline model across three metrics: runtime, objective value, and lower bound. The x-axis represents the baseline model's performance; the y-axis shows the prototype model's performance. Color-coded zones indicate relative performance levels, making it easier to identify where the prototype outperforms or underperforms the baseline. |
+
+For runtime, both models typically hit the time limit, so there is limited
+variation to observe. However, the baseline model solves a few instances
+significantly faster, whereas the prototype consistently uses the full time
+limit. For the objective value, both models produce similar results on most
+instances. Yet, particularly on the larger instances, the prototype yields
+either very poor or no solutions at all.
+
+Interestingly, the lower bounds produced by the prototype are much better for
+some instances. This improvement was not obvious from a cursory review of the
+table but becomes immediately noticeable in the plots.
+
+Scatter plots are also highly effective when working with multiple performance
+metrics, particularly when you want to ensure that gains in one metric do not
+come at the expense of unacceptable losses in another. In practice, it is often
+difficult to precisely quantify the relative importance of each metric from the
+outset. The intuitive nature of these plots offers a valuable overview, serving
+as a visual aid before you commit to a specific performance metric. The example
+below illustrates a hypothetical scenario involving a vehicle routing problem.
+
+|                                                                                                                                                             ![Scatter Plot for Multi-Objectives](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/scatter_performance_zones.png)                                                                                                                                                              |
+| :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+| Scatter plots illustrating performance trade-offs across multiple metrics in a hypothetical vehicle routing problem. These plots help assess whether improvements in one metric come at the cost of significant regressions in another. Their intuitive layout makes them especially useful when metric priorities are not yet clearly defined, offering a quick overview of relative performance and highlighting outliers across different algorithm versions. |
+
+<details>
+<summary>Here is the code I used to generate the plots. You can freely copy and use it.</summary>
+
+```python
+# MIT License
+# Dominik Krupke, 2025
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+
+
+def plot_performance_scatter(
+    ax,
+    baseline: pd.Series,
+    new_values: pd.Series,
+    lower_is_better: bool = True,
+    title: str = "",
+    **kwargs,
+):
+    """
+    Plot a scatter comparison of baseline and new values with performance areas highlighted.
+
+    Parameters:
+        ax (matplotlib.axes.Axes): The axes on which to plot.
+        baseline (pd.Series): Series of baseline values.
+        new_values (pd.Series): Series of new values.
+        lower_is_better (bool): If True, lower values indicate better performance.
+        title (str): Title of the plot.
+        **kwargs: Additional keyword arguments for customization (e.g., 'color', 'marker').
+    """
+    if not isinstance(baseline, pd.Series) or not isinstance(new_values, pd.Series):
+        raise ValueError("Both baseline and new_values should be pandas Series.")
+    if baseline.size != new_values.size:
+        raise ValueError("Both Series should have the same length.")
+
+    scatter_kwargs = {
+        "color": kwargs.get("color", "blue"),
+        "marker": kwargs.get("marker", "x"),
+        "label": kwargs.get("label", "Data Points"),
+    }
+
+    line_kwargs = {
+        "color": kwargs.get("line_color", "k"),
+        "linestyle": kwargs.get("line_style", "--"),
+        "label": kwargs.get("line_label", "No Change"),
+    }
+
+    fill_improve_kwargs = {
+        "color": kwargs.get("improve_color", "green"),
+        "alpha": kwargs.get("improve_alpha", 0.3),
+        "label": kwargs.get("improve_label", "Improved Performance"),
+    }
+
+    fill_decline_kwargs = {
+        "color": kwargs.get("decline_color", "red"),
+        "alpha": kwargs.get("decline_alpha", 0.3),
+        "label": kwargs.get("decline_label", "Declined Performance"),
+    }
+
+    # Replace inf values with NaN
+    baseline = baseline.replace([np.inf, -np.inf], np.nan)
+    new_values = new_values.replace([np.inf, -np.inf], np.nan)
+
+    max_val = max(baseline.max(skipna=True), new_values.max(skipna=True)) * 1.05
+    min_val = min(baseline.min(skipna=True), new_values.min(skipna=True)) * 0.95
+
+    # get indices of NA values
+    na_indices = baseline.isna() | new_values.isna()
+
+    if lower_is_better:
+        # replace NA values with max_val
+        baseline = baseline.fillna(max_val)
+        new_values = new_values.fillna(max_val)
+    else:
+        # replace NA values with min_val
+        baseline = baseline.fillna(min_val)
+        new_values = new_values.fillna(min_val)
+
+    # plot the na_indices with a different marker
+    if na_indices.any():
+        ax.scatter(
+            baseline[na_indices],
+            new_values[na_indices],
+            marker="s",
+            color=scatter_kwargs["color"],
+            label="N/A Values",
+            zorder=2,
+        )
+
+    # add the rest of the data points
+    ax.scatter(
+        baseline[~na_indices], new_values[~na_indices], **scatter_kwargs, zorder=2
+    )
+
+    ax.plot([min_val, max_val], [min_val, max_val], zorder=1, **line_kwargs)
+
+    x = np.linspace(min_val, max_val, 500)
+    if lower_is_better:
+        ax.fill_between(x, min_val, x, zorder=0, **fill_improve_kwargs)
+        ax.fill_between(x, x, max_val, zorder=0, **fill_decline_kwargs)
+    else:
+        ax.fill_between(x, x, max_val, zorder=0, **fill_improve_kwargs)
+        ax.fill_between(x, min_val, x, zorder=0, **fill_decline_kwargs)
+
+    # draw thin lines to the diagonal to help with reading the plot.
+    # A problem without lines is that one tends to use the distance
+    # to the diagonal as a measure of performance, which is not correct.
+    # Instead, it is `y-x` that should be used.
+    for old_val, new_val in zip(baseline, new_values):
+        if pd.isna(old_val) and pd.isna(new_val):
+            continue
+        if pd.isna(old_val):
+            old_val = min_val if lower_is_better else max_val
+        if pd.isna(new_val):
+            new_val = min_val if lower_is_better else max_val
+        if lower_is_better and new_val < old_val:
+            ax.plot(
+                [old_val, old_val],
+                [old_val, new_val],
+                color="green",
+                linewidth=1.0,
+                zorder=1,
+            )
+        elif not lower_is_better and new_val > old_val:
+            ax.plot(
+                [old_val, old_val],
+                [old_val, new_val],
+                color="green",
+                linewidth=1.0,
+                zorder=1,
+            )
+        elif lower_is_better and new_val > old_val:
+            ax.plot(
+                [old_val, old_val],
+                [old_val, new_val],
+                color="red",
+                linewidth=1.0,
+                zorder=1,
+            )
+        elif not lower_is_better and new_val < old_val:
+            ax.plot(
+                [old_val, old_val],
+                [old_val, new_val],
+                color="red",
+                linewidth=1.0,
+                zorder=1,
+            )
+
+    ax.set_xlim(min_val, max_val)
+    ax.set_ylim(min_val, max_val)
+    ax.set_xlabel(kwargs.get("xlabel", "Baseline"))
+    ax.set_ylabel(kwargs.get("ylabel", "New Values"))
+    if title:
+        ax.set_title(title)
+    ax.legend()
+
+
+def plot_comparison_grid(
+    baseline_data: pd.DataFrame,
+    new_data: pd.DataFrame,
+    metrics: list[tuple[str, str]],
+    n_cols: int = 4,
+    figsize: tuple[int, int] | None = None,
+    suptitle: str = "",
+    subplot_kwargs: dict | None = None,
+    **kwargs,
+):
+    """
+    Plot a grid of performance comparisons for multiple metrics.
+
+    Parameters:
+        baseline_data (pd.DataFrame): DataFrame containing the baseline data.
+        new_data (pd.DataFrame): DataFrame containing the new data.
+        metrics (list of tuple of str): List of tuples containing column names and comparison direction ('min' or 'max').
+        n_cols (int): Number of columns in the grid.
+        figsize (tuple of int): Figure size (width, height).
+        suptitle (str): Title for the entire figure.
+        **kwargs: Additional keyword arguments to pass to individual plot functions.
+
+    Returns:
+        fig (matplotlib.figure.Figure): The figure object containing the plots.
+        axes (np.ndarray): Array of axes objects corresponding to the subplots.
+    """
+    n_metrics = len(metrics)
+    n_cols = min(n_cols, n_metrics)
+    n_rows = (n_metrics + n_cols - 1) // n_cols  # Ceiling division
+
+    # Validate columns and directions
+    for column, direction in metrics:
+        if direction not in {"min", "max"}:
+            raise ValueError("The direction should be either 'min' or 'max'.")
+        if column not in baseline_data.columns or column not in new_data.columns:
+            raise ValueError(f"Column '{column}' not found in the data.")
+
+    # Validate index alignment
+    if not baseline_data.index.equals(new_data.index):
+        raise ValueError("Indices of the DataFrames do not match.")
+
+    if figsize is None:
+        figsize = (5 * n_cols, 5 * n_rows)
+
+    fig, axes = plt.subplots(n_rows, n_cols, figsize=figsize)
+    axes = axes.flatten()
+
+    for ax, (column_name, direction) in zip(axes, metrics):
+        # Merge kwargs and subplot_kwargs[column_name] (if present) into a new dict
+        merged_kwargs = dict(kwargs)
+        if subplot_kwargs and column_name in subplot_kwargs:
+            merged_kwargs.update(subplot_kwargs[column_name])
+        plot_performance_scatter(
+            ax,
+            baseline_data[column_name],
+            new_data[column_name],
+            lower_is_better=(direction == "min"),
+            title=column_name,
+            **merged_kwargs,
+        )
+
+    # Turn off any unused subplots
+    for ax in axes[n_metrics:]:
+        ax.axis("off")
+
+    if suptitle:
+        fig.suptitle(suptitle, fontsize=16)
+
+    plt.tight_layout(rect=[0, 0, 1, 0.96])
+
+    return fig, axes
+```
+
+</details>
+
+### Success-Based Benchmarking: Cactus Plots and PAR Metrics
+
+The SAT community frequently uses cactus plots (also known as survival plots) to
+effectively compare the time to success of different solvers on a benchmark set,
+even when timeouts occur. If you are dealing with a pure constraint satisfaction
+problem, this approach is directly applicable. However, it can also be extended
+to other binary success indicators — such as proving optimality, even under
+optimality tolerances.
+
+Additionally, the **PAR10** metric is commonly used to summarize solver
+performance on a benchmark set. It is defined as the average time a solver takes
+to solve an instance, where unsolved instances (within the time limit) are
+penalized by assigning them a runtime equal to 10 times the cutoff. Variants
+like **PAR2**, which use a penalty factor of 2 instead of 10, are also
+encountered. While a factor of 10 is conventional, it remains an arbitrary
+choice. Ultimately, you must decide how to handle unknowns—instances not solved
+within the time limit—since you only know that their actual runtime exceeds the
+cutoff. If an explicit performance metric is required to declare a winner,
+PAR-style metrics are widely accepted but come with notable limitations.
+
+To gain a more nuanced view of solver performance, **cactus plots** are often
+employed. In these plots, each solver is represented by a line where each point
+$(x, y)$ indicates that $x$ benchmark instances were solved within $y$ seconds.
+
+| ![Cactus Plot 1](https://github.com/d-krupke/cpsat-primer/blob/main/evaluations/tsp/2023-11-18_random_euclidean/PUBLIC_DATA/cactus_plot.png?raw=true) |
+| :---------------------------------------------------------------------------------------------------------------------------------------------------: |
+|                                     Each point $(x, y)$ shows that $x$ instances were solved within $y$ seconds.                                      |
+
+If the number of solvers or models under comparison is not too large, you can
+also use a variation of the cactus plot to show solver performance under
+different **optimality tolerances**. This allows you to examine how much
+performance improves when the tolerance is relaxed. However, if your primary
+interest lies in **solution quality**, performance plots are likely to be more
+appropriate.
+
+In the following example, different optimality tolerances reveal a visible
+performance improvement for the strategies `AddCircuit` and
+`Miller-Tucker-Zemlin`. For the other two strategies, the impact of tolerance
+changes is minimal. This variation of the cactus plot can also be applied to
+compare solver performance across different benchmark sets, especially if you
+suspect significant variation across instance categories.
+
+| ![Cactus Plot with Optimality Tolerances](https://github.com/d-krupke/cpsat-primer/blob/main/evaluations/tsp/2023-11-18_random_euclidean/PUBLIC_DATA/cactus_plot_opt_tol.png?raw=true) |
+| :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+|             Each line style represents an optimality tolerance. The plot shows how many instances ($y$) can be solved within a given time limit ($x$) for each tolerance.              |
+
+It is also common practice to include a **virtual best** line in the cactus
+plot. This line indicates, for each instance, the best time achieved by any
+solver. Although it does not represent an actual solver, it serves as a valuable
+reference to evaluate the potential for solver complementarity. If one solver
+clearly dominates, the virtual best line will coincide with its curve. However,
+if the lines diverge, it suggests that no single solver is universally
+superior—a case of the “no free lunch” principle. Even if one solver performs
+best on 90% of instances, the remaining 10% may be better handled by
+alternatives. The greater the gap between the best actual solver and the virtual
+best, the stronger the case for a portfolio approach.
+
+### Increase Volume/Throughput
+
+### Improve Solution Quality with Timeouts
+
+### Computing Optimal Solutions
 
 Here are the two, probably most common, approaches:
 
