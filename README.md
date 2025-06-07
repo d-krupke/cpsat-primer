@@ -7564,10 +7564,12 @@ publication, you face the same challenges; in the latter case, however, the
 process becomes more extensive and formalized (but this may also be true for the
 first case depending on your manager).
 
-> [!WARNING] In some cases, the primary performance bottleneck may not lie
-> within CP-SAT itself but rather in the **Python code used to generate the
-> model**. Identifying the most resource-intensive segments of your Python code
-> is therefore essential. The profiler
+> [!WARNING]
+>
+> In some cases, the primary performance bottleneck may not lie within CP-SAT
+> itself but rather in the **Python code used to generate the model**.
+> Identifying the most resource-intensive segments of your Python code is
+> therefore essential. The profiler
 > [Scalene](https://github.com/plasma-umass/scalene) has proven to be
 > particularly effective for diagnosing such issues. That said, in many
 > situations, simple logging statements — e.g.,
@@ -8661,7 +8663,9 @@ keep your workflow organized and your results reliable:
   turnaround times accelerate your research progress and enable quicker
   decision-making.
 
-> [!TIP] Because existing tools didn’t fully meet my needs, I developed
+> [!TIP]
+>
+> Because existing tools didn’t fully meet my needs, I developed
 > [AlgBench](https://github.com/d-krupke/AlgBench) to manage benchmarking
 > results and [Slurminade](https://github.com/d-krupke/slurminade) to simplify
 > experiment distribution on clusters via a decorator interface. However, there
