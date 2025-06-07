@@ -7553,7 +7553,7 @@ interest:
 
 
 This chapter explores methods for comparing the performance of different models
-applied to complex problems, where the basic model leaves room for improvement -
+applied to complex problems, where the basic model leaves room for improvement —
 either in runtime or in solution quality, especially when the model cannot
 always be solved to optimality. As a scientist writing a paper on a new model
 (or, more likely, a new algorithm that internally uses a model), this will be
@@ -7564,10 +7564,22 @@ publication, you face the same challenges; in the latter case, however, the
 process becomes more extensive and formalized (but this may also be true for the
 first case depending on your manager).
 
+> [!WARNING] In some cases, the primary performance bottleneck may not lie
+> within CP-SAT itself but rather in the **Python code used to generate the
+> model**. Identifying the most resource-intensive segments of your Python code
+> is therefore essential. The profiler
+> [Scalene](https://github.com/plasma-umass/scalene) has proven to be
+> particularly effective for diagnosing such issues. That said, in many
+> situations, simple logging statements — e.g.,
+> `logging.info("Building circle constraint on graph with %d nodes and %d edges", n, m)`
+> — can be sufficient to reveal performance problems. It is easy to
+> underestimate the size or construction cost of auxiliary structures, which can
+> have a significant impact on overall runtime.
+
 During the explorative phase, when you probe different ideas, you will likely
 select one to five instances that you can run quickly and compare. However, for
 most applications, this number is insufficient, and you risk overfitting your
-model to these instances - gaining performance improvements on them but
+model to these instances — gaining performance improvements on them but
 sacrificing performance on others. You may even limit your model’s ability to
 solve certain instances.
 
@@ -7646,6 +7658,18 @@ feasible solution. CP-SAT, by contrast, offers a strong compromise between the
 two: although it starts more slowly, it maintains consistent progress throughout
 the search.
 
+> [!TIP]
+>
+> A commonly used metric for convergence is the
+> [**primal integral**](https://www.sciencedirect.com/science/article/abs/pii/S0167637713001181),
+> which measures the area under the curve of the incumbent solution value over
+> time. It provides a single scalar that summarizes how quickly a solver
+> improves its best-known solution. CP-SAT reports a related metric: the
+> integral of the logarithm of the optimality gap, which also accounts for the
+> quality of the bound. These metrics offer an objective measure of solver
+> progress over time, though they may not fully capture problem-specific or
+> subjective priorities.
+
 The first step is to determine your specific requirements and how best to
 measure solver performance accordingly. It is not feasible to manually plot
 performance for every instance and assign scores based on subjective
@@ -7662,6 +7686,15 @@ the validity of your results. Let us go through some common scenarios.
 > Use the
 > [SIGPLAN Empirical Evaluation Checklist](https://raw.githubusercontent.com/SIGPLAN/empirical-evaluation/master/checklist/checklist.pdf)
 > if your evaluation has to satisfy academic standards.
+
+> [!NOTE]
+>
+> Empirical studies on algorithms have historically faced some tension within
+> the academic community, where theoretical results are often viewed as more
+> prestigious or fundamental. The paper
+> _[Needed: An Empirical Science of Algorithms](https://pubsonline.informs.org/doi/epdf/10.1287/opre.42.2.201)_
+> by John Hooker (1994) offers a valuable historical and philosophical
+> perspective on this issue.
 
 ## Common Benchmarking Scenarios
 
@@ -8354,7 +8387,9 @@ def plot_performance_profile(
 > [!NOTE]
 >
 > Tangi Migot has written an excellent article on
-> [Performnace Plots](https://tmigot.github.io/posts/2024/06/teaching/)
+> [Performance Plots](https://tmigot.github.io/posts/2024/06/teaching/). Also
+> take a look on the original paper
+> [Benchmarking optimization software with performance profiles (Dolan & Moré 2002)](https://link.springer.com/article/10.1007/s101070100263)
 
 ### Analyzing the Scalability of a Single Model
 
@@ -8381,17 +8416,41 @@ instances are included or if multiple models are compared simultaneously.
 > the results for the largest instances to give an idea of the model's
 > scalability.
 
+### Importance of Including Tables
+
+Tables offer a concise and detailed view of benchmarking results. They allow
+readers to verify the accuracy of reported data, inspect individual instances,
+and complement high-level visual summaries such as plots.
+
+While the previous sections presented insightful plots for visualizing
+performance trends, it is essential to also include at least one table that
+contains the raw results for the key benchmark instances. Many high-quality
+papers rely solely on tables to present their results, as they provide
+transparency and precision.
+
+However, avoid including every table with all available data—this applies even
+to appendices. Instead, consider what information a critical reader would need
+to verify that your plots are not misleading. Focus on presenting the most
+relevant and interpretable results. A comprehensive dataset can always be linked
+in an external repository, but the tables within your paper should remain clear,
+selective, and to the point.
+
+|                                                       ![Table with Results](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/table_samplns.png)                                                        |
+| :-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+| Example table from a recent publication, presenting detailed results of a new algorithm across benchmark instances. While less intuitive than plots, such tables enable readers to examine individual outcomes in detail. |
+
 ## Distinguishing Exploratory and Workhorse Studies in Benchmarking
 
-Before diving into comprehensive benchmarking, it is essential to conduct
-preliminary investigations to assess your model’s capabilities and identify any
-foundational issues. This phase, known as _exploratory studies_, is crucial for
-establishing the basis for more detailed benchmarking, subsequently termed as
-_workhorse studies_. These latter studies aim to provide reliable answers to
-specific research questions and are often the core of academic publications. It
-is important to explicitly differentiate between these two study types and
-maintain their distinct purposes: exploratory studies for initial understanding
-and flexibility, and workhorse studies for rigorous, reproducible research.
+Before diving into comprehensive benchmarking for scientific publications, it is
+essential to conduct preliminary investigations to assess your model’s
+capabilities and identify any foundational issues. This phase, known as
+_exploratory studies_, is crucial for establishing the basis for more detailed
+benchmarking, subsequently termed as _workhorse studies_. These latter studies
+aim to provide reliable answers to specific research questions and are often the
+core of academic publications. It is important to explicitly differentiate
+between these two study types and maintain their distinct purposes: exploratory
+studies for initial understanding and flexibility, and workhorse studies for
+rigorous, reproducible research.
 
 > [!NOTE]
 >
@@ -8402,28 +8461,32 @@ and flexibility, and workhorse studies for rigorous, reproducible research.
 
 ### Exploratory Studies: Foundation Building
 
-Exploratory studies serve as an introduction to both your model and the problem
-it addresses. This phase is about gaining preliminary understanding and
-insights.
+Exploratory studies serve as a first step toward understanding both your model
+and the problem it aims to solve. This phase is focused on building intuition
+and identifying key characteristics before committing to formal benchmarking.
 
-- **Objective**: The goal here is to gather early insights rather than
-  definitive conclusions. This phase is instrumental in identifying realistic
-  problem sizes, potential challenges, and narrowing down hyperparameter search
+- **Objective**: The goal at this stage is to gain early insights — not to draw
+  definitive conclusions. Exploratory studies help identify realistic instance
+  sizes, anticipate potential challenges, and narrow down hyperparameter search
   spaces.
 
-For instance, in the `add_circuit`-section, an exploratory study helped us
-determine that our focus should be on instances with 100 to 200 nodes. If you
-encounter fundamental issues with your model at this stage, it’s advisable to
-address these before proceeding to workhorse studies.
+Avoid setting up elaborate benchmarking frameworks during this phase. Keep the
+process lightweight and flexible to enable rapid iteration. If updating your
+benchmarks becomes cumbersome each time you adjust your model, it will slow your
+progress and — since benchmarking code tends to be tedious — you may lose
+motivation quickly.
 
-> [!WARNING]
->
-> Occasionally, the primary performance bottleneck in your model may not be
-> CP-SAT but rather the Python segment where the model is being generated. In
-> these instances, identifying the most resource-intensive parts of your Python
-> code is crucial. I have found the profiler
-> [Scalene](https://github.com/plasma-umass/scalene) to be well-suited to
-> investigate and pinpoint these bottlenecks.
+From personal experience, I noticed a significant drop in productivity when I
+first learned to create robust benchmarking setups. I began treating even
+exploratory phases with the same level of rigor, which led to over-investing in
+decisions that did not yet warrant deep analysis. This approach forced me to get
+everything right too early and led to spending excessive time on unresolved
+details.
+
+Instead, strike a balance: avoid letting things become disorganized, but
+postpone formal benchmarking until you're ready to share results. For example, I
+used quick exploratory studies in a single jupyter notebook to estimate
+appropriate instance sizes for the benchmark plots shown earlier.
 
 ### Workhorse Studies: Conducting In-depth Evaluations
 
@@ -8441,26 +8504,26 @@ Remember, the aim is not to create a flawless benchmark right away but to evolve
 it as concrete questions emerge and as your understanding of the model and
 problem deepens. These studies, unlike exploratory ones, will be the focus of
 your scientific publications, with exploratory studies only referenced for
-justifying certain design decisions.
+justifying certain lesser design decisions.
 
-## Designing a Robust Benchmark for Effective Studies
+## Designing a Robust Benchmark Set for Effective Studies
 
 When undertaking both exploratory and workhorse studies, the creation of a
-well-designed benchmark is a critical step. This benchmark is the basis upon
-which you'll test and evaluate your solvers. For exploratory studies, your
-benchmark can start simple and progressively evolve. However, when it comes to
-workhorse studies, the design of your benchmark demands meticulous attention to
-ensure comprehensiveness and reliability.
+well-designed benchmark set is a critical step. This benchmark set is the basis
+upon which you will test and evaluate your solvers. For exploratory studies,
+your benchmark set can start simple and progressively evolve. However, when it
+comes to workhorse studies, the selection of your benchmark set demands
+meticulous attention to ensure comprehensiveness and reliability.
 
-While exploratory studies also benefit from a thoughtfully designed benchmark—as
-it accelerates insight acquisition—the primary emphasis at this stage is to have
-a functioning benchmark in place. This initial benchmark acts as a springboard,
-providing a foundation for deeper, more detailed analysis in the subsequent
-workhorse studies. The key is to balance the immediacy of starting with a
-benchmark against the long-term goal of refining it for more rigorous
+While exploratory studies also benefit from a thoughtfully curated benchmark —
+as it accelerates insight acquisition — the primary emphasis at this stage is to
+have a functioning benchmark in place. This initial benchmark acts as a
+springboard, providing a foundation for deeper, more detailed analysis in the
+subsequent workhorse studies. The key is to balance the immediacy of starting
+with a benchmark against the long-term goal of refining it for more rigorous
 evaluations.
 
-Ideally, a robust benchmark would consist of a large set of real-world
+Ideally, a robust benchmark set would consist of a large set of real-world
 instances, closely reflecting the actual performance of your solver. Real-world
 instances, however, are often limited in quantity and may not provide enough
 data for a statistically significant benchmark. In such cases, it is advisable
@@ -8509,6 +8572,22 @@ deterministic, their use can inadvertently lead to irreproducible results.
 Sharing benchmarks is also more straightforward when you can distribute the
 instances themselves, rather than the code used to generate them.
 
+> [!NOTE]
+>
+> An exemplary case for crafting a benchmark set is the MIPLIB benchmark
+> collection, which is widely used in the Mixed Integer Programming community to
+> evaluate the performance of solvers such as Gurobi, CPLEX, and FICO Xpress.
+> You can find the complete article on the MIPLIB here:
+> [MIPLIB 2017: data-driven compilation of the 6th mixed-integer programming library](https://link.springer.com/article/10.1007/s12532-020-00194-3).
+
+> [!TIP]
+>
+> A concept I find very interesting is "Instance Space Analysis". Here, we
+> analyze the instance space of a problem to understand the characteristics of
+> the instances. This can help us to better understand the problem and to
+> generate better instances. Check out the 30min video by Kate Smith-Miles:
+> [Instance Space Analysis: Machine Learning ABOUT Combinatorial Optimisation](https://www.youtube.com/watch?v=-2t2c9-snf0).
+
 ## Efficiently Managing Your Benchmarks
 
 Managing benchmark data can become complex, especially with multiple experiments
@@ -8516,7 +8595,7 @@ and research questions. Here are some strategies to keep things organized:
 
 - **Folder Structure**: Maintain a clear folder structure for your experiments,
   with a top-level `evaluations` folder and descriptive subfolders for each
-  experiment. For our experiment we have the following structure:
+  experiment. Here is how such a structure could look like:
   ```
   evaluations
   ├── tsp
@@ -8542,7 +8621,10 @@ and research questions. Here are some strategies to keep things organized:
   comprehensive documentation of each experiment is crucial for future
   reference.
 - **Simplified Results**: Keep a streamlined version of your results for easy
-  access, especially for plotting and sharing.
+  access, especially for plotting and sharing. Make sure it is easy to adapt
+  your plots, especially with hinsight on a later journal submission that may
+  have a different format than the conference submission. You do not want to
+  spend hours for such a simple task because you forgot what you did a year ago.
 - **Data Storage**: Save all your data, even if it seems insignificant at the
   time. This ensures you have a comprehensive dataset for later analysis or
   unexpected inquiries. Because this can become a lot of data, it is advisable
@@ -8557,13 +8639,15 @@ and research questions. Here are some strategies to keep things organized:
   of experiments across computing clusters, saving time and resources. The
   faster you have your results, the faster you can act on them.
 
-Due to a lack of tools that exactly fitted my needs I developed
-[AlgBench](https://github.com/d-krupke/AlgBench) to manage the results, and
-[Slurminade](https://github.com/d-krupke/slurminade) to easily distribute the
-experiments on a cluster via a simple decorator. However, there may be better
-tools out there, now, especially from the Machine Learning community. Drop me a
-quick mail if you have found some tools you are happy with, and I will take a
-look myself.
+> [!TIP]
+>
+> Due to a lack of tools that exactly fitted my needs I developed
+> [AlgBench](https://github.com/d-krupke/AlgBench) to manage the results, and
+> [Slurminade](https://github.com/d-krupke/slurminade) to easily distribute the
+> experiments on a cluster via a simple decorator. However, there may be better
+> tools out there, now, especially from the Machine Learning community. Drop me
+> a quick mail if you have found some tools you are happy with, and I will take
+> a look myself.
 
 <!-- This file was generated by the `build.py` script. Do not edit it manually. -->
 <!-- ./chapters/09_lns.md -->
