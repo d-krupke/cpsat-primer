@@ -7855,8 +7855,19 @@ below illustrates a hypothetical scenario involving a vehicle routing problem.
 <summary>Here is the code I used to generate the plots. You can freely copy and use it.</summary>
 
 ```python
-# MIT License
-# Dominik Krupke, 2025
+"""
+This module contains functions to plot a scatter comparison of baseline and new values with performance areas highlighted.
+
+You can freely use and distribute this code under the MIT license.
+
+Changelog:
+    2024-08-27: First version
+    2024-08-29: Added lines to the diagonal to help with reading the plot
+    2025-06-07: Basic improvements and fixing issue with index comparison.
+
+(c) 2025 Dominik Krupke, https://github.com/d-krupke/cpsat-primer
+"""
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -8046,8 +8057,9 @@ def plot_comparison_grid(
             raise ValueError(f"Column '{column}' not found in the data.")
 
     # Validate index alignment
-    if not baseline_data.index.equals(new_data.index):
-        raise ValueError("Indices of the DataFrames do not match.")
+    if set(baseline_data.index) != set(new_data.index):
+        raise ValueError("Indices of the DataFrames do not match (different values).")
+
 
     if figsize is None:
         figsize = (5 * n_cols, 5 * n_rows)
@@ -8506,148 +8518,156 @@ problem deepens. These studies, unlike exploratory ones, will be the focus of
 your scientific publications, with exploratory studies only referenced for
 justifying certain lesser design decisions.
 
-## Designing a Robust Benchmark Set for Effective Studies
+## Selecting a Robust Benchmark Instance Set
 
-When undertaking both exploratory and workhorse studies, the creation of a
-well-designed benchmark set is a critical step. This benchmark set is the basis
-upon which you will test and evaluate your solvers. For exploratory studies,
-your benchmark set can start simple and progressively evolve. However, when it
-comes to workhorse studies, the selection of your benchmark set demands
-meticulous attention to ensure comprehensiveness and reliability.
+Choosing the right set of benchmark **instances** is a crucial step for
+effective evaluation of your models and solvers. The instance set forms the
+foundation of your experimental results and directly influences the insights you
+can draw.
 
-While exploratory studies also benefit from a thoughtfully curated benchmark —
-as it accelerates insight acquisition — the primary emphasis at this stage is to
-have a functioning benchmark in place. This initial benchmark acts as a
-springboard, providing a foundation for deeper, more detailed analysis in the
-subsequent workhorse studies. The key is to balance the immediacy of starting
-with a benchmark against the long-term goal of refining it for more rigorous
-evaluations.
+### Exploratory vs. Workhorse Studies
 
-Ideally, a robust benchmark set would consist of a large set of real-world
-instances, closely reflecting the actual performance of your solver. Real-world
-instances, however, are often limited in quantity and may not provide enough
-data for a statistically significant benchmark. In such cases, it is advisable
-to explore existing benchmarks from literature, like the
-[TSPLIB](http://comopt.ifi.uni-heidelberg.de/software/TSPLIB95/) for TSP.
-Leveraging established benchmarks allows for comparison with prior studies, but
-be cautious about their quality, as not all are equally well-constructed. For
-example, TSPLIB's limitations in terms of instance size variation and
-heterogeneity can hinder result aggregation.
+- In **exploratory studies**, the instance set can start small and simple,
+  allowing you to quickly gain initial insights and identify potential issues.
+- For **workhorse studies** — which aim for comprehensive, statistically sound
+  evaluations — the instance set must be carefully curated to ensure
+  representativeness and reliability.
 
-Therefore, creating custom instances might be necessary. When doing so, aim for
-enough instances per size category to establish reliable and statistically
-significant data points. For instance, generating 10 instances for each size
-category (e.g., 25, 50, 75, 100, 150, 200, 250, 300, 350, 400, 450, 500) can
-provide a solid basis for analysis. This approach, though modest in scale,
-suffices to illustrate the benchmarking process.
+### Sources of Benchmark Instances
 
-Exercise caution with random instance generators, as they may not accurately
-represent real-world scenarios. For example, randomly generated TSP instances
-might lack collinear points common in real-world situations, like houses aligned
-on straight roads, or they might not replicate real-world clustering patterns.
-To better mimic reality, incorporate real-world data or use diverse generation
-methods to ensure a broader variety of instances. For the TSP, we could for
-example also have sampled from the larger TSPLIB instances.
+- **Real-world instances** are ideal because they reflect practical problem
+  characteristics. However, such instances are often limited in number and may
+  not cover the full range of problem difficulty or size needed for robust
+  analysis.
+- Established **public benchmarks** (e.g.,
+  [TSPLIB](http://comopt.ifi.uni-heidelberg.de/software/TSPLIB95/) for the
+  Traveling Salesman Problem) provide a valuable basis for comparison with prior
+  research. Yet, be mindful of their limitations such as uneven instance sizes
+  or lack of heterogeneity, which can affect the generality of conclusions.
 
-Consider conducting your evaluation using two distinct benchmarks, especially
-when dealing with different data types. For instance, you might have one
-benchmark derived from real-world data which, although highly relevant, is too
-limited in size to provide robust statistical insights. Simultaneously, you
-could use a second benchmark based on a larger set of random instances, better
-suited for detailed statistical analysis. This dual-benchmark approach allows
-you to demonstrate the consistency and reliability of your results, ensuring
-they are not merely artifacts of a particular dataset's characteristics. It's a
-strategy that adds depth to your evaluation, showcasing the robustness of your
-findings across varied data sources. We will use this approach below, generating
-robust plots from random instances, but also comparing them to real-world
-instances. Mixing the two benchmarks would not be advisable, as the random
-instances would dominate the results.
+### Generating Custom Instances
 
-Lastly, always separate the creation of your benchmark from the execution of
-experiments. Create and save instances in a separate process to minimize errors.
-The goal is to make your evaluation as error-proof as possible, avoiding the
-frustration and wasted effort of basing decisions on flawed data. Be
-particularly cautious with pseudo-random number generators; while theoretically
-deterministic, their use can inadvertently lead to irreproducible results.
-Sharing benchmarks is also more straightforward when you can distribute the
-instances themselves, rather than the code used to generate them.
+When real-world or public benchmarks are insufficient, generating your own
+instances is necessary. Aim to:
+
+- Include enough instances in each size or difficulty category (for example, 10
+  instances per size class) to enable statistically meaningful results.
+- Design instance generators that capture realistic features of the problem
+  domain. For example, for TSP, random uniform points may not capture real-world
+  clustering or alignment patterns common in urban layouts.
+- Use diverse generation methods or sample from large existing instances to
+  mimic realistic distributions.
+
+### Using Multiple Benchmark Sets
+
+It is often beneficial to evaluate your models on **two complementary sets**:
+
+1. A **real-world or application-driven set**—smaller but highly relevant.
+2. A **larger synthetic or randomized set**—allowing detailed statistical
+   analysis.
+
+Keep these sets separate during analysis to avoid dominance of one data type and
+to demonstrate the robustness of your results across diverse scenarios.
+
+### Practical Considerations
+
+- **Separate instance creation from experiment execution.** Generate and save
+  benchmark instances independently to minimize errors and improve
+  reproducibility.
+- **Be cautious with pseudo-random generators.** Although deterministic in
+  principle, their use can inadvertently introduce irreproducibility if seeds or
+  environments are not carefully controlled.
+- **Share instances directly** when possible, including both the pre-generated
+  instances and the generation code. This ensures reproducibility and allows
+  others to verify results without needing to regenerate instances, which may
+  depend on specific environments or random seeds. This makes replication easier
+  for others as it may still be relevant in twenty years, when your code may
+  appear outdated to future generations of researchers, whereas quickly writing
+  a parser can already today be done by AI.
 
 > [!NOTE]
 >
-> An exemplary case for crafting a benchmark set is the MIPLIB benchmark
-> collection, which is widely used in the Mixed Integer Programming community to
-> evaluate the performance of solvers such as Gurobi, CPLEX, and FICO Xpress.
-> You can find the complete article on the MIPLIB here:
-> [MIPLIB 2017: data-driven compilation of the 6th mixed-integer programming library](https://link.springer.com/article/10.1007/s12532-020-00194-3).
+> An excellent example of a well-crafted benchmark is the
+> [MIPLIB collection](https://link.springer.com/article/10.1007/s12532-020-00194-3),
+> widely used in Mixed Integer Programming research to evaluate solvers like
+> Gurobi and CPLEX.
 
 > [!TIP]
 >
-> A concept I find very interesting is "Instance Space Analysis". Here, we
-> analyze the instance space of a problem to understand the characteristics of
-> the instances. This can help us to better understand the problem and to
-> generate better instances. Check out the 30min video by Kate Smith-Miles:
-> [Instance Space Analysis: Machine Learning ABOUT Combinatorial Optimisation](https://www.youtube.com/watch?v=-2t2c9-snf0).
+> To deepen your understanding of benchmark instance diversity, consider the
+> concept of **Instance Space Analysis**. Kate Smith-Miles offers an insightful
+> [30-minute talk on this topic](https://www.youtube.com/watch?v=-2t2c9-snf0),
+> exploring how analyzing the space of instances can guide better instance
+> selection and generation.
 
 ## Efficiently Managing Your Benchmarks
 
-Managing benchmark data can become complex, especially with multiple experiments
-and research questions. Here are some strategies to keep things organized:
+Benchmark data management can quickly become complex, especially when juggling
+multiple experiments and research questions. The following strategies can help
+keep your workflow organized and your results reliable:
 
-- **Folder Structure**: Maintain a clear folder structure for your experiments,
-  with a top-level `evaluations` folder and descriptive subfolders for each
-  experiment. Here is how such a structure could look like:
+- **Folder Structure:** Maintain a clear and consistent folder hierarchy for
+  your experiments. A typical setup uses a top-level `evaluations` directory
+  with descriptive subfolders for each experiment. For example:
+
   ```
   evaluations
   ├── tsp
   │   ├── 2023-11-18_random_euclidean
   │   │   ├── PRIVATE_DATA
-  │   │   │   ├── ... all data for debugging
+  │   │   │   ├── ... all data for debugging and internal use
   │   │   ├── PUBLIC_DATA
-  │   │   │   ├── ... selected data to share
-  │   │   ├── README.md: Provide a short description of the experiment
+  │   │   │   ├── ... curated data intended for sharing
+  │   │   ├── README.md            # Brief description of the experiment
   │   │   ├── 00_generate_instances.py
   │   │   ├── 01_run_experiments.py
-  │   │   ├── ....
+  │   │   ├── ...
   │   ├── 2023-11-18_tsplib
   │   │   ├── PRIVATE_DATA
-  │   │   │   ├── ... all data for debugging
+  │   │   │   ├── ... debugging data
   │   │   ├── PUBLIC_DATA
-  │   │   │   ├── ... selected data to share
-  │   │   ├── README.md: Provide a short description of the experiment
+  │   │   │   ├── ... selected shareable data
+  │   │   ├── README.md
   │   │   ├── 01_run_experiments.py
-  │   │   ├── ....
+  │   │   ├── ...
   ```
-- **Redundancy and Documentation**: While some redundancy is acceptable,
-  comprehensive documentation of each experiment is crucial for future
-  reference.
-- **Simplified Results**: Keep a streamlined version of your results for easy
-  access, especially for plotting and sharing. Make sure it is easy to adapt
-  your plots, especially with hinsight on a later journal submission that may
-  have a different format than the conference submission. You do not want to
-  spend hours for such a simple task because you forgot what you did a year ago.
-- **Data Storage**: Save all your data, even if it seems insignificant at the
-  time. This ensures you have a comprehensive dataset for later analysis or
-  unexpected inquiries. Because this can become a lot of data, it is advisable
-  to have two folders: One with all data and one with a selection of data that
-  you want to share.
-- **Experiment Flexibility**: Design experiments to be interruptible and
-  extendable, allowing for easy resumption or modification. This is especially
-  important for exploratory studies, where you may need to make frequent
-  adjustments. However, if your workhorse study takes a long time to run, you do
-  not want to repeat it from scratch if you want to add a further solver.
-- **Utilizing Technology**: Employ tools like slurm for efficient distribution
-  of experiments across computing clusters, saving time and resources. The
-  faster you have your results, the faster you can act on them.
 
-> [!TIP]
->
-> Due to a lack of tools that exactly fitted my needs I developed
-> [AlgBench](https://github.com/d-krupke/AlgBench) to manage the results, and
-> [Slurminade](https://github.com/d-krupke/slurminade) to easily distribute the
-> experiments on a cluster via a simple decorator. However, there may be better
-> tools out there, now, especially from the Machine Learning community. Drop me
-> a quick mail if you have found some tools you are happy with, and I will take
-> a look myself.
+- **Documentation and Redundancy:** Some redundancy in your data and code is
+  acceptable if it aids understanding, but thorough documentation is essential.
+  Clearly describe each experiment’s purpose, methodology, and results to
+  facilitate future reference and reproducibility.
+
+- **Simplified Results for Easy Access:** Keep a streamlined version of your
+  results specifically for plotting and sharing. This makes it much easier to
+  adapt figures and tables later—especially if you need to meet different
+  formatting requirements for journals versus conferences. Without such
+  preparation, reformatting old results can become a frustrating and
+  time-consuming task.
+
+- **Comprehensive Data Storage:** Save _all_ data generated during experiments,
+  even if it seems insignificant at the time. This ensures a complete record for
+  later analysis, troubleshooting, or unexpected questions. Because raw data can
+  be large, organize it into two separate folders: one containing _all_ data for
+  internal use, and another with a curated subset suitable for sharing.
+
+- **Experiment Flexibility:** Design your experiments to be interruptible and
+  extensible. This flexibility allows you to pause and resume long-running
+  studies or add new solvers and configurations without re-running everything
+  from scratch. This is particularly valuable for exploratory studies with
+  frequent iterations and also for lengthy workhorse studies.
+
+- **Leveraging Technology:** Use cluster management tools like Slurm to
+  distribute your experiments efficiently across computing resources. Faster
+  turnaround times accelerate your research progress and enable quicker
+  decision-making.
+
+> [!TIP] Because existing tools didn’t fully meet my needs, I developed
+> [AlgBench](https://github.com/d-krupke/AlgBench) to manage benchmarking
+> results and [Slurminade](https://github.com/d-krupke/slurminade) to simplify
+> experiment distribution on clusters via a decorator interface. However, there
+> may now be better solutions available, especially from the machine learning
+> community. If you know of tools you like, please drop me a line — I would be
+> happy to explore them.
 
 <!-- This file was generated by the `build.py` script. Do not edit it manually. -->
 <!-- ./chapters/09_lns.md -->

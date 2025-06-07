@@ -112,7 +112,13 @@ def plot_performance_scatter(
     # A problem without lines is that one tends to use the distance
     # to the diagonal as a measure of performance, which is not correct.
     # Instead, it is `y-x` that should be used.
-    for old_val, new_val in zip(baseline[~na_indices], new_values[~na_indices]):
+    for old_val, new_val in zip(baseline, new_values):
+        if pd.isna(old_val) and pd.isna(new_val):
+            continue
+        if pd.isna(old_val):
+            old_val = min_val if lower_is_better else max_val
+        if pd.isna(new_val):
+            new_val = min_val if lower_is_better else max_val
         if lower_is_better and new_val < old_val:
             ax.plot(
                 [old_val, old_val],
@@ -193,8 +199,8 @@ def plot_comparison_grid(
             raise ValueError(f"Column '{column}' not found in the data.")
 
     # Validate index alignment
-    if not baseline_data.index.equals(new_data.index):
-        raise ValueError("Indices of the DataFrames do not match.")
+    if set(baseline_data.index) != set(new_data.index):
+        raise ValueError("Indices of the DataFrames do not match (different values).")
 
     if figsize is None:
         figsize = (5 * n_cols, 5 * n_rows)

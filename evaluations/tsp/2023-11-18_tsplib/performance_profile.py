@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
 
+
 def plot_performance_profile(
     data: pd.DataFrame,
     instance_column: str,
@@ -15,7 +16,7 @@ def plot_performance_profile(
     ax: Axes | None = None,
     scale: str | None = None,
     log_base: int = 2,
-    figsize: tuple = (9, 6)
+    figsize: tuple = (9, 6),
 ) -> Axes:
     """
     Plot a performance profile, either on a relative-ratio basis or absolute-difference basis:
@@ -56,8 +57,7 @@ def plot_performance_profile(
 
     # 2) Pivot to get per-instance × per-strategy medians
     pivot = (
-        data
-        .groupby([instance_column, strategy_column])[metric_column]
+        data.groupby([instance_column, strategy_column])[metric_column]
         .median()
         .unstack(fill_value=np.nan)
     )
@@ -129,7 +129,7 @@ def plot_performance_profile(
         else:
             use_log = False
     else:
-        use_log = (scale == "log")
+        use_log = scale == "log"
 
     # 9) Plot each solver’s curve
     for strat in profile.columns:
@@ -137,8 +137,14 @@ def plot_performance_profile(
         if highlight_best and strat == best_solver:
             ax.step(all_x, y, where="post", label=strat, linewidth=3.0, alpha=1.0)
         else:
-            ax.step(all_x, y, where="post", label=strat,
-                    linewidth=1.5, alpha=0.6 if highlight_best else 1.0)
+            ax.step(
+                all_x,
+                y,
+                where="post",
+                label=strat,
+                linewidth=1.5,
+                alpha=0.6 if highlight_best else 1.0,
+            )
 
     # 10) Axis scaling and limits
     if comparison == "relative":
@@ -150,7 +156,8 @@ def plot_performance_profile(
             ax.set_xlim(1.0, all_x[-1] * 1.1)
         xlabel = (
             f"Within this factor of the best (log{log_base} scale)"
-            if use_log else "Within this factor of the best (linear scale)"
+            if use_log
+            else "Within this factor of the best (linear scale)"
         )
     else:  # absolute
         ax.set_xscale("linear")
