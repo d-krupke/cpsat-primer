@@ -2,7 +2,7 @@ from typing import Hashable
 import networkx as nx
 from ortools.sat.python import cp_model
 
-from .partial_tour import PartialTourWithDepot
+from partial_tour import PartialTourWithDepot
 
 
 class CvrpDuplicatedCircuits:
