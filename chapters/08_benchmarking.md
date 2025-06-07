@@ -31,7 +31,7 @@ first case depending on your manager).
 > [Scalene](https://github.com/plasma-umass/scalene) has proven to be
 > particularly effective for diagnosing such issues. That said, in many
 > situations, simple logging statements — e.g.,
-> `logging.info("Building circle constraint on graph with %d nodes and %d edges", n, m)`
+> `logging.info("Building circuit constraint on graph with %d nodes and %d edges", n, m)`
 > — can be sufficient to reveal performance problems. It is easy to
 > underestimate the size or construction cost of auxiliary structures, which can
 > have a significant impact on overall runtime.
@@ -49,12 +49,14 @@ your instance set is large enough, the risk is low; however, if you have only a
 few instances, you may remove the single strategy necessary to solve a
 particular class of problems. Modern solvers include features that impose a
 modest overhead on simple instances but enable solving otherwise intractable
-cases. This trade-off is worthwhile: do not sacrifice the ability to solve
-complex instances for a marginal performance gain on simple ones. Therefore,
+cases. This trade-off is worthwhile: **do not sacrifice the ability to solve
+complex instances for a marginal performance gain on simple ones**. Therefore,
 always benchmark your changes properly before deploying them to production, even
 if you do not plan to publish your results scientifically.
 
-The no‐free‐lunch theorem and timeouts complicate benchmarking more than you
+### No-Free-Lunch Theorem and Timeouts
+
+The **no‐free‐lunch theorem** and timeouts complicate benchmarking more than you
 might have anticipated. The no‐free‐lunch theorem asserts that no single
 algorithm outperforms all others across every instance, which is especially true
 for NP‐hard problems. Consequently, improving performance on some instances
@@ -70,6 +72,8 @@ least once. Thus, simple exclusion is not an option for most applications.
 Timeouts introduce "unknowns" into your results: a solver might have succeeded
 given just one more millisecond, or it might have been trapped in an endless
 loop. This uncertainty complicates the computation of accurate statistics.
+
+### Example: Nurse Rostering Problem Benchmark
 
 Let us examine the performance of CP-SAT, Gurobi, and Hexaly on a Nurse
 Rostering Problem. Nurse rostering is a complex yet common problem in which
@@ -102,7 +106,7 @@ So, which solver is best for this problem?
 
 > [!WARNING]
 >
-> These two plots - and even this specific problem - are insufficient to draw
+> These two plots — and even this specific problem — are insufficient to draw
 > definitive conclusions about the overall performance of the solvers.
 > Nevertheless, it is remarkable that our beloved open-source solver, CP-SAT,
 > performs so well against the commercial solvers Gurobi and Hexaly in this
@@ -130,6 +134,8 @@ the search.
 > progress over time, though they may not fully capture problem-specific or
 > subjective priorities.
 
+### Defining Your Benchmarking Goals
+
 The first step is to determine your specific requirements and how best to
 measure solver performance accordingly. It is not feasible to manually plot
 performance for every instance and assign scores based on subjective
@@ -137,9 +143,11 @@ impressions; such an approach does not scale and lacks objectivity and
 reproducibility. Instead, you should define a concrete metric that accurately
 reflects your goals. One strategy is to carefully select benchmark instances
 that are still likely to be solved to optimality, with the expectation that
-performance trends will generalize to larger instances. While no evaluation
-method will be perfect, it is essential to remain aware of potential threats to
-the validity of your results. Let us go through some common scenarios.
+performance trends will generalize to larger instances. Another to decide for a
+fixed time limit we are willing to wait for a solution, and then measure how
+well each solver performs under these constraints. While no evaluation method
+will be perfect, it is essential to remain aware of potential threats to the
+validity of your results. Let us go through some common scenarios.
 
 > [!TIP]
 >
