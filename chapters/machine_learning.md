@@ -266,6 +266,9 @@ commercial products are already exploring this idea:
    can interact with via chat
 4. [Robust and Adaptive Optimization under a Large Language Model Lens](https://arxiv.org/pdf/2501.00568):
    A research paper exploring using LLMs for robust optimization.
+5. [DualSchool: How Reliable are LLMs for Optimization Education?](https://arxiv.org/pdf/2505.21775):
+   This paper shows that LLMs still struggle with simple, recipe-based tasks
+   like dualizing linear programs.
 
 ##### Learning instead of Guessing
 
