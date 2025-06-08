@@ -29,12 +29,12 @@ first case depending on your manager).
 > Identifying the most resource-intensive segments of your Python code is
 > therefore essential. The profiler
 > [Scalene](https://github.com/plasma-umass/scalene) has proven to be
-> particularly effective for diagnosing such issues. That said, in many
-> situations, simple logging statements — e.g.,
-> `logging.info("Building circuit constraint on graph with %d nodes and %d edges", n, m)`
-> — can be sufficient to reveal performance problems. It is easy to
-> underestimate the size or construction cost of auxiliary structures, which can
-> have a significant impact on overall runtime.
+> particularly effective for pinpointing such issues. In many situations, simple
+> logging statements (e.g.,
+> `logging.info("Building circuit constraint on graph with %d nodes and %d edges", n, m)`)
+> can also be sufficient to reveal fundamental performance problems. It is easy
+> to underestimate the size or construction cost of auxiliary structures, which
+> can have a significant impact on overall runtime.
 
 During the explorative phase, when you probe different ideas, you will likely
 select one to five instances that you can run quickly and compare. However, for
@@ -63,20 +63,25 @@ for NP‐hard problems. Consequently, improving performance on some instances
 often coincides with degradations on others. It is essential to assess whether
 the gains justify the losses.
 
-Another challenge arises when imposing a time limit to prevent any individual
-instance from running indefinitely; without it, benchmarks can take
-prohibitively long. Yet comparing aborted runs to those that complete within the
-time limit poses a dilemma: disqualifying models that time out may leave no
-viable candidate, since with sufficient instances, any solver will be unlucky at
-least once. Thus, simple exclusion is not an option for most applications.
-Timeouts introduce "unknowns" into your results: a solver might have succeeded
-given just one more millisecond, or it might have been trapped in an endless
-loop. This uncertainty complicates the computation of accurate statistics.
+Another challenge arises when imposing a time limit to prevent individual
+instances from running indefinitely. Without such a limit, benchmark runs can
+become prohibitively long. However, including aborted runs in the dataset
+complicates performance evaluation, as it remains unclear whether a solver would
+have found a solution shortly after the timeout or was trapped in an infinite
+loop. Discarding all instances that timed out on a particular model restricts
+the evaluation to simpler instances, even though the more complex ones are often
+of greater interest. Conversely, discarding all models that timed out on any
+instance may leave no viable candidates, as any solver is likely to fail on at
+least one instance in a sufficiently large benchmark set. Whether the goal is to
+find a provably optimal solution, the best solution within a fixed time limit,
+or simply any feasible solution, it is essential to enable comparisons over data
+sets that include unknown outcomes.
 
 ### Example: Nurse Rostering Problem Benchmark
 
 Let us examine the performance of CP-SAT, Gurobi, and Hexaly on a Nurse
-Rostering Problem. Nurse rostering is a complex yet common problem in which
+Rostering Problem to illustrate the additional challenge of selecting an
+appropriate time limit. Nurse rostering is a complex yet common problem in which
 nurses must be assigned to shifts while satisfying a variety of constraints.
 Since CP-SAT, Gurobi, and Hexaly differ significantly in their underlying
 algorithms, the comparison reveals pronounced performance differences. However,
@@ -106,7 +111,7 @@ So, which solver is best for this problem?
 
 > [!WARNING]
 >
-> These two plots — and even this specific problem — are insufficient to draw
+> These two plots (and even this specific problem) are insufficient to draw
 > definitive conclusions about the overall performance of the solvers.
 > Nevertheless, it is remarkable that our beloved open-source solver, CP-SAT,
 > performs so well against the commercial solvers Gurobi and Hexaly in this
