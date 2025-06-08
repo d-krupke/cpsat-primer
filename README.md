@@ -7599,6 +7599,15 @@ complex instances for a marginal performance gain on simple ones**. Therefore,
 always benchmark your changes properly before deploying them to production, even
 if you do not plan to publish your results scientifically.
 
+Note that this chapter focuses solely on improving the performance of your model
+with respect to its specific formulation; it does not address the evaluation of
+the model's accuracy or its business value. When tackling a real-world problem,
+where your model is merely an approximation
+[of reality](https://en.wikipedia.org/wiki/All_models_are_wrong), it is
+essential to also consider refining the approximation and monitoring the
+real-world performance of the resulting solutions. In some cases, simpler
+formulations not only yield better outcomes but are also easier to optimize for.
+
 ### No-Free-Lunch Theorem and Timeouts
 
 The **no‐free‐lunch theorem** and timeouts complicate benchmarking more than you
