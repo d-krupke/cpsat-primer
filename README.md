@@ -7778,7 +7778,7 @@ evaluation, they offer a clear visual overview of how performance has shifted.
 Their key advantages are their intuitive readability and their ability to
 accommodate `NaN` values. They are particularly useful for identifying outliers,
 though they can be less effective when too many points overlap or when data
-ranges vary significantly.
+ranges vary significantly (sometimes, a log scale can help here).
 
 Consider the following example table, which compares a basic optimization model
 with a prototype model in terms of runtime, objective value, and lower bound.
@@ -7849,7 +7849,7 @@ the time limit if an optimal solution is found.
 
 </details>
 
-From the table, we can already spot some fundamental issues — for example, the
+From the table, we can already spot some fundamental issues. For example, the
 prototype fails on three instances, and several instances yield significantly
 worse results than the baseline. However, when we turn to the scatter plots with
 performance zones, such anomalies become immediately apparent.
@@ -8140,14 +8140,15 @@ to solve an instance, where unsolved instances (within the time limit) are
 penalized by assigning them a runtime equal to 10 times the cutoff. Variants
 like **PAR2**, which use a penalty factor of 2 instead of 10, are also
 encountered. While a factor of 10 is conventional, it remains an arbitrary
-choice. Ultimately, you must decide how to handle unknowns—instances not solved
-within the time limit—since you only know that their actual runtime exceeds the
+choice. Ultimately, you must decide how to handle unknowns (instances not solved
+within the time limit) since you only know that their actual runtime exceeds the
 cutoff. If an explicit performance metric is required to declare a winner,
 PAR-style metrics are widely accepted but come with notable limitations.
 
 To gain a more nuanced view of solver performance, **cactus plots** are often
 employed. In these plots, each solver is represented by a line where each point
-$(x, y)$ indicates that $x$ benchmark instances were solved within $y$ seconds.
+$(x, y)$ indicates that $y$ benchmark instances were solved within $x$ seconds
+(there exists also the reversed version).
 
 | ![Cactus Plot 1](https://github.com/d-krupke/cpsat-primer/blob/main/evaluations/tsp/2023-11-18_random_euclidean/PUBLIC_DATA/cactus_plot.png?raw=true) |
 | :---------------------------------------------------------------------------------------------------------------------------------------------------: |
@@ -8214,10 +8215,9 @@ its $(x,y)$ coordinates indicate the proportion $y$ of instances for which the
 solver achieved a solution that is at most $x$ times worse than the best known
 solution. For example, if a solver has a point at $(1.05, 0.8)$, it means that
 it found a solution within 5% of the best-known solution for 80% of the
-instances. The x-axis is usually on a logarithmic scale, allowing for a more
-detailed view of the performance differences. Often, a logarithmic scale is used
-for the x-axis, especially when the performance ratios vary widely. However,
-down below we use a linear scale because the values are close to 1.
+instances. Often, a logarithmic scale is used for the x-axis, especially when
+the performance ratios vary widely. However, down below we use a linear scale
+because the values are close to 1.
 
 In the example below, based on the **Capacitated Vehicle Routing Problem
 (CVRP)**, the performance plots compare three different models across a
@@ -8475,7 +8475,8 @@ to appendices. Instead, consider what information a critical reader would need
 to verify that your plots are not misleading. Focus on presenting the most
 relevant and interpretable results. A comprehensive dataset can always be linked
 in an external repository, but the tables within your paper should remain clear,
-selective, and to the point.
+selective, and to the point. Even if you are only optimizing for yourself, use
+plots to gain an overview but also check out the data tables.
 
 |                                                       ![Table with Results](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/table_samplns.png)                                                        |
 | :-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
@@ -8518,35 +8519,70 @@ benchmarks becomes cumbersome each time you adjust your model, it will slow your
 progress and — since benchmarking code tends to be tedious — you may lose
 motivation quickly.
 
-From personal experience, I noticed a significant drop in productivity when I
-first learned to create robust benchmarking setups. I began treating even
-exploratory phases with the same level of rigor, which led to over-investing in
-decisions that did not yet warrant deep analysis. This approach forced me to get
-everything right too early and led to spending excessive time on unresolved
-details.
+From personal experience, I observed a significant drop in productivity when I
+first learned to build robust benchmarking setups. I began applying the same
+level of rigor to exploratory phases, mistakenly treating the setup as a one-off
+investment that would pay off in the long run. However, whenever you do
+something genuinely interesting, unexpected issues inevitably arise, requiring
+further iterations on the setup. In trying to anticipate such surprises, it
+becomes tempting to over-engineer the process—spending excessive time
+considering what could go wrong and preparing for every contingency, rather than
+simply getting started.
 
 Instead, strike a balance: avoid letting things become disorganized, but
-postpone formal benchmarking until you're ready to share results. For example, I
-used quick exploratory studies in a single jupyter notebook to estimate
-appropriate instance sizes for the benchmark plots shown earlier.
+postpone formal benchmarking until you are ready to share results. For example,
+I used quick exploratory studies in a single jupyter notebook to estimate
+appropriate instance sizes for the benchmark plots shown earlier. Not a reliable
+part of a pipeline, but it got the job done quickly and only then I set up a
+proper pipeline to create my final plots and tables.
 
 ### Workhorse Studies: Conducting In-depth Evaluations
 
-Workhorse studies follow the exploratory phase, characterized by more structured
-and meticulous approaches. This stage is vital for a comprehensive evaluation of
-your model and collecting substantive data for analysis.
+Workhorse studies follow the exploratory phase and are characterized by more
+structured and meticulous methodologies. This stage is essential for conducting
+comprehensive evaluations of your model and collecting substantive data for
+analysis.
 
-- **Objective**: These studies are designed to answer specific research
-  questions and provide meaningful insights. The approach here is more
-  methodical, focusing on clearly defined research questions. The benchmarks
-  designed should be well-structured and large enough to yield statistically
-  significant results.
+- **Objective**: These studies aim to answer specific research questions and
+  yield meaningful insights. The approach is methodical, emphasizing clearly
+  defined objectives. Benchmarks should be well-structured and sufficiently
+  large to produce statistically significant results.
 
-Remember, the aim is not to create a flawless benchmark right away but to evolve
-it as concrete questions emerge and as your understanding of the model and
-problem deepens. These studies, unlike exploratory ones, will be the focus of
-your scientific publications, with exploratory studies only referenced for
-justifying certain lesser design decisions.
+While you can convert one of your exploratory studies into a workhorse study, I
+strongly recommend starting the data collection process from scratch. Make it as
+difficult as possible for outdated or flawed data to enter your benchmarking
+setup.
+
+Your exploratory studies should already have provided a reasonable estimate of
+the required runtime for benchmarks. Always ensure that you allocate sufficient
+time for potential failures and that your setup can resume if, for instance, a
+colleague inadvertently terminates your job. Monitor the results while the
+benchmarks are running—you do not want to wait a week only to discover that you
+forgot to save the solutions.
+
+I personally structure a workhorse study as follows:
+
+1. **Hypothesis or Research Question** Clearly define a hypothesis or research
+   question that emerged during the exploratory phase.
+
+2. **Experiment Design** Develop a detailed experimental plan, including the
+   instance set, the models to be evaluated, and the metrics to be collected.
+
+3. **Benchmark Setup** Implement a robust benchmarking framework that supports
+   reproducibility and efficient execution.
+
+4. **Data Collection** Execute the experiments, ensuring that all relevant data
+   is collected and stored in a structured and reliable format.
+
+5. **Data Analysis** Analyze the results using appropriate statistical and
+   visualization techniques.
+
+6. **Discussion of Findings** Interpret the results and discuss their
+   implications in the context of the initial hypothesis or research question.
+
+7. **Threats to Validity** Reflect on potential threats to the validity of your
+   findings, such as biases in instance selection, model assumptions, or
+   evaluation procedures.
 
 ## Selecting a Robust Benchmark Instance Set
 
