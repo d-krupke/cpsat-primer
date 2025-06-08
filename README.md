@@ -7708,12 +7708,6 @@ well each solver performs under these constraints. While no evaluation method
 will be perfect, it is essential to remain aware of potential threats to the
 validity of your results. Let us go through some common scenarios.
 
-> [!TIP]
->
-> Use the
-> [SIGPLAN Empirical Evaluation Checklist](https://raw.githubusercontent.com/SIGPLAN/empirical-evaluation/master/checklist/checklist.pdf)
-> if your evaluation has to satisfy academic standards.
-
 > [!NOTE]
 >
 > Empirical studies on algorithms have historically faced some tension within
@@ -7723,19 +7717,22 @@ validity of your results. Let us go through some common scenarios.
 > by John Hooker (1994) offers a valuable historical and philosophical
 > perspective on this issue.
 
-## Common Benchmarking Scenarios
+## Common Benchmarking Scenarios and Visualization Techniques
 
-Several common benchmarking scenarios arise in practice. To choose the
-appropriate visualization or evaluation method, it is useful to take a moment to
-identify which scenario applies to your case—and to recognize which tools are
-best suited to other situations. Do not simply go for the prettiest and most
-complex plot; instead, select the one that best fits your needs.
+Several common benchmarking scenarios arise in practice. To select an
+appropriate visualization or evaluation method, it is important to first
+identify which scenario applies to your case and to recognize which tools are
+better suited for other contexts. Avoid choosing the most visually appealing or
+complex plot by default; instead, select the one that best serves your
+analytical goals. Keep in mind that the primary purpose of a plot is to make
+tabular data more accessible and easier to interpret. It does not replace the
+underlying tables, nor does it provide definitive answers.
 
 1. **Instances are always solved to optimality, and only runtime matters.** This
    is the simplest benchmarking scenario. If every instance can be solved to
    optimality and your only concern is runtime, you can summarize performance
-   using the mean runtime or visualize it using a basic box plot. The primary
-   challenge here lies in choosing the appropriate type of mean (e.g.,
+   using the mean (relative) runtime or visualize it using a basic box plot. The
+   primary challenge here lies in choosing the appropriate type of mean (e.g.,
    arithmetic, geometric, harmonic) and selecting representative instances that
    reflect production-like conditions. For this case, the rest of the chapter
    may be skipped.
@@ -7753,18 +7750,24 @@ complex plot; instead, select the one that best fits your needs.
    approaches the best-known solution across the benchmark set.
 
 4. **Scalability analysis: how performance evolves with instance size.** If you
-   are analyzing how well a model scales—i.e., how large an instance it can
-   solve to optimality and how the optimality gap grows thereafter—**split
+   are analyzing how well a model scales, i.e., how large an instance it can
+   solve to optimality and how the optimality gap grows thereafter, **split
    plots** are a good choice. They show runtime for solved instances and
    optimality gap for those that exceed the time limit, allowing for a unified
    view of scalability.
 
 5. **Multi-metric performance comparison against a baseline.** When you want a
-   quick, intuitive overview of how your model performs across several
-   metrics—such as runtime, objective value, and lower bound—**scatter plots
-   with performance zones** are ideal. They provide a clear comparative
+   quick, intuitive overview of how your model performs across several metrics,
+   such as runtime, objective value, and lower bound, **scatter plots with
+   performance zones** are ideal. They provide a clear comparative
    visualization, making it easy to spot outliers and trade-offs across
    dimensions.
+
+> [!TIP]
+>
+> Use the
+> [SIGPLAN Empirical Evaluation Checklist](https://raw.githubusercontent.com/SIGPLAN/empirical-evaluation/master/checklist/checklist.pdf)
+> if your evaluation has to satisfy academic standards.
 
 ### Quickly Comparing to a Baseline Using Scatter Plots
 
