@@ -8587,14 +8587,14 @@ I personally structure a workhorse study as follows:
 
 ## Selecting a Benchmark Instance Set
 
-In many cases, constructing a benchmark instance set can be unexpectedly
-challenging, particularly when no established benchmarks are available. Even
-when such sets exist, they may not be of the appropriate size or may prove to be
-less realistic than anticipated. In some real-world datasets, portions of the
-original data may have been replaced with uniformly random values to preserve
-confidentiality, often without realizing that such modifications can
-substantially alter the problem's characteristics. Crafting a high-quality
-benchmark instance set can be an art in itself. A notable example is the
+Constructing a benchmark instance set is often more challenging than it first
+appears, especially when no established benchmarks exist. Even when such sets
+exist, they may be poorly sized or less realistic than anticipated. In fact,
+some seemingly realistic datasets may have had portions of the original data
+replaced with uniformly random values to preserve confidentiality, often without
+realizing that such modifications can substantially alter the problem's
+characteristics. Crafting a high-quality benchmark instance set can be an art in
+itself. A notable example is the
 [MIPLIB collection](https://link.springer.com/article/10.1007/s12532-020-00194-3),
 which stands as a scientific contribution in its own right.
 
@@ -8604,8 +8604,9 @@ and use them (or a representative subset) as your benchmark set. Performing
 basic data analysis to examine the distribution of instance characteristics is
 advisable; for example, it may turn out that 99% of the instances are trivial,
 while the remaining 1% are significantly more challenging and thus more relevant
-for improvement. In most cases, a bit of common sense is sufficient to construct
-a useful benchmark set without the need for particularly creative solutions.
+for improvement. In most cases, basic domain knowledge and judgment are often
+sufficient to construct a useful benchmark set without the need for particularly
+creative solutions.
 
 If you are not in this fortunate position, the first step is to check whether
 any public data is available for your problem or for a sufficiently similar one.
@@ -8613,7 +8614,8 @@ For instance, although the widely used
 [TSPLIB](http://comopt.ifi.uni-heidelberg.de/software/TSPLIB95/) benchmark set
 for the Traveling Salesman Problem (TSP) contains only distance information, it
 is relatively straightforward to generate Capacitated Vehicle Routing Problem
-(CVRP) instances from it. This can be done by randomly selecting a depot and
+(CVRP) instances from it, allowing the reuse of well-structured and challenging
+inputs for a related problem. This can be done by randomly selecting a depot and
 assigning a vehicle capacity based on a fraction of a heuristic TSP solution. If
 you obtain readily available instances, be sure to verify whether they remain
 challenging; they may originate from a different era or may not have been
@@ -8621,15 +8623,15 @@ well-designed, as not everything published online is of high quality (although I
 hope that this Primer is).
 
 If no suitable public benchmarks are available, you will need to generate your
-own instances. Even when public benchmarks do exist, it may still be beneficial
-to generate additional instances in order to control specific parameters and
-systematically evaluate the impact of varying a single factor on your model's
-performance. In typical benchmark sets, the diversity of instances often leads
-to significant parameter interference, which would require a large dataset and
-sophisticated statistical analysis to produce statistically significant results.
-Nevertheless, it is important to maintain diversity within your general instance
-set to ensure that your model remains robust and capable of handling a broad
-range of scenarios.
+own instances. Even with public benchmarks available, generating your own
+instances can still be beneficial to generate additional instances in order to
+control specific parameters and systematically evaluate the impact of varying a
+single factor on your model's performance. In typical benchmark sets, the
+diverse instances can confound the effects of individual parameters, making it
+difficult to isolate their impact without large datasets and careful statistical
+design. Nevertheless, it is important to maintain diversity within your general
+instance set to ensure that your model remains robust and capable of handling a
+broad range of scenarios.
 
 > [!TIP]
 >
@@ -8645,9 +8647,9 @@ existing tools. For example,
 that can be adapted to suit a variety of problem settings. An exploratory study
 is usually necessary to identify which generator aligns best with the
 requirements of your specific problem. For generating other types of values, you
-can experiment with different random distributions. One technique I find
-particularly effective is using images as a source for constructing probability
-distributions.
+can experiment with different random distributions. One particularly effective
+technique is using images to define spatial or value distributions, for example,
+treating pixel intensities as sampling probabilities.
 
 > [!TIP]
 >
