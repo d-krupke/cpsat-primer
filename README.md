@@ -8566,7 +8566,8 @@ I personally structure a workhorse study as follows:
    question that emerged during the exploratory phase.
 
 2. **Experiment Design** Develop a detailed experimental plan, including the
-   instance set, the models to be evaluated, and the metrics to be collected.
+   instance set, the models/configurations to be evaluated, and the metrics to
+   be collected.
 
 3. **Benchmark Setup** Implement a robust benchmarking framework that supports
    reproducibility and efficient execution.
@@ -8584,79 +8585,51 @@ I personally structure a workhorse study as follows:
    findings, such as biases in instance selection, model assumptions, or
    evaluation procedures.
 
-## Selecting a Robust Benchmark Instance Set
+## Selecting a Benchmark Instance Set
 
-Choosing the right set of benchmark **instances** is a crucial step for
-effective evaluation of your models and solvers. The instance set forms the
-foundation of your experimental results and directly influences the insights you
-can draw.
+In many cases, constructing a benchmark instance set can be unexpectedly
+challenging, particularly when no established benchmarks are available. Even
+when such sets exist, they may not be of the appropriate size or may prove to be
+less realistic than anticipated. In some real-world datasets, portions of the
+original data may have been replaced with uniformly random values to preserve
+confidentiality, often without realizing that such modifications can
+substantially alter the problem's characteristics. Crafting a high-quality
+benchmark instance set can be an art in itself. A notable example is the
+[MIPLIB collection](https://link.springer.com/article/10.1007/s12532-020-00194-3),
+which stands as a scientific contribution in its own right.
 
-### Exploratory vs. Workhorse Studies
+If you already have a deployed implementation, the process is fortunately quite
+straightforward. You can collect the instances that have been solved in the past
+and use them (or a representative subset) as your benchmark set. Performing
+basic data analysis to examine the distribution of instance characteristics is
+advisable; for example, it may turn out that 99% of the instances are trivial,
+while the remaining 1% are significantly more challenging and thus more relevant
+for improvement. In most cases, a bit of common sense is sufficient to construct
+a useful benchmark set without the need for particularly creative solutions.
 
-- In **exploratory studies**, the instance set can start small and simple,
-  allowing you to quickly gain initial insights and identify potential issues.
-- For **workhorse studies** — which aim for comprehensive, statistically sound
-  evaluations — the instance set must be carefully curated to ensure
-  representativeness and reliability.
+If you are not in this fortunate position, the first step is to check whether
+any public data is available for your problem or for a sufficiently similar one.
+For instance, although the widely used
+[TSPLIB](http://comopt.ifi.uni-heidelberg.de/software/TSPLIB95/) benchmark set
+for the Traveling Salesman Problem (TSP) contains only distance information, it
+is relatively straightforward to generate Capacitated Vehicle Routing Problem
+(CVRP) instances from it. This can be done by randomly selecting a depot and
+assigning a vehicle capacity based on a fraction of a heuristic TSP solution. If
+you obtain readily available instances, be sure to verify whether they remain
+challenging; they may originate from a different era or may not have been
+well-designed, as not everything published online is of high quality (although I
+hope that this Primer is).
 
-### Sources of Benchmark Instances
-
-- **Real-world instances** are ideal because they reflect practical problem
-  characteristics. However, such instances are often limited in number and may
-  not cover the full range of problem difficulty or size needed for robust
-  analysis.
-- Established **public benchmarks** (e.g.,
-  [TSPLIB](http://comopt.ifi.uni-heidelberg.de/software/TSPLIB95/) for the
-  Traveling Salesman Problem) provide a valuable basis for comparison with prior
-  research. Yet, be mindful of their limitations such as uneven instance sizes
-  or lack of heterogeneity, which can affect the generality of conclusions.
-
-### Generating Custom Instances
-
-When real-world or public benchmarks are insufficient, generating your own
-instances is necessary. Aim to:
-
-- Include enough instances in each size or difficulty category (for example, 10
-  instances per size class) to enable statistically meaningful results.
-- Design instance generators that capture realistic features of the problem
-  domain. For example, for TSP, random uniform points may not capture real-world
-  clustering or alignment patterns common in urban layouts.
-- Use diverse generation methods or sample from large existing instances to
-  mimic realistic distributions.
-
-### Using Multiple Benchmark Sets
-
-It is often beneficial to evaluate your models on **two complementary sets**:
-
-1. A **real-world or application-driven set**—smaller but highly relevant.
-2. A **larger synthetic or randomized set**—allowing detailed statistical
-   analysis.
-
-Keep these sets separate during analysis to avoid dominance of one data type and
-to demonstrate the robustness of your results across diverse scenarios.
-
-### Practical Considerations
-
-- **Separate instance creation from experiment execution.** Generate and save
-  benchmark instances independently to minimize errors and improve
-  reproducibility.
-- **Be cautious with pseudo-random generators.** Although deterministic in
-  principle, their use can inadvertently introduce irreproducibility if seeds or
-  environments are not carefully controlled.
-- **Share instances directly** when possible, including both the pre-generated
-  instances and the generation code. This ensures reproducibility and allows
-  others to verify results without needing to regenerate instances, which may
-  depend on specific environments or random seeds. This makes replication easier
-  for others as it may still be relevant in twenty years, when your code may
-  appear outdated to future generations of researchers, whereas quickly writing
-  a parser can already today be done by AI.
-
-> [!NOTE]
->
-> An excellent example of a well-crafted benchmark is the
-> [MIPLIB collection](https://link.springer.com/article/10.1007/s12532-020-00194-3),
-> widely used in Mixed Integer Programming research to evaluate solvers like
-> Gurobi and CPLEX.
+If no suitable public benchmarks are available, you will need to generate your
+own instances. Even when public benchmarks do exist, it may still be beneficial
+to generate additional instances in order to control specific parameters and
+systematically evaluate the impact of varying a single factor on your model's
+performance. In typical benchmark sets, the diversity of instances often leads
+to significant parameter interference, which would require a large dataset and
+sophisticated statistical analysis to produce statistically significant results.
+Nevertheless, it is important to maintain diversity within your general instance
+set to ensure that your model remains robust and capable of handling a broad
+range of scenarios.
 
 > [!TIP]
 >
@@ -8665,6 +8638,36 @@ to demonstrate the robustness of your results across diverse scenarios.
 > [30-minute talk on this topic](https://www.youtube.com/watch?v=-2t2c9-snf0),
 > exploring how analyzing the space of instances can guide better instance
 > selection and generation.
+
+When implementing your own instance generation, it is often possible to leverage
+existing tools. For example,
+[NetworkX provides a comprehensive collection of random graph generators](https://networkx.org/documentation/stable/reference/generators.html)
+that can be adapted to suit a variety of problem settings. An exploratory study
+is usually necessary to identify which generator aligns best with the
+requirements of your specific problem. For generating other types of values, you
+can experiment with different random distributions. One technique I find
+particularly effective is using images as a source for constructing probability
+distributions.
+
+> [!TIP]
+>
+> It is also advisable not to combine all your instances into a single set, but
+> instead to evaluate performance separately across different benchmark groups.
+> This approach often reveals interesting and meaningful performance
+> differences.
+
+A final point worth emphasizing is the importance of generating and storing
+proper instance files, rather than relying solely on the seed of a pseudo-random
+number generator. This is a recurring concern I have encountered with both
+experienced peers and students. While pseudo-random generators are valuable for
+introducing randomized but reproducible elements into algorithms, they are not a
+substitute for persistently stored data. (That said, I have seen too many cases
+where a student unknowingly computed the mean over multiple runs using the same
+seed.) Although, in theory, a seed combined with the source code should suffice
+to reproduce a complete experiment, in practice, code tends to degrade more
+quickly than data. This is especially true for C++ code, which may be less
+reproducible than anticipated due to subtle instances of undefined behavior,
+even among experienced programmers.
 
 ## Efficiently Managing Your Benchmarks
 
