@@ -1128,12 +1128,13 @@ even among experienced programmers.
 
 ## Efficiently Managing Your Benchmarks
 
-Benchmark data management can quickly become complex, especially when juggling
-multiple experiments and research questions. The following strategies can help
-keep your workflow organized and your results reliable:
+Benchmark data management can quickly become complex, especially when managing
+multiple experiments and research questions simultaneously. The following
+strategies can help maintain an organized workflow and ensure that your results
+remain reliable:
 
 - **Folder Structure:** Maintain a clear and consistent folder hierarchy for
-  your experiments. A typical setup uses a top-level `evaluations` directory
+  your experiments. A typical setup includes a top-level `evaluations` directory
   with descriptive subfolders for each experiment. For example:
 
   ```
@@ -1144,6 +1145,8 @@ keep your workflow organized and your results reliable:
   │   │   │   ├── ... all data for debugging and internal use
   │   │   ├── PUBLIC_DATA
   │   │   │   ├── ... curated data intended for sharing
+  │   │   ├── _utils               # optional
+  │   │   │   ├── ... shared utility functions to keep top level clean
   │   │   ├── README.md            # Brief description of the experiment
   │   │   ├── 00_generate_instances.py
   │   │   ├── 01_run_experiments.py
@@ -1158,41 +1161,56 @@ keep your workflow organized and your results reliable:
   │   │   ├── ...
   ```
 
-- **Documentation and Redundancy:** Some redundancy in your data and code is
-  acceptable if it aids understanding, but thorough documentation is essential.
-  Clearly describe each experiment’s purpose, methodology, and results to
-  facilitate future reference and reproducibility.
+- **Documentation:** It is easy to forget why or when a particular experiment
+  was conducted. Always include a brief `README.md` file with essential notes.
+  This document does not need to be polished initially, but it should capture
+  the core context. The more important the experiment, the more beneficial it is
+  to revisit and enhance the documentation once the experiment is underway and
+  you have had time to reflect on its purpose and outcomes.
 
-- **Simplified Results for Easy Access:** Keep a streamlined version of your
-  results specifically for plotting and sharing. This makes it much easier to
-  adapt figures and tables later—especially if you need to meet different
-  formatting requirements for journals versus conferences. Without such
-  preparation, reformatting old results can become a frustrating and
-  time-consuming task.
+- **Redundancy:** Excessive concern about redundancy in your data and code is
+  generally unnecessary. Evaluation setups are not production systems and are
+  not expected to be maintained over the long term. In fact, redundancy,
+  particularly in utility functions, can simplify refactoring. Legacy
+  experiments can continue using older versions of the code, and updates can be
+  applied selectively. It is advisable to include a brief changelog in each
+  utility file to indicate the version in use. Consider this a lightweight form
+  of dependency management. Although copying and pasting code may feel
+  inappropriate to a software engineer trained in best practices, this portion
+  of your work is typically intended to be static for reproducibility, rather
+  than actively maintained.
 
-- **Comprehensive Data Storage:** Save _all_ data generated during experiments,
-  even if it seems insignificant at the time. This ensures a complete record for
-  later analysis, troubleshooting, or unexpected questions. Because raw data can
-  be large, organize it into two separate folders: one containing _all_ data for
-  internal use, and another with a curated subset suitable for sharing.
+- **Extensive Private and Simple Public Data:** Organize your data into two
+  sections: one for private use and one for public dissemination. The private
+  section should contain all raw and intermediate data to facilitate future
+  investigations into anomalies or unexpected behavior. The public section
+  should be concise, curated, and optimized for analysis and sharing. If the
+  private data grows too large, consider transferring it to external storage and
+  leaving a reference or note indicating its location, ideally with the hope
+  that it will not be needed again. If your experiments are not huge, you may
+  also be able to store all data in the public section.
 
-- **Experiment Flexibility:** Design your experiments to be interruptible and
-  extensible. This flexibility allows you to pause and resume long-running
-  studies or add new solvers and configurations without re-running everything
-  from scratch. This is particularly valuable for exploratory studies with
-  frequent iterations and also for lengthy workhorse studies.
+- **Experiment Flexibility:** Design experiments to be both interruptible and
+  extensible. This allows long-running studies to be paused and resumed, and new
+  models or configurations to be added without restarting the entire process.
+  Such flexibility is particularly valuable in exploratory research, which often
+  involves frequent iterations, as well as in large-scale, long-duration runs.
+  The longer an experiment runs, the more likely it is that it will be
+  interrupted by system updates, network failures, or other unforeseen events.
 
-- **Leveraging Technology:** Use cluster management tools like Slurm to
-  distribute your experiments efficiently across computing resources. Faster
-  turnaround times accelerate your research progress and enable quicker
-  decision-making.
+- **Parallelization:** Obtaining results quickly can help maintain momentum and
+  focus. Learn to utilize a computing cluster or cloud infrastructure to
+  parallelize experiments. Although there is an initial learning curve, the
+  effort required to implement parallelization is usually small in comparison to
+  the efficiency gains it provides.
 
 > [!TIP]
 >
-> Because existing tools didn’t fully meet my needs, I developed
+> Because existing tools did not fully satisfy my requirements, I developed
 > [AlgBench](https://github.com/d-krupke/AlgBench) to manage benchmarking
 > results and [Slurminade](https://github.com/d-krupke/slurminade) to simplify
-> experiment distribution on clusters via a decorator interface. However, there
-> may now be better solutions available, especially from the machine learning
-> community. If you know of tools you like, please drop me a line — I would be
-> happy to explore them.
+> experiment distribution on computing clusters through a decorator-based
+> interface. However, more effective solutions may now be available,
+> particularly from the machine learning community. If you are aware of tools
+> you find useful, I would be very interested in hearing about them and would be
+> glad to explore their potential.
