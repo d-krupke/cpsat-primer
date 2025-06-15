@@ -3604,6 +3604,78 @@ intricate constraints without model duplication. For temporary complex
 constraints, model copying using `model.CopyFrom` may still be necessary, along
 with variable copying.
 
+You can also use this function to complete hints for auxiliary variables, which
+are often tedious and error-prone to set manually. To do so, invoke the function
+below before solving the model. Adjust the time limit based on the difficulty of
+completing the hint. If the values can be determined through simple propagation,
+even large models can be processed quickly.
+
+```python
+def complete_hint(
+    model: cp_model.CpModel,
+    time_limit: float = 0.5,
+):
+    """
+    Completes the hint via a limited solve. Since CP-SAT only accepts complete hints,
+    performing this step can improve solver performance.
+
+    Args:
+        model: The CpModel object to update.
+        time_limit: Time limit for the solve (in seconds).
+
+    Notes:
+        This function performs a quick solve to deduce variable values.
+        If successful, it replaces any existing hint with a complete one.
+        If not successful, the model remains unchanged and a warning is issued.
+    """
+    logging.info("Completing hint with a time limit of %d seconds", time_limit)
+    solver = cp_model.CpSolver()
+    solver.parameters.max_time_in_seconds = time_limit
+    solver.parameters.fix_variables_to_their_hinted_value = True
+    status = solver.solve(model)
+    logging.info(
+        "Automatically completing hint with status: %s", solver.status_name(status)
+    )
+    if status in [cp_model.OPTIMAL, cp_model.FEASIBLE]:
+        # Clear the existing hint to avoid model invalidation.
+        model.clear_hints()
+        # Set a new complete hint using the solver result.
+        for i, _ in enumerate(model.proto.variables):
+            v_ = model.get_int_var_from_proto_index(i)
+            model.add_hint(v_, solver.value(v_))
+        logging.info(
+            "Hint successfully completed within time limit. Status: %s",
+            solver.status_name(status),
+        )
+    else:
+        logging.warning(
+            "Unable to complete hint within time limit. Status: %s",
+            solver.status_name(status),
+        )
+
+```
+
+> [!WARNING]
+>
+> Maintaining a feasible yet non-optimal solution through presolve is
+> challenging, as the presolve phase simplifies the model (e.g., by removing
+> symmetries) which can effectively eliminate certain equivalent or suboptimal
+> solutions. Unfortunately, CP-SAT is also prone to this issue: hints that were
+> feasible before presolve may become infeasible afterward. Although this
+> behavior has been addressed in prior versions, it appears to persist in the
+> latest release.
+>
+> As a workaround, you can instruct CP-SAT to preserve all feasible solutions
+> during presolve by setting:
+>
+> ```python
+> solver.parameters.keep_all_feasible_solutions_in_presolve = True
+> ```
+>
+> However, enabling this parameter may degrade solver performance. If you
+> observe that hints become infeasible after presolve, you should experimentally
+> determine whether this option mitigates the issue in your case.
+
 ## Reinforcing the Model
 
 For advanced users working with CP-SAT incrementally—i.e., modifying and solving
