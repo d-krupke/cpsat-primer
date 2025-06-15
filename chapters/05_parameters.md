@@ -648,15 +648,17 @@ def complete_hint(
 
 > [!WARNING]
 >
-> Maintaining a feasible yet non-optimal solution through presolve is
-> challenging, as the presolve phase simplifies the model (e.g., by removing
-> symmetries) which can effectively eliminate certain equivalent or suboptimal
-> solutions. Unfortunately, CP-SAT is also prone to this issue: hints that were
-> feasible before presolve may become infeasible afterward. Although this
-> behavior has been addressed in prior versions, it appears to persist in the
-> latest release.
+> During presolve, the model is modified. For example, symmetries may be broken
+> by prohibiting equivalent variations of the same solution. While such
+> modifications can significantly improve performance by reducing the search
+> space, they make it difficult to maintain the feasibility of hints, e.g., if a
+> hint corresponds to a pruned variation.
 >
-> As a workaround, you can instruct CP-SAT to preserve all feasible solutions
+> Unfortunately, CP-SAT has historically struggled to preserve the feasibility
+> of hints through presolve. Although some issues have been resolved in earlier
+> versions, I am still encountering this behavior in recent releases.
+>
+> As a workaround, you can instruct CP-SAT to retain all feasible solutions
 > during presolve by setting:
 >
 > ```python
