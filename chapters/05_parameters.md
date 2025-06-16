@@ -667,7 +667,8 @@ def complete_hint(
 >
 > However, enabling this parameter may degrade solver performance. If you
 > observe that hints become infeasible after presolve, you should experimentally
-> determine whether this option mitigates the issue in your case.
+> determine whether maintaining feasible hints or doing the full presolve is
+> more beneficial.
 
 ## Reinforcing the Model
 
@@ -719,8 +720,82 @@ model.clear_assumptions()  # clear all assumptions
 > [!NOTE]
 >
 > While incremental SAT solvers can reuse learned clauses from previous runs
-> despite changing assumptions, CP-SAT does not support this feature.
-> Assumptions in CP-SAT only help avoid model duplication.
+> despite changes in assumptions, CP-SAT does not support this feature. Its
+> solver is stateless and always starts from scratch.
+
+While assumptions can be used to explore different assignments of Boolean
+variables without reconstructing the model, CP-SAT offers a more powerful
+feature: the extraction of unsatisfiable cores from infeasible models. This
+capability is particularly useful for model debugging. By enabling constraints
+conditionally using `only_enforce_if(b)` and adding `b` as an assumption, one
+can isolate sources of infeasibility. If the model proves infeasible, CP-SAT can
+return a minimal subset of the assumptions, and thus the corresponding
+constraints, that lead to the conflict.
+
+Consider the following example. Suppose we have a model with three integer
+variables $x$, $y$, and $z$, along with the following constraints:
+
+1. $x + y \leq 4$
+2. $x + z \leq 2$
+3. $z \geq 4$
+
+Since all variables are non-negative integers, this model is clearly infeasible
+due to the incompatibility between constraints (2) and (3). When dealing with
+larger models, identifying the source of infeasibility can be challenging.
+However, by using assumptions in conjunction with
+`sufficient_assumptions_for_infeasibility`, CP-SAT can automatically identify
+which constraints are responsible.
+
+```python
+from ortools.sat.python import cp_model
+
+model = cp_model.CpModel()
+
+# Integer variables
+x = model.new_int_var(0, 100, 'x')
+y = model.new_int_var(0, 100, 'y')
+z = model.new_int_var(0, 100, 'z')
+
+# Constraints
+constraint_1 = model.new_bool_var('Constraint 1: x + y <= 4')
+model.add(x + y <= 4).only_enforce_if(constraint_1)
+constraint_2 = model.new_bool_var('Constraint 2: x + z <= 2')
+model.add(x + z <= 2).only_enforce_if(constraint_2)
+constraint_3 = model.new_bool_var('Constraint 3: z >= 4')
+model.add(z >= 4).only_enforce_if(constraint_3)
+
+# Assumptions
+model.add_assumptions([constraint_1, constraint_2, constraint_3])
+
+# Solve
+solver = cp_model.CpSolver()
+status = solver.solve(model)
+
+assert status == cp_model.INFEASIBLE
+
+print("Minimal unsat core:")
+for var_index in solver.sufficient_assumptions_for_infeasibility():
+    print(f"{var_index}: '{model.proto.variables[var_index].name}'")
+```
+
+This produces the following output:
+
+```
+Minimal unsat core:
+4: 'Constraint 2: x + z <= 2'
+5: 'Constraint 3: z >= 4'
+```
+
+Unfortunately, not all constraints in CP-SAT support reification. However,
+lower-level constraints, where infeasibilities are most likely to occur,
+typically do. For higher-level constraints, workarounds may exist to express
+them in a reifiable form.
+
+> :reference:
+>
+> You can find more information on this in the
+> [CPMpy documentation](https://cpmpy.readthedocs.io/en/latest/unsat_core_extraction.html),
+> a modelling library that also supports CP-SAT as backend.
 
 ### Presolve
 
