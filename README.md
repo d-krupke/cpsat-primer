@@ -3766,15 +3766,15 @@ y = model.new_int_var(0, 100, 'y')
 z = model.new_int_var(0, 100, 'z')
 
 # Constraints
-constraint_1 = model.new_bool_var('Constraint 1: x + y <= 4')
-model.add(x + y <= 4).only_enforce_if(constraint_1)
-constraint_2 = model.new_bool_var('Constraint 2: x + z <= 2')
-model.add(x + z <= 2).only_enforce_if(constraint_2)
-constraint_3 = model.new_bool_var('Constraint 3: z >= 4')
-model.add(z >= 4).only_enforce_if(constraint_3)
+indicator_1 = model.new_bool_var('Indicator 1: x + y <= 4')
+model.add(x + y <= 4).only_enforce_if(indicator_1)
+indicator_2 = model.new_bool_var('Indicator 2: x + z <= 2')
+model.add(x + z <= 2).only_enforce_if(indicator_2)
+indicator_3 = model.new_bool_var('Indicator 3: z >= 4')
+model.add(z >= 4).only_enforce_if(indicator_3)
 
 # Assumptions
-model.add_assumptions([constraint_1, constraint_2, constraint_3])
+model.add_assumptions([indicator_1, indicator_2, indicator_3])
 
 # Solve
 solver = cp_model.CpSolver()
@@ -3791,8 +3791,8 @@ This produces the following output:
 
 ```
 Minimal unsat core:
-4: 'Constraint 2: x + z <= 2'
-5: 'Constraint 3: z >= 4'
+4: 'Indicator 2: x + z <= 2'
+5: 'Indicator 3: z >= 4'
 ```
 
 Unfortunately, not all constraints in CP-SAT support reification. However,
