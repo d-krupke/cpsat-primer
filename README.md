@@ -5296,18 +5296,20 @@ add_test_case(instance, config)
 You can also maintain backward compatibility easily by adding default values to
 any new fields you add to the data classes.
 
-> [!TIP] One challenge I often face is designing data classes to be as generic
-> as possible so that they can be used with multiple solvers and remain
-> compatible throughout various stages of the optimization process. For
-> instance, a graph might be represented as an edge list, an adjacency matrix,
-> or an adjacency list, each with its own pros and cons, complicating the
-> decision of which format is optimal for all stages. However, converting
-> between different data class formats is typically straightforward, often
-> requiring only a few lines of code and having a negligible impact compared to
-> the optimization process itself. Therefore, I recommend focusing on
-> functionality with your current solver without overcomplicating this aspect.
-> There is little harm in having to call a few conversion functions because you
-> created separate specialized data classes.
+> [!TIP]
+>
+> One challenge I often face is designing data classes to be as generic as
+> possible so that they can be used with multiple solvers and remain compatible
+> throughout various stages of the optimization process. For instance, a graph
+> might be represented as an edge list, an adjacency matrix, or an adjacency
+> list, each with its own pros and cons, complicating the decision of which
+> format is optimal for all stages. However, converting between different data
+> class formats is typically straightforward, often requiring only a few lines
+> of code and having a negligible impact compared to the optimization process
+> itself. Therefore, I recommend focusing on functionality with your current
+> solver without overcomplicating this aspect. There is little harm in having to
+> call a few conversion functions because you created separate specialized data
+> classes.
 
 ### Solver Class
 
@@ -5487,10 +5489,10 @@ items, you could simply drop the least valuable item to make the hint valid.
 > if the current objective is sufficiently close to the previous bound and stop
 > the search if it is. This approach avoids interfering with CP-SAT's
 > optimization capabilities, though callbacks do introduce some overhead.
->
-> As an exercise to understand why reusing bounds is challenging, try
-> implementing a branch-and-bound algorithm for a simple problem like the
-> Knapsack Problem - it is a relatively straightforward way to gain insight.
+
+|                                                                                                                                                                                                                                                                                                                                                                        [![Impact of Lower Bound Constraint on Relaxation](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/impact_lb_constraint_tsp.png)]                                                                                                                                                                                                                                                                                                                                                                         |
+| :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+| This image illustrates the detrimental impact of introducing a lower bound constraint into the model on the example of the TSP. The linear relaxation visibly deteriorates: while the original relaxation coincided with the optimal solution on 44 of 50 edges, the relaxation incorporating the lower bound constraint (set to the optimal value) coincides on only 38 edges and exhibits significantly more fractional values. Branching on certain edges may also cease to provide meaningful guidance; unless one branches on a poorly chosen edge, the objective value often remains unchanged as it is dominated by the lower bound constraint. In addition to the reduced informational value of the relaxation, such constraints are also notorious for introducing numerical instabilities (however, CP-SAT is likely unaffected by this issue due to its reliance on integer arithmetic). |
 
 ### Exchangeable Objective / Multi-Objective Optimization
 
