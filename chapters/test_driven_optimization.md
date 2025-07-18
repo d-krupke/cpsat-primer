@@ -797,7 +797,15 @@ reduce boilerplate code when validating CP-SAT models. These helpers provide an
 intuitive way to assert whether a model is feasible or infeasible after
 constraints have been added.
 
+You can install these helpers via `pip install cpsat-utils`
+
 ```python
+from cpsat_utils.testing import (
+    AssertModelFeasible,
+    AssertModelInfeasible,
+    assert_objective,
+)
+
 with AssertModelFeasible() as model:
     # build a model that is supposed to be feasible
     # if the model is infeasible, the context manager will raise an error
