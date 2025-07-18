@@ -60,11 +60,13 @@ realistic test cases.
 
 ## The Nurse Rostering Problem
 
-The nurse rostering problem requires assigning a set of nurses to a set of
-shifts over a given planning horizon. Each shift has a specified demand that
-indicates the minimum number of nurses required. The objective is to determine
-an assignment that satisfies all operational constraints while optimizing a set
-of soft preferences and priorities.
+The
+[nurse rostering problem](https://en.wikipedia.org/wiki/Nurse_scheduling_problem)
+requires assigning a set of nurses to a set of shifts over a given planning
+horizon. Each shift has a specified demand that indicates the minimum number of
+nurses required. The objective is to determine an assignment that satisfies all
+operational constraints while optimizing a set of soft preferences and
+priorities.
 
 **Constraints (Hard Requirements):**
 
@@ -147,6 +149,19 @@ implement with CP-SAT or any other optimization solver. However, real-world
 scheduling problems, such as nurse rostering, rarely remain this stable or
 well-defined over time.
 
+> [!TIP]
+>
+> If your model is sufficiently simple, as illustrated in the classical
+> mathematical formulation above, I highly recommend documenting it using formal
+> mathematical notation. This provides the most concise and precise
+> specification of the problem, easily fitting onto a single slide or a brief
+> document. However, once your model evolves beyond a certain complexity, formal
+> mathematical documentation becomes impractical to maintain, as updating
+> equations with every model revision is time-consuming and can quickly lead to
+> confusion. In such cases, specifying the model directly through code—as
+> demonstrated throughout this chapter—is usually preferable and more
+> sustainable.
+
 ### Why We Do Not Follow This Workflow Exactly
 
 In practice, nurse rostering requirements evolve continuously: new constraints
@@ -163,9 +178,9 @@ solution with respect to the flawed model, but this results in an **opportunity
 loss** rather than an explicit failure. Without systematic testing, such issues
 can remain undetected.
 
-**To mitigate this, we use code itself as the primary specification of the
-problem**— through validation functions and test cases—**rather than relying
-solely on mathematical documentation.** This shift is a deliberate step toward
+To mitigate this, we use code itself as the primary specification of the problem
+(through validation functions and test cases) rather than relying solely on
+mathematical documentation. This shift is a deliberate step toward
 software-engineering practices, where correctness and clarity are enforced by
 executable checks rather than static descriptions. A TDD-inspired workflow helps
 expose these errors early by verifying each constraint and objective through
@@ -230,12 +245,13 @@ upstream inputs violate assumptions you did not realize you were making.
 
 After enough frustrating encounters with malformed data, I became a strong
 proponent of defining formal data schemas as a first step in any serious
-optimization project. For Python, I have found Pydantic to be an excellent tool:
-it allows you to define input and output schemas declaratively, enforces type
-checks and invariants automatically, and raises clear validation errors when
-assumptions are violated. With these schemas in place, problems can be caught
-early and diagnosed easily—long before they produce incorrect results or
-puzzling failures.
+optimization project. For Python, I have found
+[Pydantic](https://docs.pydantic.dev/latest/) to be an excellent tool: it allows
+you to define input and output schemas declaratively, enforces type checks and
+invariants automatically, and raises clear validation errors when assumptions
+are violated. With these schemas in place, problems can be caught early and
+diagnosed easily—long before they produce incorrect results or puzzling
+failures.
 
 <!-- Schemas are not just for machines; they clarify team communication -->
 
@@ -824,11 +840,12 @@ rather than on the mechanics of solving and checking the model. By wrapping the
 solver logic inside a context manager, you avoid repetitive setup code and make
 tests easier to read and maintain.
 
-We will write tests using **pytest**, a widely used testing framework for
-Python. With pytest, you simply write functions that start with `test_`, and the
-framework will automatically discover and execute them. To run all tests, just
-type `pytest` in your terminal, and it will find all test files (named either
-`test_*.py` or `*_test.py`) and run the contained tests.
+We will write tests using [**pytest**](https://docs.pytest.org/en/stable/), a
+widely used testing framework for Python. With pytest, you simply write
+functions that start with `test_`, and the framework will automatically discover
+and execute them. To run all tests, just type `pytest` in your terminal, and it
+will find all test files (named either `test_*.py` or `*_test.py`) and run the
+contained tests.
 
 Here is a minimal example:
 
