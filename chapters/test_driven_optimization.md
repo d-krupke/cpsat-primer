@@ -1,98 +1,108 @@
 # Test-Driven Development with CP-SAT
 
-In this chapter, we explore how to apply test-driven development (TDD)
-principles to the nurse rostering problem using the CP-SAT solver. The goal is
-to produce a solution that is well-tested, extensible, and easy to maintain.
+In this chapter, we demonstrate how to apply test-driven development (TDD)
+principles to the nurse rostering problem using the CP-SAT solver. Our objective
+is to build a model that is modular, thoroughly tested, extensible, and
+straightforward to maintain.
 
-I personally find test-driven development to be a valuable approach for
-optimization problems. While I do not strictly follow the formal TDD process,
-writing tests early on helps to clarify the requirements and structure the
-problem. In many cases, the initial problem formulation is vague or incomplete.
-By expressing expectations through simple tests, it becomes much easier to
-communicate and refine the problem specification.
+I consider TDD a valuable approach for optimization problems, even though I do
+not follow the formal TDD cycle strictly. Writing tests early helps clarify
+requirements, refine problem specifications, and expose ambiguities in the
+initial formulation. In many real-world scenarios, the problem statement is
+incomplete or evolving. By expressing expectations as executable tests, we can
+communicate requirements more effectively and adjust them as new insights
+emerge.
 
-The nurse rostering problem serves as a particularly fitting example. It
-reflects a common class of real-world scheduling problems that are rarely fixed
-in scope. Constraints and objectives change frequently, and requirements evolve
-as stakeholders provide feedback. In such cases, investing in modular design and
-testing from the beginning can significantly reduce the effort required to
-implement and validate changes later.
+The nurse rostering problem is particularly suitable for illustrating this
+approach. It represents a class of scheduling problems where constraints and
+objectives change frequently in response to stakeholder feedback. In such
+settings, modular design and systematic testing substantially reduce the cost of
+adapting and validating the model as requirements evolve.
 
-Of course, this approach is not always necessary. For small or well-defined
-problems, a straightforward implementation with a few manual checks may be
-sufficient. However, when a problem becomes too complex to reason about
-informally—when simple inputs no longer yield clearly predictable outputs—this
-approach becomes especially valuable. It allows for decomposing the problem into
-smaller components that can be implemented, tested, and refined independently.
+For small or well-defined problems, a simple implementation with a few manual
+checks may suffice. However, as complexity grows and outcomes become harder to
+verify informally, a structured, test-driven approach proves highly beneficial.
+It allows the problem to be decomposed into smaller, testable components that
+can be incrementally implemented, validated, and refined.
 
-It is also important to recognize that the goal is not to produce a perfect
-solution. Sometimes it is better to focus on building a working prototype first.
-Clean design and testing infrastructure should be introduced when they are
-likely to pay off. Perfection is often the enemy of progress.
+This chapter does not advocate for perfection at the outset. In practice,
+building a working prototype often comes first, and design improvements are
+introduced once they offer clear benefits. The key is to maintain a balance
+between rapid prototyping and introducing structure and tests at the right stage
+of development.
 
-In the remainder of this chapter, we will incrementally build a nurse rostering
-model using CP-SAT and test-driven development. The focus is on clarity,
-extensibility, and correctness. We begin with a basic formulation and gradually
-introduce additional requirements to demonstrate how tests can guide the
-implementation.
+We will incrementally construct a nurse rostering model using CP-SAT, guided by
+test-driven principles. The workflow includes defining formal **data schemas**
+for inputs and outputs, implementing **solver-independent validation functions**
+that encode constraints and objectives, and creating **modular components** for
+decision variables, constraints, and soft objectives. We conclude by combining
+these modules into a complete CP-SAT solver and verifying its performance on
+realistic test cases.
 
 > :warning:
 >
-> This chapter is not a strict guideline but should be considered as a potential
-> approach. Neither do we follow a strict TDD process, nor do I myself follow
-> the exact steps outlined here in every project. Instead, I rather try to
-> convey a few ideas and principles here that I find useful in practice. I hope
-> that operations researchers may take away some lessons about software
-> engineering, and software engineers may learn how to transfer their skills to
-> optimization problems. Seasoned optimizers may find it interesting in
-> comparing their own approach to the one presented here.
+> This chapter is not intended as a strict guideline but as one possible
+> approach. I do not follow every step outlined here in every project. Instead,
+> I aim to share principles that I have found useful in practice. Operations
+> researchers may gain insights into software engineering practices, while
+> software engineers may learn how to apply their skills to optimization models.
+> Experienced optimizers may find value in comparing their own approach with the
+> one presented here.
 
 ## The Nurse Rostering Problem
 
-The goal is to assign a set of nurses to a set of shifts over a planning period.
-Each shift has a demand indicating the number of nurses required. The objective
-is to find an assignment that satisfies all operational constraints and
-optimizes a set of soft preferences and priorities.
+The nurse rostering problem requires assigning a set of nurses to a set of
+shifts over a given planning horizon. Each shift has a specified demand that
+indicates the minimum number of nurses required. The objective is to determine
+an assignment that satisfies all operational constraints while optimizing a set
+of soft preferences and priorities.
 
 **Constraints (Hard Requirements):**
 
-1. **Unavailability Constraint** A nurse must not be assigned to any shift for
-   which they are blocked or unavailable.
-2. **Shift Coverage Requirement** Every shift must be assigned enough nurses to
-   meet the required demand.
-3. **Rest Period Constraint** A nurse must have a sufficient break between any
-   two assigned shifts. If the break between the end of one shift and the start
-   of the next is too short, the nurse cannot be assigned to both.
+1. **Unavailability Constraint:** A nurse must not be assigned to any shift for
+   which they are unavailable or explicitly blocked.
+2. **Shift Coverage Requirement:** Each shift must be staffed with a sufficient
+   number of nurses to meet its demand.
+3. **Rest Period Constraint:** A nurse must have an adequate rest period between
+   consecutive shifts. If the interval between the end of one shift and the
+   start of the next is too short, the nurse cannot be assigned to both.
 
 **Objectives (Soft Goals):**
 
-1. **Preference Satisfaction** Nurses may express preferences for specific
-   shifts. The solution should aim to assign nurses to preferred shifts where
-   possible.
-2. **Staffing Preference** Internal staff members should be preferred over
-   external or contract nurses when assigning shifts, assuming all other
-   constraints are satisfied.
+1. **Preference Satisfaction:** Nurses may indicate preferences for particular
+   shifts. The model should honor these preferences wherever possible.
+2. **Staffing Preference:** Internal staff members should be preferred over
+   external or contract nurses when all other constraints are satisfied.
 
-Although we begin with a small and manageable set of constraints and objectives,
-the structure of the implementation allows for easy extension. In fact, several
-potential constraints and preferences were intentionally left out at this stage
-to keep the initial formulation simple. However, additional requirements could
-be added later without significant refactoring.
+To keep the initial formulation manageable, we start with this limited set of
+constraints and objectives. The implementation is designed to be **modular and
+extensible**, allowing additional requirements—such as fairness constraints,
+maximum shift limits, or cost-based objectives—to be introduced later with
+minimal refactoring.
+
+In the remainder of the chapter, we translate these requirements into a formal
+specification by defining **data schemas** for problem instances and solutions,
+along with **validation functions** that independently verify constraint
+satisfaction and evaluate objectives. These components form the foundation for a
+**test-driven workflow**, where each constraint and objective is implemented and
+tested as a self-contained module before being integrated into the complete
+CP-SAT solver.
 
 ## Steps
 
-When building optimization models, a common workflow consists of the following
-steps:
+When building optimization models, a traditional workflow typically follows
+three main steps:
 
-1. **Parameters**: Define the problem parameters. What is the input to the
-   model?
-2. **Decision Variables**: Define the decision variables. What are we trying to
-   decide or compute?
-3. **Constraints and Objectives**: Define the constraints that must be satisfied
-   and the objectives we aim to optimize.
+1. **Parameters:** Define the problem parameters, specifying the input data for
+   the model.
+2. **Decision Variables:** Define the variables representing the decisions or
+   assignments to be made.
+3. **Constraints and Objectives:** Specify the constraints that must be
+   satisfied and the objectives to be optimized.
 
-To make this concrete, here is how these steps look for a **Facility Location
-Problem (FLP)**:
+This classical workflow is straightforward and works well for stable,
+well-defined problems. For example, consider the **Facility Location Problem
+(FLP):**
 
 #### Parameters:
 
@@ -104,95 +114,115 @@ Problem (FLP)**:
 
 #### Decision Variables:
 
-- $y_i \in \mathbb{B} \quad \forall i \in F$: $y_i = 1$ if facility $i$ is
-  opened, and 0 otherwise.
-- $x_{i,j} \in \mathbb{B} \quad \forall i \in F, j \in C$: $x_{i,j} = 1$ if
-  customer $j$ is served by facility $i$, and 0 otherwise.
+- $y_i \in \mathbb{B} \ \forall i \in F$: $y_i = 1$ if facility $i$ is opened,
+  and 0 otherwise.
+- $x_{i,j} \in \mathbb{B} \ \forall i \in F, j \in C$: $x_{i,j} = 1$ if customer
+  $j$ is served by facility $i$, and 0 otherwise.
 
 #### Objective Function:
 
 Minimize the total cost of opening facilities and serving customers:
 
 $$
-\min \sum_{i \in F} f_i \cdot y_i + \sum_{i \in F} \sum_{j \in C} c_{i,j} \cdot x_{i,j}
+\min \sum_{i \in F} f_i \cdot y_i + \sum_{i \in F} \sum_{j \in C} c_{i,j} \cdot x_{i,j}.
 $$
 
 #### Constraints:
 
-1. **Customer assignment constraint**: Each customer must be served by exactly
-   one open facility.
+1. **Customer Assignment:** Each customer must be served by exactly one open
+   facility:
 
    $$
-   \sum_{i \in F} x_{i,j} = 1 \quad \forall j \in C
+   \sum_{i \in F} x_{i,j} = 1 \quad \forall j \in C.
    $$
 
-2. **Facility activation constraint**: A customer can only be served by a
-   facility if that facility is open.
+2. **Facility Activation:** A customer can only be served by a facility if that
+   facility is open:
+
    $$
-   x_{i,j} \leq y_i \quad \forall i \in F, j \in C
+   x_{i,j} \leq y_i \quad \forall i \in F, j \in C.
    $$
 
-Everyone with basic familiarity of mathematical notation will be able to
-understand this problem formulation and it is straightforward to implement with
-CP-SAT or any other optimization solver.
+This formulation is compact, mathematically precise, and straightforward to
+implement with CP-SAT or any other optimization solver. However, real-world
+scheduling problems, such as nurse rostering, rarely remain this stable or
+well-defined over time.
 
-### Why we are not following this flow exactly
+### Why We Do Not Follow This Workflow Exactly
 
-The workflow above is straightforward and often sufficient for small,
-well-defined problems. However, in practical scheduling problems—like nurse
-rostering—requirements are rarely fixed. New constraints are added frequently,
-preferences shift, and objectives are refined over time. If we strictly followed
-the traditional sequence, we would end up with a monolithic model that is
-difficult to adapt and test.
+In practice, nurse rostering requirements evolve continuously: new constraints
+are introduced, objectives are refined, and stakeholder feedback leads to
+ongoing changes. A model built strictly following the classical steps often
+becomes **monolithic** and difficult to adapt. Even minor adjustments can
+require extensive refactoring, increasing the risk of subtle modeling errors.
 
-Instead, we adopt a **test-driven and modular approach**. We first define **data
-schemas** that describe the parameters and decisions at a high level, then write
-**validation functions** that serve as an executable specification of
-constraints and objectives. This approach gives us clarity and flexibility: it
-allows us to test each piece of logic independently and ensures that the model
-remains easy to adjust as requirements evolve.
+These errors are particularly dangerous in optimization because they do not
+always cause explicit failures. A simple off-by-one error in a constraint or
+objective can silently exclude high-quality solutions or bias the solver toward
+suboptimal outcomes. The solver may still return a “feasible” or even “optimal”
+solution with respect to the flawed model, but this represents an **opportunity
+loss** rather than a visible failure. Without systematic testing, such issues
+can remain undetected.
 
-> **Classical Approach vs. Our Approach**
->
-> The **classical approach** to building optimization models is straightforward:
->
-> 1. Define the parameters.
-> 2. Define the decision variables.
-> 3. Define the constraints and objectives.
-> 4. Implement the model in a solver.
->
-> While this works well for stable, well-defined problems, it becomes brittle
-> when requirements are unclear or frequently changing. Adding a new constraint
-> or modifying an objective often requires refactoring large parts of the model
-> and risks introducing subtle bugs.
->
-> **Our approach**, by contrast, focuses on **test-driven and modular
-> development**:
->
-> - We define **data schemas** that formalize parameters and outputs.
-> - We write **validation functions** that act as an executable specification of
->   constraints and objectives.
-> - We implement **modular components** for decision variables, constraints, and
->   objectives, each of which can be tested independently.
->
-> This not only improves clarity and communication with stakeholders but also
-> makes the model easier to evolve as new requirements emerge.
+To address these challenges, we adopt a **test-driven and modular approach**:
 
-### Overview
+- We start by defining **data schemas** that formalize both problem inputs and
+  solution outputs.
+- We implement **solver-agnostic validation functions** as an **executable
+  specification** of constraints and objectives, allowing each requirement to be
+  tested independently.
+- We develop **modular components** for decision variables, constraints, and
+  objectives, which can be extended incrementally and tested in isolation.
 
-In this chapter, we will still follow the essence of the traditional steps but
-with a few modifications:
+This methodology improves clarity, facilitates communication with stakeholders,
+and ensures that the model remains flexible as requirements evolve.
 
-- We begin by defining the **data schema** for both the problem instance and the
-  solution. This corresponds to step one (parameters) and partially step two
-  (decisions).
-- We then write **validation functions** to check feasibility and evaluate the
-  objective, which corresponds to step three (constraints and objectives) at the
-  specification level.
-- Next, we introduce the **decision variables**, encapsulated in a container
-  that simplifies the construction of constraints and objectives.
-- Finally, we implement the **constraints and objectives** as testable modules,
-  before building the **solver module** that ties everything together.
+### Classical vs. Test-Driven Approach
+
+The two approaches can be summarized as follows:
+
+**Classical Workflow:**
+
+1. Define parameters.
+2. Define decision variables.
+3. Define constraints and objectives.
+4. Implement the solver model.
+
+While effective for static problems, this workflow does not inherently provide
+checks for correctness or resilience to change. Adding new constraints or
+modifying objectives often requires reworking large portions of the model.
+
+**Test-Driven and Modular Workflow:**
+
+- Define **data schemas** for input and output structures.
+- Write **validation functions** that serve as a testable, solver-independent
+  specification.
+- Implement constraints and objectives as **modular components**, each validated
+  with dedicated tests.
+- Incrementally integrate these components into the solver.
+
+Here, tests guide the design itself. Rather than building a single monolithic
+model and then testing its outcomes, we develop a suite of correctness checks
+that evolve alongside the model.
+
+### Overview of Our Approach
+
+In this chapter, we retain the essence of the classical steps but adapt them to
+a TDD-inspired workflow:
+
+1. **Data Schema:** Define structured schemas for the problem instance and
+   solution, covering parameters and parts of the decision space.
+2. **Validation Functions:** Implement functions to verify feasibility and
+   compute objective values, serving as the formal specification.
+3. **Decision Variables:** Introduce decision variables encapsulated in
+   containers to simplify constraint and objective construction.
+4. **Modular Constraints and Objectives:** Build constraints and soft objectives
+   as independent, testable modules.
+5. **Solver Integration:** Combine these components into a complete CP-SAT
+   model, guided by incremental testing.
+
+This workflow emphasizes incremental development, testability, and extensibility
+rather than building a single, rigid model from the outset.
 
 ## Instance and Solution Schema
 
