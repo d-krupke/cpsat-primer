@@ -412,6 +412,16 @@ meaningful, it prevents many accidental errors and makes debugging significantly
 easier. By catching issues at the boundary, you gain confidence that the
 optimization logic operates on well-formed inputs.
 
+> :tip:
+>
+> You do not need to use the same schema for the endpoint contract and the
+> internal representation of the optimization model. Converting between
+> different schemas is inexpensive compared to the computational cost of solving
+> the model. If a different representation enables more efficient model
+> construction, introduce an additional layer. Remember that the internal schema
+> can be modified easily, but changes to the outward-facing schema must be
+> handled carefully to avoid breaking existing interfaces.
+
 ## Solver-Agnostic Validation
 
 <!-- Writing validation functions early clarifies the constraints and enables TDD -->
