@@ -123,21 +123,15 @@ well-defined problems. For example, consider the **Facility Location Problem
 
 Minimize the total cost of opening facilities and serving customers:
 
-$$
-\min \sum_{i \in F} f_i \cdot y_i + \sum_{i \in F} \sum_{j \in C} c_{i,j} \cdot x_{i,j}.
-$$
+$$\min \sum_{i \in F} f_i \cdot y_i + \sum_{i \in F} \sum_{j \in C} c_{i,j} \cdot x_{i,j}.$$
 
 #### Constraints:
 
 1. **Customer Assignment:** Each customer must be served by exactly one open
-   facility:
-
-   $$\sum_{i \in F} x_{i,j} = 1 \quad \forall j \in C.$$
+   facility: $$\sum_{i \in F} x_{i,j} = 1 \quad \forall j \in C.$$
 
 2. **Facility Activation:** A customer can only be served by a facility if that
-   facility is open:
-
-   $$x_{i,j} \leq y_i \quad \forall i \in F, j \in C.$$
+   facility is open: $$x_{i,j} \leq y_i \quad \forall i \in F, j \in C.$$
 
 This formulation is compact, mathematically precise, and straightforward to
 implement with CP-SAT or any other optimization solver. However, real-world
@@ -149,57 +143,24 @@ well-defined over time.
 In practice, nurse rostering requirements evolve continuously: new constraints
 are introduced, objectives are refined, and stakeholder feedback leads to
 ongoing changes. A model built strictly following the classical steps often
-becomes **monolithic** and difficult to adapt. Even minor adjustments can
-require extensive refactoring, increasing the risk of subtle modeling errors.
+becomes **monolithic** and difficult to adapt. Even minor adjustments often
+require extensive refactoring and increase the risk of subtle modeling errors.
 
 These errors are particularly dangerous in optimization because they do not
 always cause explicit failures. A simple off-by-one error in a constraint or
 objective can silently exclude high-quality solutions or bias the solver toward
 suboptimal outcomes. The solver may still return a “feasible” or even “optimal”
-solution with respect to the flawed model, but this represents an **opportunity
-loss** rather than a visible failure. Without systematic testing, such issues
+solution with respect to the flawed model, but this results in an **opportunity
+loss** rather than an explicit failure. Without systematic testing, such issues
 can remain undetected.
 
-To address these challenges, we adopt a **test-driven and modular approach**:
-
-- We start by defining **data schemas** that formalize both problem inputs and
-  solution outputs.
-- We implement **solver-agnostic validation functions** as an **executable
-  specification** of constraints and objectives, allowing each requirement to be
-  tested independently.
-- We develop **modular components** for decision variables, constraints, and
-  objectives, which can be extended incrementally and tested in isolation.
-
-This methodology improves clarity, facilitates communication with stakeholders,
-and ensures that the model remains flexible as requirements evolve.
-
-### Classical vs. Test-Driven Approach
-
-The two approaches can be summarized as follows:
-
-**Classical Workflow:**
-
-1. Define parameters.
-2. Define decision variables.
-3. Define constraints and objectives.
-4. Implement the solver model.
-
-While effective for static problems, this workflow does not inherently provide
-checks for correctness or resilience to change. Adding new constraints or
-modifying objectives often requires reworking large portions of the model.
-
-**Test-Driven and Modular Workflow:**
-
-- Define **data schemas** for input and output structures.
-- Write **validation functions** that serve as a testable, solver-independent
-  specification.
-- Implement constraints and objectives as **modular components**, each validated
-  with dedicated tests.
-- Incrementally integrate these components into the solver.
-
-Here, tests guide the design itself. Rather than building a single monolithic
-model and then testing its outcomes, we develop a suite of correctness checks
-that evolve alongside the model.
+**To mitigate this, we use code itself as the primary specification of the
+problem**— through validation functions and test cases—**rather than relying
+solely on mathematical documentation.** This shift is a deliberate step toward
+software-engineering practices, where correctness and clarity are enforced by
+executable checks rather than static descriptions. A TDD-inspired workflow helps
+expose these errors early by verifying each constraint and objective through
+automated tests.
 
 ### Overview of Our Approach
 
