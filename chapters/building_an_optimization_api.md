@@ -2,10 +2,6 @@
 
 # Building an Optimization API (DRAFT)
 
-> [!WARNING]
->
-> This chapter is a draft, but feedback is already welcome.
-
 In this chapter, we will create a basic optimization service that performs
 computations on a cluster rather than on the client side. This service can be
 extended with a straightforward frontend, allowing non-technical users to access

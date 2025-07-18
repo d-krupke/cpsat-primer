@@ -6071,6 +6071,10 @@ browser.
 
 <a name="test-driven-optimization"></a>
 
+> [!WARNING]
+>
+> This chapter is a draft, but feedback is already welcome.
+
 In this chapter, we demonstrate how to apply test-driven development (TDD)
 principles to the nurse rostering problem using the CP-SAT solver. Our objective
 is to build a model that is modular, thoroughly tested, extensible, and
@@ -7692,10 +7696,6 @@ that evolve over time.
 <a name="building_an_optimization_api"></a>
 
 # Building an Optimization API (DRAFT)
-
-> [!WARNING]
->
-> This chapter is a draft, but feedback is already welcome.
 
 In this chapter, we will create a basic optimization service that performs
 computations on a cluster rather than on the client side. This service can be
