@@ -930,12 +930,34 @@ def test_no_blocked_shifts_trivial():
         NoBlockedShiftsModule().build(instance, model, [nurse_vars])
 ```
 
+This test will of course fail because we have not yet implemented the
+`NoBlockedShiftsModule`. Let us do that next.
+
+```python
+class NoBlockedShiftsModule(ShiftAssignmentModule):
+    """
+    Prohibit assignment to blocked shifts.
+    """
+
+    def build(
+        self,
+        instance: NurseRosteringInstance,
+        model: cp_model.CpModel,
+        nurse_shift_vars: list[NurseDecisionVars],
+    ) -> cp_model.LinearExprT:
+        # TODO
+        return 0
+```
+
+Now it should pass, as we actually do not enforce any constraints yet. Let us
+create a second test that will check that we cannot assign a nurse to a shift
+they are blocked from.
+
 #### Step 2: Testing Infeasibility for Blocked Shifts
 
-Next, we test the opposite scenario. If a nurse is **blocked from working a
-shift** but we force them to be assigned to it, the model should become
-infeasible. This confirms that our constraint actually prevents invalid
-assignments.
+If a nurse is **blocked from working a shift** but we force them to be assigned
+to it, the model should become infeasible. This confirms that our constraint
+actually prevents invalid assignments.
 
 ```python
 def test_no_blocked_shifts_infeasible():
@@ -950,6 +972,32 @@ def test_no_blocked_shifts_infeasible():
         nurse_vars = NurseDecisionVars(nurse, shifts, model)
         NoBlockedShiftsModule().build(instance, model, [nurse_vars])
         nurse_vars.fix(shifts[0].uid, True)  # Force assignment to a blocked shift
+```
+
+This test should now fail, as we have not yet implemented the logic to enforce
+the blocked shifts constraint. Let us implement the logic in the
+`NoBlockedShiftsModule`.
+
+```python
+class NoBlockedShiftsModule(ShiftAssignmentModule):
+    """
+    Prohibit assignment to blocked shifts.
+    """
+
+    def enforce_for_nurse(self, model: cp_model.CpModel, nurse_x: NurseDecisionVars):
+        for shift_uid in nurse_x.nurse.blocked_shifts:
+            # Prohibit assignment to blocked shifts
+            model.add(nurse_x.is_assigned_to(shift_uid=shift_uid) == 0)
+
+    def build(
+        self,
+        instance: NurseRosteringInstance,
+        model: cp_model.CpModel,
+        nurse_shift_vars: list[NurseDecisionVars],
+    ) -> cp_model.LinearExprT:
+        for nurse_x in nurse_shift_vars:
+            self.enforce_for_nurse(model, nurse_x)
+        return 0  # no objective contribution
 ```
 
 #### Step 3: Testing Feasibility on Non-Blocked Shifts
@@ -973,33 +1021,10 @@ def test_no_blocked_shifts_feasible():
         nurse_vars.fix(shifts[1].uid, True)  # Assign allowed shift
 ```
 
-#### Step 4: Implementing the Constraint
-
-With these tests in place, we can now implement the constraint itself. The
-`NoBlockedShiftsModule` simply enforces that the assignment variable for each
-blocked shift must be set to zero.
-
-```python
-class NoBlockedShiftsModule(ShiftAssignmentModule):
-    """
-    Prohibit assignment to blocked shifts.
-    """
-
-    def enforce_for_nurse(self, model: cp_model.CpModel, nurse_x: NurseDecisionVars):
-        for shift_uid in nurse_x.nurse.blocked_shifts:
-            # Prohibit assignment to blocked shifts
-            model.add(nurse_x.is_assigned_to(shift_uid=shift_uid) == 0)
-
-    def build(
-        self,
-        instance: NurseRosteringInstance,
-        model: cp_model.CpModel,
-        nurse_shift_vars: list[NurseDecisionVars],
-    ) -> cp_model.LinearExprT:
-        for nurse_x in nurse_shift_vars:
-            self.enforce_for_nurse(model, nurse_x)
-        return 0  # no objective contribution
-```
+Our `NoBlockedShiftsModule` should cover that case as well. In the following
+modules, we will not perform the TDD cycle in detail, but we will still describe
+the key tests and the implementation of each module. This will keep the focus on
+the constraints and objectives rather than the testing mechanics.
 
 ### Minimum Off Time
 
