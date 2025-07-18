@@ -333,9 +333,9 @@ class Shift(BaseModel):
     )
     name: str = Field(..., description="Name of the shift (e.g., '2025-01-01 Morning')")
     start_time: datetime = Field(
-        ..., description="Start time of the shift in HH:MM format"
+        ..., description="Start time of the shift as a full datetime (YYYY-MM-DD HH:MM)"
     )
-    end_time: datetime = Field(..., description="End time of the shift in HH:MM format")
+    end_time: datetime = Field(..., description="End time of the shift as a full datetime (YYYY-MM-DD HH:MM)")
     demand: NonNegativeInt = Field(
         ..., description="Number of nurses required for this shift"
     )
