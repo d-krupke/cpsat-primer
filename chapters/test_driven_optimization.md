@@ -651,7 +651,7 @@ rostering problem, a natural decision variable is:
 
 > **Is nurse $i$ assigned to shift $j$?**
 
-This can be represented by a Boolean variable $x\_{i,j}$ that is true if nurse
+This can be represented by a Boolean variable $x_{i,j}$ that is true if nurse
 $i$ works shift $j$, and false otherwise.
 
 <!-- Variable container as a design pattern -->
