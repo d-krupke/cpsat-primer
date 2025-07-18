@@ -55,14 +55,16 @@ realistic test cases.
 > Experienced optimizers may find value in comparing their own approach with the
 > one presented here.
 
+---
+
 > :video:
 >
-> I am not aware of much material on software engineering practices in
-> operations research. However, the talk
+> There appears to be limited material addressing software engineering practices
+> specifically in operations research. However, the talk
 > [_Optimization Modeling: The Art of Not Making It an Art_](https://www.gurobi.com/events/optimization-modeling-the-art-of-not-making-it-an-art/)
-> by Ronald van der Velden (Gurobi) is an excellent resource (registration with
-> a company name and email address is required). I highly recommend watching it,
-> as it offers a slightly different perspective on this topic.
+> by Ronald van der Velden (Gurobi) is an excellent resource that partially
+> overlaps with the themes discussed in this chapter. (Note: Registration with a
+> company name and email address is required to access the content.)
 
 You can find the complete code for this chapter
 [here](https://github.com/d-krupke/cpsat-primer/tree/main/examples/tdd).
