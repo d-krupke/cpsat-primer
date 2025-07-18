@@ -639,10 +639,10 @@ optimization model using CP-SAT. To do so, we start by defining **decision
 variables**, which represent the core choices of our problem. For the nurse
 rostering problem, a natural decision variable is:
 
-> **Is nurse \(i\) assigned to shift \(j\)?**
+> **Is nurse $i$ assigned to shift $j$?**
 
-This can be represented by a Boolean variable \(x\_{i,j}\) that is true if nurse
-\(i\) works shift \(j\), and false otherwise.
+This can be represented by a Boolean variable $(x\_{i,j}$ that is true if nurse
+$i$ works shift $j$, and false otherwise.
 
 <!-- Variable container as a design pattern -->
 
