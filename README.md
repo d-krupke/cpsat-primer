@@ -7148,12 +7148,36 @@ less than the required rest period, both cannot be assigned to the nurse.
 
 #### Key Tests
 
-To verify this constraint, we test with simple assignment patterns:
+To verify this constraint, we first test with simple assignment patterns:
 
 - `[False, True, True]`: infeasible (two consecutive shifts without rest).
 - `[True, False, True]`: feasible if the gap is long enough.
 - `[True, True]`: infeasible if two consecutive shifts overlap or violate the
   minimum rest.
+
+Using a helper function, we can easily run these tests with different
+parameters:
+
+```python
+def run_min_rest_test(
+    assignments: list[bool],
+    expected_feasible: bool,
+    shift_length: int = 8,
+    min_time_in_between: timedelta = timedelta(hours=16),
+):
+    shifts = create_shifts(len(assignments), shift_length=shift_length)
+    nurse = create_nurse("Nurse A", min_time_between_shifts=min_time_in_between)
+    instance = NurseRosteringInstance(nurses=[nurse], shifts=shifts)
+
+    context = AssertModelFeasible() if expected_feasible else AssertModelInfeasible()
+    with context as model:
+        nurse_vars = NurseDecisionVars(nurse, shifts, model)
+        MinTimeBetweenShifts().build(instance, model, [nurse_vars])
+        for s, assign in zip(shifts, assignments):
+            nurse_vars.fix(s.uid, assign)
+```
+
+The individual tests can then be defined as follows:
 
 ```python
 def test_min_time_between_shifts_infeasible_pattern():
