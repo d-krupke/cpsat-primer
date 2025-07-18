@@ -1171,7 +1171,7 @@ class DemandSatisfactionModule(ShiftAssignmentModule):
         return 0
 ```
 
-### PreferStaffModule
+### Prefer Staff
 
 While the previous modules defined hard constraints that must be satisfied, this
 module introduces a **soft constraint**. We prefer to assign internal staff
