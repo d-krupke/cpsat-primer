@@ -6125,6 +6125,9 @@ realistic test cases.
 > a company name and email address is required). I highly recommend watching it,
 > as it offers a slightly different perspective on this topic.
 
+You can find the complete code for this chapter
+[here](https://github.com/d-krupke/cpsat-primer/tree/main/examples/tdd).
+
 ## The Nurse Rostering Problem
 
 The
