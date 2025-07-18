@@ -132,16 +132,12 @@ $$
 1. **Customer Assignment:** Each customer must be served by exactly one open
    facility:
 
-   $$
-   \sum_{i \in F} x_{i,j} = 1 \quad \forall j \in C.
-   $$
+   $$\sum_{i \in F} x_{i,j} = 1 \quad \forall j \in C.$$
 
 2. **Facility Activation:** A customer can only be served by a facility if that
    facility is open:
 
-   $$
-   x_{i,j} \leq y_i \quad \forall i \in F, j \in C.
-   $$
+   $$x_{i,j} \leq y_i \quad \forall i \in F, j \in C.$$
 
 This formulation is compact, mathematically precise, and straightforward to
 implement with CP-SAT or any other optimization solver. However, real-world
