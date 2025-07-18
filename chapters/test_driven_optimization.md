@@ -49,6 +49,15 @@ realistic test cases.
 > Experienced optimizers may find value in comparing their own approach with the
 > one presented here.
 
+> :video:
+>
+> I am not aware of much material on software engineering practices in
+> operations research. However, the talk
+> [_Optimization Modeling: The Art of Not Making It an Art_](https://www.gurobi.com/events/optimization-modeling-the-art-of-not-making-it-an-art/)
+> by Ronald van der Velden (Gurobi) is an excellent resource (registration with
+> a company name and email address is required). I highly recommend watching it,
+> as it offers a slightly different perspective on this topic.
+
 ## The Nurse Rostering Problem
 
 The nurse rostering problem requires assigning a set of nurses to a set of
@@ -239,12 +248,13 @@ easy to make dangerous assumptions.
 
 <!-- Example from history: Mars Climate Orbiter -->
 
-A vivid historical example is the loss of the Mars Climate Orbiter in 1999. The
-spacecraft was destroyed because one team used imperial units while another
-expected metric, and there was no enforced contract between the systems. The
-entire $327 million mission failed because of a silent mismatch in a shared data
-interface. While most optimization projects are not launching spacecraft, the
-takeaway is just as relevant: never assume shared understanding—make your
+A vivid historical example is the loss of the
+[Mars Climate Orbiter](https://en.wikipedia.org/wiki/Mars_Climate_Orbiter)
+in 1999. The spacecraft was destroyed because one team used imperial units while
+another expected metric, and there was no enforced contract between the systems.
+The entire $327 million mission failed because of a silent mismatch in a shared
+data interface. While most optimization projects are not launching spacecraft,
+the takeaway is just as relevant: never assume shared understanding—make your
 assumptions explicit.
 
 <!-- Start with schemas before writing any logic -->
