@@ -427,6 +427,9 @@ if __name__ == "__main__":
             MarkdownFile("./chapters/03_big_picture.md", "03_big_picture.md"),
             MarkdownFile("./chapters/06_coding_patterns.md", "06_coding_patterns.md"),
             MarkdownFile(
+                "./chapters/test_driven_optimization.md", "test_driven_optimization.md"
+            ),
+            MarkdownFile(
                 "./chapters/building_an_optimization_api.md",
                 "building_an_optimization_api.md",
             ),
