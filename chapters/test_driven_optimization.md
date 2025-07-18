@@ -668,7 +668,7 @@ class NurseDecisionVars:
     A container to create and manage the decision variables for a single nurse.
 
     Each nurse has one Boolean variable for each shift, indicating whether the nurse is assigned to that shift.
-    This class also provides helper methods to count shifts, iterate over assignments, and extract results.
+    This class also provides helper methods to iterate over assignments and extract results.
     """
 
     def __init__(self, nurse: Nurse, shifts: list[Shift], model: cp_model.CpModel):
@@ -704,7 +704,7 @@ class NurseDecisionVars:
         Iterate over all (shift, variable) pairs for this nurse.
         """
         for shift in self.shifts:
-            yield shift, self.x(shift.uid)
+            yield shift, self.is_assigned_to(shift_uid=shift.uid)
 
     def extract(self, solver: cp_model.CpSolver) -> list[ShiftUid]:
         """
@@ -988,7 +988,7 @@ class NoBlockedShiftsModule(ShiftAssignmentModule):
     def enforce_for_nurse(self, model: cp_model.CpModel, nurse_x: NurseDecisionVars):
         for shift_uid in nurse_x.nurse.blocked_shifts:
             # Prohibit assignment to blocked shifts
-            model.add(nurse_x.x(shift_uid) == 0)
+            model.add(nurse_x.is_assigned_to(shift_uid=shift_uid) == 0)
 
     def build(
         self,
@@ -1066,8 +1066,8 @@ class MinTimeBetweenShifts(ShiftAssignmentModule):
                         break
                     colliding.append(shift_j)
                 if colliding:
-                    model.add(sum(nv.x(s.uid) for s in colliding) == 0).only_enforce_if(
-                        nv.x(shift_i.uid)
+                    model.add(sum(nv.is_assigned_to(shift_uid=s.uid) for s in colliding) == 0).only_enforce_if(
+                        nv.is_assigned_to(shift_uid=shift_i.uid)
                     )
         return 0  # no objective contribution
 
@@ -1138,7 +1138,7 @@ class DemandSatisfactionModule(ShiftAssignmentModule):
     ) -> cp_model.LinearExprT:
         for shift in instance.shifts:
             assigned_nurses = [
-                nurse.x(shift.uid)
+                nurse.is_assigned_to(shift_uid=shift.uid)
                 for nurse in nurse_shift_vars
                 if shift.uid in nurse._x
             ]
@@ -1189,8 +1189,8 @@ def test_prefer_staff_module():
     model.minimize(staff_mod.build(instance, model, [vars_staff, vars_contractor]))
 
     assert_objective(model=model, solver=solver, expected=0.0)
-    assert solver.value(vars_staff.x(shifts[0].uid)) == 1
-    assert solver.value(vars_contractor.x(shifts[0].uid)) == 0
+    assert solver.value(vars_staff.is_assigned_to(shifts[0].uid)) == 1
+    assert solver.value(vars_contractor.is_assigned_to(shifts[0].uid)) == 0
 ```
 
 **Implementation:**
@@ -1210,7 +1210,7 @@ class PreferStaffModule(ShiftAssignmentModule):
         for nv in nurse_shift_vars:
             if not nv.nurse.staff:
                 for uid in nv._x:
-                    expr += instance.staff_weight * nv.x(uid)
+                    expr += instance.staff_weight * nv.is_assigned_to(uid)
         return expr
 ```
 
@@ -1264,7 +1264,7 @@ def test_maximize_preferences_module():
 
     assert_objective(model=model, solver=solver, expected=-1.0)
     assert (
-        solver.value(nurse_vars.x(shifts[0].uid)) == 1
+        solver.value(nurse_vars.is_assigned_to(shifts[0].uid)) == 1
     ), "Nurse should be assigned to their preferred shift"
 ```
 
@@ -1282,7 +1282,7 @@ class MaximizePreferences(ShiftAssignmentModule):
         expr = 0
         for nv in nurse_shift_vars:
             for uid in nv.nurse.preferred_shifts:
-                expr += -nv.nurse.preferred_shift_weight * nv.x(uid)
+                expr += -nv.nurse.preferred_shift_weight * nv.is_assigned_to(uid)
         return expr
 ```
 
