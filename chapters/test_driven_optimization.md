@@ -1,5 +1,7 @@
 # Test-Driven Development with CP-SAT
 
+<a name="test-driven-optimization"></a>
+
 In this chapter, we demonstrate how to apply test-driven development (TDD)
 principles to the nurse rostering problem using the CP-SAT solver. Our objective
 is to build a model that is modular, thoroughly tested, extensible, and
@@ -118,34 +120,32 @@ This classical workflow is straightforward and works well for stable,
 well-defined problems. For example, consider the **Facility Location Problem
 (FLP):**
 
-#### Parameters:
-
-- $F$: Set of potential facility locations.
-- $C$: Set of customers.
-- $f_i \in \mathbb{N}_0$ for $i \in F$: Fixed cost of opening facility $i$.
-- $c_{i,j} \in \mathbb{N}_0$ for $i \in F, j \in C$: Cost of serving customer
-  $j$ from facility $i$.
-
-#### Decision Variables:
-
-- $y_i \in \mathbb{B} \ \forall i \in F$: $y_i = 1$ if facility $i$ is opened,
-  and 0 otherwise.
-- $x_{i,j} \in \mathbb{B} \ \forall i \in F, j \in C$: $x_{i,j} = 1$ if customer
-  $j$ is served by facility $i$, and 0 otherwise.
-
-#### Objective Function:
-
-Minimize the total cost of opening facilities and serving customers:
-
-$$\min \sum_{i \in F} f_i \cdot y_i + \sum_{i \in F} \sum_{j \in C} c_{i,j} \cdot x_{i,j}.$$
-
-#### Constraints:
-
-1. **Customer Assignment:** Each customer must be served by exactly one open
-   facility: $$\sum_{i \in F} x_{i,j} = 1 \quad \forall j \in C.$$
-
-2. **Facility Activation:** A customer can only be served by a facility if that
-   facility is open: $$x_{i,j} \leq y_i \quad \forall i \in F, j \in C.$$
+> **Parameters:**
+>
+> - $F$: Set of potential facility locations.
+> - $C$: Set of customers.
+> - $f_i \in \mathbb{N}_0$ for $i \in F$: Fixed cost of opening facility $i$.
+> - $c_{i,j} \in \mathbb{N}_0$ for $i \in F, j \in C$: Cost of serving customer
+>   $j$ from facility $i$.
+>
+> **Decision Variables:**
+>
+> - $y_i \in \mathbb{B} \ \forall i \in F$: $y_i = 1$ if facility $i$ is opened,
+>   and 0 otherwise.
+> - $x_{i,j} \in \mathbb{B} \ \forall i \in F, j \in C$: $x_{i,j} = 1$ if
+>   customer $j$ is served by facility $i$, and 0 otherwise.
+>
+> **Objective Function:**
+>
+> Minimize the total cost of opening facilities and serving customers:
+> $\min \sum_{i \in F} f_i \cdot y_i + \sum_{i \in F} \sum_{j \in C} c_{i,j} \cdot x_{i,j}.$
+>
+> **Constraints:**
+>
+> 1. **Customer Assignment:** Each customer must be served by exactly one open
+>    facility: $\sum_{i \in F} x_{i,j} = 1 \quad \forall j \in C.$
+> 2. **Facility Activation:** A customer can only be served by a facility if
+>    that facility is open: $x_{i,j} \leq y_i \quad \forall i \in F, j \in C.$
 
 This formulation is compact, mathematically precise, and straightforward to
 implement with CP-SAT or any other optimization solver. However, real-world
