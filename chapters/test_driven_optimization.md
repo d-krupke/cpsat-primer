@@ -692,7 +692,7 @@ class NurseDecisionVars:
             )
         self.model.add(self._x[shift_uid] == value)
 
-    def x(self, shift_uid: ShiftUid) -> cp_model.BoolVarT:
+    def is_assigned_to(self, shift_uid: ShiftUid) -> cp_model.BoolVarT:
         """
         Return the decision variable for the given shift UID.
         This variable is True if the nurse is assigned to that shift, and False otherwise.
