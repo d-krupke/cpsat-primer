@@ -447,6 +447,16 @@ function is often the most volatile part of the specification—frequently revis
 as new goals, costs, or incentives are introduced. By expressing it in code, we
 make it easier to reason about and iterate on collaboratively.
 
+> :warning:
+>
+> Crafting an effective objective function requires experience. I have often
+> observed less experienced practitioners reaching incorrect conclusions about
+> its proper formulation. Common errors include unintentionally encoding parts
+> of the objective as constraints or defining the objective in a way that allows
+> undesirable trade-offs between its components. If a client provides an
+> objective function, do not implement it blindly; instead, analyze it carefully
+> before proceeding.
+
 <!-- Summarizes the benefits -->
 
 By writing these checks up front, we make the problem precise and executable.
@@ -570,7 +580,6 @@ def assert_solution_is_feasible(
     """
     assert_consistent_uids(instance, solution)
     assert_no_blocked_shifts(instance, solution)
-    assert_shift_limits(instance, solution)
     assert_demand_satisfaction(instance, solution)
     assert_min_time_between_shifts(instance, solution)
     if check_objective:
