@@ -412,7 +412,7 @@ meaningful, it prevents many accidental errors and makes debugging significantly
 easier. By catching issues at the boundary, you gain confidence that the
 optimization logic operates on well-formed inputs.
 
-> :tip:
+> [!TIP]
 >
 > You do not need to use the same schema for the endpoint contract and the
 > internal representation of the optimization model. Converting between
