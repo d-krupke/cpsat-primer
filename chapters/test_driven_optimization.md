@@ -1,5 +1,11 @@
 # Test-Driven Development with CP-SAT
 
+<!-- START_SKIP_FOR_README -->
+
+![Cover Image](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/crashtest_platypus.webp)
+
+<!-- STOP_SKIP_FOR_README -->
+
 <a name="test-driven-optimization"></a>
 
 > [!WARNING]
