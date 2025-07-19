@@ -1149,6 +1149,14 @@ def test_min_time_between_shifts_feasible_pattern():
 Additional test cases (e.g., single-shift, all-false, and variable-length gaps)
 are available in the full test file but omitted here for clarity.
 
+> [!WARNING]
+>
+> For testing feasibility, you should fix as many assignments as possible, as
+> each fixed assignment makes it harder for the solver to maneuver around the
+> constraints. For testing infeasibility, you should fix as few assignments as
+> necessary, allowing the solver enough freedom to explore potential ways of
+> circumventing the constraints.
+
 #### Implementation
 
 The implementation uses a **pairwise check** over shifts for each nurse. For a
