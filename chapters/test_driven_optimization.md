@@ -657,6 +657,14 @@ problem. These validation functions would remain useful and safeguard you while,
 e.g., replacing the vanilla CP-SAT model with a large neighborhood search or a
 metaheuristic approach.
 
+> [!TIP]
+>
+> You could also add unit tests for these validation functions to ensure that
+> they raise the expected errors for invalid inputs. However, I would consider
+> this unnecessary in most cases, as the complementary nature of validation
+> functions and CP-SAT constraints will likely catch most inconsistencies. If a
+> test fails, always verify whether the test itself might be incorrect.
+
 ## Decision Variables
 
 <!-- Transition from specification to modeling -->
@@ -1069,6 +1077,14 @@ Our `NoBlockedShiftsModule` should cover that case as well. In the following
 modules, we will not perform the TDD cycle in detail, but we will still describe
 the key tests and the implementation of each module. This will keep the focus on
 the constraints and objectives rather than the testing mechanics.
+
+> [!TIP]
+>
+> How do you find good test cases? A good rule of thumb is to start with simple
+> cases that cover the basic functionality. Then add edge cases from both sides:
+> create one case that is right on the edge of feasibility, and another that is
+> just outside it. Any scenario that could be off by one is an excellent
+> candidate for an edge case.
 
 ### Minimum Off Time
 
