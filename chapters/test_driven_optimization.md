@@ -1647,3 +1647,17 @@ test-driven approach. The modular design allowed us to separate constraints and
 objectives, write targeted tests, and iterate safely. This methodology is not
 always the fastest way to get a working solution, but it pays off for problems
 that evolve over time.
+
+> [!TIP]
+>
+> This chapter primarily emphasized correctness. However, once your solution is
+> working correctly, you may discover that it does not scale sufficiently well.
+> In the chapter [Benchmarking your Model](#08-benchmarking), you will learn how
+> to benchmark models to evaluate improvements in performance and scalability.
+> The testing framework developed here helps maintain correctness during
+> performance optimization. Frequently, enhancing efficiency involves slight
+> modifications to the problem formulation—such as approximating non-linear
+> elements with linear ones or relaxing constraints that can usually be repaired
+> in postprocessing with minimal loss of solution quality. Adapting these
+> changes may require adjustments to your tests, but typically you can reuse
+> many of them.
