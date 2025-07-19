@@ -10,7 +10,7 @@ from cpsat_utils.testing import AssertModelFeasible, AssertModelInfeasible
 
 
 def run_min_rest_test(
-    assignments: list[bool],
+    assignments: list[bool | None],
     expected_feasible: bool,
     shift_length: int = 8,
     min_time_in_between: timedelta = timedelta(hours=16),
@@ -24,11 +24,13 @@ def run_min_rest_test(
         nurse_vars = NurseDecisionVars(nurse, shifts, model)
         MinTimeBetweenShifts().build(instance, model, [nurse_vars])
         for s, assign in zip(shifts, assignments):
+            if assign is None:
+                continue  # skip free assignments
             nurse_vars.fix(s.uid, assign)
 
 
 def test_pattern_false_true_true_false():
-    run_min_rest_test(assignments=[False, True, True, False], expected_feasible=False)
+    run_min_rest_test(assignments=[None, True, True, None], expected_feasible=False)
 
 
 def test_pattern_true_false_true_false():
