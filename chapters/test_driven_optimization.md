@@ -116,18 +116,47 @@ along with **validation functions** that independently verify constraint
 satisfaction and evaluate objectives. These components form the foundation for a
 **test-driven workflow**, where each constraint and objective is implemented and
 tested as a self-contained module before being integrated into the complete
-CP-SAT solver.
+model.
 
 > [!WARNING]
 >
 > This chapter focuses on correctness, not performance. First, ensure the
 > solution is correct; only then focus on making it efficient. Correspondingly,
-> the implementation here
+> the implementation here may not be the most efficient.
 
-## Steps
+## Classical Steps for Textbook Problems
 
-When building optimization models, a traditional workflow typically follows
-three main steps:
+Before introducing the more advanced TDD-inspired workflow, let us briefly
+review a classical approach to implementing optimization models, as commonly
+encountered in textbook exercises or university homework. This traditional
+approach can also be effective for many real-world problems, provided their
+complexity remains moderate. However, real-world problems often introduce
+additional challenges that are absent from well-structured academic exercises.
+As the problem complexity increases, this classical approach becomes difficult
+to manage. We will therefore explore how software engineering practices can help
+address these challenges.
+
+Let us discuss it on a concrete example, the **Facility Location Problem
+(FLP)**:
+
+> A delivery company is planning to open new warehouses to serve its customers.
+> There is a set $F$ of potential warehouse locations, and a set $C$ of
+> customers who need to receive their orders.
+>
+> Opening a warehouse at location $i \in F$ comes with a fixed cost $f_i$.
+> Shipping goods from warehouse $i \in F$ to customer $j \in C$ costs $c_{i,j}$.
+>
+> Every customer $j \in C$ must be served by exactly one warehouse, and a
+> warehouse can only ship goods if it is actually opened.
+>
+> The company needs to decide which warehouse locations $i \in F$ to open and
+> which warehouse will serve each customer $j \in C$ so that the total
+> cost—consisting of the opening costs $f_i$ and the shipping costs $c_{i,j}$—is
+> as small as possible.
+
+Now, a good idea would be to highlight parameters, decisions, constraints, and
+objectives in the text (using different colors), and then write down the
+mathematical formulation of the problem in the following steps:
 
 1. **Parameters:** Define the problem parameters, specifying the input data for
    the model.
@@ -136,9 +165,7 @@ three main steps:
 3. **Constraints and Objectives:** Specify the constraints that must be
    satisfied and the objectives to be optimized.
 
-This classical workflow is straightforward and works well for stable,
-well-defined problems. For example, consider the **Facility Location Problem
-(FLP):**
+For this problem, this would look like this:
 
 > **Parameters:**
 >
@@ -167,39 +194,118 @@ well-defined problems. For example, consider the **Facility Location Problem
 > 2. **Facility Activation:** A customer can only be served by a facility if
 >    that facility is open: $x_{i,j} \leq y_i \quad \forall i \in F, j \in C.$
 
-This formulation is compact, mathematically precise, and straightforward to
-implement with CP-SAT or any other optimization solver. However, real-world
-scheduling problems, such as nurse rostering, rarely remain this stable or
-well-defined over time.
+Finally, I would implement it, which is straightforward with CP-SAT or any other
+optimization solver or modeling language. It is very likely that test instances
+already exist for you to run the model on and verify whether it performs as
+expected.
 
-> [!TIP]
->
-> If your model is sufficiently simple, as illustrated in the classical
-> mathematical formulation above, I highly recommend documenting it using formal
-> mathematical notation. This provides the most concise and precise
-> specification of the problem, easily fitting onto a single slide or a brief
-> document. However, once your model evolves beyond a certain complexity, formal
-> mathematical documentation becomes impractical to maintain, as updating
-> equations with every model revision is time-consuming and can quickly lead to
-> confusion. In such cases, specifying the model directly through code—as
-> demonstrated throughout this chapter—is usually preferable and more
-> sustainable.
+The advantage of this approach is that most of the work can be done on a
+whiteboard or a piece of paper. At this level of complexity, it is feasible to
+model the problem live in a meeting, and any inconsistencies can typically be
+identified quickly.
 
-### Why We Do Not Follow This Workflow Exactly
+In practice, many cases are still simple enough to follow this workflow.
+Although the data may not be readily available or may require extensive
+preprocessing, and the problem statement may not yet be fully defined, it is
+often possible to sketch the mathematical formulation and then implement it in a
+single step. This is particularly feasible because many problems are essentially
+well-known combinatorial optimization problems, merely obscured by
+domain-specific terminology. With experience, you can often identify the
+underlying structure of the problem quickly and adapt them to custom constraints
+with ease. Modeling languages such as Pyomo, GAMS, or AMPL closely resemble the
+mathematical notation used above, making it reasonable to directly write the
+formulation in them. In Python, this is even true for CP-SAT.
 
-In practice, nurse rostering requirements evolve continuously: new constraints
-are introduced, objectives are refined, and stakeholder feedback leads to
-ongoing changes. A model built strictly following the classical steps often
-becomes **monolithic** and difficult to adapt. Even minor adjustments often
-require extensive refactoring and increase the risk of subtle modeling errors.
+```python
+from ortools.sat.python import cp_model
 
-These errors are particularly dangerous in optimization because they do not
-always cause explicit failures. A simple off-by-one error in a constraint or
-objective can silently exclude high-quality solutions or bias the solver toward
-suboptimal outcomes. The solver may still return a “feasible” or even “optimal”
-solution with respect to the flawed model, but this results in an **opportunity
-loss** rather than an explicit failure. Without systematic testing, such issues
-can remain undetected.
+# 1. Parameters
+F = [1, 2, 3]  # Set of potential facility locations.
+C = [1, 2, 3]  # Set of customers.
+f = {1: 100, 2: 200, 3: 150}  # Fixed cost f[i] of opening facility i.
+c = {1: {1: 10, 2: 20, 3: 30},
+     2: {1: 15, 2: 25, 3: 35},
+     3: {1: 20, 2: 30, 3: 40}}  # Cost c[i][j] of serving customer j from facility i.
+
+model = cp_model.CpModel()
+
+# 2. Decision variables
+y = {i: model.new_bool_var(f'y_{i}') for i in F}  # y[i] = 1 if facility i is opened.
+x = {(i, j): model.new_bool_var(f'x_{i}_{j}') for i in F for j in C}  # x[i,j] = 1 if customer j is served by facility i.
+
+# 3. Objective function
+model.minimize(
+    sum(f[i] * y[i] for i in F) + sum(c[i][j] * x[i, j] for i in F for j in C)
+)
+# 4. Constraints
+for j in C:
+    model.add(sum(x[i, j] for i in F) == 1)  # Each customer must be served by exactly one open facility.
+for i in F:
+    for j in C:
+        model.add(x[i, j] <= y[i])  # A customer can only be served by a facility if that facility is open.
+
+# Solve the model
+solver = cp_model.CpSolver()
+status = solver.solve(model)
+# ...
+```
+
+I would encapsulate this code in a class to enhance reusability, resulting in an
+implementation similar to the following:
+
+```python
+class FacilityLocationModel:
+    def __init__(self, F, C, f, c):
+        self.F, self.C, self.f, self.c = F, C, f, c
+        self.model = cp_model.CpModel()
+
+        # 2. Decision variables
+        self.y = {i: model.new_bool_var(f'y_{i}') for i in self.F}  # y[i] = 1 if facility i is opened.
+        ...
+
+    def solve(self, **parameters):
+        # Solve the model
+        solver = cp_model.CpSolver()
+        # ...
+```
+
+Others prefer to use pure functions; however, I often need to make models
+incremental, which is not compatible with stateless functions. Moreover, using
+classes in Python is almost as straightforward as using pure functions.
+
+As long as the model remains this simple, you may only need to add a few basic
+tests to verify that the solutions behave as expected; there is no need for
+modularization or extensive validation functions. Such a model is easy to
+understand and can be implemented within minutes. It can even be presented on a
+single slide, and any additional structure would likely introduce unnecessary
+complexity rather than improving clarity.
+
+However, we now encounter cases such as the nurse rostering problem, where the
+requirements are more complex, the problem is not well-defined, and both
+constraints and objectives are likely to evolve. First, the data itself becomes
+more intricate. The single-letter matrices used in the FLP quickly become
+inadequate, as they cannot capture the complexity of the required data entries.
+In such cases, properly documented data schemas and validation become essential.
+
+Moreover, some constraints may grow in complexity—for instance, ensuring
+sufficient rest periods between shifts, which may require testing in isolation.
+There may also be a need for auxiliary variables, which can quickly make
+monolithic models cluttered, difficult to interpret, and prone to errors,
+thereby complicating further modifications.
+
+At this stage, discussing the problem directly through the model becomes
+challenging, particularly when stakeholders are unfamiliar with the mathematical
+notation or modeling language. Instead, it can be more effective to write simple
+validation functions that verify the correctness of solutions but do not serve
+as mathematical constraints suitable for optimization.
+
+Subtle modeling errors are particularly dangerous in optimization because they
+do not always cause explicit failures. A simple off-by-one error in a constraint
+or objective can silently exclude high-quality solutions or bias the solver
+toward suboptimal outcomes. The solver may still return a “feasible” or even
+“optimal” solution with respect to the flawed model, but this results in an
+**opportunity loss** rather than an explicit failure. Without systematic
+testing, such issues can remain undetected.
 
 To mitigate this, we use code itself as the primary specification of the problem
 (through validation functions and test cases) rather than relying solely on
@@ -209,9 +315,7 @@ executable checks rather than static descriptions. A TDD-inspired workflow helps
 expose these errors early by verifying each constraint and objective through
 automated tests.
 
-### Overview of Our Approach
-
-In this chapter, we retain the essence of the classical steps but adapt them to
+In this chapter, we retain the essence of the classical steps but extend them to
 a TDD-inspired workflow:
 
 1. **Data Schema:** Define structured schemas for the problem instance and
@@ -222,8 +326,9 @@ a TDD-inspired workflow:
    containers to simplify constraint and objective construction.
 4. **Modular Constraints and Objectives:** Build constraints and soft objectives
    as independent, testable modules.
-5. **Solver Integration:** Combine these components into a complete CP-SAT
-   model, guided by incremental testing.
+5. **Solver Integration:** Combine these components into a complete CP-SAT model
+   and test it in completion to check that the components work together as
+   expected.
 
 This workflow emphasizes incremental development, testability, and extensibility
 rather than building a single, rigid model from the outset.
@@ -318,15 +423,6 @@ and allows everyone to work toward the same structure. Even if the schema
 evolves over time (and it almost certainly will), the evolution is transparent,
 versioned, and easy to manage.
 
-<!-- Output schemas matter too, even if simpler -->
-
-While the output (solution) schema is usually less complex than the input
-schema, it is still worth defining early. A clearly structured output enables
-automated validation, test writing, and visualization right from the start. It
-also facilitates downstream integration with logging, visualization, or API
-systems, where a structured solution object can be directly serialized to JSON
-or other formats.
-
 <!-- Summary: schemas are foundational -->
 
 Below is the data schema we will be using for the nurse rostering problem. We
@@ -364,6 +460,9 @@ def generate_random_uid() -> int:
 
 
 class Nurse(BaseModel):
+    """
+    Represents a nurse whose shifts we want to plan. Will be part of `NurseRosteringInstance`.
+    """
     uid: NurseUid = Field(
         default_factory=generate_random_uid,
         description="Unique identifier for the nurse",
@@ -389,6 +488,9 @@ class Nurse(BaseModel):
 
 
 class Shift(BaseModel):
+    """
+    Represents a shift that needs to be covered by nurses. Will be part of `NurseRosteringInstance`.
+    """
     uid: ShiftUid = Field(
         default_factory=generate_random_uid,
         description="Unique identifier for the shift",
@@ -447,8 +549,22 @@ class NurseRosteringInstance(BaseModel):
             if shift_a.start_time > shift_b.start_time:
                 raise ValueError("Shifts must be sorted by start time.")
         return self
+```
 
+<!-- Solution schema and pydantic vs native lists -->
 
+For the solution, each shift is mapped to a list of assigned nurses. In
+addition, the objective value and the timestamp at which the solution was
+computed are recorded. As a potential improvement, the `list[NurseUid]`
+structure could be replaced with a dedicated Pydantic model. This approach would
+allow for the inclusion of additional shift-specific data in the future, which
+cannot be directly attached to a plain `list`. Such a design would be
+particularly advantageous when the solution must be presented in a user
+interface. Nevertheless, as long as the base object is defined as a Pydantic
+model, it is generally possible to maintain backward compatibility when
+extending the schema, even when certain native Python elements are involved.
+
+```python
 class NurseRosteringSolution(BaseModel):
     """
     This schema defines the OUTPUT for the nurse rostering problem.
@@ -466,13 +582,13 @@ class NurseRosteringSolution(BaseModel):
     # Validation of the solution will be handled in a separate module.
 ```
 
-With this schema in place, it becomes immediately clear what structure the input
-and output must follow. The `model_validator` methods let you encode important
-assumptions—such as uniqueness or sorting—and they raise explicit errors if
-those assumptions are violated. While this does not guarantee that all data is
-meaningful, it prevents many accidental errors and makes debugging significantly
-easier. By catching issues at the boundary, you gain confidence that the
-optimization logic operates on well-formed inputs.
+With these schemas in place, it becomes immediately clear what structure the
+input and output must follow. The `model_validator` methods let you encode
+important assumptions—such as uniqueness or sorting—and they raise explicit
+errors if those assumptions are violated. While this does not guarantee that all
+data is actually correct, it prevents many accidental errors and makes debugging
+significantly easier. By catching issues at the boundary, you gain confidence
+that the optimization logic operates on well-formed inputs.
 
 > [!TIP]
 >
@@ -525,7 +641,9 @@ By writing these checks up front, we make the problem precise and executable.
 Even without an optimization engine, we already know how to distinguish valid
 from invalid solutions and how to compare two feasible solutions in terms of
 quality. This gives us a solid foundation for developing and testing
-optimization algorithms in the next steps.
+optimization algorithms in the next steps. If we are lucky, we could even use it
+as a feedback loop for an AI assistant to code the solution for us, although my
+experiences with that have been mixed so far.
 
 The following Python module provides these validation checks and a function to
 compute the objective value:
@@ -783,12 +901,18 @@ class NurseDecisionVars:
         return [shift_uid for shift_uid in self._x if solver.value(self._x[shift_uid])]
 ```
 
-<!-- Summary of purpose -->
+<!-- Allows refactoring and performance hacks -->
 
-By encapsulating the decision variables in this way, we simplify the process of
-building constraints and objectives. Each constraint module can focus on a
-single nurse or a set of shifts without worrying about the low-level details of
-variable creation or indexing.
+By encapsulating the decision variables in this manner, the process of
+constructing constraints and objectives is simplified. Each constraint module
+can focus on a single nurse or a subset of shifts without dealing with the
+low-level details of variable creation or indexing. The behavior of the
+`NurseDecisionVars` class can later be modified, for example, to avoid creating
+variables for shifts irrelevant to a given nurse and instead return a constant
+`0` when such shifts are queried. These shifts can also be skipped in
+`iter_shifts` to improve loop efficiency. Such refactoring is straightforward
+with this container-based design but would be considerably more complex when
+using, for instance, a raw two-dimensional array.
 
 ## Modules
 
