@@ -6335,8 +6335,8 @@ class FacilityLocationModel:
         self.model = cp_model.CpModel()
 
         # 2. Decision variables
-        self.y = {i: model.new_bool_var(f'y_{i}') for i in self.F}  # y[i] = 1 if facility i is opened.
-        ...
+        self.y = {i: self.model.new_bool_var(f'y_{i}') for i in self.F}  # y[i] = 1 if facility i is opened.
+        # ...
 
     def solve(self, **parameters):
         # Solve the model
@@ -6378,11 +6378,10 @@ abstract that the original problem is no longer recognizable. While the
 threshold varies depending on one's background, there comes a point at which
 monolithic mathematical formulations become incomprehensible, and even minor
 modifications require significant effort. It will also be extremely difficult to
-debug such as model if you cannot look at components in isolation. This
-situation parallels a software architecture that, while initially
-straightforward, has accumulated complexity through incremental growth, to the
-point where any modification is fraught with risk and development velocity
-suffers.
+debug such a model if you cannot look at components in isolation. This situation
+parallels a software architecture that, while initially straightforward, has
+accumulated complexity through incremental growth, to the point where any
+modification is fraught with risk and development velocity suffers.
 
 <!-- Examples of things that can go wrong -->
 
@@ -6408,8 +6407,8 @@ Here are a few things that can go wrong when the model grows too complex:
 
 <!-- These are failures on the "easy" parts -->
 
-All of these issues may fail the project, before the "real challenges" of
-optimizing scalability and accuracy even arise.
+All of these issues may fail the project, before even reaching the real
+challenges of optimizing scalability and ensuring real-world accuracy.
 
 <!-- Overview -->
 
