@@ -243,12 +243,13 @@ schedules.
 > Obtain a data sample as early as possible, even if it is only an "educated
 > guess" or a small subset of the actual dataset. Such samples simplify the
 > extraction of test cases and support iterative discussions with stakeholders,
-> who often overlook trivial but important details. For example, the model
+> who often overlook trivial but important details. For instance, the model
 > developed here does not enforce a single shift per day, focusing instead on
 > rest periods and total working hours over a given period (e.g., a week).
-> Addressing such issues typically requires an agile, iterative process, which
-> we omit here for simplicity but which can be applied throughout all phases of
-> this example.
+> Stakeholders are likely to recognize such omissions as soon as they review a
+> solution for a realistic instance. Addressing these issues typically requires
+> an agile, iterative process, which we omit here for simplicity but which can
+> be applied throughout all phases of this example.
 
 <!-- Even available data is often inconsistent or unreliable -->
 
