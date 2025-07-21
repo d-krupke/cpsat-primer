@@ -6113,7 +6113,8 @@ for inputs and outputs, implementing **solver-independent validation functions**
 that encode constraints and objectives, and creating **modular components** for
 decision variables, constraints, and soft objectives. We conclude by combining
 these modules into a complete solver and verifying its solutions on test
-instances.
+instances. However, before doing so, we will briefly review a classical approach
+and what can go wrong when the problem complexity increases.
 
 > :warning:
 >
@@ -6138,55 +6139,6 @@ instances.
 
 You can find the complete code for this chapter
 [here](https://github.com/d-krupke/cpsat-primer/tree/main/examples/tdd).
-
-## The Nurse Rostering Problem
-
-The
-[nurse rostering problem](https://en.wikipedia.org/wiki/Nurse_scheduling_problem)
-requires assigning a set of nurses to a set of shifts over a given planning
-horizon. Each shift has a specified demand that indicates the minimum number of
-nurses required. The objective is to determine an assignment that satisfies all
-operational constraints while optimizing a set of soft preferences and
-priorities. In this example, we were given the following requirements:
-
-**Constraints (Hard Requirements):**
-
-1. **Unavailability Constraint:** A nurse must not be assigned to any shift for
-   which they are unavailable or explicitly blocked.
-2. **Shift Coverage Requirement:** Each shift must be staffed with a sufficient
-   number of nurses to meet its demand.
-3. **Rest Period Constraint:** A nurse must have an adequate rest period between
-   consecutive shifts. If the interval between the end of one shift and the
-   start of the next is too short, the nurse cannot be assigned to both.
-
-**Objectives (Soft Goals):**
-
-1. **Preference Satisfaction:** Nurses may indicate preferences for particular
-   shifts. The model should honor these preferences wherever possible.
-2. **Staffing Preference:** Internal staff members should be preferred over
-   external or contract nurses when all other constraints are satisfied.
-
-To keep the initial formulation manageable, we start with this limited set of
-constraints and objectives. The implementation is designed to be **modular and
-extensible**, allowing additional requirements—such as fairness constraints,
-maximum shift limits, or cost-based objectives—to be introduced later with
-minimal refactoring. While the initial requirements may still be easily
-implemented in a monolithic model, it should already be complex enough to
-illustrate the benefits of a more structured, test-driven approach.
-
-In the remainder of the chapter, we translate these requirements into a formal
-specification by defining **data schemas** for problem instances and solutions,
-along with **validation functions** that independently verify constraint
-satisfaction and evaluate objectives. These components form the foundation for a
-**test-driven workflow**, where each constraint and objective is implemented and
-tested as a self-contained module before being integrated into the complete
-model.
-
-> [!WARNING]
->
-> This chapter focuses on correctness, not performance. First, ensure the
-> solution is correct; only then focus on making it efficient. Correspondingly,
-> the implementation here may not be the most efficient.
 
 ## Classical Steps for Textbook Problems
 
@@ -6402,7 +6354,9 @@ Here are a few things that can go wrong when the model grows too complex:
 - Communication with stakeholders breaks down because you lack a clear, shared
   language to formally specify requirements.
 - The model becomes so convoluted that implementing all requirements—or even
-  building a prototype—feels impossible.
+  building a first useful prototype—feels impossible.
+- No clear input/output data interfaces, making collaboration and integration
+  difficult.
 - ...
 
 <!-- These are failures on the "easy" parts -->
@@ -6435,6 +6389,47 @@ the nurse rostering problem. We will do the following steps:
 > You can transition fluently between the two approaches; it is not an
 > all-or-nothing choice. It is entirely feasible to adopt only parts of the
 > approach described here and apply them to selected aspects of the problem.
+
+## The Nurse Rostering Problem
+
+The
+[nurse rostering problem](https://en.wikipedia.org/wiki/Nurse_scheduling_problem)
+requires assigning a set of nurses to a set of shifts over a given planning
+horizon. Each shift has a specified demand that indicates the minimum number of
+nurses required. The objective is to determine an assignment that satisfies all
+operational constraints while optimizing a set of soft preferences and
+priorities. In this example, we were given the following requirements:
+
+**Constraints (Hard Requirements):**
+
+1. **Unavailability Constraint:** A nurse must not be assigned to any shift for
+   which they are unavailable or explicitly blocked.
+2. **Shift Coverage Requirement:** Each shift must be staffed with a sufficient
+   number of nurses to meet its demand.
+3. **Rest Period Constraint:** A nurse must have an adequate rest period between
+   consecutive shifts. If the interval between the end of one shift and the
+   start of the next is too short, the nurse cannot be assigned to both.
+
+**Objectives (Soft Goals):**
+
+1. **Preference Satisfaction:** Nurses may indicate preferences for particular
+   shifts. The model should honor these preferences wherever possible.
+2. **Staffing Preference:** Internal staff members should be preferred over
+   external or contract nurses when all other constraints are satisfied.
+
+To keep the initial formulation manageable, we start with this limited set of
+constraints and objectives. The implementation is designed to be **modular and
+extensible**, allowing additional requirements—such as fairness constraints,
+maximum shift limits, or cost-based objectives—to be introduced later with
+minimal refactoring. While the initial requirements may still be easily
+implemented in a monolithic model, it should already be complex enough to
+illustrate the benefits of a more structured, test-driven approach.
+
+> [!WARNING]
+>
+> This chapter focuses on correctness, not performance. First, ensure the
+> solution is correct; only then focus on making it efficient. Correspondingly,
+> the implementation here may not be the most efficient.
 
 ## Instance and Solution Schema
 
