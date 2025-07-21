@@ -136,8 +136,11 @@ As the problem complexity increases, this classical approach becomes difficult
 to manage. We will therefore explore how software engineering practices can help
 address these challenges.
 
-Let us discuss it on a concrete example, the **Facility Location Problem
-(FLP)**:
+Let us consider a concrete example: the **Facility Location Problem (FLP)**. To
+set the right context, we will present it as if it were stated directly on a
+homework sheet:
+
+<!-- Textbook Exercise FLP -->
 
 > A delivery company is planning to open new warehouses to serve its customers.
 > There is a set $F$ of potential warehouse locations, and a set $C$ of
@@ -154,6 +157,8 @@ Let us discuss it on a concrete example, the **Facility Location Problem
 > cost—consisting of the opening costs $f_i$ and the shipping costs $c_{i,j}$—is
 > as small as possible.
 
+<!-- Approach to convert it into a mathematical model -->
+
 Now, a good idea would be to highlight parameters, decisions, constraints, and
 objectives in the text (using different colors), and then write down the
 mathematical formulation of the problem in the following steps:
@@ -164,6 +169,8 @@ mathematical formulation of the problem in the following steps:
    assignments to be made.
 3. **Constraints and Objectives:** Specify the constraints that must be
    satisfied and the objectives to be optimized.
+
+<!-- The mathematical model -->
 
 For this problem, this would look like this:
 
@@ -194,27 +201,15 @@ For this problem, this would look like this:
 > 2. **Facility Activation:** A customer can only be served by a facility if
 >    that facility is open: $x_{i,j} \leq y_i \quad \forall i \in F, j \in C.$
 
-Finally, I would implement it, which is straightforward with CP-SAT or any other
-optimization solver or modeling language. It is very likely that test instances
-already exist for you to run the model on and verify whether it performs as
-expected.
+The mathematical notation is so compact that one can easily work through it on a
+whiteboard or a sheet of paper, which makes it ideal for group discussions. Such
+concise, precise notation also makes it easier to identify inconsistencies or
+errors directly at least for smaller problems.
 
-The advantage of this approach is that most of the work can be done on a
-whiteboard or a piece of paper. At this level of complexity, it is feasible to
-model the problem live in a meeting, and any inconsistencies can typically be
-identified quickly.
-
-In practice, many cases are still simple enough to follow this workflow.
-Although the data may not be readily available or may require extensive
-preprocessing, and the problem statement may not yet be fully defined, it is
-often possible to sketch the mathematical formulation and then implement it in a
-single step. This is particularly feasible because many problems are essentially
-well-known combinatorial optimization problems, merely obscured by
-domain-specific terminology. With experience, you can often identify the
-underlying structure of the problem quickly and adapt them to custom constraints
-with ease. Modeling languages such as Pyomo, GAMS, or AMPL closely resemble the
-mathematical notation used above, making it reasonable to directly write the
-formulation in them. In Python, this is even true for CP-SAT.
+Finally, you implement it either with your favorite optimization framework or
+modelling language. In case of an exercise, it is also very likely that your
+instructor has already provided some test instances, which you can use to verify
+your implementation.
 
 ```python
 from ortools.sat.python import cp_model
@@ -250,6 +245,16 @@ status = solver.solve(model)
 # ...
 ```
 
+<!-- classes instead of functions -->
+
+Usually you would implement this in a function; however, I often need to make
+models incremental, which is not compatible with stateless functions. Moreover,
+using classes in Python is almost as straightforward as using pure functions.
+Being able to manipulate the model after construction, like fixing certain
+variables, also makes it easier to test and debug.
+
+<!-- Example of wrapping it into a class. -->
+
 I would encapsulate this code in a class to enhance reusability, resulting in an
 implementation similar to the following:
 
@@ -269,16 +274,34 @@ class FacilityLocationModel:
         # ...
 ```
 
-Others prefer to use pure functions; however, I often need to make models
-incremental, which is not compatible with stateless functions. Moreover, using
-classes in Python is almost as straightforward as using pure functions.
+<!-- you could also just directly model it in code -->
+
+As you can see, the implementation is actually nearly identical to the
+mathematical formulation and many experts may opt to directly implement it,
+especially when using modeling languages like Pyomo, GAMS, or AMPL.
+
+<!-- also works for many practical cases as many practical problems are basic -->
+
+In practice, many cases are still simple enough to follow this workflow.
+Although the data may not be readily available or may require extensive
+preprocessing, and the problem statement may not yet be fully defined, it is
+often possible to sketch the mathematical formulation and then implement it in a
+single step. This is particularly feasible because many problems are essentially
+well-known combinatorial optimization problems, merely obscured by
+domain-specific terminology. With experience, you can often identify the
+underlying structure of the problem quickly and adapt them to custom constraints
+with ease.
+
+<!-- perfect for simple problems -->
 
 As long as the model remains this simple, you may only need to add a few basic
 tests to verify that the solutions behave as expected; there is no need for
 modularization or extensive validation functions. Such a model is easy to
-understand and can be implemented within minutes. It can even be presented on a
+understand and can be implemented within minutes. It can be presented on a
 single slide, and any additional structure would likely introduce unnecessary
 complexity rather than improving clarity.
+
+<!-- First, the data schema fails-->
 
 However, we now encounter cases such as the nurse rostering problem, where the
 requirements are more complex, the problem is not well-defined, and both
@@ -287,17 +310,23 @@ more intricate. The single-letter matrices used in the FLP quickly become
 inadequate, as they cannot capture the complexity of the required data entries.
 In such cases, properly documented data schemas and validation become essential.
 
+<!-- constraints grow in complexity and should be tested/debugged in isolation -->
+
 Moreover, some constraints may grow in complexity—for instance, ensuring
 sufficient rest periods between shifts, which may require testing in isolation.
 There may also be a need for auxiliary variables, which can quickly make
 monolithic models cluttered, difficult to interpret, and prone to errors,
 thereby complicating further modifications.
 
+<!-- math notation goes from 'straight to the point' to headache -->
+
 At this stage, discussing the problem directly through the model becomes
 challenging, particularly when stakeholders are unfamiliar with the mathematical
 notation or modeling language. Instead, it can be more effective to write simple
 validation functions that verify the correctness of solutions but do not serve
 as mathematical constraints suitable for optimization.
+
+<!-- complex models can have difficult to spot bugs leading to undetected opportunity losses -->
 
 Subtle modeling errors are particularly dangerous in optimization because they
 do not always cause explicit failures. A simple off-by-one error in a constraint
@@ -307,6 +336,8 @@ toward suboptimal outcomes. The solver may still return a “feasible” or even
 **opportunity loss** rather than an explicit failure. Without systematic
 testing, such issues can remain undetected.
 
+<!-- shift to TDD -->
+
 To mitigate this, we use code itself as the primary specification of the problem
 (through validation functions and test cases) rather than relying solely on
 mathematical documentation. This shift is a deliberate step toward
@@ -314,6 +345,8 @@ software-engineering practices, where correctness and clarity are enforced by
 executable checks rather than static descriptions. A TDD-inspired workflow helps
 expose these errors early by verifying each constraint and objective through
 automated tests.
+
+<!-- TDD-inspired workflow -->
 
 In this chapter, we retain the essence of the classical steps but extend them to
 a TDD-inspired workflow:
@@ -330,8 +363,17 @@ a TDD-inspired workflow:
    and test it in completion to check that the components work together as
    expected.
 
-This workflow emphasizes incremental development, testability, and extensibility
-rather than building a single, rigid model from the outset.
+This workflow emphasizes incremental development, specification through code,
+testability, and extensibility rather than building a single, rigid model from
+the outset.
+
+<!-- not all-or-nothing -->
+
+> [!TIP]
+>
+> You can transition fluently between the two approaches; it is not an
+> all-or-nothing choice. It is entirely feasible to adopt only parts of the
+> approach described here and apply them to selected aspects of the problem.
 
 ## Instance and Solution Schema
 
