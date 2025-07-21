@@ -6190,6 +6190,8 @@ model.
 
 ## Classical Steps for Textbook Problems
 
+<!-- From classroom to complex reality -->
+
 Before introducing the more advanced TDD-inspired workflow, let us briefly
 review a classical approach to implementing optimization models, as commonly
 encountered in textbook exercises or university homework. This traditional
@@ -6265,10 +6267,14 @@ For this problem, this would look like this:
 > 2. **Facility Activation:** A customer can only be served by a facility if
 >    that facility is open: $x_{i,j} \leq y_i \quad \forall i \in F, j \in C.$
 
+<!-- The mathematical model is concise and precise -->
+
 The mathematical notation is so compact that one can easily work through it on a
 whiteboard or a sheet of paper, which makes it ideal for group discussions. Such
 concise, precise notation also makes it easier to identify inconsistencies or
 errors directly at least for smaller problems.
+
+<!-- implementation -->
 
 Finally, you implement it either with your favorite optimization framework or
 modelling language. In case of an exercise, it is also very likely that your
@@ -6365,55 +6371,51 @@ understand and can be implemented within minutes. It can be presented on a
 single slide, and any additional structure would likely introduce unnecessary
 complexity rather than improving clarity.
 
-<!-- First, the data schema fails-->
+<!-- from simplifying abstraction to incomprehensible, similar to tech debt -->
 
-However, we now encounter cases such as the nurse rostering problem, where the
-requirements are more complex, the problem is not well-defined, and both
-constraints and objectives are likely to evolve. First, the data itself becomes
-more intricate. The single-letter matrices used in the FLP quickly become
-inadequate, as they cannot capture the complexity of the required data entries.
-In such cases, properly documented data schemas and validation become essential.
+Mathematical abstraction can simplify a problem; however, it can also become so
+abstract that the original problem is no longer recognizable. While the
+threshold varies depending on one's background, there comes a point at which
+monolithic mathematical formulations become incomprehensible, and even minor
+modifications require significant effort. It will also be extremely difficult to
+debug such as model if you cannot look at components in isolation. This
+situation parallels a software architecture that, while initially
+straightforward, has accumulated complexity through incremental growth, to the
+point where any modification is fraught with risk and development velocity
+suffers.
 
-<!-- constraints grow in complexity and should be tested/debugged in isolation -->
+<!-- Examples of things that can go wrong -->
 
-Moreover, some constraints may grow in complexity—for instance, ensuring
-sufficient rest periods between shifts, which may require testing in isolation.
-There may also be a need for auxiliary variables, which can quickly make
-monolithic models cluttered, difficult to interpret, and prone to errors,
-thereby complicating further modifications.
+Here are a few things that can go wrong when the model grows too complex:
 
-<!-- math notation goes from 'straight to the point' to headache -->
+- You are the only one who understands the model, making it unmaintainable by
+  others.
+- Even you no longer fully understand the model, causing simple changes to take
+  forever or to break things—often only discovered when it fails in production.
+- The model's complexity makes it impossible to verify individual components in
+  isolation, making root-cause analysis extremely difficult.
+- Testing becomes impractical, leaving you with constant doubts about whether
+  the model is correct.
+- A subtle bug silently excludes high-quality solutions, leading to significant
+  opportunity loss without any explicit error.
+- Bad or inconsistent data goes undetected due to missing validation checks,
+  producing incorrect results and eroding trust in your code.
+- Communication with stakeholders breaks down because you lack a clear, shared
+  language to formally specify requirements.
+- The model becomes so convoluted that implementing all requirements—or even
+  building a prototype—feels impossible.
+- ...
 
-At this stage, discussing the problem directly through the model becomes
-challenging, particularly when stakeholders are unfamiliar with the mathematical
-notation or modeling language. Instead, it can be more effective to write simple
-validation functions that verify the correctness of solutions but do not serve
-as mathematical constraints suitable for optimization.
+<!-- These are failures on the "easy" parts -->
 
-<!-- complex models can have difficult to spot bugs leading to undetected opportunity losses -->
+All of these issues may fail the project, before the "real challenges" of
+optimizing scalability and accuracy even arise.
 
-Subtle modeling errors are particularly dangerous in optimization because they
-do not always cause explicit failures. A simple off-by-one error in a constraint
-or objective can silently exclude high-quality solutions or bias the solver
-toward suboptimal outcomes. The solver may still return a “feasible” or even
-“optimal” solution with respect to the flawed model, but this results in an
-**opportunity loss** rather than an explicit failure. Without systematic
-testing, such issues can remain undetected.
+<!-- Overview -->
 
-<!-- shift to TDD -->
-
-To mitigate this, we use code itself as the primary specification of the problem
-(through validation functions and test cases) rather than relying solely on
-mathematical documentation. This shift is a deliberate step toward
-software-engineering practices, where correctness and clarity are enforced by
-executable checks rather than static descriptions. A TDD-inspired workflow helps
-expose these errors early by verifying each constraint and objective through
-automated tests.
-
-<!-- TDD-inspired workflow -->
-
-In this chapter, we retain the essence of the classical steps but extend them to
-a TDD-inspired workflow:
+In the remainder of this chapter, we will explore how to avoid this situation by
+applying software engineering practices to optimization models on the example of
+the nurse rostering problem. We will do the following steps:
 
 1. **Data Schema:** Define structured schemas for the problem instance and
    solution, covering parameters and parts of the decision space.
@@ -6426,10 +6428,6 @@ a TDD-inspired workflow:
 5. **Solver Integration:** Combine these components into a complete CP-SAT model
    and test it in completion to check that the components work together as
    expected.
-
-This workflow emphasizes incremental development, specification through code,
-testability, and extensibility rather than building a single, rigid model from
-the outset.
 
 <!-- not all-or-nothing -->
 
