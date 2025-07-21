@@ -6112,8 +6112,8 @@ test-driven principles. The workflow includes defining formal **data schemas**
 for inputs and outputs, implementing **solver-independent validation functions**
 that encode constraints and objectives, and creating **modular components** for
 decision variables, constraints, and soft objectives. We conclude by combining
-these modules into a complete CP-SAT solver and verifying its performance on
-realistic test cases.
+these modules into a complete solver and verifying its solutions on test
+instances.
 
 > :warning:
 >
@@ -6147,7 +6147,7 @@ requires assigning a set of nurses to a set of shifts over a given planning
 horizon. Each shift has a specified demand that indicates the minimum number of
 nurses required. The objective is to determine an assignment that satisfies all
 operational constraints while optimizing a set of soft preferences and
-priorities.
+priorities. In this example, we were given the following requirements:
 
 **Constraints (Hard Requirements):**
 
@@ -6170,7 +6170,9 @@ To keep the initial formulation manageable, we start with this limited set of
 constraints and objectives. The implementation is designed to be **modular and
 extensible**, allowing additional requirements—such as fairness constraints,
 maximum shift limits, or cost-based objectives—to be introduced later with
-minimal refactoring.
+minimal refactoring. While the initial requirements may still be easily
+implemented in a monolithic model, it should already be complex enough to
+illustrate the benefits of a more structured, test-driven approach.
 
 In the remainder of the chapter, we translate these requirements into a formal
 specification by defining **data schemas** for problem instances and solutions,
@@ -6179,6 +6181,12 @@ satisfaction and evaluate objectives. These components form the foundation for a
 **test-driven workflow**, where each constraint and objective is implemented and
 tested as a self-contained module before being integrated into the complete
 CP-SAT solver.
+
+> [!WARNING]
+>
+> This chapter focuses on correctness, not performance. First, ensure the
+> solution is correct; only then focus on making it efficient. Correspondingly,
+> the implementation here
 
 ## Steps
 
