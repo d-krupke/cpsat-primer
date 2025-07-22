@@ -1823,8 +1823,10 @@ re-load them later for regression tests.
 
 ```python
 # export instance and solution to JSON
-instance.model_dump_json("instance.json")
-solution.model_dump_json("solution.json")
+with open("instance.json", "w") as f:
+    f.write(instance.model_dump_json())
+with open("solution.json", "w") as f:
+    f.write(solution.model_dump_json())
 ```
 
 You can then load these files in your tests:
