@@ -7460,9 +7460,9 @@ the shift. The demand satisfaction constraint enforces that each shift is
 assigned at least as many nurses as its demand specifies.
 
 To verify this behavior, we use simple tests. In the first test, we create one
-shift with a demand of 2 and assign two nurses to it, which is feasible. In the
-second test, we assign only one nurse, which violates the demand requirement and
-should make the model infeasible.
+shift with a demand of 2 and two available nurses, which is feasible. In the
+second test, we block the assignment of one of the nurses, which violates the
+demand requirement and should make the model infeasible.
 
 ```python
 from nurserostering.modules import DemandSatisfactionModule
@@ -7482,8 +7482,7 @@ def test_demand_satisfaction_met():
         nurse_vars1 = NurseDecisionVars(nurse1, shifts, model)
         nurse_vars2 = NurseDecisionVars(nurse2, shifts, model)
         DemandSatisfactionModule().build(instance, model, [nurse_vars1, nurse_vars2])
-        nurse_vars1.fix(shifts[0].uid, True)
-        nurse_vars2.fix(shifts[0].uid, True)
+
 
 def test_demand_satisfaction_understaffed():
     shifts = create_shifts(1)
@@ -7496,7 +7495,6 @@ def test_demand_satisfaction_understaffed():
         nurse_vars1 = NurseDecisionVars(nurse1, shifts, model)
         nurse_vars2 = NurseDecisionVars(nurse2, shifts, model)
         DemandSatisfactionModule().build(instance, model, [nurse_vars1, nurse_vars2])
-        nurse_vars1.fix(shifts[0].uid, True)
         nurse_vars2.fix(shifts[0].uid, False)
 ```
 

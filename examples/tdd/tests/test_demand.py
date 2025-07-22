@@ -16,8 +16,6 @@ def test_demand_satisfaction_met():
         nurse_vars1 = NurseDecisionVars(nurse1, shifts, model)
         nurse_vars2 = NurseDecisionVars(nurse2, shifts, model)
         DemandSatisfactionModule().build(instance, model, [nurse_vars1, nurse_vars2])
-        nurse_vars1.fix(shifts[0].uid, True)
-        nurse_vars2.fix(shifts[0].uid, True)
 
 
 def test_demand_satisfaction_understaffed():
@@ -31,5 +29,4 @@ def test_demand_satisfaction_understaffed():
         nurse_vars1 = NurseDecisionVars(nurse1, shifts, model)
         nurse_vars2 = NurseDecisionVars(nurse2, shifts, model)
         DemandSatisfactionModule().build(instance, model, [nurse_vars1, nurse_vars2])
-        nurse_vars1.fix(shifts[0].uid, True)
         nurse_vars2.fix(shifts[0].uid, False)
