@@ -355,11 +355,11 @@ priorities. In this example, we were given the following requirements:
 
 To keep the initial formulation manageable, we start with this limited set of
 constraints and objectives. The implementation is designed to be **modular and
-extensible**, allowing additional requirements—such as fairness constraints,
-maximum shift limits, or cost-based objectives—to be introduced later with
-minimal refactoring. While the initial requirements may still be easily
-implemented in a monolithic model, it should already be complex enough to
-illustrate the benefits of a more structured, test-driven approach.
+extensible**, allowing additional requirements—such as fairness, seniority,
+on-call shifts, and others—to be introduced later with minimal refactoring.
+While the initial requirements may still be easily implemented in a monolithic
+model, it should already be complex enough to illustrate the benefits of a more
+structured, test-driven approach.
 
 > [!WARNING]
 >
@@ -1346,35 +1346,46 @@ are available in the full test file but omitted here for clarity.
 
 #### Implementation
 
-The implementation uses a **pairwise check** over shifts for each nurse. For a
-given shift `i`, we identify all subsequent shifts `j` that start before the
-required rest time ends. If `i` is assigned, then none of these `j` can be
-assigned:
+For the implementation, we find for each shift of a nurse all subsequent shifts
+that would violate the minimum rest time if both were assigned. If the first
+shift is assigned, then none of these subsequent shifts can be assigned. Here we
+can optimize the model building by leveraging the fact that the shifts are
+sorted by start time.
+
+A simpler, but less efficient, implementation would check all pairs of shifts
+for each nurse, and enforce that only one of them can be assigned.
 
 ```python
 class MinTimeBetweenShifts(ShiftAssignmentModule):
-    def build(self, instance, model, nurse_shift_vars):
-        """
-        Enforce minimum rest time between any two shifts for each nurse.
-        """
-        for nv in nurse_shift_vars:
-            for i in range(len(nv.shifts) - 1):
-                shift_i = nv.shifts[i]
-                colliding = []
-                for j in range(i + 1, len(nv.shifts)):
-                    shift_j = nv.shifts[j]
+    def enforce_for_nurse(self, model: cp_model.CpModel, nurse_x: NurseDecisionVars):
+        min_time_between_shifts = nurse_x.nurse.min_time_between_shifts
+        for i in range(len(nurse_x.shifts) - 1):
+            shift_i = nurse_x.shifts[i]
+            colliding: list[Shift] = []  # shifts that are too close to shift_i
+            for j in range(i + 1, len(nurse_x.shifts)):
+                shift_j = nurse_x.shifts[j]
+                if shift_i.end_time + min_time_between_shifts <= shift_j.start_time:
                     # Since shifts are sorted by start time, if the current shift_j starts
                     # after the required rest period, all subsequent shifts will also be valid.
                     # Therefore, we can safely break here to avoid unnecessary checks.
-                    if shift_i.end_time + nv.nurse.min_time_between_shifts <= shift_j.start_time:
-                        break
-                    colliding.append(shift_j)
-                if colliding:
-                    model.add(sum(nv.is_assigned_to(shift_uid=s.uid) for s in colliding) == 0).only_enforce_if(
-                        nv.is_assigned_to(shift_uid=shift_i.uid)
-                    )
-        return 0  # no objective contribution
+                    break
+                colliding.append(shift_j)
+            if colliding:
+                # if there are shifts that are too close to shift_i,
+                # prevent their assignment if shift_i is assigned
+                shift_i_selected = nurse_x.is_assigned_to(shift_i.uid)
+                no_colliding_selected = (
+                    sum(nurse_x.is_assigned_to(s.uid) for s in colliding) == 0
+                )
+                model.add(no_colliding_selected).only_enforce_if(shift_i_selected)
 
+    def build(self, instance, model, nurse_shift_vars):
+        """
+        Enforce minimum rest time between any two shifts for a nurse.
+        """
+        for nv in nurse_shift_vars:
+            self.enforce_for_nurse(model, nv)
+        return 0  # no objective contribution
 ```
 
 ### Demand Satisfaction

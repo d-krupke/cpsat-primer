@@ -1,6 +1,6 @@
 import abc
 from ortools.sat.python import cp_model
-from .data_schema import NurseRosteringInstance
+from .data_schema import NurseRosteringInstance, Shift
 from .nurse_vars import NurseDecisionVars
 
 
@@ -56,27 +56,35 @@ class DemandSatisfactionModule(ShiftAssignmentModule):
 
 
 class MinTimeBetweenShifts(ShiftAssignmentModule):
+    def enforce_for_nurse(self, model: cp_model.CpModel, nurse_x: NurseDecisionVars):
+        min_time_between_shifts = nurse_x.nurse.min_time_between_shifts
+        for i in range(len(nurse_x.shifts) - 1):
+            shift_i = nurse_x.shifts[i]
+            colliding: list[Shift] = []  # shifts that are too close to shift_i
+            for j in range(i + 1, len(nurse_x.shifts)):
+                shift_j = nurse_x.shifts[j]
+                if shift_i.end_time + min_time_between_shifts <= shift_j.start_time:
+                    # Since shifts are sorted by start time, if the current shift_j starts
+                    # after the required rest period, all subsequent shifts will also be valid.
+                    # Therefore, we can safely break here to avoid unnecessary checks.
+                    break
+                colliding.append(shift_j)
+            if colliding:
+                # if there are shifts that are too close to shift_i,
+                # prevent their assignment if shift_i is assigned
+                shift_i_selected = nurse_x.is_assigned_to(shift_i.uid)
+                no_colliding_selected = (
+                    sum(nurse_x.is_assigned_to(s.uid) for s in colliding) == 0
+                )
+                model.add(no_colliding_selected).only_enforce_if(shift_i_selected)
+
     def build(self, instance, model, nurse_shift_vars):
         """
         Enforce minimum rest time between any two shifts for a nurse.
         """
         for nv in nurse_shift_vars:
-            for i in range(len(nv.shifts) - 1):
-                shift_i = nv.shifts[i]
-                colliding = []
-                for j in range(i + 1, len(nv.shifts)):
-                    shift_j = nv.shifts[j]
-                    if (
-                        shift_i.end_time + nv.nurse.min_time_between_shifts
-                        <= shift_j.start_time
-                    ):
-                        break
-                    colliding.append(shift_j)
-                if colliding:
-                    model.add(
-                        sum(nv.is_assigned_to(s.uid) for s in colliding) == 0
-                    ).only_enforce_if(nv.is_assigned_to(shift_i.uid))
-        return 0
+            self.enforce_for_nurse(model, nv)
+        return 0  # no objective contribution
 
 
 class MaximizePreferences(ShiftAssignmentModule):
