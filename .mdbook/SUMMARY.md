@@ -22,6 +22,7 @@
 # Part 2: Advanced Topics
 
 - [Coding Patterns](./06_coding_patterns.md)
+- [Test-Driven Development](./test_driven_optimization.md)
 - [Building an Optimization API](./building_an_optimization_api.md)
 - [CP-SAT vs. ML vs. QC](./chapters/machine_learning.md)
 - [Large Neighborhood Search](./09_lns.md)
