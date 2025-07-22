@@ -328,7 +328,8 @@ the nurse rostering problem. We will do the following steps:
 
 ## The Nurse Rostering Problem
 
-The
+Before implementing a solution for the nurse rostering problem, we first need to
+describe the problem and its initial requirements. The
 [nurse rostering problem](https://en.wikipedia.org/wiki/Nurse_scheduling_problem)
 requires assigning a set of nurses to a set of shifts over a given planning
 horizon. Each shift has a specified demand that indicates the minimum number of
