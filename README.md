@@ -7533,7 +7533,7 @@ use of contractors in the objective function. This way, the solver will try to
 minimize the number of contractor assignments while still satisfying all hard
 constraints.
 
-**Test Example:**
+**Example Test:**
 
 ```python
 from nurserostering.modules import PreferStaffModule, DemandSatisfactionModule
@@ -7610,6 +7610,8 @@ This module is therefore not a soft constraint but a **true objective**: among
 all feasible schedules, it guides the solver to find one that maximizes nurse
 satisfaction.
 
+**Example Test:**
+
 ```python
 from nurserostering.modules import MaximizePreferences, DemandSatisfactionModule
 from cpsat_utils.testing import assert_objective
@@ -7644,6 +7646,8 @@ def test_maximize_preferences_module():
         solver.value(nurse_vars.is_assigned_to(shifts[0].uid)) == 1
     ), "Nurse should be assigned to their preferred shift"
 ```
+
+**Implementation:**
 
 ```python
 class MaximizePreferences(ShiftAssignmentModule):
