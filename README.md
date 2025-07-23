@@ -7931,6 +7931,16 @@ minimum of regression risk in correctness or performance. However, keep in mind
 that the performance of CP-SAT (and other such solvers) can vary between runs,
 so do not be too strict with the performance tests.
 
+Instead of relying solely on historical data for testing, you can **shadow**
+your production model with a development or experimental model. This approach
+allows you not only to verify correctness but also to directly compare the
+performance of both models, providing strong confidence that your modifications
+enhance the model without disrupting production. If you already have a
+monitoring tool in place, integrating _shadow solutions_ is likely
+straightforward. This technique is so popular that
+[nextmv](https://www.nextmv.io/docs/using-nextmv/experiments/shadow) offers
+built-in support for it.
+
 ## Conclusion
 
 In this chapter, we built a complete nurse rostering solver using CP-SAT and a
