@@ -10,7 +10,17 @@
 
 > [!WARNING]
 >
-> This chapter is a draft, but feedback is already welcome.
+> This chapter is a draft, but feedback is already welcome. Current TODOs:
+>
+> 1. Some ideas/views Richard Oberdieck presented in
+>    [this tutorial](https://github.com/RichardOberdieck/opti_test), especially
+>    the idea of Hypothesis testing.
+> 2. [This post by Princeton Consultants](https://princetonoptimization.com/blog/rapid-optimization-model-development-python-and-pandas-7-steps/)
+>    has some strong points on teamwork and tabular data, whereas this chapter
+>    focuses more on individual work and complex data structures. There should
+>    be at least a reference to this post, but probably the text should also be
+>    extended to at least also cover tabular data and its validation, e.g., via
+>    pandera, instead of just Pydantic.
 
 In this chapter, we demonstrate how to apply test-driven development (TDD)
 principles to the nurse rostering problem using the CP-SAT solver. Our objective
