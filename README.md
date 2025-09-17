@@ -5661,7 +5661,7 @@ and manageability of constraints. Readable constraints, free from complex
 variable access patterns, ensure that the constraints accurately reflect the
 intended model.
 
-In the following code, we introduce the `_ItemVariables` class to the
+In the following code, we introduce the `_ItemSelectionVars` class to the
 `KnapsackSolver`, which acts as a container for the decision variables
 associated with the knapsack items. This class not only creates these variables
 but also offers several utility methods to interact with them, improving the
