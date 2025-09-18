@@ -785,9 +785,7 @@ model.add(x + y == 10).only_enforce_if([b1, ~b2])  # only enforce if b1 AND NOT 
 > concepts in classical MIP-solvers, it can still impact the performance of
 > CP-SAT significantly. Doing some additional reasoning, you can often find a
 > more efficient way to model your problem without having to use
-> `only_enforce_if`. For logical constraints, there are actually
-> straight-forward methods in
-> [propositional calculus](https://en.wikipedia.org/wiki/Propositional_calculus).
+> `only_enforce_if`; see the previous section on logical constraints.
 > As `only_enforce_if` is often a more natural way to model your problem, it is
 > still a good idea to use it to get your first prototype running and think
 > about smarter ways later.
