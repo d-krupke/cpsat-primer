@@ -231,9 +231,9 @@ When dealing with integer variables that you know will only need to take certain
 values, or when you wish to limit their possible values, custom domain variables
 can become interesting. Unlike regular integer variables, which must have a
 domain between a given range of values (e.g., $\[ 1, 100 \]$), domain variables
-can specify a custom set of values as domain (e.g., $\\{1, 3, 5 \\}$). This
-approach can enhance efficiency when the domain - the range of sensible values -
-is small. However, it may not be the best choice for larger domains.
+can specify a custom set of values as domain (e.g., $\\{1, 31, 57 \\}$). This can
+improve efficiency if the variable’s feasible values are substantially reduced.
+However, it also introduces drawbacks, which we discuss below.
 
 CP-SAT works by converting all integer variables into boolean variables
 (warning: simplification). For each potential value, it creates two boolean
@@ -249,14 +249,20 @@ decision-making process. Therefore, an integer variable with a wide range - say,
 from 0 to 100 - will not immediately result in 200 boolean variables. It might
 lead to the creation of only a few, depending on the solver's requirements.
 
-Limiting the domain of a variable can have drawbacks. Firstly, defining a domain
-explicitly can be computationally costly and increase the model size drastically
-as it now need to contain not just a lower and upper bound for a variable but an
-explicit list of numbers (model size is often a limiting factor). Secondly, by
-narrowing down the solution space, you might inadvertently make it more
-challenging for the solver to find a viable solution. First, try to let CP-SAT
-handle the domain of your variables itself and only intervene if you have a good
-reason to do so.
+Limiting the domain of a variable can have drawbacks. First, if the assumptions
+about admissible values are incorrect, it may introduce subtle and difficult-to-detect
+bugs. Therefore, it is advisable to prioritize correctness before attempting such
+optimizations. Second, specifying an explicit domain can significantly increase the
+model size, as the solver must handle a list of discrete values rather than a simple
+lower and upper bound. For example, if a variable is restricted to even values, it
+would be inefficient to define a domain consisting of all even numbers. In this case,
+a better approach is to substitute the variable $x$ with $2x'$, and subsequently
+multiply $x'$ by $2$ in the final solution. Third, in certain instances, the use of
+custom domains may delay the discovery of an initial solution. Since CP-SAT relies on
+its powerful neighborhood search to improve solutions after the first feasible one
+is found, this delay can hinder solver performance. Unless the domain restriction
+itself encodes a meaningful modeling constraint, it is generally preferable to defer
+its use until performance optimization becomes necessary.
 
 If you choose to utilize domain variables for their benefits in specific
 scenarios, here is how to define them:
