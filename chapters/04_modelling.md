@@ -695,8 +695,11 @@ Let us consider some examples:
 > expressions and, in some cases, improve performance by replacing expensive
 > constructs with simpler ones (short `add_bool_or` clauses are usually the most
 > efficient constraints, with length 2 being trivial for CP-SAT to propagate).
-> Nevertheless, CP-SAT performs many reformulations automatically. As always,
-> prioritize correctness first and consider performance only afterwards.
+> Nevertheless, CP-SAT performs many reformulations automatically. For example,
+> `add_implication` is directly converted to `add_bool_or`
+> [internally](https://github.com/google/or-tools/blob/7ee639cf6981a9beeba908cf543a50f4ee7413ad/ortools/sat/cp_model.h#L807).
+> As always, prioritize correctness first and consider performance only
+> afterwards.
 
 <a name="04-modelling-conditional-constraints"></a>
 
