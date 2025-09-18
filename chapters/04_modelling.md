@@ -231,9 +231,9 @@ When dealing with integer variables that you know will only need to take certain
 values, or when you wish to limit their possible values, custom domain variables
 can become interesting. Unlike regular integer variables, which must have a
 domain between a given range of values (e.g., $\[ 1, 100 \]$), domain variables
-can specify a custom set of values as domain (e.g., $\\{1, 31, 57 \\}$). This can
-improve efficiency if the variable’s feasible values are substantially reduced.
-However, it also introduces drawbacks, which we discuss below.
+can specify a custom set of values as domain (e.g., $\\{1, 31, 57 \\}$). This
+can improve efficiency if the variable’s feasible values are substantially
+reduced. However, it also introduces drawbacks, which we discuss below.
 
 CP-SAT works by converting all integer variables into boolean variables
 (warning: simplification). For each potential value, it creates two boolean
@@ -250,18 +250,19 @@ from 0 to 100 - will not immediately result in 200 boolean variables. It might
 lead to the creation of only a few, depending on the solver's requirements.
 
 Limiting the domain of a variable can have drawbacks. First, if the assumptions
-about admissible values are incorrect, it may introduce subtle and difficult-to-detect
-bugs. Therefore, it is advisable to prioritize correctness before attempting such
-optimizations. Second, specifying an explicit domain can significantly increase the
-model size, as the solver must handle a list of discrete values rather than a simple
-lower and upper bound. For example, if a variable is restricted to even values, it
-would be inefficient to define a domain consisting of all even numbers. In this case,
-a better approach is to substitute the variable $x$ with $2x'$, and subsequently
-multiply $x'$ by $2$ in the final solution. Third, in certain instances, the use of
-custom domains may delay the discovery of an initial solution. Since CP-SAT relies on
-its powerful neighborhood search to improve solutions after the first feasible one
-is found, this delay can hinder solver performance. Unless the domain restriction
-itself encodes a meaningful modeling constraint, it is generally preferable to defer
+about admissible values are incorrect, it may introduce subtle and
+difficult-to-detect bugs. Therefore, it is advisable to prioritize correctness
+before attempting such optimizations. Second, specifying an explicit domain can
+significantly increase the model size, as the solver must handle a list of
+discrete values rather than a simple lower and upper bound. For example, if a
+variable is restricted to even values, it would be inefficient to define a
+domain consisting of all even numbers. In this case, a better approach is to
+substitute the variable $x$ with $2x'$, and subsequently multiply $x'$ by $2$ in
+the final solution. Third, in certain instances, the use of custom domains may
+delay the discovery of an initial solution. Since CP-SAT relies on its powerful
+neighborhood search to improve solutions after the first feasible one is found,
+this delay can hinder solver performance. Unless the domain restriction itself
+encodes a meaningful modeling constraint, it is generally preferable to defer
 its use until performance optimization becomes necessary.
 
 If you choose to utilize domain variables for their benefits in specific
@@ -614,6 +615,89 @@ You could also use `add`.
 model.add(b2 >= b1)  # If b1 is true, then b2 must also be true
 ```
 
+#### Equivalent Reformulations of Logical Expressions
+
+Logical expressions are often written in a nested form, but CP-SAT requires a
+flat structure. Fortunately, any propositional logic expression can be
+reformulated into a flat structure that only uses `and_bool_or` (also known as
+the conjunctive normal form CNF). All other constraints are merely syntactic
+sugar, provided to have a more natural modelling experience. While it would be
+straightforward for CP-SAT to support nested expressions directly, its
+development focuses on its engine rather than the interface. Therefore, at
+present, you must perform these reformulations manually.
+
+The most useful reformulations include:
+
+1. Implication: `A -> B` is equivalent to `NOT A OR B`
+2. `NOT (A AND B)` is equivalent to `NOT A OR NOT B` (De Morgan’s Law 1)
+3. `NOT (A OR B)` is equivalent to `NOT A AND NOT B` (De Morgan’s Law 2)
+
+These equivalences can be verified using a truth table. Since there are only
+four possible combinations of truth values for `A` and `B`, you need only check
+that the two columns produce identical results:
+
+| A   | B   | A -> B | NOT A OR B |
+| --- | --- | ------ | ---------- |
+| 0   | 0   | 1      | 1          |
+| 0   | 1   | 1      | 1          |
+| 1   | 0   | 0      | 0          |
+| 1   | 1   | 1      | 1          |
+
+Note that `A` and `B` may themselves be logical expressions, not just single
+variables. A more extensive list of equivalences can be found on
+[Wikipedia](https://en.wikipedia.org/wiki/Propositional_logic#List_of_classically_valid_argument_forms).
+
+> [!VIDEO]
+>
+> Logic is a common undergraduate lecture and there are some recorded courses
+> available online in case you would like to refresh your knowledge:
+>
+> - [Logic 101](https://www.youtube.com/playlist?list=PLKI1h_nAkaQq5MDWlKXu0jeZmLDt-51on)
+>   by William Spaniel provides a series of short videos covering the basics of
+>   logic, also suitable for less mathematically inclined individuals.
+> - [Logic Stanford CS221](https://youtube.com/playlist?list=PLh7QmcIRQB-uiOS4GMlBbq0jkvtqhqtq0&si=dyXebJW-nvW14pFp)
+>   has a more explicit computer science focus and is also relatively compact,
+>   easily digestible within a day.
+
+Let us consider some examples:
+
+1. To model `b1 -> b2`, you can use `model.add_implication(b1, b2)`.
+   Alternatively, reformulate it as `NOT b1 OR b2` and use
+   `model.add_bool_or(~b1, b2)`.
+2. To model `NOT (b1 AND b2)`, reformulate it as `NOT b1 OR NOT b2` and use
+   `model.add_bool_or(~b1, ~b2)`.
+3. To model `NOT (b1 OR b2)`, reformulate it as `NOT b1 AND NOT b2` and use
+   `model.add_bool_and(~b1, ~b2)`. (Even more efficiently, you could directly
+   substitute `b1` and `b2` with `0`, since they can never be true.)
+4. To model `(b1 AND b2) -> b3`, reformulate it as `NOT (b1 AND b2) OR b3`,
+   which is equivalent to `(NOT b1 OR NOT b2) OR b3`. You can then use
+   `model.add_bool_or(~b1, ~b2, b3)`.
+5. To model `(b1 OR b2) -> b3`, reformulate it as `(b1 -> b3) AND (b2 -> b3)`,
+   which is equivalent to `(NOT b1 OR b3) AND (NOT b2 OR b3)`. You can then use:
+   ```python
+   model.add_bool_or(~b1, b3)
+   model.add_bool_or(~b2, b3)
+   ```
+6. To model `b1 -> (b2 OR b3)`, reformulate it as `NOT b1 OR (b2 OR b3)`, which
+   is equivalent to `NOT b1 OR b2 OR b3`. You can then use
+   `model.add_bool_or(~b1, b2, b3)`.
+7. Expressions of the form `(b1 AND b2) OR (b3 AND b4)` can be reformulated
+   using distributive laws to
+   `(b1 OR b3) AND (b1 OR b4) AND (b2 OR b3) AND (b2 OR b4)`. However, for
+   longer expressions, this can lead to an exponential increase in the number of
+   clauses. In such cases, it is often more efficient to introduce auxiliary
+   variables in the form of the
+   [Tseytin transformation](https://en.wikipedia.org/wiki/Tseytin_transformation).
+
+> [!WARNING]
+>
+> Awareness of these equivalences can support the modelling of complex logical
+> expressions and, in some cases, improve performance by replacing expensive
+> constructs with simpler ones (short `add_bool_or` clauses are usually the most
+> efficient constraints, with length 2 being trivial for CP-SAT to propagate).
+> Nevertheless, CP-SAT performs many reformulations automatically. As always,
+> prioritize correctness first and consider performance only afterwards.
+
 <a name="04-modelling-conditional-constraints"></a>
 
 ### Conditional Constraints (Reification)
@@ -671,7 +755,7 @@ driver_has_big_truck_license = model.new_bool_var("driver_has_big_truck_license"
 driver_has_special_license = model.new_bool_var("driver_has_special_license")
 # Only drivers with a big truck license or a special license can rent truck c
 model.add_bool_or(
-    driver_has_big_truck_license, driver_has_special_license
+  driver_has_big_truck_license, driver_has_special_license
 ).only_enforce_if(truck_c)
 
 # Minimize the rent cost
