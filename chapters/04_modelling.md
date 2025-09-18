@@ -466,7 +466,7 @@ consider, although such scenarios are rare in practical applications.
 > that this function does currently not support generators.
 >
 > ```python
-> xs = [model.NewIntVar(0, 10, f"x{i}") for i in range(5)]
+> xs = [model.new_int_var(0, 10, f"x{i}") for i in range(5)]
 > weights = [i for i in range(5)]
 > model.add(cp_model.LinearExpr.sum(xs) >= 1)
 > model.minimize(cp_model.LinearExpr.weighted_sum(xs, weights))
