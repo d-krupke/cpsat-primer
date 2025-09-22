@@ -645,6 +645,144 @@ that the optimization logic operates on well-formed inputs.
 > can be modified easily, but changes to the outward-facing schema must be
 > handled carefully to avoid breaking existing interfaces.
 
+### Tabular Data
+
+<!-- Tabular data is common and very nice to work with, if it is clean -->
+
+Many people, including myself, appreciate working with tables. In the chapter’s
+example project, we use a nested data structure. However, in many projects
+tabular data is entirely sufficient, and in such cases you should prefer this
+representation. In principle, any data structure can be expressed in tabular
+form, and most common databases, in particular relational databases accessed via
+SQL, are built around tables. Nevertheless, when extracting information requires
+complex joins or aggregations, you may need to either restructure your tables or
+adopt a more object-oriented format, for example by using Pydantic models as
+shown above. Since input data should not be modified during model construction,
+it is perfectly acceptable to employ both representations in parallel.
+
+If your data can be naturally and intuitively expressed in tabular form, then
+you should retain this representation. Python provides excellent libraries for
+working with tabular data, most notably [Pandas](https://pandas.pydata.org/) and
+[Polars](https://www.pola.rs/). Pandas is the most widely used library for data
+analysis in Python, and it benefits from a rich ecosystem of extensions and
+integrations. However, it can exhibit performance limitations, particularly with
+large datasets. Polars is a newer library that is more performance-oriented.
+Since optimization problems typically involve much smaller datasets than those
+encountered in data analysis or machine learning, the widespread use and
+ecosystem of Pandas usually make it the more suitable choice.
+
+The major advantage of storing data in a Pandas DataFrame is the ability to
+perform aggregations, filtering, and transformations with a concise and
+expressive syntax. In addition, Pandas integrates well with visualization
+libraries such as [Matplotlib](https://matplotlib.org/) and
+[Seaborn](https://seaborn.pydata.org/), which allow you to easily create
+informative visual representations of your data.
+
+Do you want to scale a column to the range [0, 1]? This requires only a single
+line of code:
+
+```python
+df['scaled_column'] = (df['column'] - df['column'].min()) / (df['column'].max() - df['column'].min())
+```
+
+Do you want to filter rows based on a condition? Again, this can be achieved in
+one line:
+
+```python
+filtered_df = df[df['column'] > threshold]
+```
+
+CP-SAT also provides integration with Pandas, as demonstrated in the following
+knapsack example, where the values and weights of items are stored in a
+`DataFrame`:
+
+```python
+from ortools.sat.python import cp_model
+import pandas as pd
+
+# Example data: each row is an item with a weight and a value
+# In production, you would likely load this from a file or database,
+# which pandas has simple loaders for.
+df = pd.DataFrame(
+    data={
+        "weight": [2, 4, 3, 5, 1, 6, 2, 7, 3, 4],
+        "value": [10, 8, 7, 6, 5, 9, 4, 3, 2, 1],
+    },
+    index=["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"],
+)
+
+model = cp_model.CpModel()
+
+# Create a Boolean variable for each item (indexed by DataFrame index)
+x = model.new_bool_var_series("x", df.index)
+
+# Use Pandas vectorized operations to build constraints and objectives
+model.add((x @ df["weight"]) <= 15)  # total weight limit
+model.maximize(x @ df["value"])      # maximize total value
+```
+
+Some constraints can also be conveniently added row by row. For example, suppose
+we have a set of prohibited pairs of items that cannot be selected together.
+Such restrictions can be represented naturally as a two-column table:
+
+```python
+prohibited_pairs_df = pd.DataFrame(
+    data={
+        "item1": ["A", "B", "C"],
+        "item2": ["D", "E", "F"],
+    }
+)
+
+# For each row, apply the corresponding constraint
+for _, row in prohibited_pairs_df.iterrows():
+    model.add(x[row["item1"]] + x[row["item2"]] <= 1)
+```
+
+Suppose we have not only prohibited pairs of items but arbitrary sets of items
+that cannot be selected together. To express this structure in a classical
+tabular format, we would introduce a unique identifier for each set and a
+relation table that maps item identifiers to set identifiers. To build the
+constraints, we would first group the rows by set identifier, aggregate the
+corresponding item identifiers, and then add the constraint for each set. If
+this requirement constitutes only a small portion of the model, the tabular
+approach is acceptable. However, if the model relies on many such sets or lists,
+I recommend switching to a more object-oriented representation, as used in the
+nurse rostering problem in this chapter.
+
+When working with tabular data, it is still important to enforce a strict
+schema, as we did with the Pydantic models above. This can be achieved with
+libraries such as [pandera](https://pandera.readthedocs.io/en/stable/). For
+instance, we can require that the weights and values of the items are
+non-negative integers. Although this may appear trivial, errors can easily
+arise, for example when data is extracted from widely used Excel files somewhere
+in the processing pipeline.
+
+```python
+import pandas as pd
+import pandera.pandas as pa
+
+schema = pa.DataFrameSchema({
+    "weight": pa.Column(int, pa.Check.ge(0)),
+    "value": pa.Column(int, pa.Check.ge(0)),
+})
+
+validated_df = schema.validate(df)
+```
+
+> :reference:
+>
+> Princeton Consultants provide an excellent post on
+> [Rapid Optimization Model Development with Python and pandas in 7 Steps](https://princetonoptimization.com/blog/rapid-optimization-model-development-python-and-pandas-7-steps/),
+> which offers a more detailed discussion of the model-building process with
+> Pandas. In my own work, I am often involved in projects where the data is more
+> graph-like or hierarchical, in which case Pydantic tends to be a more natural
+> representation for building optimization models. I explicitly added this
+> subsection to emphasize that using nested data with Pydantic is not the only
+> approach, and it is not always the best one. Ultimately, you should choose the
+> representation that best matches your data and your team. If necessary, use
+> multiple representations in parallel, as the additional memory overhead is
+> usually negligible.
+
 ## Solver-Agnostic Validation
 
 <!-- Writing validation functions early clarifies the constraints and enables TDD -->
