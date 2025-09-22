@@ -659,6 +659,14 @@ variables. A more extensive list of equivalences can be found on
 >   has a more explicit computer science focus and is also relatively compact,
 >   easily digestible within a day.
 
+> :reference:
+>
+> I can also highly recommend the following
+> [chapter](<https://eng.libretexts.org/Bookshelves/Computer_Science/Programming_and_Computation_Fundamentals/Mathematics_for_Computer_Science_(Lehman_Leighton_and_Meyer)/01:_Proofs/03:_Logical_Formulas>)
+> of the open-source book _Mathematics for Computer Science_ by Lehman,
+> Leighton, and Meyer. It should not take long to read and lists all the
+> important equivalences.
+
 Let us consider some examples:
 
 1. To model `b1 -> b2`, you can use `model.add_implication(b1, b2)`.
@@ -785,8 +793,8 @@ model.add(x + y == 10).only_enforce_if([b1, ~b2])  # only enforce if b1 AND NOT 
 > concepts in classical MIP-solvers, it can still impact the performance of
 > CP-SAT significantly. Doing some additional reasoning, you can often find a
 > more efficient way to model your problem without having to use
-> `only_enforce_if`; see the previous section on logical constraints.
-> As `only_enforce_if` is often a more natural way to model your problem, it is
+> `only_enforce_if`; see the previous section on logical constraints. As
+> `only_enforce_if` is often a more natural way to model your problem, it is
 > still a good idea to use it to get your first prototype running and think
 > about smarter ways later.
 
