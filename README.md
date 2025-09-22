@@ -1213,8 +1213,11 @@ Let us consider some examples:
 > Nevertheless, CP-SAT performs many reformulations automatically. For example,
 > `add_implication` is directly converted to `add_bool_or` internally
 > [(see source code)](https://github.com/google/or-tools/blob/7ee639cf6981a9beeba908cf543a50f4ee7413ad/ortools/sat/cp_model.h#L807).
-> As always, prioritize correctness first and consider performance only
-> afterwards.
+> There are also more complex automatic reformulations, which you definitely do
+> not want to do by hand. See the chapter
+> [Preprocessing in SAT Solving](https://cca.informatik.uni-freiburg.de/papers/BiereJarvisaloKiesl-SAT-Handbook-2021-Preprocessing-Chapter-Manuscript.pdf)
+> if you are interested in the details. As always, prioritize correctness first
+> and consider performance only afterwards.
 
 <a name="04-modelling-conditional-constraints"></a>
 
