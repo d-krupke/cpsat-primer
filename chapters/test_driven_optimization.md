@@ -2105,6 +2105,7 @@ to the smallest counterexample.
 
 <details>
 <summary>Here would be the inputs that hypothesis tested automatically:</summary>
+
 - `[]`
 - `[0]`
 - `[26242, -1963]`
