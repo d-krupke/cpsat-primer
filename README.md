@@ -6200,20 +6200,6 @@ browser.
 
 <a name="test-driven-optimization"></a>
 
-> [!WARNING]
->
-> This chapter is a draft, but feedback is already welcome. Current TODOs:
->
-> 1. Some ideas/views Richard Oberdieck presented in
->    [this tutorial](https://github.com/RichardOberdieck/opti_test), especially
->    the idea of Hypothesis testing.
-> 2. [This post by Princeton Consultants](https://princetonoptimization.com/blog/rapid-optimization-model-development-python-and-pandas-7-steps/)
->    has some strong points on teamwork and tabular data, whereas this chapter
->    focuses more on individual work and complex data structures. There should
->    be at least a reference to this post, but probably the text should also be
->    extended to at least also cover tabular data and its validation, e.g., via
->    pandera, instead of just Pydantic.
-
 In this chapter, we demonstrate how to apply test-driven development (TDD)
 principles to the nurse rostering problem using the CP-SAT solver. Our objective
 is to build a model that is modular, thoroughly tested, extensible, and
@@ -8217,13 +8203,341 @@ straightforward. This technique is so popular that
 [nextmv](https://www.nextmv.io/docs/using-nextmv/experiments/shadow) offers
 built-in support for it.
 
+## Property-based Testing
+
+As a final point, I briefly discuss property-based testing. Richard Oberdieck, a
+senior optimizer with expertise in testing, favors this approach and considers
+unit-based testing less suitable for his purposes. He argues that optimization
+models are difficult to decompose and that testing individual equations has
+limited value.
+
+The problem in this chapter has been deliberately simplified. In typical
+projects, my unit tests target constraints or modules that consist of sets of
+lower-level constraints and equations. Many of the tests presented here are
+indeed excessive for the simplified setting.
+
+These observations underscore that no single workflow fits all applications; you
+should not force my personal style onto your needs. I also vary my approach
+substantially depending on the problem and context. Property-based testing may
+be a strong fit for your needs; therefore, I now briefly outline its core ideas.
+
+Property-based testing is a methodology in which you specify general properties
+that your code must satisfy and then rely on a tool to automatically generate a
+wide range of test cases to verify these properties. This approach is
+particularly valuable for optimization problems, where the solution space is
+large and complex. Conceptually, it resembles randomly sampling possible inputs
+and checking whether the corresponding outputs fulfill the required criteria.
+
+If, like me, you were initially taught that tests should be deterministic, this
+may appear unsettling. However, in practice you only need to encounter a bug
+once; afterward, you can add a deterministic test case to ensure it does not
+reoccur. When you are uncertain which edge cases to test, property-based testing
+provides an effective way to uncover them.
+
+One widely used Python library for property-based testing is
+[Hypothesis](https://hypothesis.readthedocs.io/en/latest/). It enables you to
+define strategies for generating test data and then automatically executes your
+tests with a diverse set of inputs.
+
+> [!TIP] A clear and engaging introduction to property-based testing with
+> Hypothesis is provided in this
+> [21-minute YouTube video](https://www.youtube.com/watch?v=mkgd9iOiICc) by
+> ArjanCode.
+
+With property-based testing, the guiding questions typically take the following
+form:
+
+- _For any valid instance of my optimization problem, does the solver return a
+  feasible solution?_
+- _For any valid instance of the nurse rostering problem, is there always
+  sufficient staffing to cover every shift?_
+
+Emphasize the phrase “for any valid instance,” which is central to
+property-based testing. You must specify to Hypothesis how to generate valid
+instances; Hypothesis then attempts to falsify your assumption by searching for
+counterexamples across many inputs, often targeting edge cases. This approach
+eliminates the need to maintain dozens of unit tests that try to cover the same
+space and bloat the test suite.
+
+Let us begin with a simple example of a property-based test to illustrate the
+basic concept. In this case, we test the built-in `sorted` function and verify
+two properties:
+
+```python
+from hypothesis import given, strategies as st
+
+@given(st.lists(st.integers()))
+def test_sort_preserves_length_and_order(xs):
+    sorted_xs = sorted(xs)
+
+    # Property 1: Sorting does not change the length
+    assert len(sorted_xs) == len(xs)
+
+    # Property 2: Sorted list is monotonically non-decreasing
+    for a, b in zip(sorted_xs, sorted_xs[1:]):
+        assert a <= b
+```
+
+In this example, we verify that _for any list of integers_, applying `sorted`
+preserves the list length and produces a sequence in non-decreasing order.
+Hypothesis automatically generates a wide variety of integer lists and evaluates
+the test against them.
+
+<details>
+<summary>Here would be the inputs that hypothesis tested automatically:</summary>
+```
+[]
+[0]
+[26242, -1963]
+[-121]
+[8436]
+[15719]
+[-19093982987237563430026067407172463954]
+[-3922]
+[-3922, 1364]
+[-923437505601415702]
+[-923437505601415702, 1030000614]
+[-923437505601415702, -923437505601415702]
+[-28265]
+[-30093, -2983, -30440]
+[-30093, -30440, -30440]
+[-30093]
+[-40, 111940892136851798167905802830994768244, -28043, 7, 20215, 1370480367, 7446, -39]
+[-40, 111940892136851798167905802830994768244, -28043, 7, 20215, 1370480367, 20215, -39]
+[-40, 111940892136851798167905802830994768244, 111940892136851798167905802830994768244, 7, 20215, 1370480367, 20215, -39]
+[-40, 111940892136851798167905802830994768244, 111940892136851798167905802830994768244, 7, -39, 1370480367, 20215, -39]
+[-40, 111940892136851798167905802830994768244, 111940892136851798167905802830994768244, 7, 111940892136851798167905802830994768244, 1370480367, 20215, -39]
+[1370480367, 111940892136851798167905802830994768244, 111940892136851798167905802830994768244, 7, 111940892136851798167905802830994768244, 1370480367, 20215, -39]
+[1370480367, 1370480367, 111940892136851798167905802830994768244, 7, 111940892136851798167905802830994768244, 1370480367, 20215, -39]
+[8328, 6129]
+[8328]
+[-114, 12990, -114, 27, -16229, -19256, 928]
+[-114, 12990, -114, 27, -16229, -16229, 928]
+[-114, 12990, -114, 27, -16229, -114, 928]
+[-114, 12990, -114, -114, -16229, -114, 928]
+[-114, 12990, -114, -114, -16229, 928, 928]
+[-114, 12990, -114, -114, -16229, 928, -114]
+[-114, 12990, -114, -114, 928, 928, 928]
+[-7, -79, -1133414645]
+[-79, -79, -1133414645]
+[-79, -79, -79]
+[-1482, -30293, -23505, -7340]
+[-22323, 93]
+[-22323, -22323]
+[2353, 13157]
+[2353, 2353]
+[2353]
+[7714]
+[13297, -12682, -26, 2588, -5696, 18, 10030, 22]
+[13297, -12682, -26, 2588, -5696, 18, 22, 22]
+[13297, -12682, -26, 2588, -5696, 18]
+[13297, 2588, -26, 2588, -5696, 18]
+[13297, 2588, -26]
+[23480, -82, 46, 26111, 32207, -3830610785522322019, 63408623014671325114394083743435908480, 61, -20775, -1100012486, 0, -5724957629946085877, -1248, 64, 21, 13771, 721, 4, 81, -11615, -75, -31640, -15547, -5831, 2113]
+[23480, -82, 46, 26111, 32207, -3830610785522322019, 63408623014671325114394083743435908480, 61, -20775, -1100012486, 0, -5724957629946085877, -1248, 64, 21, 2113, 721, 4, 81, -11615, -75, -31640, -15547, -5831, 2113]
+[23480, -82, 46, 26111, 32207, -3830610785522322019, 63408623014671325114394083743435908480, 61, -20775, -1100012486, 0, -5724957629946085877, -1248, 64, 21]
+[23480, -82, 46, 26111, 32207, -3830610785522322019, 63408623014671325114394083743435908480, 61, -20775, -1100012486, 0, -5724957629946085877, -1248, 21, 21]
+[23480, -82, -1248, 26111, 32207, -3830610785522322019, 63408623014671325114394083743435908480, 61, -20775, -1100012486, 0, -5724957629946085877, -1248, 21, 21]
+[23480, -82, -1248, 26111, 32207, -3830610785522322019, 63408623014671325114394083743435908480, 61, -20775, -1100012486, 0, -5724957629946085877, -1248, 61, 21]
+[23480, -82, -1248, 26111, 63408623014671325114394083743435908480, -3830610785522322019, 63408623014671325114394083743435908480, 61, -20775, -1100012486, 0, -5724957629946085877, -1248, 61, 21]
+[-78711666441691544779522005139678058413, 9413, -28, -25429, 1138913225, 119, 15206, -14631, 13620, 22066, 73, -930]
+[-78711666441691544779522005139678058413, 22066, -28, -25429, 1138913225, 119, 15206, -14631, 13620, 22066, 73, -930]
+[-78711666441691544779522005139678058413, 22066, -28, 119, 1138913225, 119, 15206, -14631, 13620, 22066, 73, -930]
+[-78711666441691544779522005139678058413, 15206, -28, 119, 1138913225, 119, 15206, -14631, 13620, 22066, 73, -930]
+[119, 15206, -28, 119, 1138913225, 119, 15206, -14631, 13620, 22066, 73, -930]
+[119, 15206, -28, 73, 1138913225, 119, 15206, -14631, 13620, 22066, 73, -930]
+[119, 15206, -28, 73, 1138913225, 73, 15206, -14631, 13620, 22066, 73, -930]
+[-10367, -28534]
+[-10367, -10367]
+[-15, -97, 20993, 86, -3483807830384175452, 17981, 5590988155335024430, 21910677380750136143640822796681648827, -11734, 10, -23457]
+[-15, -97, 20993, 86, -3483807830384175452, 17981, 5590988155335024430, -11734, -11734, 10, -23457]
+[-15, -97, 20993, 86, -3483807830384175452, 17981, 5590988155335024430, -23457, -11734, 10, -23457]
+[-15, 10, 20993, 86, -3483807830384175452, 17981, 5590988155335024430, -23457, -11734, 10, -23457]
+[-15, 10, 20993, 86, -3483807830384175452, 17981, 5590988155335024430, -11734, -11734, 10, -23457]
+[-15, 10, 20993, 86, -3483807830384175452, 17981, 5590988155335024430, -11734, 17981, 10, -23457]
+[29141, -30, -5793, 102, -16130, -5, -9949, 676613804, -61, 12368]
+[29141, -30, -5793, 102, 676613804, -5, -9949, 676613804, -61, 12368]
+[-61, -30, -5793, 102, 676613804, -5, -9949, 676613804, -61, 12368]
+[-61, -9949, -5793, 102, 676613804, -5, -9949, 676613804, -61, 12368]
+[-61, -9949, 12368, 102, 676613804, -5, -9949, 676613804, -61, 12368]
+[-61, -9949, 12368, 102, 676613804, -5, -61, 676613804, -61, 12368]
+[105, -124, 29994, 4704, 23985, 5651302969633935431, -21152, 476047859, 23285, 7392, 12]
+[23285, -124, 29994, 4704, 23985, 5651302969633935431, -21152, 476047859, 23285, 7392, 12]
+[23285, -124, 29994, 4704, 5651302969633935431, 5651302969633935431, -21152, 476047859, 23285, 7392, 12]
+[23285, -124, 29994, 23285, 5651302969633935431, 5651302969633935431, -21152, 476047859, 23285, 7392, 12]
+[23285, -124, 29994, 23285, 7392, 5651302969633935431, -21152, 476047859, 23285, 7392, 12]
+[23285, -124, 29994, 7392, 7392, 5651302969633935431, -21152, 476047859, 23285, 7392, 12]
+[2105491908, 8597804526551328604, 7275042865703570734]
+[2105491908, 2105491908, 7275042865703570734]
+[2105491908, 7275042865703570734, 7275042865703570734]
+[7275042865703570734, 2105491908, 7275042865703570734]
+[2105491908, 2105491908, 2105491908]
+[29243, -1704064901, 29484]
+[29243, 29484, 29484]
+[29484, 29484, 29484]
+[-19703, -88, -6578, 121]
+[1070832594, 17504]
+[1070832594, 1070832594]
+[-69]
+[15301, 479652285201667946]
+[479652285201667946, 479652285201667946]
+[479652285201667946]
+[516195269, 10059, -61, -106, 6213, -83, -15699]
+[6213, 10059, -61, -106, 6213, -83, -15699]
+[6213, 10059, -61, -106, 6213, -83, -83]
+[6213, 10059, -61, -106, -83, -83, -83]
+```
+</details>
+
+We now apply property-based testing to the nurse rostering problem. The central
+challenge is to define a strategy that generates valid instances of the problem.
+In particular, the generated instances must satisfy the data schema: unique
+UIDs; valid time intervals for shifts; and consistent references between nurses,
+shifts, and assignments. Because constructing instances that are always feasible
+is difficult, we instead check the following property: the solver either returns
+a feasible solution or correctly identifies the instance as infeasible. This
+choice may fail to detect false infeasibilities; however, it suffices for this
+illustrative example.
+
+```python
+from datetime import datetime, timedelta
+from hypothesis import given, strategies as st
+from hypothesis.strategies import composite
+from nurserostering.data_schema import NurseRosteringInstance, Shift, Nurse
+from nurserostering.solver import NurseRosteringModel
+from nurserostering.validation import assert_solution_is_feasible
+
+
+# --- Helper strategies ---
+
+# A datetime in Jan 2025
+_dt_jan_2025 = st.datetimes(
+    min_value=datetime(2025, 1, 1, 0, 0, 0),
+    max_value=datetime(2025, 1, 31, 23, 59, 59),
+)
+
+@composite
+def shift_strategy(draw):
+    """
+    Build a Shift with end_time > start_time.
+    """
+    name = draw(st.text(min_size=1, max_size=10))
+    start = draw(_dt_jan_2025)
+
+    # Duration between 4h and 12h
+    duration_hours = draw(st.integers(min_value=4, max_value=12))
+    end = start + timedelta(hours=duration_hours)
+
+    # Demand can be zero per schema (NonNegativeInt); keep small
+    demand = draw(st.integers(min_value=0, max_value=3))
+
+    # uid is auto-generated by schema default_factory
+    return Shift(
+        name=name,
+        start_time=start,
+        end_time=end,
+        demand=demand,
+    )
+
+def _subset_of_uids(shift_uids, max_size=5):
+    """
+    Produce a strategy for a set subset of the given shift_uids.
+    """
+    # sampled_from requires a sequence, not a set
+    return st.sets(
+        st.sampled_from(list(shift_uids)),
+        max_size=max_size,
+    )
+
+@composite
+def nurse_strategy(draw, shift_uids):
+    """
+    Build a Nurse whose preferred/blocked sets are subsets of the provided shift_uids.
+    """
+    name = draw(st.text(min_size=1, max_size=10))
+    staff = draw(st.booleans())
+    min_tbs = timedelta(hours=8)  # fixed, as in your original
+    pref_weight = draw(st.integers(min_value=0, max_value=5))  # NonNegativeInt
+
+    # Independent subsets; may overlap (schema does not forbid)
+    preferred = draw(_subset_of_uids(shift_uids, max_size=5))
+    blocked = draw(_subset_of_uids(shift_uids, max_size=5))
+
+    # uid is auto-generated by schema default_factory
+    return Nurse(
+        name=name,
+        preferred_shifts=preferred,
+        blocked_shifts=blocked,
+        staff=staff,
+        min_time_between_shifts=min_tbs,
+        preferred_shift_weight=pref_weight,
+    )
+
+@composite
+def instance_strategy(draw):
+    """
+    Build a NurseRosteringInstance that passes all schema validators:
+    - Unique nurse/shift UIDs (handled by defaults).
+    - Shifts sorted by start_time.
+    - Nurses' preference/blocked sets reference existing shift UIDs.
+    """
+    # Make and sort shifts by start_time
+    num_shifts = draw(st.integers(min_value=10, max_value=20))
+    shifts = [draw(shift_strategy()) for _ in range(num_shifts)]
+    shifts.sort(key=lambda s: s.start_time)
+
+    shift_uids = [s.uid for s in shifts]
+
+    # Build nurses referencing these shift_uids
+    num_nurses = draw(st.integers(min_value=5, max_value=10))
+    nurses = [draw(nurse_strategy(shift_uids)) for _ in range(num_nurses)]
+
+    staff_weight = draw(st.integers(min_value=0, max_value=5))
+
+    return NurseRosteringInstance(
+        nurses=nurses,
+        shifts=shifts,
+        staff_weight=staff_weight,
+    )
+
+
+# --- Property test ---
+
+@given(instance=instance_strategy())
+def test_solver_finds_feasible_solution(instance):
+    model = NurseRosteringModel(instance)
+    try:
+        solution = model.solve(max_time_in_seconds=10.0)
+        assert_solution_is_feasible(instance, solution)
+    except ValueError:
+        # If the model is infeasible, we accept that as a valid outcome.
+        # Ensuring that the input is feasible would be a little more complex.
+        pass
+```
+
+> [!NOTE]
+>
+> See Richard Oberdieck’s
+> [example repository](https://github.com/RichardOberdieck/opti_test), which
+> demonstrates property-based testing for an optimization problem using
+> Hypothesis. Consult the
+> [/docs](https://github.com/RichardOberdieck/opti_test/tree/main/docs)
+> directory for additional textual explanation; note that the documentation is
+> incomplete at present.
+
 ## Conclusion
 
-In this chapter, we built a complete nurse rostering solver using CP-SAT and a
-test-driven approach. The modular design allowed us to separate constraints and
-objectives, write targeted tests, and iterate safely. This methodology is not
-always the fastest way to get a working solution, but it pays off for problems
-that evolve over time.
+In this chapter, we developed a complete nurse rostering solver using CP-SAT
+within a test-driven framework. The modular design enabled us to separate
+constraints from objectives, create targeted tests, and iterate with confidence.
+While this methodology is not always the fastest path to a working solution, it
+proves highly effective for problems that evolve over time.
+
+We also highlighted alternative approaches—such as tabular data representations
+and property-based testing—emphasizing that you should select the methods that
+best suit your specific context. The key takeaway is that software engineering
+principles can be successfully applied to optimization modeling, thereby
+enhancing both reliability and maintainability.
 
 > [!TIP]
 >
