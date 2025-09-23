@@ -116,16 +116,3 @@ def test_solver_finds_feasible_solution(instance):
         # If the model is infeasible, we accept that as a valid outcome.
         # Ensuring that the input is feasible would be a little more complex.
         pass
-
-
-@given(st.lists(st.integers()))
-def test_sort_preserves_length_and_order(xs):
-    print(xs)
-    sorted_xs = sorted(xs)
-
-    # Property 1: Sorting does not change the length
-    assert len(sorted_xs) == len(xs)
-
-    # Property 2: Sorted list is monotonically non-decreasing
-    for a, b in zip(sorted_xs, sorted_xs[1:]):
-        assert a <= b

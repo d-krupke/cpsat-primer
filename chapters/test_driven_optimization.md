@@ -2033,14 +2033,20 @@ Property-based testing is a methodology in which you specify general properties
 that your code must satisfy and then rely on a tool to automatically generate a
 wide range of test cases to verify these properties. This approach is
 particularly valuable for optimization problems, where the solution space is
-large and complex. Conceptually, it resembles randomly sampling possible inputs
-and checking whether the corresponding outputs fulfill the required criteria.
+large and complex. Conceptually, it resembles automated sampling of possible
+inputs and checking whether the corresponding outputs fulfill the required
+criteria.
+
+Unlike naive random testing, libraries such as Hypothesis use _strategies_ to
+systematically generate inputs and, if a failure occurs, they attempt to
+**shrink** the failing case to a minimal counterexample. Hypothesis also stores
+examples so that failures can be reproduced deterministically.
 
 If, like me, you were initially taught that tests should be deterministic, this
 may appear unsettling. However, in practice you only need to encounter a bug
-once; afterward, you can add a deterministic test case to ensure it does not
-reoccur. When you are uncertain which edge cases to test, property-based testing
-provides an effective way to uncover them.
+once; afterward, you can add a deterministic regression test to ensure it does
+not reoccur. When you are uncertain which edge cases to test, property-based
+testing provides an effective way to uncover them.
 
 One widely used Python library for property-based testing is
 [Hypothesis](https://hypothesis.readthedocs.io/en/latest/). It enables you to
@@ -2056,26 +2062,28 @@ With property-based testing, the guiding questions typically take the following
 form:
 
 - _For any valid instance of my optimization problem, does the solver return a
-  feasible solution?_
+  feasible solution (or report infeasibility correctly)?_
 - _For any valid instance of the nurse rostering problem, is there always
   sufficient staffing to cover every shift?_
 
-Emphasize the phrase “for any valid instance,” which is central to
-property-based testing. You must specify to Hypothesis how to generate valid
-instances; Hypothesis then attempts to falsify your assumption by searching for
-counterexamples across many inputs, often targeting edge cases. This approach
-eliminates the need to maintain dozens of unit tests that try to cover the same
-space and bloat the test suite.
+The phrase “for any valid instance” is central: you must specify to Hypothesis
+how to generate inputs that satisfy schema invariants. Hypothesis then attempts
+to falsify your assumption by searching for counterexamples, often targeting
+edge cases. This approach **complements unit tests**: you still want a small set
+of clear, deterministic unit tests for well-understood components, while using
+property-based tests to explore a much wider space of inputs without bloating
+the test suite.
 
 Let us begin with a simple example of a property-based test to illustrate the
 basic concept. In this case, we test the built-in `sorted` function and verify
-two properties:
+three properties:
 
 ```python
+from collections import Counter
 from hypothesis import given, strategies as st
 
 @given(st.lists(st.integers()))
-def test_sort_preserves_length_and_order(xs):
+def test_sort_properties(xs):
     sorted_xs = sorted(xs)
 
     # Property 1: Sorting does not change the length
@@ -2084,12 +2092,16 @@ def test_sort_preserves_length_and_order(xs):
     # Property 2: Sorted list is monotonically non-decreasing
     for a, b in zip(sorted_xs, sorted_xs[1:]):
         assert a <= b
+
+    # Property 3: Sorting does not lose or duplicate elements
+    assert Counter(sorted_xs) == Counter(xs)
 ```
 
 In this example, we verify that _for any list of integers_, applying `sorted`
-preserves the list length and produces a sequence in non-decreasing order.
-Hypothesis automatically generates a wide variety of integer lists and evaluates
-the test against them.
+preserves the list length, produces a sequence in non-decreasing order, and
+returns a permutation of the input. Hypothesis automatically generates a wide
+variety of integer lists, runs the test against them, and shrinks any failures
+to the smallest counterexample.
 
 <details>
 <summary>Here would be the inputs that hypothesis tested automatically:</summary>
@@ -2202,10 +2214,10 @@ challenge is to define a strategy that generates valid instances of the problem.
 In particular, the generated instances must satisfy the data schema: unique
 UIDs; valid time intervals for shifts; and consistent references between nurses,
 shifts, and assignments. Because constructing instances that are always feasible
-is difficult, we instead check the following property: the solver either returns
-a feasible solution or correctly identifies the instance as infeasible. This
-choice may fail to detect false infeasibilities; however, it suffices for this
-illustrative example.
+is difficult, we instead check the following property: within a fixed time
+limit, the solver either returns a feasible solution that passes an independent
+validator or reports the instance as infeasible or unknown. This choice may miss
+false infeasibilities but suffices for this illustrative example.
 
 ```python
 from datetime import datetime, timedelta
