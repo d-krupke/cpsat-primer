@@ -1157,7 +1157,8 @@ the conjunctive normal form CNF). All other constraints are merely syntactic
 sugar, provided to have a more natural modelling experience. While it would be
 straightforward for CP-SAT to support nested expressions directly, its
 development focuses on its engine rather than the interface. Therefore, at
-present, you must perform these reformulations manually.
+present, you must perform these reformulations manually (or use
+[CPMpy](https://cpmpy.readthedocs.io/en/latest/index.html)).
 
 The most useful reformulations include:
 
