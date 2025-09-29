@@ -2768,6 +2768,12 @@ whereas the assignment `[1, 0, 1, 2]` would be infeasible because state 0 has no
 transition for value 1. Similarly, the assignment `[0, 0, 1, 1]` would be
 infeasible as it does not end in a final state.
 
+> [!NOTE]
+>
+> The automaton constraint is for example used in this
+> [paper](https://arxiv.org/pdf/2410.11981) to model Parallel Batch Scheduling
+> With Incompatible Job Families.
+
 <a name="04-modelling-reservoir"></a>
 
 ### Reservoir Constraints
