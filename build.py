@@ -438,6 +438,7 @@ if __name__ == "__main__":
             ),
             MarkdownFile("./chapters/08_benchmarking.md", "08_benchmarking.md"),
             MarkdownFile("./chapters/09_lns.md", "09_lns.md"),
+            MarkdownFile("./chapters/mathopt.md", "mathopt.md"),
         ]
     )
     document.write_readme("README.md")

@@ -27,3 +27,4 @@
 - [CP-SAT vs. ML vs. QC](./chapters/machine_learning.md)
 - [Large Neighborhood Search](./09_lns.md)
 - [Benchmarking your Model](./08_benchmarking.md)
+- [MathOpt](./mathopt.md)
