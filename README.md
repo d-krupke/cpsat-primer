@@ -167,6 +167,9 @@ optimization.
    CP-SAT, we look into how CP-SAT will do all these things.
 8. [Alternatives](#03-big-picture): An overview of the different optimization
    techniques and tools available. Putting CP-SAT into context.
+9. [MathOpt as a Modeling Layer](#chapters-mathopt): A new modeling layer in
+   OR-Tools that allows using CP-SAT as a backend solver, but also MIP solvers
+   such as Gurobi or HiGHS.
 
 **Part 2: Advanced Topics**
 
