@@ -16,6 +16,7 @@
 - [Understanding the Log](./understanding_the_log.md)
 - [How does it work?](./07_under_the_hood.md)
 - [Alternatives](./03_big_picture.md)
+- [MathOpt](./mathopt.md)
 
 ---
 
@@ -27,4 +28,3 @@
 - [CP-SAT vs. ML vs. QC](./chapters/machine_learning.md)
 - [Large Neighborhood Search](./09_lns.md)
 - [Benchmarking your Model](./08_benchmarking.md)
-- [MathOpt](./mathopt.md)
