@@ -20,7 +20,7 @@ Sometimes you will see new algorithms with cool-sounding names in scientific
 papers. While tempting, these are often just small twists on older methods and
 might leave out key details that make them work. If you are interested, there's
 a discussion about this issue in a paper by Sörensen, called
-["Metaheuristics – The Metaphor Exposed"](http://onlinelibrary.wiley.com/doi/10.1111/itor.12001/).
+["Metaheuristics – The Metaphor Exposed"](http://onlinelibrary.wiley.com/doi/10.1111/itor.12001).
 
 The good news? You do not have to implement an algorithm that simulates the
 mating behavior of forest frogs to solve your problem. If you already know how
