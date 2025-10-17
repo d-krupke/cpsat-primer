@@ -17,10 +17,10 @@ class KnapsackInstance(BaseModel):
     capacity: PositiveInt = Field(..., description="The capacity of the knapsack.")
 
     @model_validator(mode="after")
-    def check_lengths(cls, v):
-        if len(v.weights) != len(v.values):
+    def check_lengths(self):
+        if len(self.weights) != len(self.values):
             raise ValueError("Mismatch in number of weights and values.")
-        return v
+        return self
 
 
 class KnapsackSolverConfig(BaseModel):

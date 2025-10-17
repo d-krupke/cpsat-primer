@@ -1,6 +1,7 @@
 name: Run Pytest to autoamtically check for changes in CP-SAT's behavior
 
 on:
+  workflow_dispatch:
   schedule:
     - cron: "0 0 * * FRI"
 
