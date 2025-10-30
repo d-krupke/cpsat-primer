@@ -1,7 +1,6 @@
 [book]
 authors = ["Dominik Krupke"]
 language = "en"
-multilingual = false
 src = "."
 title = "The CP-SAT Primer - Using and Understanding Google OR-Tools' CP-SAT Solver"
 [output.html]
