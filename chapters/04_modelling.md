@@ -825,10 +825,10 @@ abs_xz = model.new_int_var(0, 200, "|x+z|")
 model.add_abs_equality(target=abs_xz, expr=x + z)
 
 # Create variables to capture the maximum and minimum of x, (y-1), and z
-max_xyz = model.new_int_var(0, 100, "max(x, y, z-1)")
+max_xyz = model.new_int_var(0, 100, "max(x, y-1, z)")
 model.add_max_equality(target=max_xyz, exprs=[x, y - 1, z])
 
-min_xyz = model.new_int_var(-100, 100, "min(x, y, z)")
+min_xyz = model.new_int_var(-100, 100, "min(x, y-1, z)")
 model.add_min_equality(target=min_xyz, exprs=[x, y - 1, z])
 ```
 

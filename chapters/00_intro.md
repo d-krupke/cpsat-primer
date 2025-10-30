@@ -68,8 +68,10 @@ capacity = 2000
 model = cp_model.CpModel()
 xs = [model.new_bool_var(f"x_{i}") for i in range(len(weights))]
 
-model.add(sum(x * w for x, w in zip(xs, weights)) <= capacity)
-model.maximize(sum(x * v for x, v in zip(xs, values)))
+accumulated_weight = sum(x * w for x, w in zip(xs, weights))
+model.add(accumulated_weight <= capacity)
+accumulated_value = sum(x * v for x, v in zip(xs, values))
+model.maximize(accumulated_value)
 
 solver = cp_model.CpSolver()
 solver.solve(model)
