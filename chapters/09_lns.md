@@ -101,7 +101,7 @@ capacity with the deleted items and the newly selected items. Repeat this until
 you are happy with the solution quality. The number of items you delete and
 select can be fixed such that the problem can be easily solved by CP-SAT. You
 can find a full implementation under
-[examples/lns_knapsack.ipynb](examples/lns_knapsack.ipynb).
+[examples/lns_knapsack.ipynb](https://github.com/d-krupke/cpsat-primer/blob/main/examples/lns_knapsack.ipynb).
 
 Let us look only on an example here:
 
