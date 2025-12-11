@@ -67,8 +67,10 @@ capacity = 2000
 model = cp_model.CpModel()
 xs = [model.new_bool_var(f"x_{i}") for i in range(len(weights))]
 
-model.add(sum(x * w for x, w in zip(xs, weights)) <= capacity)
-model.maximize(sum(x * v for x, v in zip(xs, values)))
+accumulated_weight = sum(x * w for x, w in zip(xs, weights))
+model.add(accumulated_weight <= capacity)
+accumulated_value = sum(x * v for x, v in zip(xs, values))
+model.maximize(accumulated_value)
 
 solver = cp_model.CpSolver()
 solver.solve(model)
@@ -1361,10 +1363,10 @@ abs_xz = model.new_int_var(0, 200, "|x+z|")
 model.add_abs_equality(target=abs_xz, expr=x + z)
 
 # Create variables to capture the maximum and minimum of x, (y-1), and z
-max_xyz = model.new_int_var(0, 100, "max(x, y, z-1)")
+max_xyz = model.new_int_var(0, 100, "max(x, y-1, z)")
 model.add_max_equality(target=max_xyz, exprs=[x, y - 1, z])
 
-min_xyz = model.new_int_var(-100, 100, "min(x, y, z)")
+min_xyz = model.new_int_var(-100, 100, "min(x, y-1, z)")
 model.add_min_equality(target=min_xyz, exprs=[x, y - 1, z])
 ```
 
@@ -6187,7 +6189,7 @@ An alternative is to let the solver run in a separate process and communicate
 with it using a pipe. This approach allows the solver to be interrupted at any
 time, enabling the application to react immediately. Python's multiprocessing
 module provides reasonably simple ways to achieve this.
-[This example](https://github.com/d-krupke/cpsat-primer/blob/main//examples/embedding_cpsat/)
+[This example](https://github.com/d-krupke/cpsat-primer/blob/main/examples/embedding_cpsat/)
 showcases such an approach. However, for scaling this approach up, you will
 actually have to build a task queues where the solver is run by workers. Using
 multiprocessing can still be useful for the worker to remain responsive for stop
@@ -11518,7 +11520,7 @@ capacity with the deleted items and the newly selected items. Repeat this until
 you are happy with the solution quality. The number of items you delete and
 select can be fixed such that the problem can be easily solved by CP-SAT. You
 can find a full implementation under
-[examples/lns_knapsack.ipynb](examples/lns_knapsack.ipynb).
+[examples/lns_knapsack.ipynb](https://github.com/d-krupke/cpsat-primer/blob/main/examples/lns_knapsack.ipynb).
 
 Let us look only on an example here:
 
