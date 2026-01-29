@@ -826,10 +826,12 @@ model.add_abs_equality(target=abs_xz, expr=x + z)
 
 # Create variables to capture the maximum and minimum of x, (y-1), and z
 max_xyz = model.new_int_var(0, 100, "max(x, y-1, z)")
-model.add_max_equality(target=max_xyz, exprs=[x, y - 1, z])
+# Changed in ortools 9.15: was add_max_equality(target=max_xyz, exprs=[x, y - 1, z])
+model.add_max_equality(max_xyz, x, y - 1, z)
 
 min_xyz = model.new_int_var(-100, 100, "min(x, y-1, z)")
-model.add_min_equality(target=min_xyz, exprs=[x, y - 1, z])
+# Changed in ortools 9.15: was add_min_equality(target=min_xyz, exprs=[x, y - 1, z])
+model.add_min_equality(min_xyz, x, y - 1, z)
 ```
 
 While some practitioners report that these methods are more efficient than those

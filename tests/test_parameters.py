@@ -127,21 +127,24 @@ def test_assumptions():
 
 
 def test_bad_hints():
+    """
+    Test that fix_variables_to_their_hinted_value detects infeasible hints.
+    This is more reliable than debug_crash_on_bad_hint which has race conditions.
+    """
     model = cp_model.CpModel()
-    vertices = range(30)
+    vertices = range(10)
     arcs = [(i, j) for i in vertices for j in vertices if i != j]
-    costs = {(i, j): random.randint(1, 100) for i, j in arcs}
     x = {(i, j): model.new_bool_var(f"x_{i}_{j}") for i, j in arcs}
     model.add_circuit([(v, w, x) for (v, w), x in x.items()])
-    model.minimize(sum(costs[i, j] * x[i, j] for i, j in arcs))
+    # add a bad hint of multiple outgoing arcs from the same node (violates circuit)
     model.add_hint(x[0, 1], 1)
     model.add_hint(x[0, 2], 1)
     model.add_hint(x[0, 3], 1)
     solver = cp_model.CpSolver()
-    # add a bad hint of two outgoing arcs from the same node
-    solver.parameters.max_time_in_seconds = 10
-    solver.parameters.debug_crash_on_bad_hint = True
-    status = solver.solve(model)  # noqa: F841
+    # Fix variables to hinted values to reliably detect infeasible hints
+    solver.parameters.fix_variables_to_their_hinted_value = True
+    status = solver.solve(model)
+    assert status == cp_model.INFEASIBLE, "Expected INFEASIBLE due to conflicting hints"
 
 
 def test_presolve_parameters_exist():

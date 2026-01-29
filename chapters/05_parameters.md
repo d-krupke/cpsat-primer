@@ -498,6 +498,7 @@ load the model on a different machine and run the solver.
 
 ```python
 from ortools.sat.python import cp_model
+from ortools.sat import cp_model_pb2
 from google.protobuf import text_format
 from pathlib import Path
 
@@ -508,20 +509,39 @@ def _detect_binary_mode(filename: str) -> bool:
         return True
     raise ValueError(f"Unknown extension for file: {filename}")
 
+# Changed in ortools 9.15: was model.Proto().SerializeToString() / text_format.MessageToString()
+# Now use model.export_to_file() which auto-detects format by extension
 def export_model(model: cp_model.CpModel, filename: str, binary: bool | None = None):
     binary = _detect_binary_mode(filename) if binary is None else binary
-    if binary:
-        Path(filename).write_bytes(model.Proto().SerializeToString())
+    # export_to_file uses .txt extension for text format, otherwise binary
+    # So we need to handle the mismatch for some extensions
+    if binary and filename.endswith(".txt"):
+        # Force binary even with .txt extension - use temp file
+        temp_file = filename + ".pb"
+        model.export_to_file(temp_file)
+        Path(filename).write_bytes(Path(temp_file).read_bytes())
+        Path(temp_file).unlink()
+    elif not binary and not filename.endswith(".txt"):
+        # Force text even without .txt extension
+        temp_file = filename + ".txt"
+        model.export_to_file(temp_file)
+        Path(filename).write_text(Path(temp_file).read_text())
+        Path(temp_file).unlink()
     else:
-        Path(filename).write_text(text_format.MessageToString(model.Proto()))
+        model.export_to_file(filename)
 
+# Changed in ortools 9.15: was model.Proto().ParseFromString() / text_format.Parse()
+# Now use model.Proto().parse_text_format() for text, or cp_model_pb2 for binary
 def import_model(filename: str, binary: bool | None = None) -> cp_model.CpModel:
     binary = _detect_binary_mode(filename) if binary is None else binary
     model = cp_model.CpModel()
     if binary:
-        model.Proto().ParseFromString(Path(filename).read_bytes())
+        # Parse binary via standard protobuf, then convert to text for import
+        proto = cp_model_pb2.CpModelProto()
+        proto.ParseFromString(Path(filename).read_bytes())
+        model.Proto().parse_text_format(text_format.MessageToString(proto))
     else:
-        text_format.Parse(Path(filename).read_text(), model.Proto())
+        model.Proto().parse_text_format(Path(filename).read_text())
     return model
 ```
 
@@ -560,17 +580,26 @@ We will also see how to utilize hints for multi-objective optimization in the
 > complete the solution from the hint, it may have wasted a lot of time in
 > branches it could otherwise have pruned.
 
-To ensure your hints are correct, you can enable the following parameter, which
-will make CP-SAT throw an error if the hints are incorrect:
+To verify that your hints are feasible, you can temporarily fix variables to
+their hinted values and check if the model becomes infeasible:
 
 ```python
-solver.parameters.debug_crash_on_bad_hint = True
+solver.parameters.fix_variables_to_their_hinted_value = True
+status = solver.solve(model)
+if status == cp_model.INFEASIBLE:
+    print("Hints are conflicting or infeasible!")
 ```
 
 If you suspect that your hints are not being utilized, it might indicate a
-logical error in your model or a bug in your code. This parameter can help
-diagnose such issues. However, this feature does not work reliably, so it should
-not be solely relied upon.
+logical error in your model or a bug in your code. This approach reliably
+detects infeasible hints by forcing the solver to use the exact hinted values.
+
+There is also `solver.parameters.debug_crash_on_bad_hint = True`, which crashes
+the solver if it cannot complete hints into a feasible solution. However, this
+feature is unreliable: it only triggers in multi-worker mode, depends on a race
+condition between workers, and is controlled by `hint_conflict_limit` (default:
+10). The `fix_variables_to_their_hinted_value` approach above is simpler and
+deterministic.
 
 > [!WARNING]
 >

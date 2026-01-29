@@ -38,8 +38,9 @@ def test_interval():
         name="optional_fixed_interval",
     )
 
+    # Changed in ortools 9.15: was interval_vars=
     model.add_no_overlap(
-        interval_vars=[
+        intervals=[
             flexible_interval,
             fixed_interval,
             optional_interval,
