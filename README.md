@@ -195,16 +195,11 @@ optimization.
 This book assumes you are fluent in Python, and have already been introduced to
 combinatorial optimization problems. In case you are just getting into
 combinatorial optimization and are learning on your own, I recommend starting
-with the free Coursera course,
-[Discrete Optimization](https://www.coursera.org/learn/discrete-optimization),
-taught by Pascal Van Hentenryck and Carleton Coffrin. This course provides a
-comprehensive introduction in a concise format.
-
-For an engaging exploration of a classic problem within this domain,
-[In Pursuit of the Traveling Salesman by Bill Cook](https://press.princeton.edu/books/paperback/9780691163529/in-pursuit-of-the-traveling-salesman)
-is highly recommended. This book, along with this
+with
+[In Pursuit of the Traveling Salesman by Bill Cook](https://press.princeton.edu/books/paperback/9780691163529/in-pursuit-of-the-traveling-salesman).
+This book, along with this
 [YouTube talk](https://www.youtube.com/watch?v=5VjphFYQKj8) by the author that
-lasts about an hour, offers a practical case study of the well-known Traveling
+lasts about an hour, offers an engaging case study of the well-known Traveling
 Salesman Problem. It not only introduces fundamental techniques but also delves
 into the community and historical context of the field.
 
@@ -4608,8 +4603,6 @@ following learning path:
      - [Video Series by Gurobi](https://www.youtube.com/playlist?list=PLHiHZENG6W8BeAfJfZ3myo5dsSQjEV5pJ)
    - Mixed Integer Programming: Branch and Bound, Cutting Planes, Branch and
      Cut, ...
-     - [Discrete Optimization on Coursera with Pascal Van Hentenryck and Carleton Coffrin](https://www.coursera.org/learn/discrete-optimization)
-       (video course, including also Constraint Programming and Heuristics)
      - [Gurobi Resources](https://www.gurobi.com/resource/mip-basics/) (website)
 3. Learn the additional concepts of LCG Constraint Programming: Propagation,
    Lazy Clause Generation, ...

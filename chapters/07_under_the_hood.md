@@ -79,8 +79,6 @@ following learning path:
      - [Video Series by Gurobi](https://www.youtube.com/playlist?list=PLHiHZENG6W8BeAfJfZ3myo5dsSQjEV5pJ)
    - Mixed Integer Programming: Branch and Bound, Cutting Planes, Branch and
      Cut, ...
-     - [Discrete Optimization on Coursera with Pascal Van Hentenryck and Carleton Coffrin](https://www.coursera.org/learn/discrete-optimization)
-       (video course, including also Constraint Programming and Heuristics)
      - [Gurobi Resources](https://www.gurobi.com/resource/mip-basics/) (website)
 3. Learn the additional concepts of LCG Constraint Programming: Propagation,
    Lazy Clause Generation, ...
