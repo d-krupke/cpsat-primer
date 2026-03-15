@@ -3644,6 +3644,13 @@ different hardware, you can use the following code snippets to export a model.
 Instead of having to rebuild the model or share any code, you can then simply
 load the model on a different machine and run the solver.
 
+> [!TIP]
+>
+> These functions are also available via
+> [`cpsat-utils`](https://github.com/d-krupke/cpsat-utils)
+> (`pip install cpsat-utils`) as `export_model` and `import_model`, tested
+> across multiple ortools versions.
+
 ```python
 from ortools.sat.python import cp_model
 from ortools.sat import cp_model_pb2
@@ -3729,7 +3736,9 @@ We will also see how to utilize hints for multi-objective optimization in the
 > branches it could otherwise have pruned.
 
 To verify that your hints are feasible, you can temporarily fix variables to
-their hinted values and check if the model becomes infeasible:
+their hinted values and check if the model becomes infeasible. This is also
+available as `assert_hint_feasible` in
+[`cpsat-utils`](https://github.com/d-krupke/cpsat-utils).
 
 ```python
 solver.parameters.fix_variables_to_their_hinted_value = True
@@ -3776,51 +3785,40 @@ You can also use this function to complete hints for auxiliary variables, which
 are often tedious and error-prone to set manually. To do so, invoke the function
 below before solving the model. Adjust the time limit based on the difficulty of
 completing the hint. If the values can be determined through simple propagation,
-even large models can be processed quickly.
+even large models can be processed quickly. This function is also available as
+`complete_hint` in [`cpsat-utils`](https://github.com/d-krupke/cpsat-utils).
 
 ```python
 def complete_hint(
     model: cp_model.CpModel,
-    time_limit: float = 0.5,
-):
+    time_limit: float = 10.0,
+) -> bool:
     """
-    Completes the hint via a limited solve. Since CP-SAT only accepts complete hints,
-    performing this step can improve solver performance.
+    Complete partial hints into a full variable assignment.
 
-    Args:
-        model: The CpModel object to update.
-        time_limit: Time limit for the solve (in seconds).
+    CP-SAT only benefits from complete hints (all variables hinted).
+    This function does a quick solve with hinted variables fixed,
+    then sets hints for all remaining variables based on the solution.
 
-    Notes:
-        This function performs a quick solve to deduce variable values.
-        If successful, it replaces any existing hint with a complete one.
-        If not successful, the model remains unchanged and a warning is issued.
+    Returns True if hints were successfully completed, False otherwise.
+    On failure, the model's hints are left unchanged.
     """
-    logging.info("Completing hint with a time limit of %d seconds", time_limit)
     solver = cp_model.CpSolver()
     solver.parameters.max_time_in_seconds = time_limit
     solver.parameters.fix_variables_to_their_hinted_value = True
     status = solver.solve(model)
-    logging.info(
-        "Automatically completing hint with status: %s", solver.status_name(status)
-    )
-    if status in [cp_model.OPTIMAL, cp_model.FEASIBLE]:
-        # Clear the existing hint to avoid model invalidation.
-        model.clear_hints()
-        # Set a new complete hint using the solver result.
-        for i, _ in enumerate(model.proto.variables):
-            v_ = model.get_int_var_from_proto_index(i)
-            model.add_hint(v_, solver.value(v_))
-        logging.info(
-            "Hint successfully completed within time limit. Status: %s",
-            solver.status_name(status),
-        )
-    else:
+    if status not in (cp_model.OPTIMAL, cp_model.FEASIBLE):
         logging.warning(
-            "Unable to complete hint within time limit. Status: %s",
+            "Unable to complete hint: status %s. Hints are left unchanged.",
             solver.status_name(status),
         )
+        return False
 
+    model.clear_hints()
+    for i in range(len(model.proto.variables)):
+        var = model.get_int_var_from_proto_index(i)
+        model.add_hint(var, solver.value(var))
+    return True
 ```
 
 > [!WARNING]
