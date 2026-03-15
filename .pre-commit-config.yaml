@@ -75,7 +75,7 @@ repos:
         exclude: .pre-commit-config.yaml
       - id: build-readme
         name: Build the README.md from the subfiles
-        entry: python ./build.py
+        entry: python3 ./build.py
         language: system
         always_run: true
         files: "README.md"
