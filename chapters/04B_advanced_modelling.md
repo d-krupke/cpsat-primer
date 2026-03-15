@@ -1292,12 +1292,13 @@ model.minimize(y)
 # if we were to maximize y, we would have used <= instead of >=
 ```
 
-This can be quite tedious, but luckily, I wrote a small helper class that will
-do this automatically for you. You can find it in
-[./utils/piecewise_functions](https://github.com/d-krupke/cpsat-primer/blob/main/utils/piecewise_functions/).
-Simply copy it into your code.
+This can be quite tedious, but luckily, the
+[cpsat-utils](https://github.com/d-krupke/cpsat-utils) package provides a
+`PiecewiseLinearFunction` class that handles all of this automatically. Install
+it via `pip install cpsat-utils` and import it with
+`from cpsat_utils.piecewise import PiecewiseLinearFunction`.
 
-This code does some further optimizations:
+The `cpsat-utils` implementation includes some further optimizations:
 
 1. Considering every segment as a separate case can be quite expensive and
    inefficient. Thus, it can make a serious difference if you can combine
@@ -1310,6 +1311,10 @@ This code does some further optimizations:
    linear relaxation, and having the convex hull as independent constraint can
    directly limit the solution space, without having to do any branching on the
    cases.
+
+For more complete examples — budget allocation, tiered pricing, and energy
+dispatch — see the
+[cpsat-utils examples](https://github.com/d-krupke/cpsat-utils/tree/main/examples).
 
 Let us use this code to solve an instance of the problem above.
 
@@ -1345,41 +1350,33 @@ model.add(produce_1 * requirements_1[0] + produce_2 * requirements_2[0] <= buy_1
 model.add(produce_1 * requirements_1[1] + produce_2 * requirements_2[1] <= buy_2)
 model.add(produce_1 * requirements_1[2] + produce_2 * requirements_2[2] <= buy_3)
 
-# You can find this code it ./utils!
-from piecewise_functions import PiecewiseLinearFunction, PiecewiseLinearConstraint
+from cpsat_utils.piecewise import PiecewiseLinearFunction
 
 # Define the functions for the costs
 costs_1 = [(0, 0), (1000, 400), (1500, 1300)]
 costs_2 = [(0, 0), (300, 300), (700, 500), (1200, 600), (1500, 1100)]
 costs_3 = [(0, 0), (200, 400), (500, 700), (1000, 900), (1500, 1500)]
-# PiecewiseLinearFunction is a pydantic model and can be serialized easily!
-f_costs_1 = PiecewiseLinearFunction(
-    xs=[x for x, y in costs_1], ys=[y for x, y in costs_1]
-)
-f_costs_2 = PiecewiseLinearFunction(
-    xs=[x for x, y in costs_2], ys=[y for x, y in costs_2]
-)
-f_costs_3 = PiecewiseLinearFunction(
-    xs=[x for x, y in costs_3], ys=[y for x, y in costs_3]
-)
+f_costs_1 = PiecewiseLinearFunction.from_points(costs_1)
+f_costs_2 = PiecewiseLinearFunction.from_points(costs_2)
+f_costs_3 = PiecewiseLinearFunction.from_points(costs_3)
 
 # Define the functions for the gain
 gain_1 = [(0, 0), (100, 800), (200, 1600), (300, 2_000)]
 gain_2 = [(0, 0), (80, 1_000), (150, 1_300), (200, 1_400), (300, 1_500)]
-f_gain_1 = PiecewiseLinearFunction(xs=[x for x, y in gain_1], ys=[y for x, y in gain_1])
-f_gain_2 = PiecewiseLinearFunction(xs=[x for x, y in gain_2], ys=[y for x, y in gain_2])
+f_gain_1 = PiecewiseLinearFunction.from_points(gain_1)
+f_gain_2 = PiecewiseLinearFunction.from_points(gain_2)
 
 # Create y>=f(x) constraints for the costs
-x_costs_1 = PiecewiseLinearConstraint(model, buy_1, f_costs_1, upper_bound=False)
-x_costs_2 = PiecewiseLinearConstraint(model, buy_2, f_costs_2, upper_bound=False)
-x_costs_3 = PiecewiseLinearConstraint(model, buy_3, f_costs_3, upper_bound=False)
+y_costs_1 = f_costs_1.add_lower_bound(model, buy_1)
+y_costs_2 = f_costs_2.add_lower_bound(model, buy_2)
+y_costs_3 = f_costs_3.add_lower_bound(model, buy_3)
 
 # Create y<=f(x) constraints for the gain
-x_gain_1 = PiecewiseLinearConstraint(model, produce_1, f_gain_1, upper_bound=True)
-x_gain_2 = PiecewiseLinearConstraint(model, produce_2, f_gain_2, upper_bound=True)
+y_gain_1 = f_gain_1.add_upper_bound(model, produce_1)
+y_gain_2 = f_gain_2.add_upper_bound(model, produce_2)
 
 # Maximize the gain minus the costs
-model.Maximize(x_gain_1.y + x_gain_2.y - (x_costs_1.y + x_costs_2.y + x_costs_3.y))
+model.Maximize(y_gain_1 + y_gain_2 - (y_costs_1 + y_costs_2 + y_costs_3))
 
 solver = cp_model.CpSolver()
 solver.parameters.log_search_progress = True

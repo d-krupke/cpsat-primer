@@ -1150,7 +1150,9 @@ reduce boilerplate code when validating CP-SAT models. These helpers provide an
 intuitive way to assert whether a model is feasible or infeasible after
 constraints have been added.
 
-You can install these helpers via `pip install cpsat-utils`
+You can install these helpers via `pip install cpsat-utils`. `cpsat-utils` also
+provides piecewise linear and step function constraints for modeling non-linear
+relationships (see the [advanced modeling chapter](#04-modelling-pwl)).
 
 ```python
 from cpsat_utils.testing import (
