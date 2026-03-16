@@ -10371,11 +10371,11 @@ impressions; such an approach does not scale and lacks objectivity and
 reproducibility. Instead, you should define a concrete metric that accurately
 reflects your goals. One strategy is to carefully select benchmark instances
 that are still likely to be solved to optimality, with the expectation that
-performance trends will generalize to larger instances. Another to decide for a
-fixed time limit we are willing to wait for a solution, and then measure how
-well each solver performs under these constraints. While no evaluation method
-will be perfect, it is essential to remain aware of potential threats to the
-validity of your results. Let us go through some common scenarios.
+performance trends will generalize to larger instances. Another strategy is to
+set a time limit for waiting for a solution, and then measure how well each
+solver performs under these constraints. While no evaluation method will be
+perfect, it is essential to remain aware of potential threats to the validity of
+your results. Let us go through some common scenarios.
 
 > [!NOTE]
 >
