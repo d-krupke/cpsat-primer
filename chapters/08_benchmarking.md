@@ -607,7 +607,7 @@ $(x, y)$ indicates that $y$ benchmark instances were solved within $x$ seconds
 
 | ![Cactus Plot 1](https://github.com/d-krupke/cpsat-primer/blob/main/evaluations/tsp/2023-11-18_random_euclidean/PUBLIC_DATA/cactus_plot.png?raw=true) |
 | :---------------------------------------------------------------------------------------------------------------------------------------------------: |
-|                                     Each point $(x, y)$ shows that $x$ instances were solved within $y$ seconds.                                      |
+|                                     Each point $(x, y)$ shows that $y$ instances were solved within $x$ seconds.                                      |
 
 The mean PAR10 scores for the four strategies in the example above are as
 follows:
