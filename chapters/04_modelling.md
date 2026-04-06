@@ -314,7 +314,7 @@ x = model.new_int_var(-100, 100, "x")
 y = model.new_int_var(-100, 100, "y")
 model.add(x + 10 * y <= 100)
 
-# Minimize 30x + 50y
+# Maximize 30x + 50y
 model.maximize(30 * x + 50 * y)
 ```
 
