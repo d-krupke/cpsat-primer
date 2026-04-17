@@ -112,7 +112,7 @@ possibilities in the upcoming section on "Model Building with GenAI/LLMs".
 To dig a little deeper into the limitations of LLMs for optimization, consider
 the following articles:
 
-- [LLM-ify me - Optimization edition](https://oberdieck.dk/p/llm-in-optimization/):
+- [LLM-ify me - Optimization edition](https://oberdieck.dk/2024/11/27/llm-in-optimization/):
   A blog post exploring the potential of LLMs for optimization.
 - [Mind Evolution and the frontier of LLM-based optimization solvers](https://open.substack.com/pub/feasible/p/64-mind-evolution-and-the-frontier?r=49480z&utm_campaign=post&utm_medium=email):
   An article from the Feasible newsletter discussing the potential of LLMs for
@@ -474,7 +474,7 @@ interest:
 - [Challenges and opportunities in quantum optimization](https://www.nature.com/articles/s42254-024-00770-9):
   A balanced discussion by a group of researchers, highlighting potential
   opportunities without making unfounded claims.
-- [Quantum Annealing versus Digital Computing: An Experimental Comparison](https://www.researchgqate.net/publication/353155344_Quantum_Annealing_versus_Digital_Computing_An_Experimental_Comparison):
+- [Quantum Annealing versus Digital Computing: An Experimental Comparison](https://dl.acm.org/doi/10.1145/3459606):
   This paper compares quantum annealing to classical computing for optimization
   problems and found no indication of a quantum advantage.
 
