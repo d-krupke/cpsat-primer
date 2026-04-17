@@ -333,7 +333,7 @@ terms of variables, constraints, and objective function, and then let the solver
 find a solution for it. We call such a formulation that can be understood by the
 corresponding solver a _model_ for the problem. For people not familiar with
 this
-[declarative approach](https://programiz.pro/resources/imperative-vs-declarative-programming/),
+[declarative approach](https://en.wikipedia.org/wiki/Declarative_programming),
 you can compare it to SQL, where you also just state what data you want, not how
 to get it. However, it is not purely declarative, because it can still make a
 huge(!) difference how you model the problem and getting that right takes some
@@ -643,7 +643,7 @@ The more advanced constraints `add_circuit`, `add_multiple_circuit`,
 There are two important types of variables in CP-SAT: Booleans and Integers
 (which are actually converted to Booleans, but more on this later). There are
 also, e.g.,
-[interval variables](https://developers.google.com/optimization/reference/python/sat/python/cp_model#intervalvar),
+[interval variables](https://or-tools.github.io/docs/pdoc/ortools/sat/python/cp_model.html#IntervalVar),
 but they are actually rather a combination of integral variables and discussed
 [later](#04-modelling-intervals). For the integer variables, you have to specify
 a lower and an upper bound.
@@ -3339,7 +3339,7 @@ dynamic model adjustments.
 To add a solution callback, inherit from the base class
 `CpSolverSolutionCallback`. Documentation for this base class and its operations
 is available
-[here](https://developers.google.com/optimization/reference/python/sat/python/cp_model#cp_model.CpSolverSolutionCallback).
+[here](https://or-tools.github.io/docs/pdoc/ortools/sat/python/cp_model.html#CpSolverSolutionCallback).
 
 ```python
 class MySolutionCallback(cp_model.CpSolverSolutionCallback):
@@ -4585,7 +4585,7 @@ following learning path:
    - [Historical Overview by Armin Biere](https://youtu.be/DU44Y9Pt504) (video)
    - [Donald Knuth - The Art of Computer Programming, Volume 4, Fascicle 6: Satisfiability](https://www-cs-faculty.stanford.edu/~knuth/taocp.html)
      (book)
-   - [Carsten Sinz and Tomas Baylo - Practical SAT Solving](https://baldur.iti.kit.edu/sat/#about)
+   - [Carsten Sinz and Tomas Balyo - Practical SAT Solving](https://satlecture.github.io/kit2024/)
      (slides)
 2. Learn how to get provably optimal solutions via classical Mixed Integer
    Programming:
@@ -9842,7 +9842,7 @@ possibilities in the upcoming section on "Model Building with GenAI/LLMs".
 To dig a little deeper into the limitations of LLMs for optimization, consider
 the following articles:
 
-- [LLM-ify me - Optimization edition](https://oberdieck.dk/p/llm-in-optimization/):
+- [LLM-ify me - Optimization edition](https://oberdieck.dk/2024/11/27/llm-in-optimization/):
   A blog post exploring the potential of LLMs for optimization.
 - [Mind Evolution and the frontier of LLM-based optimization solvers](https://open.substack.com/pub/feasible/p/64-mind-evolution-and-the-frontier?r=49480z&utm_campaign=post&utm_medium=email):
   An article from the Feasible newsletter discussing the potential of LLMs for
@@ -10204,7 +10204,7 @@ interest:
 - [Challenges and opportunities in quantum optimization](https://www.nature.com/articles/s42254-024-00770-9):
   A balanced discussion by a group of researchers, highlighting potential
   opportunities without making unfounded claims.
-- [Quantum Annealing versus Digital Computing: An Experimental Comparison](https://www.researchgqate.net/publication/353155344_Quantum_Annealing_versus_Digital_Computing_An_Experimental_Comparison):
+- [Quantum Annealing versus Digital Computing: An Experimental Comparison](https://dl.acm.org/doi/10.1145/3459606):
   This paper compares quantum annealing to classical computing for optimization
   problems and found no indication of a quantum advantage.
 
@@ -11283,9 +11283,9 @@ creative solutions.
 If you are not in this fortunate position, the first step is to check whether
 any public data is available for your problem or for a sufficiently similar one.
 For instance, although the widely used
-[TSPLIB](http://comopt.ifi.uni-heidelberg.de/software/TSPLIB95/) benchmark set
-for the Traveling Salesman Problem (TSP) contains only distance information, it
-is relatively straightforward to generate Capacitated Vehicle Routing Problem
+[TSPLIB](https://www.math.uwaterloo.ca/tsp/data/index.html) benchmark set for
+the Traveling Salesman Problem (TSP) contains only distance information, it is
+relatively straightforward to generate Capacitated Vehicle Routing Problem
 (CVRP) instances from it, allowing the reuse of well-structured and challenging
 inputs for a related problem. This can be done by randomly selecting a depot and
 assigning a vehicle capacity based on a fraction of a heuristic TSP solution. If

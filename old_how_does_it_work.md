@@ -96,7 +96,7 @@ For a better understanding, I recommend to take a look at
 > don't have to go deeper into this branch, you have get a number of conflict
 > clauses that tell you, that nothing feasible can come out of branches that fit
 > any of these clauses. There is
-> [some work](https://www.csc.kth.se/~jakobn/research/LearnToRelax_Constraints.pdf)
+> [some work](https://jakobnordstrom.se/docs/publications/LearnToRelax_Constraints.pdf)
 > in also integrating this into branch and cut procedures, but it is not yet
 > used in the state-of-the-art MIP-solvers, as far as I know. CP-SAT, on the
 > other hand, does that (plus some rudimentary branch and cutting) which maybe

@@ -66,7 +66,7 @@ following learning path:
    - [Historical Overview by Armin Biere](https://youtu.be/DU44Y9Pt504) (video)
    - [Donald Knuth - The Art of Computer Programming, Volume 4, Fascicle 6: Satisfiability](https://www-cs-faculty.stanford.edu/~knuth/taocp.html)
      (book)
-   - [Carsten Sinz and Tomas Baylo - Practical SAT Solving](https://baldur.iti.kit.edu/sat/#about)
+   - [Carsten Sinz and Tomas Balyo - Practical SAT Solving](https://satlecture.github.io/kit2024/)
      (slides)
 2. Learn how to get provably optimal solutions via classical Mixed Integer
    Programming:

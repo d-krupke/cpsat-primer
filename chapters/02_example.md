@@ -19,7 +19,7 @@ terms of variables, constraints, and objective function, and then let the solver
 find a solution for it. We call such a formulation that can be understood by the
 corresponding solver a _model_ for the problem. For people not familiar with
 this
-[declarative approach](https://programiz.pro/resources/imperative-vs-declarative-programming/),
+[declarative approach](https://en.wikipedia.org/wiki/Declarative_programming),
 you can compare it to SQL, where you also just state what data you want, not how
 to get it. However, it is not purely declarative, because it can still make a
 huge(!) difference how you model the problem and getting that right takes some

@@ -194,7 +194,7 @@ dynamic model adjustments.
 To add a solution callback, inherit from the base class
 `CpSolverSolutionCallback`. Documentation for this base class and its operations
 is available
-[here](https://developers.google.com/optimization/reference/python/sat/python/cp_model#cp_model.CpSolverSolutionCallback).
+[here](https://or-tools.github.io/docs/pdoc/ortools/sat/python/cp_model.html#CpSolverSolutionCallback).
 
 ```python
 class MySolutionCallback(cp_model.CpSolverSolutionCallback):

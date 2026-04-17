@@ -110,7 +110,7 @@ The more advanced constraints `add_circuit`, `add_multiple_circuit`,
 There are two important types of variables in CP-SAT: Booleans and Integers
 (which are actually converted to Booleans, but more on this later). There are
 also, e.g.,
-[interval variables](https://developers.google.com/optimization/reference/python/sat/python/cp_model#intervalvar),
+[interval variables](https://or-tools.github.io/docs/pdoc/ortools/sat/python/cp_model.html#IntervalVar),
 but they are actually rather a combination of integral variables and discussed
 [later](#04-modelling-intervals). For the integer variables, you have to specify
 a lower and an upper bound.

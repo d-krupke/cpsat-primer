@@ -1066,9 +1066,9 @@ creative solutions.
 If you are not in this fortunate position, the first step is to check whether
 any public data is available for your problem or for a sufficiently similar one.
 For instance, although the widely used
-[TSPLIB](http://comopt.ifi.uni-heidelberg.de/software/TSPLIB95/) benchmark set
-for the Traveling Salesman Problem (TSP) contains only distance information, it
-is relatively straightforward to generate Capacitated Vehicle Routing Problem
+[TSPLIB](https://www.math.uwaterloo.ca/tsp/data/index.html) benchmark set for
+the Traveling Salesman Problem (TSP) contains only distance information, it is
+relatively straightforward to generate Capacitated Vehicle Routing Problem
 (CVRP) instances from it, allowing the reuse of well-structured and challenging
 inputs for a related problem. This can be done by randomly selecting a depot and
 assigning a vehicle capacity based on a fraction of a heuristic TSP solution. If
