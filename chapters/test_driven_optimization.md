@@ -64,7 +64,7 @@ and what can go wrong when the problem complexity increases.
 >
 > There appears to be limited material addressing software engineering practices
 > specifically in operations research. However, the talk
-> [_Optimization Modeling: The Art of Not Making It an Art_](https://www.gurobi.com/events/optimization-modeling-the-art-of-not-making-it-an-art/)
+> [_Optimization Modeling: The Art of Not Making It an Art_](https://www.gurobi.com/resources/blog/optimization-modeling-the-art-of-not-making-it-an-art)
 > by Ronald van der Velden (Gurobi) is an excellent resource that partially
 > overlaps with the themes discussed in this chapter. (Note: Registration with a
 > company name and email address is required to access the content.)

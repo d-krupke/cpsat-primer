@@ -83,9 +83,7 @@ class GurobiTspSolver:
         self._model.Params.LogToConsole = 1
         self._model.Params.TimeLimit = time_limit
         self._model.Params.lazyConstraints = 1
-        self._model.Params.MIPGap = (
-            opt_tol  # https://www.gurobi.com/documentation/10.0/refman/mipgap.html
-        )
+        self._model.Params.MIPGap = opt_tol  # https://docs.gurobi.com/projects/optimizer/en/current/reference/parameters.html#mipgap
 
         def gurobi_subtour_callback(model, where):
             if where == gp.GRB.Callback.MESSAGE:
