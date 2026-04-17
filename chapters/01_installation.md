@@ -62,6 +62,6 @@ and 32GB of RAM on the other hand rarely has any problems with the models I am
 working on.
 
 For further guidance, consider the
-[hardware recommendations for the Gurobi solver](https://support.gurobi.com/hc/en-us/articles/8172407217041-What-hardware-should-I-select-when-running-Gurobi-),
+[hardware recommendations for the Gurobi solver](https://support.gurobi.com/hc/en-us/articles/8172407217041-What-hardware-should-I-select-when-running-Gurobi),
 which are likely to be similar. Since we frequently use Gurobi in addition to
 CP-SAT, our hardware choices were also influenced by their recommendations.

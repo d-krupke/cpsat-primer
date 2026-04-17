@@ -49,7 +49,7 @@ CP-SAT can better address cases where traditional MIP-solvers struggle.
 
 Additional resources on mathematical modeling (not CP-SAT specific):
 
-- [Math Programming Modeling Basics by Gurobi](https://www.gurobi.com/resources/math-programming-modeling-basics/):
+- [Optimization Models 101 by Gurobi](https://www.gurobi.com/resources/blog/optimization-models-101-types-tips-and-resources):
   This resource provides a solid introduction to the basics of mathematical
   modeling.
 - [Modeling with Gurobi Python](https://www.youtube.com/playlist?list=PLHiHZENG6W8CezJLx_cw9mNqpmviq3lO9):
@@ -62,7 +62,7 @@ Additional resources on mathematical modeling (not CP-SAT specific):
 >
 > For getting started with implementing optimization models in general, I highly
 > recommend the blog post
-> [The Art Of Not Making It An Art](https://www.gurobi.com/resources/optimization-modeling-the-art-of-not-making-it-an-art/).
+> [The Art Of Not Making It An Art](https://www.gurobi.com/resources/blog/optimization-modeling-the-art-of-not-making-it-an-art).
 > It excellently summarizes the fundamental principles of successfully managing
 > an optimization project, independent of the concrete language or solver.
 

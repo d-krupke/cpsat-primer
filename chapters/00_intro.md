@@ -205,7 +205,7 @@ Salesman Problem. It not only introduces fundamental techniques but also delves
 into the community and historical context of the field.
 
 Additionally, the article
-[Mathematical Programming](https://www.gurobi.com/resources/math-programming-modeling-basics/)
+[Optimization Models 101](https://www.gurobi.com/resources/blog/optimization-models-101-types-tips-and-resources)
 by CP-SAT's competitor Gurobi offers an insightful introduction to mathematical
 programming and modeling. In this context, the term "Programming" does not refer
 to coding; rather, it originates from an earlier usage of the word "program",

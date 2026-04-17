@@ -106,8 +106,8 @@ For a better understanding, I recommend to take a look at
 #### Linear and Integer Programming
 
 For this topic, there is actually a
-[nice primer by Gurobi](https://www.gurobi.com/resource/mip-basics/). Let me
-quickly recap the most important parts for CP-SAT:
+[nice primer by Gurobi](https://www.gurobi.com/resources/blog/mixed-integer-programming-an-introduction-to-the-basics).
+Let me quickly recap the most important parts for CP-SAT:
 
 - Mixed Integer Linear Programming is a subset of CP-SAT, but one that is still
   very powerful and can be reasonably well solved. It limits you to linear

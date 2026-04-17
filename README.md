@@ -204,7 +204,7 @@ Salesman Problem. It not only introduces fundamental techniques but also delves
 into the community and historical context of the field.
 
 Additionally, the article
-[Mathematical Programming](https://www.gurobi.com/resources/math-programming-modeling-basics/)
+[Optimization Models 101](https://www.gurobi.com/resources/blog/optimization-models-101-types-tips-and-resources)
 by CP-SAT's competitor Gurobi offers an insightful introduction to mathematical
 programming and modeling. In this context, the term "Programming" does not refer
 to coding; rather, it originates from an earlier usage of the word "program",
@@ -311,7 +311,7 @@ and 32GB of RAM on the other hand rarely has any problems with the models I am
 working on.
 
 For further guidance, consider the
-[hardware recommendations for the Gurobi solver](https://support.gurobi.com/hc/en-us/articles/8172407217041-What-hardware-should-I-select-when-running-Gurobi-),
+[hardware recommendations for the Gurobi solver](https://support.gurobi.com/hc/en-us/articles/8172407217041-What-hardware-should-I-select-when-running-Gurobi),
 which are likely to be similar. Since we frequently use Gurobi in addition to
 CP-SAT, our hardware choices were also influenced by their recommendations.
 
@@ -354,7 +354,7 @@ handle more and more 'bad' problem models effectively with every year.
 > _model_ to refer to a (feasible) variable assignment, i.e., solution of a
 > SAT-formula. If you struggle with this terminology, maybe you want to read
 > this short guide on
-> [Math Programming Modelling Basics](https://www.gurobi.com/resources/math-programming-modeling-basics/).
+> [Optimization Models 101](https://www.gurobi.com/resources/blog/optimization-models-101-types-tips-and-resources).
 
 Our first problem has no deeper meaning, except for showing the basic workflow
 of creating the variables (x and y), adding the constraint $x+y<=30$ on them,
@@ -582,7 +582,7 @@ CP-SAT can better address cases where traditional MIP-solvers struggle.
 
 Additional resources on mathematical modeling (not CP-SAT specific):
 
-- [Math Programming Modeling Basics by Gurobi](https://www.gurobi.com/resources/math-programming-modeling-basics/):
+- [Optimization Models 101 by Gurobi](https://www.gurobi.com/resources/blog/optimization-models-101-types-tips-and-resources):
   This resource provides a solid introduction to the basics of mathematical
   modeling.
 - [Modeling with Gurobi Python](https://www.youtube.com/playlist?list=PLHiHZENG6W8CezJLx_cw9mNqpmviq3lO9):
@@ -595,7 +595,7 @@ Additional resources on mathematical modeling (not CP-SAT specific):
 >
 > For getting started with implementing optimization models in general, I highly
 > recommend the blog post
-> [The Art Of Not Making It An Art](https://www.gurobi.com/resources/optimization-modeling-the-art-of-not-making-it-an-art/).
+> [The Art Of Not Making It An Art](https://www.gurobi.com/resources/blog/optimization-modeling-the-art-of-not-making-it-an-art).
 > It excellently summarizes the fundamental principles of successfully managing
 > an optimization project, independent of the concrete language or solver.
 
@@ -4598,7 +4598,8 @@ following learning path:
      - [Video Series by Gurobi](https://www.youtube.com/playlist?list=PLHiHZENG6W8BeAfJfZ3myo5dsSQjEV5pJ)
    - Mixed Integer Programming: Branch and Bound, Cutting Planes, Branch and
      Cut, ...
-     - [Gurobi Resources](https://www.gurobi.com/resource/mip-basics/) (website)
+     - [Gurobi Resources](https://www.gurobi.com/resources/blog/mixed-integer-programming-an-introduction-to-the-basics)
+       (website)
 3. Learn the additional concepts of LCG Constraint Programming: Propagation,
    Lazy Clause Generation, ...
    - [Combinatorial Optimisation and Constraint Programming by Prof. Pierre Flener at Uppsala University in Sweden](https://user.it.uu.se/~pierref/courses/COCP/slides/)
@@ -5062,7 +5063,7 @@ might have distracted from the patterns themselves.
 >
 > For getting started with implementing optimization models in general, I highly
 > recommend the blog post
-> [The Art Of Not Making It An Art](https://www.gurobi.com/resources/optimization-modeling-the-art-of-not-making-it-an-art/).
+> [The Art Of Not Making It An Art](https://www.gurobi.com/resources/blog/optimization-modeling-the-art-of-not-making-it-an-art).
 > It excellently summarizes the fundamental principles of successfully managing
 > an optimization project, independent of the concrete language or solver.
 
@@ -6275,10 +6276,12 @@ and what can go wrong when the problem complexity increases.
 >
 > There appears to be limited material addressing software engineering practices
 > specifically in operations research. However, the talk
-> [_Optimization Modeling: The Art of Not Making It an Art_](https://www.gurobi.com/events/optimization-modeling-the-art-of-not-making-it-an-art/)
+> [_Optimization Modeling: The Art of Not Making It an Art_](https://www.gurobi.com/resources/webinar-events/optimization-modeling-the-art-of-not-making-it-an-art)
 > by Ronald van der Velden (Gurobi) is an excellent resource that partially
-> overlaps with the themes discussed in this chapter. (Note: Registration with a
-> company name and email address is required to access the content.)
+> overlaps with the themes discussed in this chapter. The
+> [slides](https://gurobi.github.io/slides/art-of-not-art.html) are available
+> without registration, and there is also a
+> [companion blog post](https://www.gurobi.com/resources/blog/optimization-modeling-the-art-of-not-making-it-an-art).
 
 You can find the complete code for this chapter
 [here](https://github.com/d-krupke/cpsat-primer/tree/main/examples/tdd).

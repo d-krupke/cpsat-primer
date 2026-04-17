@@ -96,7 +96,7 @@ might have distracted from the patterns themselves.
 >
 > For getting started with implementing optimization models in general, I highly
 > recommend the blog post
-> [The Art Of Not Making It An Art](https://www.gurobi.com/resources/optimization-modeling-the-art-of-not-making-it-an-art/).
+> [The Art Of Not Making It An Art](https://www.gurobi.com/resources/blog/optimization-modeling-the-art-of-not-making-it-an-art).
 > It excellently summarizes the fundamental principles of successfully managing
 > an optimization project, independent of the concrete language or solver.
 

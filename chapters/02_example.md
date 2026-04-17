@@ -40,7 +40,7 @@ handle more and more 'bad' problem models effectively with every year.
 > _model_ to refer to a (feasible) variable assignment, i.e., solution of a
 > SAT-formula. If you struggle with this terminology, maybe you want to read
 > this short guide on
-> [Math Programming Modelling Basics](https://www.gurobi.com/resources/math-programming-modeling-basics/).
+> [Optimization Models 101](https://www.gurobi.com/resources/blog/optimization-models-101-types-tips-and-resources).
 
 Our first problem has no deeper meaning, except for showing the basic workflow
 of creating the variables (x and y), adding the constraint $x+y<=30$ on them,

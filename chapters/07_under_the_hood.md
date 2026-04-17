@@ -79,7 +79,8 @@ following learning path:
      - [Video Series by Gurobi](https://www.youtube.com/playlist?list=PLHiHZENG6W8BeAfJfZ3myo5dsSQjEV5pJ)
    - Mixed Integer Programming: Branch and Bound, Cutting Planes, Branch and
      Cut, ...
-     - [Gurobi Resources](https://www.gurobi.com/resource/mip-basics/) (website)
+     - [Gurobi Resources](https://www.gurobi.com/resources/blog/mixed-integer-programming-an-introduction-to-the-basics)
+       (website)
 3. Learn the additional concepts of LCG Constraint Programming: Propagation,
    Lazy Clause Generation, ...
    - [Combinatorial Optimisation and Constraint Programming by Prof. Pierre Flener at Uppsala University in Sweden](https://user.it.uu.se/~pierref/courses/COCP/slides/)
