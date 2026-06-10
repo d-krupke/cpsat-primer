@@ -1,4 +1,4 @@
-<!-- EDIT THIS PART VIA 08_benchmarking.md -->
+<!-- EDIT THIS PART VIA benchmarking.md -->
 
 <a name="08-benchmarking"></a>
 

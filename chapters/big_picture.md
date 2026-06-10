@@ -1,4 +1,4 @@
-<!-- EDIT THIS PART VIA 03_big_picture.md -->
+<!-- EDIT THIS PART VIA big_picture.md -->
 
 <a name="section-alternatives"></a> <a name="03-big-picture"></a>
 

@@ -1,4 +1,4 @@
-<!-- EDIT THIS PART VIA 06_coding_patterns.md -->
+<!-- EDIT THIS PART VIA coding_patterns.md -->
 
 # Part 2: Advanced Topics
 

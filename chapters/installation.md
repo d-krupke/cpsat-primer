@@ -1,4 +1,4 @@
-<!-- EDIT THIS PART VIA 01_installation.md -->
+<!-- EDIT THIS PART VIA installation.md -->
 
 # Part 1: The Basics
 
