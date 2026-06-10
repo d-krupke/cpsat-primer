@@ -6,5 +6,21 @@ title = "The CP-SAT Primer - Using and Understanding Google OR-Tools' CP-SAT Sol
 [output.html]
 site-url = "/cpsat-primer/"
 mathjax-support = true
-edit-url-template = "https://github.com/d-krupke/cpsat-primer/edit/main/{path}"
+edit-url-template = "https://github.com/d-krupke/cpsat-primer/edit/main/chapters/{path}"
 git-repository-url = "https://github.com/d-krupke/cpsat-primer/"
+
+# Keep old page URLs working after dropping the numeric filename prefixes and
+# flattening machine_learning out of the /chapters/ subpath (see build.py).
+[output.html.redirect]
+"/chapters/machine_learning.html" = "../machine_learning.html"
+"/00_intro.html" = "intro.html"
+"/01_installation.html" = "installation.html"
+"/02_example.html" = "example.html"
+"/03_big_picture.html" = "big_picture.html"
+"/04_modelling.html" = "modelling.html"
+"/04B_advanced_modelling.html" = "advanced_modelling.html"
+"/05_parameters.html" = "parameters.html"
+"/06_coding_patterns.html" = "coding_patterns.html"
+"/07_under_the_hood.html" = "under_the_hood.html"
+"/08_benchmarking.html" = "benchmarking.html"
+"/09_lns.html" = "lns.html"

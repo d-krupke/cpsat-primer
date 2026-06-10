@@ -1,4 +1,4 @@
-<!-- EDIT THIS PART VIA 05_parameters.md -->
+<!-- EDIT THIS PART VIA parameters.md -->
 
 <a name="05-parameters"></a>
 

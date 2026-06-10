@@ -1,4 +1,4 @@
-<!-- EDIT THIS PART VIA 02_example.md -->
+<!-- EDIT THIS PART VIA example.md -->
 
 <a name="02-example"></a>
 

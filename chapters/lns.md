@@ -1,4 +1,4 @@
-<!-- EDIT THIS PART VIA 08_lns.md -->
+<!-- EDIT THIS PART VIA lns.md -->
 
 <a name="09-lns"></a>
 

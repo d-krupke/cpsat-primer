@@ -2,29 +2,29 @@
 
 # The CP-SAT Primer
 
-- [Introduction](./00_intro.md)
+- [Introduction](./intro.md)
 
 ---
 
 # Part 1: The Basics
 
-- [Installation](./01_installation.md)
-- [Example](./02_example.md)
-- [Basic Modeling](./04_modelling.md)
-- [Advanced Modeling](./04B_advanced_modelling.md)
-- [Parameters](./05_parameters.md)
+- [Installation](./installation.md)
+- [Example](./example.md)
+- [Basic Modeling](./modelling.md)
+- [Advanced Modeling](./advanced_modelling.md)
+- [Parameters](./parameters.md)
 - [Understanding the Log](./understanding_the_log.md)
-- [How does it work?](./07_under_the_hood.md)
-- [Alternatives](./03_big_picture.md)
+- [How does it work?](./under_the_hood.md)
+- [Alternatives](./big_picture.md)
 - [MathOpt](./mathopt.md)
 
 ---
 
 # Part 2: Advanced Topics
 
-- [Coding Patterns](./06_coding_patterns.md)
+- [Coding Patterns](./coding_patterns.md)
 - [Test-Driven Development](./test_driven_optimization.md)
 - [Building an Optimization API](./building_an_optimization_api.md)
-- [CP-SAT vs. ML vs. QC](./chapters/machine_learning.md)
-- [Large Neighborhood Search](./09_lns.md)
-- [Benchmarking your Model](./08_benchmarking.md)
+- [CP-SAT vs. ML vs. QC](./machine_learning.md)
+- [Large Neighborhood Search](./lns.md)
+- [Benchmarking your Model](./benchmarking.md)

@@ -1,4 +1,4 @@
-<!-- EDIT THIS PART VIA 07_under_the_hood.md -->
+<!-- EDIT THIS PART VIA under_the_hood.md -->
 
 <a name="07-under-the-hood"></a>
 
@@ -110,7 +110,7 @@ need to understand the constraint programming part of CP-SAT.
 > Originally, I wrote a short introduction into each of the topics, but I
 > decided to remove them as the material I linked to is much better than what I
 > could have written. You can find a backup of the old version
-> [here](https://github.com/d-krupke/cpsat-primer/blob/main/old_how_does_it_work.md).
+> [here](https://github.com/d-krupke/cpsat-primer/blob/main/chapters/old_how_does_it_work.md).
 
 ### What Happens in CP-SAT During Solve?
 

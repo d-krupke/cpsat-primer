@@ -1,4 +1,4 @@
-<!-- EDIT THIS PART VIA 00_intro.md -->
+<!-- EDIT THIS PART VIA intro.md -->
 
 # The CP-SAT Primer: Using and Understanding Google OR-Tools' CP-SAT Solver
 
