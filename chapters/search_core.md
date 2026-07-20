@@ -4,6 +4,12 @@
 
 ## How CP-SAT Reasons: The Search Core
 
+<!-- START_SKIP_FOR_README -->
+
+![Cover Image Search Core](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/logo_search_core.webp)
+
+<!-- STOP_SKIP_FOR_README -->
+
 CP-SAT is easy to use as a black box: you declare variables and
 constraints, call solve, and read off an answer, often without knowing
 what the engine did in between. That is usually enough. But when a model is

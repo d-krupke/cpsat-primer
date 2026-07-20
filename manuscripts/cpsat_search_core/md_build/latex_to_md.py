@@ -650,12 +650,23 @@ def extract_abstract(conv: Converter) -> str:
     )
 
 
-CHAPTER_HEADER = """<!-- This chapter is GENERATED from manuscripts/cpsat_search_core \
+# Cover image (website only, like the other chapters): a platypus watchmaker
+# peering into the opened engine of the solver. Lives in images/ (not the
+# search_core/ subfolder) alongside the other chapter covers.
+COVER_URL = "https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/logo_search_core.webp"
+
+CHAPTER_HEADER = f"""<!-- This chapter is GENERATED from manuscripts/cpsat_search_core \
 by md_build/latex_to_md.py. Do not edit by hand; edit the LaTeX and regenerate. -->
 
 <a name="search-core"></a>
 
 ## How CP-SAT Reasons: The Search Core
+
+<!-- START_SKIP_FOR_README -->
+
+![Cover Image Search Core]({COVER_URL})
+
+<!-- STOP_SKIP_FOR_README -->
 """
 
 
