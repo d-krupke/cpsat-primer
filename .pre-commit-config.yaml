@@ -59,7 +59,9 @@ repos:
       - id: prettier
         types_or: [yaml, markdown, html, css, scss, javascript, json]
         args: [--prose-wrap=always]
-        exclude: "README.md"
+        # README.md and chapters/search_core.md are generated (build.py /
+        # the Search Core LaTeX pipeline); leave their formatting authoritative.
+        exclude: "README.md|chapters/search_core.md"
 
   - repo: local
     hooks:

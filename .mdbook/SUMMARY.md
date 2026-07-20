@@ -15,6 +15,7 @@
 - [Parameters](./parameters.md)
 - [Understanding the Log](./understanding_the_log.md)
 - [How does it work?](./under_the_hood.md)
+- [How CP-SAT Reasons: The Search Core](./search_core.md)
 - [Alternatives](./big_picture.md)
 - [MathOpt](./mathopt.md)
 

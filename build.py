@@ -43,6 +43,22 @@ BOX_CONFIG = {
         "img_style": "",
         "reverse": False,
     },
+    "log": {  # "In the solve log" callouts (from the Search Core manuscript)
+        "tokens": ["> :log:"],
+        "icon": "log_platypus.webp",
+        "img_width": "10%",
+        "content_width": "90%",
+        "img_style": "",
+        "reverse": False,
+    },
+    "param": {  # "Tuning the search" callouts (from the Search Core manuscript)
+        "tokens": ["> :tune:"],
+        "icon": "tune_platypus.webp",
+        "img_width": "10%",
+        "content_width": "90%",
+        "img_style": "",
+        "reverse": False,
+    },
     "video": {
         "tokens": ["> :video:"],
         "icon": "tv_platypus.webp",
@@ -171,6 +187,22 @@ def replace_video_boxes(content: str) -> str:
     )
 
 
+def replace_log_boxes(content: str) -> str:
+    return _replace_boxes(
+        content,
+        BOX_CONFIG["log"]["tokens"],
+        lambda msg: _create_box(msg, BOX_CONFIG["log"]),
+    )
+
+
+def replace_param_boxes(content: str) -> str:
+    return _replace_boxes(
+        content,
+        BOX_CONFIG["param"]["tokens"],
+        lambda msg: _create_box(msg, BOX_CONFIG["param"]),
+    )
+
+
 def convert_for_mdbook(content):
     footer = """
 ---
@@ -193,6 +225,8 @@ def convert_for_mdbook(content):
     content = replace_info_boxes(content)
     content = replace_reference_boxes(content)
     content = replace_video_boxes(content)
+    content = replace_log_boxes(content)
+    content = replace_param_boxes(content)
     # replace all `:warning:` with the unicode character for a warning sign.
     content = content.replace(":warning:", "⚠️")
     # replace in all links that lead to a .png file the `github.com` with `raw.githubusercontent.com`.
@@ -424,6 +458,7 @@ if __name__ == "__main__":
                 "./chapters/understanding_the_log.md", "understanding_the_log.md"
             ),
             MarkdownFile("./chapters/under_the_hood.md", "under_the_hood.md"),
+            MarkdownFile("./chapters/search_core.md", "search_core.md"),
             MarkdownFile("./chapters/big_picture.md", "big_picture.md"),
             MarkdownFile("./chapters/coding_patterns.md", "coding_patterns.md"),
             MarkdownFile(

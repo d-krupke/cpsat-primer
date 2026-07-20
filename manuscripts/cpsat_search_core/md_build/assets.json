@@ -1,0 +1,74 @@
+[
+  {
+    "kind": "figure",
+    "section": "01-what-kind-of-solver.tex",
+    "number": 1,
+    "label": "fig:sudoku-propagation",
+    "caption": "\\textbf{Propagation} on a Sudoku: each cell is a variable, the\n\\emph{all-different} constraints on rows, columns, and boxes are the propagators,\nand the small pencil marks are each cell's remaining candidates. \\textbf{Left:}\nthe givens propagated as far as they go; every empty cell still has several\ncandidates and none is forced, so search must guess. \\textbf{Right:} we guess a\n\\textbf{blue} value; the propagators strike it from every peer (blue arrows), one\npeer loses its last alternative and is forced, which forces a \\textbf{green}\nvalue, and the deductions cascade to a new fixed point with no further guessing.",
+    "graphic": "figures/sudoku/propagation_sudoku.pdf",
+    "image": "fig_sudoku-propagation.svg"
+  },
+  {
+    "kind": "figure",
+    "section": "01-what-kind-of-solver.tex",
+    "number": 2,
+    "label": "fig:sudoku-conflict",
+    "caption": "\\textbf{Conflict analysis} on a Sudoku. \\textbf{Left:} six guesses (grey,\ntagged $D$) have been placed and propagated, and nothing has failed yet.\n\\textbf{Right:} a seventh guess (\\textbf{orange}) propagates and empties one cell's\ndomain (\\textbf{red}, $\\bot$): a \\textbf{conflict}. Tracing the struck candidates\nbackward shows that only \\emph{two} of the seven guesses are jointly to blame (the\norange one and a \\textbf{blue} one); the other five never touched this cell. From\nthese two the solver learns a \\textbf{SAT clause} (a nogood) that bars the\ncombination forever, then backjumps past the five irrelevant guesses instead of\njust undoing the last one.",
+    "graphic": "figures/sudoku/conflict_sudoku.pdf",
+    "image": "fig_sudoku-conflict.svg"
+  },
+  {
+    "kind": "algorithm",
+    "section": "02-foundations.tex",
+    "number": 1,
+    "label": "alg:linprop",
+    "caption": "Linear propagator for $\\sum_i c_i x_i \\le u$ in canonical form (all $c_i > 0$)",
+    "graphic": null,
+    "image": "alg_linprop.svg"
+  },
+  {
+    "kind": "figure",
+    "section": "03-learning-from-failure.tex",
+    "number": 3,
+    "label": "fig:uipgraph",
+    "caption": "Implication graph for the trace: nodes are bound literals\n$\\bl{\\cdot}$, blue for decisions and $\\bot$ for the conflict, with the rule that\nforced each propagated bound beneath it. The orange \\emph{1-UIP cut} isolates the\ndominator $x_4 \\ge 5$ and the lower-level decision $x_2 \\ge 2$ (ringed), whose\nnegation $\\{\\lnot\\bl{x_4 \\ge 5},\\ \\lnot\\bl{x_2 \\ge 2}\\}$ is the learned nogood;\nthe faded branch is the off-path $x_6 \\ge 5$ that analysis never visits.",
+    "graphic": "figures/conflict_analysis.pdf",
+    "image": "fig_uipgraph.svg"
+  },
+  {
+    "kind": "algorithm",
+    "section": "03-learning-from-failure.tex",
+    "number": 2,
+    "label": "alg:uip",
+    "caption": "First-UIP conflict analysis (\\code{ComputeFirstUIPConflict})",
+    "graphic": null,
+    "image": "alg_uip.svg"
+  },
+  {
+    "kind": "algorithm",
+    "section": "05-putting-it-together.tex",
+    "number": 3,
+    "label": "alg:loop",
+    "caption": "The CP-SAT feasibility core, \\textsc{Solve}",
+    "graphic": null,
+    "image": "alg_loop.svg"
+  },
+  {
+    "kind": "algorithm",
+    "section": "05-putting-it-together.tex",
+    "number": 4,
+    "label": "alg:bisection",
+    "caption": "Optimization by bisection: \\textsc{MinimizeByBisection} drives \\textsc{Solve}",
+    "graphic": null,
+    "image": "alg_bisection.svg"
+  },
+  {
+    "kind": "algorithm",
+    "section": "05-putting-it-together.tex",
+    "number": 5,
+    "label": "alg:linscan",
+    "caption": "Linear scan: \\textsc{MinimizeByLinearScan} tightens a monotone bound",
+    "graphic": null,
+    "image": "alg_linscan.svg"
+  }
+]
