@@ -38,10 +38,13 @@ def main() -> None:
             f"{BUILT} not found -- run `make primer` (build.py + mdbook build) first."
         )
     html = BUILT.read_text()
+    images_dir = (REPO / "images").resolve()
 
     def inline(m: re.Match) -> str:
-        f = REPO / "images" / m.group(1)
-        if not f.exists():
+        # The capture allows '.' and '/', so resolve the path and refuse to
+        # inline anything that escapes images/ (e.g. a "../.." traversal).
+        f = (images_dir / m.group(1)).resolve()
+        if not f.is_relative_to(images_dir) or not f.is_file():
             return m.group(0)
         data = base64.b64encode(f.read_bytes()).decode()
         return f"data:{MIME.get(f.suffix, 'application/octet-stream')};base64,{data}"

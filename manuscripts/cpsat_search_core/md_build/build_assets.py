@@ -4,20 +4,21 @@ Asset generation for the Markdown backend of the Search Core manuscript.
 
 Scans the LaTeX section files for the two float kinds that cannot be rendered as
 text -- pseudocode `algorithm` blocks and `figure` blocks wrapping a graphic --
-and turns each into a raster image plus a caption, writing an `assets.json`
-manifest that the later text-conversion stage consumes.
+and turns each into an SVG image plus a caption, writing an `assets.json`
+manifest that the later text-conversion stage consumes. SVG is used so the
+pseudocode and diagrams stay crisp at any zoom on the mdbook site.
 
   * algorithm : the `algorithmic` body is wrapped in a standalone document that
                 \\input's content_preamble.tex (so it renders identically to the
-                PDF), compiled with xelatex, and rasterised to PNG.
-  * figure    : the already-existing referenced PDF is rasterised to PNG; no
-                LaTeX compile is needed.
+                PDF), compiled with xelatex, and converted to SVG (pdftocairo).
+  * figure    : the already-existing referenced PDF is cropped (pdfcrop) and
+                converted to SVG; no LaTeX compile is needed.
 
 The float parser (find_floats) is written to be reused by the text stage, which
 must strip these same blocks out and drop image references in their place.
 
 Usage:
-    python3 build_assets.py [--dpi 300] [--keep-tex]
+    python3 build_assets.py [--keep-tex]
 """
 
 from __future__ import annotations
@@ -166,8 +167,8 @@ def run(cmd: list[str], cwd: Path) -> None:
         raise SystemExit(f"command failed: {' '.join(cmd)}")
 
 
-def render_algorithm(fl: Float, dpi: int, keep_tex: bool) -> Path:
-    """Compile one algorithm to a cropped PNG; return its path."""
+def render_algorithm(fl: Float, keep_tex: bool) -> Path:
+    """Compile one algorithm to a tightly-cropped SVG; return its path."""
     stem = fl.label.replace(":", "_") if fl.label else f"alg_{fl.number}"
     tex_path = BUILD_DIR / f"{stem}.tex"
     tex_path.write_text(
@@ -191,7 +192,7 @@ def render_algorithm(fl: Float, dpi: int, keep_tex: bool) -> Path:
     return svg_path
 
 
-def render_figure(fl: Float, dpi: int) -> Path:
+def render_figure(fl: Float) -> Path:
     """Convert a figure's existing graphic (PDF) to a tightly-cropped SVG."""
     stem = fl.label.replace(":", "_") if fl.label else f"fig_{fl.number}"
     src = (MANUSCRIPT / fl.graphic).resolve()
@@ -220,8 +221,11 @@ def render_figure(fl: Float, dpi: int) -> Path:
 # --------------------------------------------------------------------------- #
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--dpi", type=int, default=300)
-    ap.add_argument("--keep-tex", action="store_true")
+    ap.add_argument(
+        "--keep-tex",
+        action="store_true",
+        help="keep the per-algorithm standalone .tex files for debugging",
+    )
     args = ap.parse_args()
 
     # The pseudocode's \cref numbers are imported from the manuscript's .aux;
@@ -231,11 +235,13 @@ def main() -> None:
             "cpsat_search_core.aux not found -- run `make` (build the PDF) first."
         )
 
-    # Regenerate from scratch so a float removed from the LaTeX leaves no stale
-    # image behind. OUT_DIR is a dedicated folder owned by this pipeline.
+    # Regenerate from scratch so a float removed from the LaTeX (or an output
+    # whose format changed) leaves no stale file behind. OUT_DIR is a dedicated
+    # folder owned by this pipeline, so clearing every file in it is safe.
     if OUT_DIR.exists():
-        for old in OUT_DIR.glob("*.svg"):
-            old.unlink()
+        for old in OUT_DIR.iterdir():
+            if old.is_file():
+                old.unlink()
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     BUILD_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -256,11 +262,11 @@ def main() -> None:
     for fl in all_floats:
         print(f"[{fl.kind} {fl.number}] {fl.label or '(no label)'}  <- {fl.section}")
         if fl.kind == "algorithm":
-            png = render_algorithm(fl, args.dpi, args.keep_tex)
+            img = render_algorithm(fl, args.keep_tex)
         else:
-            png = render_figure(fl, args.dpi)
+            img = render_figure(fl)
         rec = asdict(fl)
-        rec["image"] = png.name  # filename only; consumers build the URL/path
+        rec["image"] = img.name  # filename only; consumers build the URL/path
         rec.pop("body")  # keep the manifest readable; body isn't needed downstream
         manifest.append(rec)
 
