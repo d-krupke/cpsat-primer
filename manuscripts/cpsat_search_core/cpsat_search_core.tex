@@ -14,41 +14,26 @@
 
 \documentclass[11pt]{article}
 
-% --- Geometry & fonts -----------------------------------------------------
+% --- Geometry -------------------------------------------------------------
 \usepackage[a4paper,margin=2.5cm]{geometry}
-\usepackage{fontspec}
-\usepackage{microtype}
 
-% --- Math -----------------------------------------------------------------
-\usepackage{amsmath}
-\usepackage{amssymb}
-
-% --- Tables, lists, floats, algorithms ------------------------------------
+% --- Tables, lists, floats (print-only) -----------------------------------
+% Loaded before the shared preamble so `float` precedes the `algorithm` package.
 \usepackage{booktabs}
 \usepackage{enumitem}
 \usepackage{float}
-\usepackage{seqsplit}
-\usepackage{algorithm}
-\usepackage{algpseudocode}
 
-% pseudocode styling: tighter indent, comment style
-\algrenewcommand\algorithmicindent{1.1em}
-\algrenewcommand\algorithmiccomment[1]{\hfill\textit{\footnotesize $\triangleright$\,#1}}
-% Phase comment: a normal numbered, indented code line (like in an editor), set apart
-% only by style --- a grey italic /* ... */ block reusing the listings' comment colour.
-\algnewcommand{\LineComment}[1]{\State\textcolor{codecom}{\textit{\footnotesize /*~#1~*/}}}
+% --- Shared content preamble ----------------------------------------------
+% Fonts, math, pseudocode styling, the syntax-highlight colour palette, and the
+% semantic macros (\code, \bl, \LineComment) live in ONE file that is also used
+% to render the pseudocode/figures to images for the Markdown build (md_build/),
+% so the print and Markdown backends can never drift apart.
+\input{md_build/content_preamble.tex}
 
 % --- Listings (code blocks) -----------------------------------------------
-% Syntax-highlighting palette for code.
+% The syntax palette (codekw, codecom, ...) comes from content_preamble.tex;
+% these two colours are print-only (the listings frame and background).
 \usepackage{listings}
-\usepackage{xcolor}
-
-\definecolor{codekw}{HTML}{0033B3}      % keywords (blue)
-\definecolor{codebuiltin}{HTML}{6A2570} % builtins (purple)
-\definecolor{codestr}{HTML}{B35C00}     % strings (orange)
-\definecolor{codecom}{HTML}{6E737A}     % comments (grey)
-\definecolor{codenum}{HTML}{1E7C50}     % numbers (green)
-\definecolor{codedecorator}{HTML}{735A12}% decorators
 \definecolor{codeframe}{HTML}{D0D4DA}
 \definecolor{codebg}{HTML}{F8F8F8}
 
@@ -237,10 +222,7 @@
   {\platyfloatopen{#1}\begin{tcolorbox}[platypusbase={tuneaccent}{tune}{Tuning the search}]}
   {\end{tcolorbox}\platyfloatclose}
 
-% inline monospace helper -- long identifiers are made breakable (no visible
-% hyphen) via \seqsplit so they wrap cleanly instead of running into the margin.
-% Robust so it survives moving arguments (e.g. \caption in algorithm floats).
-\DeclareRobustCommand{\code}[1]{\texttt{\seqsplit{#1}}}
+% \code is defined in content_preamble.tex (shared with the Markdown build).
 \emergencystretch=2em
 
 % --- GitHub source permalinks --------------------------------------------------
@@ -259,10 +241,7 @@
 %   Also used for class names: link the bare class name to its declaration line.
 \newcommand{\srcla}[3]{\href{\orbase#1\#L#2}{\code{#3}}}
 
-% bound-literal brackets (no stmaryrd dependency).
-% \bl{...} wraps its argument in double brackets, e.g. \bl{x \ge 5} -> [[x >= 5]],
-% so call sites give the content once instead of pairing \llbracket ... \rrbracket.
-\newcommand{\bl}[1]{[\![#1]\!]}
+% \bl (bound-literal double brackets) is defined in content_preamble.tex.
 
 \setlist[itemize]{leftmargin=1.4em,topsep=0.3em,itemsep=0.25em}
 
