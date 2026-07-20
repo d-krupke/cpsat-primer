@@ -166,8 +166,8 @@ optimization.
 5. [Parameters](#05-parameters): How to specify CP-SATs behavior, if needed.
    Timelimits, hints, assumptions, parallelization, ...
 6. [Understanding the Log](#understanding-the-log): How to interpret the log
-7. [How does it work?](#07-under-the-hood): After we know what we can do with
-   CP-SAT, we look into how CP-SAT will do all these things.
+7. [How CP-SAT Reasons: The Search Core](#search-core): After we know what we
+   can do with CP-SAT, we look into how CP-SAT actually does all these things.
 8. [Alternatives](#03-big-picture): An overview of the different optimization
    techniques and tools available. Putting CP-SAT into context.
 9. [MathOpt as a Modeling Layer](#chapters-mathopt): A new modeling layer in

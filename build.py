@@ -457,7 +457,6 @@ if __name__ == "__main__":
             MarkdownFile(
                 "./chapters/understanding_the_log.md", "understanding_the_log.md"
             ),
-            MarkdownFile("./chapters/under_the_hood.md", "under_the_hood.md"),
             MarkdownFile("./chapters/search_core.md", "search_core.md"),
             MarkdownFile("./chapters/big_picture.md", "big_picture.md"),
             MarkdownFile("./chapters/coding_patterns.md", "coding_patterns.md"),
