@@ -1,0 +1,191 @@
+\section{Lazy integer encoding}\label{part:encoding}
+
+The conflict analysis of \cref{sec:learning} resolved over Boolean bound
+literals such as $\bl{x_5 \ge 6}$ and learned clauses written in them, taking for
+granted that those Booleans exist. This section describes where they come from:
+the part of CP-SAT that reconciles an integer variable with a huge domain with a
+CDCL engine that ultimately reasons in Boolean literals.
+
+The lazy-reason machinery of the preceding sections only works because the
+Boolean layer it feeds is itself built lazily: an integer variable's encoding
+into Booleans is created on demand, the same way its reasons are. That is why it
+follows learning directly rather than waiting among the later accelerators.
+
+The encoding below puts one Boolean on each bound $\bl{x \ge v}$, which looks like a \emph{unary} encoding: a variable over a million
+values would seem to need a million Booleans, the very blow-up a binary encoding
+exists to avoid. The resolution is the word \emph{lazy}. CP-SAT never lays down
+that unary chain in full; it mints a bound literal only at the moment some
+mechanism actually refers to it, so a wide integer typically contributes a
+handful of Booleans rather than its whole range. The encoding is unary in
+\emph{form} but sparse in \emph{practice}, and the rest of this section is about
+how that sparsity is achieved and what it costs elsewhere.
+
+It also helps to be precise about what kind of mechanism this is. Lazy clause
+generation (\cref{sec:learning}) is a \textbf{correctness} mechanism:
+reasons are what make learned clauses sound deductions. Lazy \emph{encoding}, by
+contrast, is an \textbf{efficiency} mechanism: CP-SAT would stay correct if it
+encoded every bound up front. Whether that would even hurt depends on the
+domains involved. Many models are dominated by Boolean variables, and a variable
+with a small domain costs only a few bound literals; there, eager encoding
+would do no real harm. The cost concentrates on the variables whose domains are
+genuinely wide. The objective is the usual one (a weighted sum can range over
+millions), and CP-SAT mints further wide-domain integers of its own when it
+breaks a long linear constraint into a tree of partial sums. Encode every
+bound of those up front and the model turns slow and memory-hungry.
+
+\subsection{Minting Booleans on demand}\label{sec:encoding}
+% Sources (VERIFIED): ortools/sat/integer.h, ortools/sat/integer.cc
+%   IntegerEncoder; GetOrCreateAssociatedLiteral() (order/"list" encoding,
+%   adds implications to neighbor literals; comment cites Feydy & Stuckey,
+%   "Lazy Clause Generation Reengineered", CP 2009);
+%   GetOrCreateLiteralAssociatedToEquality(); FullyEncodeVariable() (eager path);
+%   Canonicalize() (folds domains with holes); NegationOf() shares the encoding;
+%   num_created_variables_ counts created Booleans.
+%   ortools/sat/integer_search.cc -- GetDecisionLiteral() calls
+%     GetOrCreateAssociatedLiteral when branching (one of the two creation sites).
+%   ortools/sat/integer_resolution.cc -- the other creation site (1-UIP).
+%   ortools/sat/cp_model_loader.cc -- ExtractEncoding() creates value literals
+%     (x == v) up front during loading/presolve (value encoding is STATIC).
+
+\textbf{Why eager encoding is hopeless.} The naive bridge would give every
+bound its own Boolean up front. A variable $x \in [0, 10^6]$ would spawn a
+million literals
+\[
+  \bl{x \ge 1},\quad
+  \bl{x \ge 2},\quad
+  \ldots
+\]
+before search even starts. This is a non-starter in both memory and propagation
+cost, and the overwhelming majority of those literals would never be touched.
+CP-SAT therefore does not pre-encode all bounds. The integer trail reasons
+about bounds \emph{directly}, as native integer facts
+(\cref{sec:bounds}), and Booleans are created only where the integer and
+Boolean worlds actually need to meet.
+
+\textbf{The order encoding.} When that bridge is built, it uses the
+\emph{order encoding}, also called the ``list encoding.'' CP-SAT follows Feydy
+and Stuckey's \emph{``Lazy Clause Generation Reengineered''} (CP
+2009)~\cite{feydy2009lcg}.
+% The code comment at integer.h:106 attributes the order encoding to this paper.
+For a variable $x$, the bound
+literals have the form $\bl{x \ge v}$, and they are linked by
+the obvious monotone implications:
+\[
+  \bl{x \ge 6} \;\Rightarrow\; \bl{x \ge 5}
+  \;\Rightarrow\; \bl{x \ge 4} \;\Rightarrow\; \cdots .
+\]
+A single such Boolean also represents the corresponding upper-bound fact,
+because
+\[
+  \bl{x \le v}
+  \equiv
+  \lnot\bl{x \ge v{+}1} .
+\]
+In the implementation, the upper-bound side is handled by sharing the encoding
+with \code{NegationOf}$(x)$, so $x$ and its negation do not duplicate Booleans.
+
+\textbf{On-demand creation.} The workhorse is
+\srcla{integer.h}{193}{GetOrCreateAssociatedLiteral}$(x \ge v)$. It
+returns the Boolean $\bl{x \ge v}$. If that literal does
+not yet exist, it mints a fresh Boolean variable and wires in the implications to
+the already encoded neighboring bounds, the next bound below and the
+next bound above. This preserves the monotone chain.
+
+This is the moment alluded to in the conflict trace of \cref{sec:trace}.
+When 1-UIP resolution needs $\bl{x \ge v}$ as a clause literal, this call
+materializes it. The implication links keep it consistent
+with its neighbors, and from then on the SAT engine treats it like any other
+Boolean literal. In the basic search loop, two moments dominate bound-literal
+creation: \emph{branching} on an integer bound mints the Boolean for that
+bound (\srcla{integer\_search.cc}{1426}{GetDecisionLiteral}), and
+\emph{integer conflict resolution} mints the Boolean it needs for the 1-UIP
+(\cref{sec:trace}). Other mechanisms call the same
+\code{GetOrCreateAssociatedLiteral} on demand as well, including core-guided
+optimization when forming assumption literals, the feasibility pump, and some
+global propagators. Ordinary bound propagation, however, stays in integer-bound
+space and creates no Booleans. That is what keeps the Boolean skeleton small.
+
+\textbf{Equality literals.} Some constraints, for example a table constraint,
+\srcla{all\_different.h}{52}{AllDifferent}, or anything that reasons about exact
+values, want $\bl{x = v}$, not just bounds.
+\srcla{integer.h}{194}{GetOrCreateLiteralAssociatedToEquality}$(x, v)$
+provides it, based on the identity
+\[
+  \bl{x = v} \;\Longleftrightarrow\;
+  \bl{x \ge v} \;\wedge\; \bl{x \le v} .
+\]
+A constraint may even ask for the whole domain at once via
+\srcla{integer.h}{144}{FullyEncodeVariable}. This is the deliberate
+\emph{eager} path, used precisely when a propagator is going to need every value
+anyway, so laziness would only add overhead. Full encoding is the exception
+requested by a constraint; lazy bound encoding is the default for everything
+else.
+
+There is an important asymmetry between the two encodings. The bound literals
+$\bl{x \ge v}$ of the order encoding are predominantly \emph{dynamic}: they
+are minted during branching and conflict resolution as just described. Value
+literals $\bl{x = v}$ are predominantly \emph{static}: the
+equalities a model needs are detected and created up front during
+presolve/loading (\srcla{cp\_model\_loader.cc}{352}{ExtractEncoding}), rather
+than on demand. That said,
+\code{GetOrCreateLiteralAssociatedToEquality} can still mint one lazily if a
+constraint later asks for a value literal that loading did not foresee. The
+developers' rule of thumb behind this split is blunt: if a model genuinely needs
+per-value Booleans for a variable, that variable probably should not have been a
+wide integer in the first place.
+
+\textbf{Domains with holes.} Real domains are not always intervals. If
+$x \in [1,2] \cup [5,6]$, then ``$x \le 3$'' and ``$x \le 4$'' mean the same
+thing as ``$x \le 2$,'' and ``$x \ge 3$'' means ``$x \ge 5$.'' The encoder's
+\srcla{integer.h}{177}{Canonicalize} step folds each requested bound onto
+the canonical bound for that domain before looking it up. Equivalent bounds
+therefore share one Boolean instead of spawning redundant ones.
+
+\textbf{The payoff.} The Boolean skeleton that the CDCL engine actually sees
+stays small: it contains only the bounds and equalities that branching,
+conflict learning, or a constraint-specific encoding genuinely reached. A
+variable over a million values typically contributes a handful of literals, not
+a million, and the encoder tracks exactly how many Booleans it had to create
+(\code{num\_created\_variables\_}). Both layers are lazy: the reasons
+(\cref{sec:learning}) and the Boolean variables they are written in.
+Strong integer propagation does
+the bulk of the reasoning natively over bounds, and the Boolean encoding
+materializes only at the thin interface where the learning machinery needs to
+grip.
+
+% Source (VERIFIED): "Search stats" column "Bools" = FormatCounter(r.num_booleans())
+%   in ortools/sat/stat_tables.cc:90. The response field "booleans:"
+%   (cp_model_solver.cc:711) is one worker's SatSolver::NumVariables(), not a
+%   portfolio figure -- different workers mint different amounts (see the portfolio
+%   box in the parallelization section).
+\begin{platypuslog}[htb]
+The size of the lazily minted Boolean skeleton is reported per worker as the
+\code{Bools} column of the \textsf{Search stats} table; each worker mints its own,
+so the counts differ across rows. For a model with wide integer domains it usually
+stays orders of magnitude below the number of representable values: the measurable
+payoff of minting bound literals on demand rather than up front.
+\end{platypuslog}
+
+\subsection{A fixed skeleton need not be a solution}\label{sec:completion}
+% Sources (VERIFIED):
+%   ortools/sat/integer_search.cc:422 SatSolverHeuristic -- all_assigned =
+%     trail->Index() == sat_solver->NumVariables(); returns no decision when true.
+%   The completion heuristic that closes this gap (AtMinValue, bisection, LP
+%   value; completion-last policy) is assembled in sec:search.
+
+The sparse skeleton has a consequence the foundational search of
+\cref{sec:complete} sidestepped. Because the skeleton holds only a handful
+of bounds, all of them can be assigned while an integer still spans a range:
+$\bl{x \ge 3}$ true and $\bl{x \ge 8}$ false
+leave $x \in [3,7]$ with every \emph{existing} literal decided. The gap is then a
+\emph{missing} literal, not an unassigned one. Even a complete Boolean assignment
+can leave $x$ genuinely ranged, because no bound between $3$ and $7$ was ever
+minted. Under a full encoding this could not arise, since deciding every
+bound pins the value; the sparse skeleton is exactly what pulls the two
+tests apart.
+
+Closing this gap is the job of \emph{integer completion}, the second half of the
+search machinery in \cref{sec:search}: once the Boolean skeleton is
+settled but some integer is still ranged, the solver mints a fresh bound for
+that integer and branches on it, repeating until every variable is pinned to a
+single value.

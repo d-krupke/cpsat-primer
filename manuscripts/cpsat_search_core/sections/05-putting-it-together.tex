@@ -1,0 +1,547 @@
+\section{Putting it together}\label{part:together}
+
+This section assembles the moving parts into a single control loop: bounds and
+their literals (\cref{part:foundations}), propagators that tighten them, branching
+that commits values, and conflict analysis that learns from failure
+(\cref{part:learning}). It then opens the loop's two busiest lines: what
+``propagate to a fixed point'' actually runs, and in what order the SAT and CP
+engines take turns (\cref{sec:propstep}); and how the next decision is
+chosen once propagation stalls, where a deliberate design choice has CP-SAT drive
+the search itself and lets a configurable decision strategy, by default led by SAT
+branching, choose where to descend (\cref{sec:search}).
+
+\subsection{The search loop, assembled}\label{sec:loop}
+% Sources (VERIFIED):
+%   ortools/sat/integer_search.cc -- main integer search loop: repeatedly
+%     propagate, take a decision, on conflict analyze+backjump; return FEASIBLE
+%     when the heuristic yields no decision (all variables fixed).
+%   ortools/sat/sat_solver.cc -- SatSolver::Solve / Propagate / conflict handling.
+%   ortools/sat/optimization.cc -- the objective-tightening wrapper around it.
+
+Putting the pieces together, the engine is a single feasibility loop
+(\srcla{integer\_search.cc}{1526}{SolveIntegerProblem}, entered through the
+level-$0$ reset-and-assert wrapper
+\srcla{integer\_search.cc}{1649}{ResetAndSolveIntegerProblem}) wrapped by a
+thin optimizer that calls it repeatedly. The loop, \textsc{Solve}
+(\cref{alg:loop}), is the heart:
+every concept introduced so far appears in it exactly once, and each line points to
+a section that expands it. It takes a set of \emph{assumptions} (literals forced
+true for the duration of one call) and returns either a feasible solution or a
+proof that none exists under them. The wrapper,
+\textsc{MinimizeByBisection} (\cref{alg:bisection}), turns that feasibility engine into an optimizer: it
+calls \textsc{Solve} under a trial bound on the objective and narrows that bound by
+bisection until the optimum is pinned.
+
+\begin{algorithm}[htbp]
+\caption{The CP-SAT feasibility core, \textsc{Solve}}
+\label{alg:loop}
+\begin{algorithmic}[1]
+\Procedure{Solve}{$A$} \Comment{$A$: assumption literals, forced true for this call}
+  \LineComment{Prepare the model for a new run, with the assumptions enforced at the root level}
+  \State reset to decision level $0$; assert every $\ell \in A$
+  \Loop
+    \LineComment{Run all propagators (cheapest first) until we reach a fixed point (\cref{sec:propstep})}
+    \State \Call{PropagateToFixedPoint}{} \Comment{first SAT, then CP propagations}
+    \If{conflict detected}
+      \LineComment{Learn from the conflict and resolve it (\cref{sec:trace})}
+      \If{current decision level $= 0$}
+        \State \Return \textsc{Infeasible} \Comment{with the failing core $\subseteq A$, when $A \neq \emptyset$}
+      \EndIf
+      \State $c \gets \Call{AnalyzeConflict}{}$ \Comment{1-UIP nogood}
+      \State \Call{Backjump}{\textsc{AssertionLevel}$(c)$}; \ \Call{Learn}{$c$}
+    \Else
+      \LineComment{Ask the decision strategies for a branching literal, or confirm none is left (\cref{sec:search})}
+      \State $\ell \gets \Call{NextDecision}{}$ \Comment{default: (1)~VSIDS, (2)~integer completion}
+      \If{$\ell = \textsc{none}$} \Comment{everything well-defined: a full solution}
+        \State \Return \textsc{Feasible}(current assignment)
+      \EndIf
+      \State \Call{Assert}{$\ell$} \Comment{descend one decision level}
+    \EndIf
+  \EndLoop
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+% Source (VERIFIED): ortools/sat/optimization.cc:259
+%   RestrictObjectiveDomainWithBinarySearch -- assumption =
+%   GetOrCreateAssociatedLiteral(LowerOrEqual(objective_var, target)),
+%   ResetAndSolveIntegerProblem({assumption}); on FEASIBLE restrict ub to the
+%   solution's objective, on ASSUMPTIONS_UNSAT Enqueue(GreaterOrEqual(obj,target+1)).
+\begin{algorithm}[htbp]
+\caption{Optimization by bisection: \textsc{MinimizeByBisection} drives \textsc{Solve}}
+\label{alg:bisection}
+\begin{algorithmic}[1]
+\Procedure{MinimizeByBisection}{$\code{obj}$}
+  \State $\text{lo} \gets \text{lb}(\code{obj})$; \ $\text{hi} \gets \text{ub}(\code{obj})$; \ \textit{incumbent} $\gets \textsc{none}$
+  \While{$\text{lo} < \text{hi}$}
+    \State $m \gets \lfloor (\text{lo} + \text{hi})/2 \rfloor$
+    \State $r \gets \Call{Solve}{\{\bl{\code{obj} \le m}\}}$ \Comment{assume the trial bound for one call}
+    \If{$r = \textsc{Infeasible}$}
+      \State $\text{lo} \gets m + 1$ \Comment{the returned core proves $\code{obj} > m$}
+    \Else
+      \State \textit{incumbent} $\gets r$; \ $\text{hi} \gets \code{obj}(\textit{incumbent})$ \Comment{a solution of cost $\le m$}
+    \EndIf
+  \EndWhile
+  \State \Return \textit{incumbent} as \textsc{Optimal}
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+The two procedures factor the engine cleanly. \textsc{Solve}'s contract is
+feasibility: it returns a feasible assignment or a proof none exists, and it never
+manages the objective bound --- that bookkeeping is entirely the wrapper's. The
+loop itself carries no optimization logic; the only cost-awareness inside it lives
+in the decision strategies, which can be set up, explicitly or implicitly, to
+branch toward cheaper solutions (\cref{sec:search}). \textsc{MinimizeByBisection}
+(\srcla{optimization.cc}{259}{RestrictObjectiveDomainWithBinarySearch}) keeps a
+lower and an upper bound on the
+optimal cost and, each round, asks \textsc{Solve} whether a solution of cost at most
+the midpoint $m$ exists --- forcing the order-encoding literal
+$\bl{\, \code{obj} \le m \,}$ (minted on demand by
+\srcla{integer.h}{193}{GetOrCreateAssociatedLiteral}) as an \emph{assumption}, a fact held
+only for that one call. This works because the objective is just one more bounded
+integer variable (\cref{sec:opt}) and a bound \emph{is} a literal
+(\cref{part:foundations}). The two answers move opposite ends of the gap: a solution
+pulls the upper bound down to its cost, while an \textsc{Infeasible} hands back a
+\emph{core} --- the subset of the assumptions that cannot hold together --- proving
+$\code{obj} > m$ and lifting the lower bound. When the two bounds meet, the incumbent
+is optimal, and that final infeasibility proof \emph{is} the proof of optimality.
+This is the first place \textsc{Solve}'s assumption input and core output earn their
+keep; \cref{sec:opt} puts the same $A$ parameter to work in the other
+strategies that drive this loop.
+
+This single loop hides a deeper design decision: how the CDCL clause-learning
+machinery is coupled to finite-domain propagation. There are broadly two ways to
+wire the two together. One option is to keep a complete CDCL \textbf{SAT solver in
+charge} and let it own the whole search stack: the trail, the decisions, unit
+propagation, conflict analysis, and backjumping. The finite-domain side then talks
+to it only through the clause interface, injecting fresh clauses (and the Boolean
+variables they need) whenever it notices the solver has missed something a
+constraint implies. The SAT engine runs the show; the constraint reasoning feeds
+it from outside.
+
+CP-SAT takes the other option: it \textbf{drives the search itself}. It runs its
+own propagation, conflict analysis, and search as one integrated core, and the
+CDCL clause-learning machinery is a mechanism inside that core rather than an
+external engine being fed from the side. This choice runs through every line of
+the loop. Boolean literals and integer bounds share one decision-level timeline across two
+coupled trails (\cref{sec:trail}), so the \textsc{PropagateToFixedPoint} step runs the CP
+propagators directly and a finite-domain propagator pushes an integer-bound fact
+onto the integer trail itself (\cref{sec:propstep}); conflict analysis then resolves
+over those integer literals natively, and the Boolean clauses and variables are
+minted lazily, only at the thin interface where the two worlds meet. This is what
+lets the costly apparatus of \cref{part:learning} pay off: a decision and the
+reason later learned from it are written in the very same literals, so every
+failure feeds straight back into the search that produced it, with no re-encoding
+round trip.
+
+The interesting work inside \textsc{Solve}'s conflict case is split between
+\textbf{learning} and \textbf{backjumping}. Branching is not a single rule but a walk down an ordered
+\textbf{decision strategy} $\mathcal{S}$, a list of heuristics: \textsc{NextDecision}
+tries each in turn and returns the first literal one produces, which the loop then
+asserts. By default $\mathcal{S}$
+holds two such heuristics (\cref{sec:search}): the SAT decision heuristic
+(\textbf{VSIDS}), which keeps branching on existing bound literals until every one
+has a value, and \textbf{integer completion}, a generic fallback that takes the
+first variable still spanning a range and fixes it toward its minimum. Running only
+after VSIDS has settled every Boolean, completion in practice sees just the integers
+the skeleton has left loose, minting one bound at a time until each domain
+collapses to a single value. The loop reports a solution only when \emph{every} heuristic in
+$\mathcal{S}$ comes up empty, which is why the leaf test is stricter than ``all
+Booleans assigned'': it holds only once every domain has also shrunk to a
+singleton.
+
+Which heuristics $\mathcal{S}$ contains, and in what order, is part of the
+configuration rather than a fixed feature of the loop. \cref{sec:search}
+takes the strategy apart: what each of the two default heuristics does, and how
+the parallel portfolio reorders and extends them across workers.
+
+% Source (VERIFIED): the "Search stats" table is built in ortools/sat/stat_tables.cc:84-92
+%   (header "...Branches..."; FormatCounter(r.num_branches())). The response field
+%   "branches:" (cp_model_solver.cc:713) is NOT a portfolio sum: it is one worker's
+%   num_branches(), copied by the statistics postprocessor (see sec:portfolio).
+% Empirical (checked against real CP-SAT logs): per-worker Branches has NO fixed
+%   relation to the variable count -- orders of magnitude ABOVE it (hard small models,
+%   restart/backjump re-descents) or far BELOW it (large models solved at the root).
+%   In xl_20x6_120parties.log the response showed branches:1072 (below 2730 vars)
+%   because the solution-holding worker barely searched.
+\begin{platypuslog}[htb]
+Each pass through the \textsc{Assert} line is counted as a \code{Branch} in the
+per-worker \textsf{Search stats} table printed at the end of a run. The count has
+no fixed relation to the number of variables: it tallies decisions over the
+\emph{whole} search, so restarts and backjumping can drive a searching worker to
+many times the variable count, while a worker that rides presolve and root
+propagation can finish with far fewer. Within one worker's row it sits well below
+the two propagation columns beside it (\cref{sec:propstep}): every decision sets
+off a full cascade, so \code{BoolPropag} and \code{IntegerPropag} both run far
+ahead of \code{Branches} wherever real search happens. Read these per worker; the
+response summary's \code{branches:} field reports only the worker that returned
+the solution (\cref{sec:portfolio}), which can be far smaller.
+\end{platypuslog}
+
+\textsc{Solve} and its optimizer, together with strong propagators, are the search
+core. Bisection is one clean way to drive the feasibility loop;
+\cref{sec:opt} surveys the others, including the even simpler linear scan and
+the core-guided strategies the portfolio runs.
+
+\subsection{Inside ``propagate to a fixed point''}\label{sec:propstep}
+% Sources (VERIFIED):
+%   ortools/sat/sat_solver.cc -- SatSolver::Propagate(): loops over an ordered
+%     propagators_ list; the inner loop BREAKS as soon as the trail grows, so it
+%     restarts from the cheapest propagator. Registration order: binary_implication_graph_,
+%     clauses_propagator_, enforcement_propagator_, pb_constraints_, external,
+%     then GenericLiteralWatcher (last_propagator_). The in-source comment states
+%     the intent ("loop over and test again the highest priority constraint types").
+%   ortools/sat/clause.cc -- BinaryImplicationGraph::Propagate() and
+%     ClauseManager::Propagate() ARE the unit-propagation engines (the "first row").
+%   ortools/sat/integer.cc -- GenericLiteralWatcher::Propagate(): priority buckets
+%     queue_by_priority_ (default priority 1; 0 = cheap), drains low priority first,
+%     resets to priority 0 when an integer bound is enqueued, RETURNS to the SAT
+%     loop when a Boolean literal is enqueued.
+%   ortools/sat/integer.h -- WatchLiteral/WatchLowerBound/WatchUpperBound +
+%     PropagatorInterface::IncrementalPropagate(watch_indices): change-driven waking.
+
+The loop of \cref{sec:loop} hides its most important line:
+``propagate to a fixed point.'' What actually happens there, and where does the
+SAT engine sit relative to the CP propagators?
+
+\begin{platypuswarning}[htb][Not generate-and-check]
+CP-SAT does \emph{not} let the SAT solver guess a complete Boolean assignment
+and then hand it to the CP propagators for checking, as in generate-and-check
+lazy SMT or CEGAR. Propagation is \textbf{online}: it runs after \emph{every}
+decision, before the next one, and the propagators always operate on the current
+\emph{partial} state, namely the bounds as they stand, never on a finished
+assignment.
+\end{platypuswarning}
+
+\textbf{A layered, cheapest-first cascade.} Propagators are kept in a fixed
+order, with the cheapest and most prolific first, and the engine runs them as a
+chain:
+
+\begin{enumerate}[leftmargin=1.6em,topsep=0.3em,itemsep=0.25em]
+  \item the \textbf{binary-implication graph}: implications from two-literal
+  clauses, the cheapest form of unit propagation;
+  \item the \textbf{clause manager}: unit propagation on general clauses via the
+  two-watched-literals scheme;
+  \item enforcement and \textbf{pseudo-Boolean} constraints;
+  \item the \textbf{\srcla{integer.h}{1324}{GenericLiteralWatcher}}, which fans
+  out to all integer and CP propagators: linear,
+  \srcla{all\_different.h}{52}{AllDifferent},
+  \srcla{disjunctive.h}{49}{NoOverlap},
+  \srcla{cumulative.h}{48}{Cumulative}, and so on.
+\end{enumerate}
+
+The first two layers \emph{are} classical SAT unit propagation. This is the
+``first-row propagator'' picture: cheap, always-run Boolean reasoning fires
+before any expensive global constraint is even consulted.
+
+\textbf{Restart-on-progress is the key scheduling rule.} The instant any
+propagator deduces something new, by enqueuing a literal or tightening a bound,
+the chain breaks and starts again \emph{from the top}. Thus, when an expensive
+global constraint such as \srcla{cumulative.h}{48}{Cumulative} tightens a bound,
+control immediately returns to binary-implication and clause unit propagation.
+Those cheap layers then run to their own fixed point again before any expensive
+propagator is reconsidered. Cheap reasoning is always exhausted before the
+engine spends time on expensive reasoning.
+
+The same discipline repeats one level down inside
+\srcla{integer.h}{1324}{GenericLiteralWatcher}. CP propagators are themselves
+bucketed by priority: priority 0 for cheap propagators such as linear and
+scheduling helpers, and higher priorities for more expensive propagators such as
+\srcla{all\_different.h}{52}{AllDifferent} or
+\srcla{cumulative.h}{48}{Cumulative}. The watcher drains priority 0 before
+priority 1, but resets to priority 0 as soon as a cheap propagator tightens a
+bound. If a propagator pushes a \emph{Boolean} literal, control returns to the
+SAT layer immediately, so unit propagation re-runs before anything costlier.
+
+\textbf{Change-driven waking.} None of this rescans every constraint in every
+round. At registration, a propagator declares exactly which literals and
+variable bounds it cares about (\srcla{integer.h}{1369}{WatchLiteral}, \srcla{integer.h}{1370}{WatchLowerBound},
+\srcla{integer.h}{1371}{WatchUpperBound}). It is then woken only when one of \emph{those} facts
+changes, and it receives the changed watch indices through
+\srcla{integer.h}{1299}{IncrementalPropagate} rather than recomputing from scratch. The fixed-point
+loop is therefore sparse: only the constraints touched by the last deduction are
+re-run, and they are usually told precisely what moved.
+
+Putting this together, a single decision triggers a cascade that first exhausts
+the cheapest propagation, escalates to expensive global constraints only when
+the cheap layers stall, returns to cheap propagation the moment anything new is
+deduced, and wakes only constraints whose watched facts changed. Only when the
+\emph{entire} cascade stalls does control return to branching; if some
+propagator instead empties a domain, control goes to the conflict analysis of
+\cref{sec:learning}.
+
+% Source (VERIFIED): "Search stats" columns "BoolPropag"/"IntegerPropag" =
+%   FormatCounter(r.num_binary_propagations())/FormatCounter(r.num_integer_propagations())
+%   in ortools/sat/stat_tables.cc:96-97. The two counters come from two structures:
+%   num_binary_propagations() := SatSolver::num_propagations() (Boolean trail, binary
+%   + clause unit propagation), num_integer_propagations() := IntegerTrail::num_enqueues()
+%   (integer trail). Naming trap: the response field is PRINTED as "propagations:" but
+%   is num_binary_propagations() (cp_model_solver.cc:715-718 comment says so), the
+%   Boolean count only; the response prints just ONE worker's figures (see sec:portfolio).
+% Empirical (real CP-SAT logs): do NOT claim IntegerPropag > BoolPropag -- the
+%   order between them flips by model (clause-heavy encodings make BoolPropag the
+%   larger, e.g. 65.7M vs 36.9M). What IS robust: both > Branches in every
+%   searching worker. So anchor the message on the propagation-vs-Branches gap.
+\begin{platypuslog}[htb]
+The two trails are tallied by two separate columns of the \textsf{Search stats}
+table. \code{BoolPropag} counts propagations on the Boolean trail (the
+binary-implication and clause layers), read from the SAT solver's own counter;
+\code{IntegerPropag} counts bound tightenings pushed onto the integer trail, read
+from that trail's enqueue count. In a worker that genuinely searches they are
+usually the two largest columns by a wide margin, the quantitative face of
+``propagation does most of the work, branching only a little.'' Which of the two
+leads is model-dependent: clause-heavy encodings can put \code{BoolPropag} ahead,
+so the message lies in their size relative to \code{Branches}, not in the split
+between them. The response summary echoes the pair as \code{integer\_propagations:}
+and --- a naming trap --- \code{propagations:} for the Boolean count, but, like the
+other summary counters, only for the single worker that returned the solution
+(\cref{sec:portfolio}).
+\end{platypuslog}
+
+\subsection{Inside ``search'': choosing the next decision}\label{sec:search}
+% Sources (VERIFIED):
+%   ortools/sat/sat_decision.h:58 -- VSIDS-style decaying activity, phase saving.
+%   ortools/sat/integer_search.cc:422 SatSolverHeuristic -- all_assigned test
+%     (returns no decision when every Boolean is assigned);
+%   integer_search.cc:61 AtMinValue (min-first completion);
+%   integer_search.cc:80 GreaterOrEqualToMiddleValue (bisection);
+%   integer_search.cc:119 SplitAroundLpValue (LP value);
+%   integer_search.cc:1224 SequentialSearch({SatSolverHeuristic, fixed_search})
+%     -- completion (fixed_search) is the last heuristic in the default policy.
+
+The companion to ``propagate to a fixed point'' is the other line the loop hides:
+how the next decision is actually chosen. The integrated design of
+\cref{sec:loop} --- one decision-level timeline across its two trails, with clause learning a mechanism
+inside the core --- settles how decisions are represented and learned from, but
+not \emph{which} heuristic picks the next one. That is the configurable decision
+strategy $\mathcal{S}$ of \cref{sec:loop}: the default leads with SAT
+branching and falls back to finite-domain branching, but other workers reorder
+these or lead with an LP or a fixed integer order instead. The two heuristics
+below are the entries of that default $\mathcal{S}$, and the building blocks the
+other strategies recombine.
+
+\textbf{The SAT decision heuristic.} This entry branches on a bound literal that
+already exists. CP-SAT's SAT core chooses it by \textbf{VSIDS}
+(\srcl{sat\_decision.h}{58}): it keeps a decaying activity score per variable,
+bumps the variables that appear in each conflict, and branches on whichever has
+been most involved in recent failures, with a saved polarity (\emph{phase
+saving}) picking true or false. Because an integer bound is a reified literal
+(\cref{sec:bounds}), this one heuristic ranges over Boolean and integer
+variables alike: the literals it scores are exactly the bound literals conflict
+analysis has been resolving over. This is the sense in which this entry branches
+from the SAT side.
+
+\textbf{Integer completion.} VSIDS can branch only on literals that already
+exist, and the sparse skeleton (\cref{sec:completion}) lets those run out
+while an integer is still ranged: every existing bound for $x$ is assigned,
+yet $x \in [3,7]$ because no bound between $3$ and $7$ was ever minted. When
+the SAT heuristic reports nothing left to decide, every Boolean is assigned
+(\srcla{integer\_search.cc}{422}{SatSolverHeuristic}), and only then does an
+\emph{integer-completion} heuristic step in: it picks a still-ranged variable,
+mints a fresh bound for it, and branches on that. The default composition puts
+completion last for exactly this reason (\srcl{integer\_search.cc}{1224}):
+exhaust the existing Booleans first, and fall back to minting a new one only when
+the skeleton is settled but some integer is still loose.
+
+Which bound to mint is a value-selection choice. The default branches the
+variable toward its current minimum, asserting $\bl{x \le \text{lb}(x)}$ (\srcla{integer\_search.cc}{61}{AtMinValue}): the first guess tries
+the smallest surviving value, and the other branch pushes the lower bound up.
+Other configurations bisect instead, minting a middle bound
+$\bl{x \ge \text{lb} + \lceil(\text{ub}-\text{lb})/2\rceil}$
+(\srcla{integer\_search.cc}{80}{GreaterOrEqualToMiddleValue}) to halve the range
+per decision, or split around the current LP value. Each is just a rule for which
+not-yet-minted bound becomes the next decision.
+
+This is why search terminates on $\text{lb} = \text{ub}$ rather than when the
+Booleans are exhausted: completion keeps minting bounds for an unfixed
+variable instead of declaring victory once the SAT skeleton is satisfied. The
+propagation fixed point of \cref{sec:propstep} becomes a \emph{solution}
+only when every integer has been pinned to a single value, one missing literal at
+a time.
+
+\textbf{How workers vary the strategy.} These two heuristics are only the default
+$\mathcal{S}$. Nothing in the loop of \cref{sec:loop} fixes \emph{which}
+strategy it runs, and the parallel portfolio (\cref{sec:portfolio})
+exploits this, running workers whose $\mathcal{S}$ differs in both contents and
+order, selected through the \code{search\_branching} parameter:
+
+\begin{itemize}[leftmargin=1.6em,topsep=0.3em,itemsep=0.25em]
+  \item \code{auto} (\srcla{integer\_search.cc}{1224}{AUTOMATIC\_SEARCH}, the default):
+  $\langle\text{VSIDS},\ \text{integer completion}\rangle$;
+  \item \code{fixed} (\srcla{integer\_search.cc}{1239}{FIXED\_SEARCH}):
+  $\langle\text{fixed integer order},\ \text{VSIDS}\rangle$, the integer-style
+  decisions first, with VSIDS only settling any leftover Booleans;
+  \item \code{reduced\_costs} (\srcla{integer\_search.cc}{1288}{LP\_SEARCH}):
+  $\langle\text{LP reduced-cost},\ \text{VSIDS},\ \text{integer completion}\rangle$;
+  \item \code{pseudo\_costs} (\srcla{integer\_search.cc}{1310}{PSEUDO\_COST\_SEARCH}):
+  $\langle\text{pseudo-cost},\ \text{VSIDS},\ \text{integer completion}\rangle$;
+  \item \code{portfolio} and \code{quick\_restart}
+  (\srcla{integer\_search.cc}{1282}{PORTFOLIO\_SEARCH}, \srcla{integer\_search.cc}{1319}{PORTFOLIO\_WITH\_QUICK\_RESTART\_SEARCH}):
+  a randomized rotation over such lists, reshuffled on restart.
+\end{itemize}
+
+Only the contents and order of $\mathcal{S}$ change between workers; the loop
+around it does not.
+
+% Sources (VERIFIED against sat_parameters.proto / cp_model.proto):
+%   search_branching (SearchBranching enum) field 82, default AUTOMATIC_SEARCH:
+%     sat_parameters.proto:1194 (field), enum 1151-1193. FIXED_SEARCH=1 (proto:1161).
+%   The user-supplied fixed order is the repeated search_strategy field of the
+%     CpModelProto: cp_model.proto:654 (repeated DecisionStrategyProto), message
+%     DecisionStrategyProto cp_model.proto:520, VariableSelectionStrategy enum
+%     :539 (CHOOSE_FIRST=0 :540, CHOOSE_LOWEST_MIN=1 :541, ...),
+%     DomainReductionStrategy enum :552 (SELECT_MIN_VALUE=0 :553,
+%     SELECT_MAX_VALUE=1 :554, ...). Python API: model.add_decision_strategy().
+%   Caveat re portfolio: a single global search_branching binds only the workers
+%     that honour it; see the subsolver-restriction box in \cref{sec:portfolio}.
+\begin{platypusparam}[htb]
+You can also supply your own search strategy $\mathcal{S}$ instead of leaving it to the
+portfolio. The \srcla{sat\_parameters.proto}{1194}{search\_branching} parameter (default \code{AUTOMATIC\_SEARCH}) selects the policy,
+and \code{FIXED\_SEARCH} makes the solver follow an order \emph{you} specify,
+walked by \srcla{cp\_model\_search.cc}{210}{ConstructUserSearchStrategy}.
+That order is a per-model object: each
+\srcla{cp\_model.proto}{520}{DecisionStrategyProto} (the repeated
+\srcla{cp\_model.proto}{654}{search\_strategy} field, exposed as
+\code{add\_decision\_strategy} in the Python API) pairs a
+\textbf{variable-selection} rule (\code{CHOOSE\_FIRST},
+\code{CHOOSE\_LOWEST\_MIN}, \dots) with a \textbf{value} rule
+(\code{SELECT\_MIN\_VALUE}, \code{SELECT\_MAX\_VALUE}, \dots), letting you
+hand-encode a custom variable and value order rather than leaving the choice to
+the automatic activity heuristic.
+\end{platypusparam}
+
+\subsection{A small worked example}
+
+The following tiny model illustrates the control loop without introducing an
+objective yet:
+\[
+\begin{aligned}
+  &a, b, c \in \{0, 1\} \quad\text{(Booleans)}, \qquad x \in [0, 5] \\
+  &\text{C1:}\ a + b + c \ge 2 \quad\text{(at least two of } a,b,c \text{ are true)}\\
+  &\text{C2:}\ x \ge 3a \\
+  &\text{C3:}\ x \le 2
+\end{aligned}
+\]
+
+\textbf{Root propagation.} C3 tightens $x$ to $x \le 2$. C2 says
+$x \ge 3a$; in combination with $x \le 2$, it forces $a = 0$, because $a = 1$
+would require $x \ge 3$. Now C1 becomes $b + c \ge 2$, forcing $b = 1$ and
+$c = 1$. All of this is pure deduction, with no decisions at all.
+
+\textbf{Completion search.} At this point the state is consistent, but not yet a
+solution. The Boolean variables are fixed, whereas $x$ still ranges over
+$[0,2]$: once $a=0$, no remaining constraint distinguishes $x=0$, $x=1$, and
+$x=2$. Recall \cref{sec:search}: search terminates only when every
+variable has a singleton domain. The completion brancher therefore still takes a
+decision on $x$. Under the minimum-first completion heuristic, it tries
+$x \le 0$; together with the existing lower bound $x \ge 0$, this fixes $x=0$.
+Only then is the total assignment $(a,b,c,x) = (0,1,1,0)$ reported.
+
+The example is intentionally conflict-free. Its purpose is to show the ordinary
+case in which propagation and branching cooperate: propagation performs the
+forced deductions, and search supplies the remaining choices needed to turn a
+consistent state into a complete assignment. If a later decision in another
+branch did lead to a conflict, the same reasons attached to these propagations
+would feed the conflict analysis described in \cref{sec:learning}.
+
+\subsection{Optimization: solving feasibility, repeatedly}\label{sec:opt}
+% Sources (VERIFIED): ortools/sat/optimization.cc
+%   Linear-scan path: on FEASIBLE, objective = integer_trail->LowerBound(objective_var),
+%   then Enqueue(IntegerLiteral::LowerOrEqual(objective_var, objective - 1)) and
+%   re-solve -> next solution must be strictly better. (Other strategies exist,
+%   e.g. core-based CoreBasedOptimizer; the bound-tightening idea is the shared core.)
+
+Optimization treats the objective as one more bounded integer variable. This is
+literal, not a metaphor: the model holds a dedicated integer variable,
+\srcla{cp\_model\_mapping.h}{41}{objective\_var}, constrained to equal the
+objective expression, and to
+minimize is to drive down its upper bound. Because it is an ordinary integer
+variable, it sits on the integer trail, propagators watch and tighten it, and
+parallel workers share improved bounds on it like any other bound
+(\cref{sec:portfolio}). This is what lets \textsc{MinimizeByBisection}
+(\cref{alg:bisection}) optimize with no optimization-specific search: it
+only ever moves a bound on \code{objective\_var} and re-runs the same feasibility
+loop. Bisection is one way to move that bound; it is not the only one.
+
+\textbf{Linear scan} (\srcl{optimization.cc}{212}) is even simpler, and it is the
+one strategy that needs no assumptions at all. Find a solution of cost $C$, then forbid that cost and
+everything worse and search again. Because the objective only ever has to improve,
+the cutoff is \emph{monotone}: it never has to be taken back. So rather than
+assuming it for a single call, \textsc{MinimizeByLinearScan} \emph{permanently}
+tightens \code{objective\_var}'s upper bound to $C - 1$ at the root
+(\cref{alg:linscan}); the bound becomes part of the model, propagates like
+any other, and every later solution is strictly cheaper. When the tightened model
+is infeasible, the last $C$ was optimal --- again the infeasibility proof \emph{is}
+the proof of optimality. This is the contrast with bisection that matters: bisection
+probes a bound it may have to retract, so it \emph{assumes} it; linear scan tightens
+a bound it will never relax, so it \emph{asserts} it for good. Either way, CP-SAT
+reports both an \textbf{incumbent} (the best feasible cost so far) and a
+\textbf{bound} (the best cost ruled out below); when the two meet the gap is zero
+and optimality is proved, and good incumbents, propagating like any other bound,
+accelerate that proof.
+
+% Source (VERIFIED): ortools/sat/integer_search.cc -- objective-directed branching,
+%   e.g. SplitAroundLpValue (119) descends toward the LP relaxation's values; the
+%   solution Solve returns is therefore typically well below the posted cutoff, so
+%   the realized step exceeds the single unit the cutoff demands.
+\begin{platypusinfo}[htb][The step size comes from the search, not the cutoff]
+The cutoff posted after each solution only demands that the \emph{next} one be
+strictly better: it tightens $\bl{\, \code{obj} \le \code{obj}(\textit{incumbent}) - 1 \,}$,
+a single unit. How far each step actually moves is set by the search, not by that
+cutoff. Objective-directed decision strategies, such as branching toward the LP
+relaxation's values (\cref{sec:search}), steer each \textsc{Solve} call toward a
+good assignment rather than merely a feasible one just under the cutoff, so the
+solution returned is usually \emph{much} cheaper than one unit better. Linear scan
+therefore tends to descend in large, uneven jumps rather than crawling unit by
+unit. The same effect helps bisection: it banks the returned incumbent's true cost
+(\cref{alg:bisection}, $\text{hi} \gets \code{obj}(\textit{incumbent})$), which
+often sits well below the probed midpoint.
+\end{platypusinfo}
+
+% Source (VERIFIED): ortools/sat/optimization.cc -- linear-scan path: on FEASIBLE,
+%   Enqueue(LowerOrEqual(objective_var, objective - 1)) at level 0 and re-solve.
+\begin{algorithm}[htbp]
+\caption{Linear scan: \textsc{MinimizeByLinearScan} tightens a monotone bound}
+\label{alg:linscan}
+\begin{algorithmic}[1]
+\Procedure{MinimizeByLinearScan}{$\code{obj}$}
+  \State \textit{incumbent} $\gets \textsc{none}$
+  \Loop
+    \State $r \gets \Call{Solve}{\emptyset}$ \Comment{search under the cutoffs posted so far}
+    \If{$r = \textsc{Infeasible}$}
+      \State \Return \textit{incumbent} as \textsc{Optimal} if one was found, else \textsc{Infeasible}
+    \EndIf
+    \State \textit{incumbent} $\gets r$ \Comment{a strictly better solution; record it}
+    \LineComment{No assumption needed: the cutoff only ever tightens, so post it permanently at the root}
+    \State permanently tighten $\bl{\, \code{obj} \le \code{obj}(\textit{incumbent}) - 1 \,}$ at the root
+  \EndLoop
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\textbf{Core-guided} workers
+(\srcla{optimization.cc}{444}{CoreBasedOptimizer}) push the same machinery
+further. Instead of bounding
+\code{obj} as a whole, they assume the individual objective terms at their best
+values and call \textsc{Solve}; each returned core
+(\srcla{optimization.cc}{376}{FindCores}) is a set of terms that cannot
+all stay at their best, which they use to reformulate the objective and lift the
+lower bound (sometimes minimizing the core first). Bound-focused workers
+(\code{objective\_lb\_search}, \code{objective\_shaving}) specialize in the dual
+side. They differ in \emph{how} they move the incumbent and the bound, but every
+one of them is an outer loop over the single \textsc{Solve} of
+\cref{alg:loop}: they share its propagation, learning, and search, and
+vary only what they assert or assume on the objective between calls.
+
+% Source (VERIFIED): ProgressMessage()/SatProgressMessage() in
+%   ortools/sat/cp_model_solver_logging.cc:43-92 -- "#%-5s %6.2fs best:... next:[lb,ub]";
+%   solution counter "#1,#2,..." (num_solutions_), throttled "#Bound", and "#Done".
+\begin{platypuslog}[htb]
+The optimizer's bound-tightening is what generates the streaming progress lines: each
+improving incumbent prints as \code{\#1}, \code{\#2}, \ldots, with its cost as
+\code{best:} and the still-open gap as \code{next:[lb,ub]}. These lines are
+interleaved with throttled \code{\#Bound} lines whenever a worker improves the
+proof bound. When \code{best} meets the bound, the gap is zero and a final
+\code{\#Done} line closes the search.
+\end{platypuslog}

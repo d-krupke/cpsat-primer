@@ -1,0 +1,573 @@
+\section{Going faster}\label{part:faster}
+
+Everything up to here is enough to explain the \emph{correctness} of the core:
+in an unlimited exact run, the solver of \crefrange{part:foundations}{part:together}
+finds optima and proves them. This section is about being \emph{fast}. Each
+technique that follows is an accelerator layered onto that same core: the LP
+relaxation, cutting planes, restarts, and the parallel portfolio. In the idealized complete-search sense, these do not change the
+feasible set or the optimum; in practical time-limited runs, they can of course
+change whether CP-SAT proves optimality, returns only an incumbent, or times out
+without a useful solution.
+
+\begin{platypusbook}[htb]
+The accelerators in this section all run \emph{during} search. CP-SAT also spends
+a considerable effort \emph{before} search begins, on \textbf{presolve}: a
+preprocessing pass that simplifies and canonicalizes the model, removes
+redundant variables and constraints, tightens bounds, and expands high-level
+constraints into the primitives the search core understands. None of it is
+exotic, but it is fundamental to performance, and a model often shrinks
+dramatically before a single decision is made. We leave presolve out of scope
+here; the general ideas, drawn from the SAT and MIP traditions CP-SAT inherits,
+are covered in lectures on SAT and MaxSAT
+preprocessing~\cite{preprocsat,preprocmaxsat} and in Achterberg et al.'s survey
+of MIP presolve reductions~\cite{achterberg2016presolve}.
+\end{platypusbook}
+
+\subsection{The LP relaxation: dual simplex as a propagator}\label{sec:lp}
+% Sources (VERIFIED):
+%   ortools/sat/linear_programming_constraint.h -- class LinearProgrammingConstraint
+%     : public PropagatorInterface, ReversibleInterface; Propagate()/IncrementalPropagate();
+%     GetBasisState()/LoadBasisState() (warm start); header comment "uses glop's
+%     revised simplex ... Reduced Cost Strengthening".
+%   ortools/sat/linear_programming_constraint.cc --
+%     simplex_params_.set_use_dual_simplex(true)  (uses DUAL simplex);
+%     watcher_->Register(this) + RegisterWith at propagation priority 2;
+%     state_=simplex_.GetState() / simplex_.LoadStateForNextSolve(state_) (warm start);
+%     AnalyzeLp(): Enqueue(GreaterOrEqual(objective_cp_, ceil(lp_obj))) (dual bound);
+%     ReducedCostStrengtheningDeductions() (reduced-cost fixing);
+%     PropagateExactLpReason(): scale negated dual values to integers (power-of-2,
+%     divide by GCD) -> exact integer linear combination = Farkas-style reason;
+%     root-level dtime throttling + max_number_of_iterations limits.
+%   ortools/glop/parameters.proto -- use_dual_simplex (Glop revised simplex).
+%   ortools/sat/sat_parameters.proto -- linearization_level (default 1; range 0..2;
+%     no_lp=0, default_lp=1, max_lp=2 in cp_model_search.cc). NOTE: the developer
+%     slides show a level 3, but the released code tops out at 2.
+%     use_exact_lp_reason (default true).
+%   linear_programming_constraint.cc -- AnalyzeLp() at DUAL_UNBOUNDED calls
+%     PropagateExactDualRay() (GetDualRay) -> conflict; the third LP deduction.
+
+Pure constraint propagation reasons one constraint at a time. It is weak exactly
+where linear programming is strong: at providing a \emph{global} numeric view of
+all linear constraints at once, a sharp lower bound on the objective, and
+reduced-cost arguments. CP-SAT therefore carries a continuous \textbf{LP
+relaxation} of part of the model alongside the search and uses it as one more
+propagator. This is the bridge to the MIP world, and it is where the dual
+simplex enters. The developers' own account of these MIP aspects is a useful
+companion here~\cite{didier2025mipaspects}.
+
+\textbf{It is just a propagator.}
+\srcla{linear\_programming\_constraint.h}{137}{LinearProgrammingConstraint}
+implements the same \srcla{integer.h}{1276}{PropagatorInterface} as the CP
+propagators and registers with the
+\srcla{integer.h}{1324}{GenericLiteralWatcher}. It registers at a high-cost
+priority, so the cheapest-first rule of \cref{sec:propstep} runs it only
+after unit propagation and the light CP propagators have reached their fixed
+point. It watches integer-variable bounds (Booleans included, through their
+$\{0,1\}$ integer views) and the objective bound, wakes
+incrementally when those bounds change, and, like any propagator, feeds its
+deductions back as integer-bound tightenings on the trail. Nothing in the search
+core changes; the LP is simply an unusually powerful propagator.
+
+\textbf{What it relaxes.} CP-SAT loads the model's linear constraints into a
+continuous LP over the same variables, drops integrality, and uses each
+variable's current $[\text{lb}, \text{ub}]$ as its column bounds. How much of the
+model enters the LP is governed by \code{linearization\_level}: level 0 means no
+LP at all; level 1 adds the linear constraints together with the integer and
+at-most-one encodings; and level 2 linearizes more aggressively still, pulling in
+additional Boolean and reified structure and enabling the cut generators of
+\cref{sec:cuts} where they apply. The proto documents only this coarse
+0/1/2 progression; the precise set of relaxations admitted at each level is an
+implementation detail and shifts between releases. This single knob is what
+distinguishes the \code{no\_lp} (0), \code{default\_lp} (1), and \code{max\_lp}
+(2) workers of the portfolio (\cref{sec:portfolio}).
+
+\textbf{Why the dual simplex.} This is the crux. Branching and propagation change
+only variable \emph{bounds}, the column bounds of the LP; they do not change the
+constraint matrix or the objective. After such a bound change, the previous
+optimal basis often remains dual-feasible, because dual feasibility depends on
+the matrix and objective, while primal feasibility may be broken by the new
+bounds. This is the textbook situation for the \textbf{dual simplex}: starting
+from the saved basis, it repairs primal feasibility, typically in a small number
+of pivots, instead of re-solving from scratch. CP-SAT sets
+\code{use\_dual\_simplex(true)} and saves and reloads Glop's basis state across
+calls (\srcla{linear\_programming\_constraint.cc}{964}{GetState} / \srcla{linear\_programming\_constraint.h}{269}{LoadStateForNextSolve}). This warm start is what
+makes it affordable for an LP to sit inside a CDCL search.
+
+\textbf{What it gives back.} The LP returns three kinds of deduction, each handed
+to the engine as ordinary integer-bound facts, or as a conflict, on the trail:
+
+\begin{itemize}
+  \item \textbf{A conflict, when the LP is infeasible.} If the relaxation has no
+  feasible point, CP-SAT can use a \textbf{dual ray}, a Farkas certificate, to
+  form a linear combination proving that the current bounds are jointly
+  impossible. That proof is reported as a learned conflict like any other
+  (\srcla{linear\_programming\_constraint.h}{329}{PropagateExactDualRay}).
+  \item \textbf{A dual bound on the objective.} When the LP is optimal, its value
+  is a valid lower bound, for minimization, on the relaxation and therefore on
+  the integer problem. The propagator pushes
+  $\text{objective\_var} \ge \lceil \text{lp\_objective} \rceil$, directly
+  strengthening the bound that drives the optimality proof of
+  \cref{sec:opt}.
+  \item \textbf{Reduced-cost strengthening.} Given the incumbent cutoff, i.e.,
+  the objective's current upper bound, each variable's LP reduced cost says how
+  much moving it away from its LP value would worsen the objective. If that
+  movement would breach the cutoff, the variable's domain can be tightened. This
+  is classic MIP reduced-cost fixing, returned as ordinary integer-bound
+  deductions.
+\end{itemize}
+
+\textbf{Soundness despite floating point.} The simplex runs in floating point,
+which a solver that must be \emph{exact} and must produce \emph{learnable
+reasons} cannot trust directly. CP-SAT therefore does not blindly believe the
+LP's numerical values; it treats them as proposals. For LP-derived deductions, it
+scales the relevant dual multipliers to integers, using a power-of-two scaling
+and then dividing by the gcd, and forms an exact integer linear combination of
+the constraints. The result is a Farkas-style certificate that yields a provably
+valid bound together with an exact reason expressed in integer bound literals.
+That certified reason is what is enqueued and, if a conflict follows, learned.
+With \code{use\_exact\_lp\_reason} on by default, the \emph{deductions are exact
+even though the LP that suggested them was approximate}. This is what keeps the
+LP compatible with lazy clause generation: \emph{the LP proposes, exact integer
+arithmetic certifies, and the certified reason is there for CDCL when the
+deduction enters conflict analysis.}
+
+\textbf{Cost and throttling.} A simplex re-solve is far heavier than an ordinary
+propagator, so CP-SAT throttles the LP beyond merely assigning it a low priority.
+At the root, it may be skipped unless enough deterministic time has elapsed since
+the previous solve; pivot counts are capped per call; and the LP can be disabled
+outright during heavy phases such as probing. The portfolio hedges this
+trade-off directly: some workers pay nothing for the LP (\code{no\_lp}), whereas
+others pay for a maximal relaxation (\code{max\_lp}), so the ensemble covers both
+sides of the bet on whether the linear structure is worth the cost.
+
+In short, the LP injects the kind of reasoning that constraint propagation cannot
+provide on its own: a global, dual-certified numeric bound. It does so without
+disturbing the engine. It is a propagator, woken by bound changes, that returns
+exactly justified bound tightenings, made affordable by dual-simplex warm starts.
+
+% Source (VERIFIED): "Lp stats" table header {"Lp stats","Component","Iterations",
+%   "AddedCuts","OPTIMAL","DUAL_F.","DUAL_U."} at ortools/sat/stat_tables.cc:49-51;
+%   Iterations = lp->total_num_simplex_iterations() (stat_tables.cc:239).
+\begin{platypuslog}[htb]
+Every LP-bearing worker adds a row to the \textsf{Lp stats} table:
+\code{Iterations} is its cumulative simplex pivot count, held low precisely by
+the dual-simplex warm starts, and the \code{OPTIMAL}/\code{DUAL\_F.}/\code{DUAL\_U.}
+columns count solve outcomes. The \code{DUAL\_U.} column is the dual-unbounded
+case, corresponding to the infeasible relaxation that produces the dual-ray
+conflict described in this section.
+\end{platypuslog}
+\subsection{Cutting planes: tightening the relaxation}\label{sec:cuts}
+% Sources (VERIFIED):
+%   ortools/sat/linear_programming_constraint.cc -- AddCGCuts() (1607, Chvatal-Gomory,
+%     multipliers from B^-1.e_j), AddMirCuts() (1804), AddZeroHalfCuts() (2071);
+%     generic cuts generated mainly at level zero (root); cut loop ~2215-2275.
+%   ortools/sat/cuts.{h,cc} -- IntegerRoundingCutHelper (cuts.cc:1002), CoverCutHelper
+%     /knapsack (1534, Letchford-Souli lifting), ImpliedBoundsProcessor (2338),
+%     CreateCliqueCutGenerator (2971), BoolRLTCutHelper (cuts.h:637). RHS kept as
+%     absl::int128, coefficients IntegerValue -> cuts are EXACT (integer arithmetic).
+%   ortools/sat/scheduling_cuts.{h,cc} -- energetic (CreateCumulative/NoOverlapEnergyCutGenerator),
+%     completion-time / Smith rule (CreateCumulative/NoOverlapCompletionTimeCutGenerator),
+%     time-table, precedence cuts. ortools/sat/diffn_cuts.h -- 2d variants.
+%   ortools/sat/routing_cuts.{h,cc} -- subtour/strongly-connected (3196), CVRP (3214),
+%     flow cuts; registered in linear_relaxation.cc.
+%   ortools/sat/linear_constraint_manager.cc -- AddCut() (422): efficacy threshold +
+%     orthogonality filtering; TopN cut pool, number of active cuts capped.
+
+The LP of \cref{sec:lp} is only as strong as the constraints in it, and
+the bare relaxation of an integer model is often loose.
+% Source (VERIFIED): LowerThanCoeffStrengthening(), ortools/sat/cp_model_presolve.cc:4570
+%   -- "coeff * (X - LB + LB) -> rhs * (X - LB) + coeff * LB"; clamps an over-large
+%   coefficient down to the rhs (comment ~4759: "3x + 5y <= 6, the coefficient 5 can
+%   be changed to 6"); also rewrites through an enforcement literal when implied.
+Presolve already buys some tightening for free: \emph{coefficient strengthening}
+rewrites a coefficient that the right-hand side leaves partly slack into a
+tighter one, without changing the set of integer solutions. The source's own
+example is $3x + 5y \le 6$ with $x, y \in \{0,1\}$: the coefficient $5$ can be
+raised to $6$, since $y = 1$ already forces $x = 0$ either way, so no integer
+point is lost while the linear relaxation becomes sharper at no extra row. True
+to the engine's preference for Boolean structure, CP-SAT can even re-express
+such a constraint through an \emph{enforcement literal} when one is implied.
+
+\textbf{Cutting planes} sharpen the relaxation further. They are extra linear
+inequalities that every \emph{integer} solution satisfies but that the current
+fractional LP optimum violates. Adding them cuts off the fractional point without
+removing any feasible integer point, so the next re-solve can return a tighter
+dual bound. This is the MIP half of CP-SAT: cuts are generated into the same
+shared LP and gated by the \code{linearization\_level} of \cref{sec:lp}.
+
+\textbf{Generic MIP cuts.} From the LP basis, CP-SAT separates standard cut
+families: \textbf{Chvátal--Gomory} cuts, with multipliers read from $B^{-1}$;
+\textbf{MIR} cuts, mixed-integer rounding cuts obtained by combining a few tight
+rows; \textbf{zero-half} cuts, based on a mod-2 heuristic; and
+\textbf{knapsack/cover} cuts with lifting. It also derives implied-bound and
+clique cuts from the Boolean structure.
+
+% Source (VERIFIED): the unifying super-additive recipe is GetSuperAdditiveRoundingFunction()
+%   in ortools/sat/cuts.cc:709-792 -- MIR function f(x) = size*floor(t*x/divisor)
+%   + max(0, (t*x mod divisor) - rhs_remainder); declared cuts.h:310-343 with the
+%   comment "f is super-additive: f(a) + f(b) <= f(a + b)". CoverCutHelper::
+%   TrySimpleKnapsack (cuts.cc:1534) complements the cover then applies it with
+%   divisor = best_coeff (cuts.cc:1629). Aggregation heuristics: MIR kMaxAggregation=5
+%   (linear_programming_constraint.cc:1924), CG via GetUnitRowLeftInverse (1654),
+%   zero-half +/-1 (zero_half_cuts.h), clique via WeightedBronKerboschBitsetAlgorithm.
+\textbf{One recipe behind many of them.} Despite the different names, many
+generic cuts follow the same four-step pattern (\srcf{cuts.cc}).
+
+\emph{(1) Aggregate.} Take a linear combination of LP rows (the same algebraic
+operation behind the LP's reasons in \cref{sec:lp}) to obtain a single
+constraint that is tight, or nearly tight, at the current fractional point. The
+multipliers distinguish the families: Chvátal--Gomory reads them from a row of
+$B^{-1}$, MIR combines only a handful of rows, and zero-half uses small
+coefficients such as $\pm 1$.
+
+\emph{(2) Rewrite.} Put the aggregate into a canonical form over non-negative
+variables, complementing some variables ($x \mapsto \text{range}-x^c$) and
+substituting implied bounds so that the rounding step is valid.
+
+\emph{(3) Round.} Apply a \textbf{super-additive function}
+$f:\mathbb{Z}\to\mathbb{Z}$ to every coefficient and to the right-hand side,
+where super-additivity means $f(a)+f(b)\le f(a+b)$. This property is exactly
+what keeps the rounded inequality valid for all integer points while allowing it
+to cut off the current fractional point. Cover and knapsack cuts use a simple
+function such as $f(x)=\lfloor x/d\rfloor$, while MIR uses
+\[
+  f(x)=s\lfloor x/d\rfloor+\max\!\bigl(0,(x \bmod d)-r\bigr).
+\]
+
+\emph{(4) Substitute back.} Translate the rounded inequality back into the
+original variables.
+
+Thus, a large part of the generic cut machinery reduces to an integer rounding
+helper, \srcla{cuts.h}{341}{GetSuperAdditiveRoundingFunction}, wrapped in different
+aggregation heuristics. This is also why the kept cuts remain exact: the
+rounding function maps integers to integers, and the inequality that is added to
+the LP is stored in integer arithmetic.
+
+\textbf{Structural and scheduling cuts.} Because CP-SAT still \emph{knows} the
+high-level constraints from \cref{sec:expansion}, it can add cuts that a
+flat MIP model would not easily recover. For
+\srcla{circuit.h}{46}{Circuit}/routing constraints, it can generate dynamic
+\textbf{subtour-elimination} and capacity cuts. For
+\srcla{disjunctive.h}{49}{NoOverlap} and
+\srcla{cumulative.h}{48}{Cumulative}, it has a rich scheduling family:
+\textbf{energetic} cuts, stating that the energy in a time window must fit
+capacity times span, lifted by tasks that must partly overlap the window;
+\textbf{completion-time} cuts, including the Smith-rule area bound
+\[
+  \sum_i p_i e_i \ge \frac12\left(\sum_i p_i^2 + \left(\sum_i p_i\right)^2\right)
+\]
+(here $p_i$ is the constant processing time and $e_i$ the completion-time
+variable, so the inequality is linear in the $e_i$ with a constant right-hand
+side); as well as time-table and precedence cuts. These families are an important part
+of why CP-SAT is competitive on scheduling problems against dedicated solvers.
+
+\textbf{Still exact, hence still compatible with learning.} The crucial property
+is that cuts inherit the LP's exactness discipline from \cref{sec:lp}:
+coefficients are kept in integer arithmetic (\code{IntegerValue}, with an
+\code{int128} right-hand side), so every cut is a \emph{provably valid} integer
+inequality, not a floating-point approximation. A cut is not itself a learned
+clause; it is a valid linear row added to the relaxation
+(\srcla{linear\_constraint\_manager.h}{154}{LinearConstraintManager}). But
+because it is exact, it can participate cleanly in the LP's certified reasoning.
+When the strengthened LP later derives a dual bound or a dual-ray conflict
+(\cref{sec:lp}), the exact integer certificate behind that deduction may
+use the cut, and \emph{that} reason is what enters conflict analysis and is
+learned. Thus, cuts participate in learning indirectly, through the LP's exact
+reasons, rather than as clauses on the trail.
+
+\textbf{Management and cost.} Cuts are not free: each one enlarges the LP and
+can slow subsequent solves. Generation is therefore concentrated at the root,
+``level zero,'' where a tighter bound benefits the entire search below. The cut
+pool is curated: candidates are filtered by \textbf{efficacy}, meaning how deeply
+they cut the current point, and by \textbf{orthogonality}, meaning how much new
+direction they add relative to existing cuts. The number of active cuts is capped
+(\srcf{linear\_constraint\_manager.cc}), and constraints that remain unused or
+basic for several solves can be dropped again. As with the LP itself, the
+portfolio hedges how aggressively to invest: \code{max\_lp} leans into cuts,
+whereas \code{no\_lp} forgoes them entirely.
+
+% Source (VERIFIED): "Lp stats" column "AddedCuts" (stat_tables.cc:49); per-type
+%   "Lp Cut" table from manager.type_to_num_cuts() (stat_tables.cc:282-298,395);
+%   "Lp pool" column "Strengthened" = num_coeff_strengthening (stat_tables.cc:58,308).
+\begin{platypuslog}[htb]
+Cut activity is visible in two places: the \code{AddedCuts} column of the
+\textsf{Lp stats} table gives the total, and a dedicated \textsf{Lp Cut} table
+breaks it down by generator, such as \code{CG}, \code{MIR},
+\code{ZERO\_HALF}, cover, clique, and the scheduling/routing families. The
+coefficient strengthening from this section's opening appears one table over, as
+the \code{Strengthened} column of the \textsf{Lp pool} table.
+\end{platypuslog}
+\subsection{Restarts: abandoning the tree without forgetting}\label{sec:restarts}
+% Sources (VERIFIED):
+%   ortools/sat/sat_parameters.proto -- RestartAlgorithm enum (NO_RESTART,
+%     LUBY_RESTART, DL_MOVING_AVERAGE_RESTART, LBD_MOVING_AVERAGE_RESTART,
+%     FIXED_RESTART); default_restart_algorithms =
+%     "LUBY_RESTART,LBD_MOVING_AVERAGE_RESTART,DL_MOVING_AVERAGE_RESTART".
+%   ortools/sat/restart.h / restart.cc -- RestartPolicy::ShouldRestart()/OnConflict();
+%     LBD and decision-level moving averages.
+%   ortools/sat/sat_solver.cc -- ComputeLbd(); on restart backtrack to level 0,
+%     learned clauses are NOT cleared.
+%   ortools/sat/sat_decision.h -- saved polarity (phase saving) and stable/
+%     unstable phase (SetStablePhase); VSIDS-like variable activity.
+
+A subtle weakness lurks in the loop of \cref{sec:loop}. Early decisions
+are made when the solver knows least, yet they sit at the top of the tree and
+constrain everything below. A bad first guess can trap search in a vast,
+fruitless subtree for a long time. Worse, the branching heuristic's view of which
+variables matter \emph{changes} as learning accumulates, but the decisions
+already on the trail were made under an older, less-informed view.
+
+\textbf{Restarts} are the cure. Periodically, the solver discards its current
+decisions and jumps back to decision level 0, then starts descending again. The
+critical detail, and the reason restarts help rather than merely spin, is what
+is kept and what is discarded:
+
+\begin{itemize}
+  \item \textbf{Discarded:} the trail of decisions and the bounds they implied.
+  The guesses are gone.
+  \item \textbf{Kept:} \emph{everything the solver learned.} Learned nogood
+  clauses, variable activity scores, and saved polarities all survive. In the
+  code, a restart backtracks to level 0, but the learned-clause repository is not
+  cleared (\srcla{sat\_solver.cc}{1734}{sat\_solver.cc}, the restart branch around
+  line~1734).
+\end{itemize}
+
+A restart is therefore not a reset. It is a \emph{re-descent with accumulated
+wisdom}. The solver returns to the root, but now with all the nogoods it has
+learned. Propagation near the top of the tree is stronger than it was before,
+and the branching heuristic, updated by variable activities, can make better
+opening moves. Restarts also frequently make learned asserting clauses fire much
+closer to the root, fixing facts that previously required deeper search.
+
+\textbf{When to restart.} CP-SAT does not rely only on a fixed restart schedule;
+it also watches the \emph{quality} of recent conflicts. The key quality metric is
+\textbf{LBD}, Literal Block Distance: the number of distinct decision levels
+appearing in a learned clause (\srcla{sat\_solver.cc}{1926}{ComputeLbd}).
+A low-LBD clause ties together literals from few levels and tends to be highly
+reusable. If recent LBDs trend worse than the running average, the current
+search trajectory is degrading, and a restart becomes attractive.
+
+CP-SAT cycles through a small set of restart strategies
+(\srcla{sat\_parameters.proto}{267}{RestartAlgorithm}): a \textbf{Luby}
+sequence, with intervals $1, 1, 2, 1, 1, 2, 4, \ldots$ and robust worst-case
+properties; an \textbf{LBD moving-average} trigger; and a
+\textbf{decision-level moving-average} trigger. The default configuration cycles
+through all three (\code{default\_restart\_algorithms}), the aim being robustness
+across instances that reward either aggressive or conservative restarting; other
+workers may instead lean on a single algorithm.
+
+\textbf{Phase saving and stability.} When a restart discards the trail, which
+value should the solver try first for a variable it sees again? It remembers the
+\textbf{last value that variable held}, its saved \emph{polarity}, and reuses it.
+A restart therefore need not redo work from scratch: variables drift back toward
+a partial assignment that was working, while early decisions are reconsidered
+with better information.
+
+CP-SAT modulates this behavior with a \textbf{stable/unstable} phase distinction
+(\srcf{sat\_decision.h}). In \emph{stable} mode, paired with Luby restarts, it
+restarts less aggressively and trusts saved phases, behaving more like a solver
+trying to \emph{find} a solution. In \emph{unstable} mode, it restarts more often
+and explores more broadly, behaving more like a solver trying to \emph{prove}
+infeasibility. The solver alternates between the two rather than commit to either.
+
+A restart lets CDCL escape bad early commitments while monotonically accumulating
+the learned constraints that make each later descent cheaper. It changes
+\emph{where} the solver searches without discarding anything it has proved.
+
+% Source (VERIFIED): "Search stats" column "Restarts" = FormatCounter(counters.num_restarts)
+%   at ortools/sat/stat_tables.cc:93. The response field "restarts:"
+%   (cp_model_solver.cc:722) is one worker's count, not a portfolio sum (see the
+%   portfolio box below); a 24-worker log showed restarts:0 in the summary while
+%   quick_restart_no_lp restarted 23'060 times.
+\begin{platypuslog}[htb]
+The \code{Restarts} column of the \textsf{Search stats} table records how often
+each worker jumped back to level~0. Aggressive configurations such as
+\code{quick\_restart} often restart far more than steadier ones, although on some
+models every worker restarts a similar number of times. This is one quantitative
+glimpse of the portfolio's diversity.
+\end{platypuslog}
+
+\subsection{The portfolio: many configurations, one core}\label{sec:portfolio}
+% Sources (VERIFIED):
+%   ortools/sat/cp_model_search.cc -- builds the default subsolver portfolio
+%     (default_lp, no_lp, max_lp, core, quick_restart, reduced_costs,
+%     pseudo_costs, fixed, probing, objective_lb_search, objective_shaving,
+%     lb_tree_search, ...), each a SatParameters variant of the same core.
+%   ortools/sat/synchronization.h -- SharedClausesManager (shares learned
+%     clauses, esp. short/binary) and SharedBoundsManager (shares improved
+%     variable/objective bounds) between workers.
+%   ortools/sat/cp_model_solver.cc -- worker setup and Synchronize().
+
+CP-SAT's parallelism is the second half of the same idea. Given several workers
+(threads), the natural expectation is ``divide the search tree among them.''
+CP-SAT usually does something more robust: it runs a \textbf{portfolio}, where
+each worker is a \emph{differently configured copy of the same search core}
+attacking the \emph{whole} problem, and the workers cooperate by sharing what
+they learn.
+
+This is a \textbf{configuration portfolio, not an algorithm portfolio}. Every
+worker runs the loop of \cref{sec:loop}; the workers differ mainly in
+their parameters (\srcf{cp\_model\_search.cc} builds the default set). The exact
+roster and the names below are specific to the pinned release and change between
+versions; treat them as illustrative of the design, not as a stable contract. A
+representative slice of the named full-thread subsolvers is:
+
+\begin{itemize}
+  \item \textbf{\code{default\_lp}}: the balanced default, combining propagation
+  with a light LP relaxation that feeds bounds back into the integer trail.
+  \item \textbf{\code{no\_lp}}: pure CP/SAT, without the LP relaxation; fast and
+  lean when the LP does not pay off.
+  \item \textbf{\code{max\_lp}}: a heavier LP relaxation for problems where
+  strong linear bounds dominate.
+  \item \textbf{\code{core}}: core-guided optimization, which attacks the
+  objective through infeasible cores, possibly minimized heuristically, rather
+  than only through linear bound-tightening; often effective on problems with
+  many soft constraints. It is scheduled by default only for optimization
+  problems whose objective has several terms, and dropped otherwise.
+  \item \textbf{\code{quick\_restart}}: a configuration that restarts very
+  aggressively, useful on problems that reward rapid re-descent.
+  \item \textbf{\code{pseudo\_costs} / \code{reduced\_costs}}: configurations
+  that branch using objective-derived estimates of which variables most affect
+  cost, in a MIP-like style.
+  \item \textbf{\code{fixed}}: a configuration that follows a user-provided
+  fixed search order.
+  \item \textbf{\code{probing}, \code{objective\_lb\_search},
+  \code{objective\_shaving}, \code{lb\_tree\_search}}: configurations
+  specializing in proving bounds rather than finding solutions.
+\end{itemize}
+
+The instance landscape is unpredictable: sometimes the LP is decisive, sometimes
+core-guided search cracks the instance, and sometimes aggressive restarts win.
+Running these configurations \emph{simultaneously} makes the wall-clock behavior
+closer to the best configuration for that instance, without requiring you to know
+in advance which one that is. This diversity is also one reason CP-SAT can see
+superlinear speedups from additional cores: extra workers are not merely splitting
+one fixed amount of work, but placing additional independent bets, any of which
+may crack the instance.
+
+% Sources (VERIFIED): incomplete (interleaved) subsolvers are built in
+%   cp_model_solver.cc (SubSolver::INCOMPLETE; "feasibility_pump" :1223,
+%   generator-named LNS/LS workers :1317; listed as "interleaved subsolver" :794;
+%   LNS roster built :1879-2016 -- rins/rens, rnd/graph_*_lns, lb_relax_lns,
+%   scheduling_*_lns, packing_*_lns).
+%   use_feasibility_jump field 265 default=true (sat_parameters.proto:1292);
+%   num_violation_ls field 244 (proto:1337); use_lns field 283 default=true
+%   (proto:1483); NeighborhoodGenerator base class cp_model_lns.h:388.
+\begin{platypuswarning}[htb][Incomplete search is part of the engine]
+The portfolio configurations named so far are only the \emph{complete} (exhaustive) slice. Alongside them,
+CP-SAT interleaves \textbf{incomplete} primal heuristics that trade completeness
+for speed; the log calls them \emph{interleaved subsolvers}. They come in the two
+classic flavors:
+\begin{itemize}
+  \item \textbf{First-solution heuristics} drive toward an initial feasible
+  point. CP-SAT runs the \textbf{feasibility pump} and \textbf{feasibility jump}
+  (\srcla{sat\_parameters.proto}{1292}{use\_feasibility\_jump}), a local
+  search that repeatedly nudges an assignment to reduce total constraint
+  violation.
+  \item \textbf{Improvement heuristics} take an existing incumbent and make it
+  better. The dominant family here is \textbf{Large Neighborhood Search}
+  (\srcla{cp\_model\_lns.h}{388}{NeighborhoodGenerator}; \srcla{sat\_parameters.proto}{1483}{use\_lns}): fix most of the incumbent and let the full
+  solver re-optimize a small neighborhood. CP-SAT ships many such neighborhoods,
+  generic (\code{rins/rens}, random and graph-based) and structure-aware
+  (scheduling- and packing-specific), complemented by constraint-based
+  (violation) local search (\code{num\_violation\_ls}).
+\end{itemize}
+These never prove optimality, but a single good incumbent any of them publishes
+through the shared-bounds channel tightens every other worker's objective cutoff
+at once, so a worker that ``only'' finds or improves solutions also accelerates
+the optimality proof run by the exact workers. The incomplete heuristics are
+therefore a fundamental source of CP-SAT's practical strength, not a sideshow
+bolted onto the exact core.
+
+For the curious reader, the constraint-based local-search worker is described in
+a paper by the developers \cite{davies2024violationls}; and \cite{berthold2025primal}
+is a compact, readable book covering both families above, including Large
+Neighborhood Search, for integer programming in general.
+\end{platypuswarning}
+
+\textbf{Cooperation is what makes it more than a race.} The workers are not
+isolated. Two shared channels (\srcf{synchronization.h}) let a discovery by one
+worker accelerate the others:
+
+\begin{itemize}
+  \item \textbf{Shared clauses}
+  (\srcla{synchronization.h}{853}{SharedClausesManager}): learned nogoods,
+  especially short, low-LBD clauses and binary clauses, are broadcast between
+  workers. A dead end that \code{core} discovers can become a permanent
+  constraint that \code{default\_lp} and \code{no\_lp} also benefit from. This
+  turns the portfolio into a \emph{collective} learner: the global pool of useful
+  nogoods can grow faster than any single worker could produce.
+  \item \textbf{Shared bounds}
+  (\srcla{synchronization.h}{661}{SharedBoundsManager}): when one worker tightens
+  a variable's domain or improves the objective bound, it publishes the
+  improvement; the others import it and propagate it. In optimization, the moment
+  any worker finds a better incumbent, every worker's objective cutoff
+  $\code{obj} \le C-1$ tightens as well. Good solutions therefore propagate
+  across the portfolio and accelerate the optimality proof elsewhere.
+\end{itemize}
+
+Parallel CP-SAT is therefore best understood as \textbf{one search core,
+diversified into many parameterizations, all solving the full problem and
+pooling their learned clauses and bounds.} The diversity covers uncertainty
+about which configuration suits the instance; the sharing ensures that a
+worker's hard-won insight is not wasted on the others.
+
+% Sources (VERIFIED against sat_parameters.proto):
+%   num_workers field 206, default 0 (=auto): sat_parameters.proto:707
+%     ("num_workers is the preferred name", doc :695-706).
+%   subsolvers (repeated string) field 207: proto:742 -- names the full-thread
+%     portfolio configs; doc :717-741 lists default_lp/no_lp/max_lp/quick_restart/
+%     pseudo_costs/reduced_costs/probing/lb_tree_search/fixed and notes the order
+%     matters (only the first num_full_subsolvers are scheduled).
+%   extra_subsolvers (repeated string) field 219: proto:746 ("add more workers
+%     types ... added at the beginning of the list").
+%   ignore_subsolvers (repeated string) field 209: proto:757 -- glob patterns
+%     ('*','?') to drop configs; doc :751-756.
+%   linearization_level field 90, default 1: proto:1652 (0 = no LP, 2 = heavy LP;
+%     this is exactly what no_lp / max_lp set, per the subsolvers doc :721-725).
+\begin{platypusparam}[htb]
+You are not stuck with the default mix. \srcla{sat\_parameters.proto}{742}{subsolvers}, a list of named configurations, lets you state
+\emph{exactly} which full-thread workers run. \code{extra\_subsolvers} appends
+your own, and \code{ignore\_subsolvers} drops configurations by glob pattern
+(e.g., \code{"max\_lp"} to suppress the heavy LP on a model where it never pays).
+\srcla{sat\_parameters.proto}{707}{num\_workers} sets how many workers run
+at once. Pin it to \code{1} with a single subsolver to get a deterministic,
+single-strategy search, the lever that makes the ``restrict which workers run''
+caveat concrete. Because the named configurations differ largely in how
+hard they lean on the LP, \srcla{sat\_parameters.proto}{1652}{linearization\_level} (\code{0} = none, like \code{no\_lp};
+\code{2} = heavy, like \code{max\_lp}) dials that axis directly on whichever
+workers you keep.
+\end{platypusparam}
+
+% Source (VERIFIED): every stat table is keyed by FormatName(name) per subsolver
+%   (ortools/sat/stat_tables.cc, e.g. search_table_/lp_table_ push one row per worker);
+%   progress lines carry the subsolver via ExtractSubSolverName()/RegisterSolutionFound()
+%   in cp_model_solver_logging.cc.
+% Source (VERIFIED): the closing response summary is NOT a portfolio total. Its
+%   counters are written by a single statistics postprocessor run on ONE model:
+%   SharedResponseManager::FillSolveStatsInResponse(model,...) (synchronization.cc:271)
+%   reads that model's SatSolver (num_branches/num_failures/num_propagations/
+%   num_restarts) and IntegerTrail (num_enqueues) -- cp_model_solver.cc:2317-2348;
+%   the summary block just prints that one CpSolverResponse (cp_model_solver.cc:710-723).
+% Empirical (xl_20x6_120parties.log, 24 workers): summary read conflicts:0
+%   branches:1072 restarts:0, while the 'core' Search stats row recorded
+%   921'777 conflicts / 10'142'481 branches / 530M BoolPropag / 100M IntegerPropag.
+\begin{platypuslog}[htb]
+The portfolio is why every end-of-run table carries \emph{one row per worker}:
+the \textsf{Search stats}, \textsf{Lp stats}, and timing tables list
+\code{default\_lp}, \code{no\_lp}, \code{max\_lp}, \code{core}, and the rest side
+by side. Each \code{\#1}/\code{\#Bound} progress line is also tagged with the
+subsolver that produced it, so the log shows which configuration actually
+cracked the instance.
+
+The same fact makes the closing \textsf{CpSolverResponse summary} easy to
+misread. Its headline counters --- \code{booleans:}, \code{conflicts:},
+\code{branches:}, \code{propagations:}, \code{integer\_propagations:},
+\code{restarts:} --- are \emph{not} portfolio totals. Each is copied from the one
+worker whose model carries the returned solution, which is frequently a
+first-solution or LNS helper that barely searched. In one real 24-worker run the
+summary read \code{conflicts: 0} and \code{branches: 1072} while the \code{core}
+worker's \textsf{Search stats} row recorded about 920{,}000 conflicts and over
+ten million branches. To see how hard the search actually worked, read the
+per-worker table, not the summary.
+\end{platypuslog}

@@ -1,0 +1,171 @@
+% Bibliography for "How CP-SAT Works: The Search Core".
+%
+% Contains: background reading on CDCL SAT solving (the prerequisites this
+% text assumes) and the OR-Tools / lazy-clause-generation talks the prose
+% already points to. Video entries use @online with an access date; the
+% canonical written reference (Knuth) is a @book.
+%
+% Add an entry here, then \cite it in the .tex; biber resolves it at build
+% time (see the Makefile's biber step).
+
+% --- Background: CDCL SAT fundamentals ------------------------------------
+
+@online{smock2016peek,
+  author       = {Smock, Jon},
+  title        = {A Peek Inside {SAT} Solvers},
+  year         = {2016},
+  organization = {Clojure/conj},
+  note         = {Video talk, approx.\ 35 min; a gentle visual introduction},
+  url          = {https://www.youtube.com/watch?v=d76e4hV1iJY},
+  urldate      = {2026-06-16},
+}
+
+@online{nadel2023cdcl,
+  author       = {Nadel, Alexander},
+  title        = {{CDCL} {SAT} Solving and Applications to Optimization Problems},
+  year         = {2023},
+  organization = {Simons Institute for the Theory of Computing},
+  note         = {Video talk; a more technical introduction},
+  url          = {https://www.youtube.com/watch?v=oL_vZ5_ybjk},
+  urldate      = {2026-06-16},
+}
+
+@online{biere2021satsolving,
+  author       = {Biere, Armin},
+  title        = {{SAT}-Solving},
+  year         = {2021},
+  organization = {Simons Institute Boot Camp ``Satisfiability: Theory, Practice, and Beyond''},
+  note         = {Video tutorial, approx.\ 4 h 22 min; an in-depth treatment},
+  url          = {https://www.youtube.com/watch?v=II2RhzwYszQ},
+  urldate      = {2026-06-16},
+}
+
+@book{knuth2015satisfiability,
+  author    = {Knuth, Donald E.},
+  title     = {The Art of Computer Programming, Volume 4, Fascicle 6: Satisfiability},
+  publisher = {Addison-Wesley},
+  year      = {2015},
+  isbn      = {978-0-13-439760-3},
+}
+
+% --- OR-Tools / lazy clause generation talks (cited in the text) ----------
+
+@online{stuckey2014lcg,
+  author  = {Stuckey, Peter J.},
+  title   = {Those Who Cannot Remember the Past Are Condemned to Repeat It},
+  note    = {Video talk on lazy clause generation},
+  url     = {https://youtu.be/lxiCHRFNgno},
+  urldate = {2026-06-16},
+}
+
+@online{perron2020cpaior,
+  author       = {Perron, Laurent and Didier, Fr\'ed\'eric},
+  title        = {{CPAIOR} 2020 Master Class: Constraint Programming},
+  year         = {2020},
+  organization = {CPAIOR 2020},
+  note         = {Video; overview of CP-SAT by its developers},
+  url          = {https://youtu.be/lmy1ddn4cyw},
+  urldate      = {2026-06-16},
+}
+
+@online{perron2024scheduling,
+  author       = {Perron, Laurent},
+  title        = {The {CP-SAT} Solver},
+  year         = {2024},
+  organization = {Scheduling Seminar},
+  note         = {Video; a follow-up to the CPAIOR 2020 master class},
+  url          = {https://youtu.be/vvUxusrUcpU},
+  urldate      = {2026-06-16},
+  addendum     = {slides at \url{https://schedulingseminar.com/presentations/SchedulingSeminar_LaurentPerron.pdf}},
+}
+
+@online{perron-ewo-ortools,
+  author       = {Perron, Laurent and Furnon, Vincent and {Le Molgat}, Corentin},
+  title        = {{OR-Tools}},
+  year         = {2023},
+  organization = {Enterprise-Wide Optimization Seminar, Carnegie Mellon University},
+  note         = {Video},
+  url          = {http://egon.cheme.cmu.edu/ewo/video/CP_SAT_LP_google.mp4},
+  urldate      = {2026-06-16},
+  addendum     = {slides at \url{https://egon.cheme.cmu.edu/ewo/docs/CP-SAT\%20and\%20OR-Tools.pdf}},
+}
+
+@online{didier2025mipaspects,
+  author       = {Didier, Fr\'ed\'eric},
+  title        = {{MIP} Aspects of the {OR-Tools} {CP-SAT} Solver},
+  year         = {2025},
+  organization = {EUROMIP 2025},
+  note         = {Slides},
+  url          = {https://www.mixedinteger.org/EUROMIP/2025/slides/frederic-didier.pdf},
+  urldate      = {2026-06-16},
+}
+
+% --- Incomplete search / primal heuristics inside CP-SAT ------------------
+
+@inproceedings{davies2024violationls,
+  author       = {Davies, Toby O. and Didier, Fr\'ed\'eric and Perron, Laurent},
+  title        = {{ViolationLS}: Constraint-Based Local Search in {CP-SAT}},
+  booktitle    = {International Conference on the Integration of Constraint
+                  Programming, Artificial Intelligence, and Operations Research
+                  (CPAIOR)},
+  pages        = {243--258},
+  year         = {2024},
+  organization = {Springer},
+}
+
+@book{berthold2025primal,
+  author    = {Berthold, T. and Lodi, A. and Salvagnin, D.},
+  title     = {Primal Heuristics in Integer Programming},
+  publisher = {Cambridge University Press},
+  year      = {2025},
+  isbn      = {9781009574785},
+  url       = {https://books.google.de/books?id=2-jv0AEACAAJ},
+}
+
+% --- Preprocessing / presolve (background; out of scope here) -------------
+
+@online{preprocsat,
+  author       = {Kiesl, Benjamin},
+  title        = {Preprocessing {SAT}, {MaxSAT}, and {QBF} (Part 1)},
+  year         = {2021},
+  organization = {Simons Institute for the Theory of Computing},
+  note         = {Video lecture on {SAT} preprocessing},
+  url          = {https://www.youtube.com/watch?v=ez9ArInp8w4},
+  urldate      = {2026-06-16},
+}
+
+@online{preprocmaxsat,
+  author       = {Berg, Jeremias},
+  title        = {Preprocessing {SAT}, {MaxSAT}, and {QBF} (Part 2)},
+  year         = {2021},
+  organization = {Simons Institute for the Theory of Computing},
+  note         = {Video lecture on {MaxSAT} preprocessing},
+  url          = {https://www.youtube.com/watch?v=xLg4hbM8ooM},
+  urldate      = {2026-06-16},
+}
+
+@techreport{achterberg2016presolve,
+  author      = {Achterberg, Tobias and Bixby, Robert E. and Gu, Zonghao and
+                 Rothberg, Edward and Weninger, Dieter},
+  title       = {Presolve Reductions in Mixed Integer Programming},
+  institution = {Zuse Institute Berlin},
+  type        = {ZIB-Report},
+  number      = {16-44},
+  year        = {2016},
+  url         = {https://opus4.kobv.de/opus4-zib/frontdoor/index/index/docId/6037},
+  urldate     = {2026-06-16},
+}
+
+@InProceedings{feydy2009lcg,
+author="Feydy, Thibaut
+and Stuckey, Peter J.",
+editor="Gent, Ian P.",
+title="Lazy Clause Generation Reengineered",
+booktitle="Principles and Practice of Constraint Programming - CP 2009",
+year="2009",
+publisher="Springer Berlin Heidelberg",
+address="Berlin, Heidelberg",
+pages="352--366",
+abstract="Lazy clause generation is a powerful hybrid approach to combinatorial optimization that combines features from SAT solving and finite domain (FD) propagation. In lazy clause generation finite domain propagators are considered as clause generators that create a SAT description of their behaviour for a SAT solver. The ability of the SAT solver to explain and record failure and perform conflict directed backjumping are then applicable to FD problems. The original implementation of lazy clause generation was constructed as a cut down finite domain propagation engine inside a SAT solver. In this paper we show how to engineer a lazy clause generation solver by embedding a SAT solver inside an FD solver. The resulting solver is flexible, efficient and easy to use. We give experiments illustrating the effect of different design choices in engineering the solver.",
+isbn="978-3-642-04244-7"
+}
