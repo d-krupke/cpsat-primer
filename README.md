@@ -4528,6 +4528,7 @@ solution_fingerprint: 0xf10c47f1901c2c16  # Useful to check if two runs result i
 
 ## How CP-SAT Reasons: The Search Core
 
+
 CP-SAT is easy to use as a black box: you declare variables and
 constraints, call solve, and read off an answer, often without knowing
 what the engine did in between. That is usually enough. But when a model is
