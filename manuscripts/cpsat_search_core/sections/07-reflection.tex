@@ -1,0 +1,90 @@
+\section{Reflection}\label{part:reflection}
+
+The preceding sections described CP-SAT from several angles: bounds, propagation,
+conflict analysis, lazy encoding, LP reasoning, cuts, restarts, and the parallel
+portfolio. The unifying architectural statement is:
+
+\begin{quote}
+\textbf{CP-SAT is a CDCL SAT solver whose variables include integer bounds and
+whose learnable deductions are generated on demand by explainable propagators,
+LP reasoning, and cuts.}
+\end{quote}
+
+This statement separates the main ingredients. From constraint programming,
+CP-SAT takes \emph{propagation}: specialized algorithms that prune domains using
+the structure of constraints such as scheduling, routing, and resource
+constraints. From SAT, it takes \emph{learning, backjumping, and restarts}: every
+failure can become a reusable clause, and search can jump directly to the
+decision level where that clause becomes useful. Lazy clause generation is the
+interface that lets these mechanisms meet: propagators produce bound deductions
+together with reasons, and those reasons are turned into clauses only when
+conflict analysis needs them.
+
+% Sources (the developers' own framing): Laurent Perron, "CP-SAT for scheduling"
+% -- "CDCL allows investing more time in costly techniques that benefit only on a
+% subset of problems"; "Clause Learning is critical as it offsets the cost of
+% running the simplex"; and "[the engine] could incorporate different relaxation /
+% specialized (expensive) propagation algorithms, provided they can be EXPLAINED,
+% or used at the root node."
+Two design principles explain why the hybrid is effective.
+
+% Source (developers' own cost breakdown): Laurent Perron, CPAIOR 2020 Master
+% Class (perron2020cpaior), ~17:54 in the main talk (NOT the scheduling-talk
+% Q&A) -- "my intuition maybe ... is that we spent one third of the time in the
+% [SAT] solver one third of [the] time in the simplex and the rest in
+% propagation ... it completely depends on the type of [the] problem but on the
+% [SAT] solver it's mostly the conflict analysis which is expensive ... on
+% average i would say one third pure sat engine one for cp one third lp." This
+% is the empirical anchor for "learning amortizes expensive reasoning": the
+% solver deliberately budgets a third of its time on the LP.
+\textbf{First, learning amortizes expensive reasoning.} An LP solve, a cutting
+plane, or an energetic scheduling deduction is far more expensive than unit
+propagation, and on many branches it produces no immediate payoff. It becomes
+worth running when the information it produces can be reused. CDCL provides that
+reuse mechanism: a costly deduction, once reduced to a learned clause or to an
+exact bound reason, can affect many later branches, including branches far from
+the one where the deduction was discovered. Thus the relevant question is not
+only whether a technique is cheap locally, but whether the information it
+produces repays its cost over the whole search tree.
+
+This explains why CP-SAT can place a simplex and a cut loop inside search
+workers. In a classical CP solver, such machinery would often be too expensive
+to justify at many nodes. In CP-SAT, the information can be banked as bounds,
+conflicts, and learned clauses. The developers' rule-of-thumb cost split makes
+this bargain concrete: on a typical run, roughly one third of the time is spent
+in the SAT engine, one third in the simplex, and one third in propagation. The
+costliest part of the SAT third is conflict analysis itself, which is precisely
+the mechanism that turns failures into reusable information.
+
+\textbf{Second, explainability is the price of integration.} Any deduction that
+changes the in-search trail must be explainable in a common language: Boolean
+literals and integer-bound literals. Native propagators provide such reasons
+directly. LP reasoning and cuts obey the same rule through exact integer
+certificates, as described in \cref{sec:lp,sec:cuts}. The
+floating-point LP may suggest a deduction, but only the certified integer reason
+is allowed to enter the trail and later conflict analysis.
+
+A technique that cannot produce such a reason is not useless, but it occupies a
+different role. It may guide branching, strengthen the model at the root, or
+generate candidate solutions in an incomplete worker. It may not directly enqueue
+a learnable in-search consequence. This constraint is what lets heterogeneous
+techniques behave as parts of one solver rather than as loosely coupled
+subsystems.
+
+The resulting integration has several degrees. Native propagators and the
+integer trail are tightly coupled: they share decision levels, backtracking, and
+conflict analysis. The LP and cut machinery are coupled through certified
+reasons: they propose global numeric deductions, then translate the valid ones
+into the same reason language. The portfolio is looser still: workers run
+separate searches over separate trails, but exchange learned clauses, incumbents,
+and bounds. Thus ``one solver'' does not mean one monolithic search tree; it
+means one learning currency.
+
+This is the main lesson of CP-SAT's design. It succeeds on many scheduling,
+routing, packing, and configuration problems because those domains offer both
+rich structure for propagation and deep search spaces in which failures recur.
+Propagation exploits the structure; learning prevents the solver from paying for
+the same failure repeatedly; LP reasoning and cuts add global numeric bounds; and
+the portfolio hedges across strategies. The strength is not any single component
+in isolation, but the fact that all components can feed information into the
+same learning system.

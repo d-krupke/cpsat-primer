@@ -1,0 +1,52 @@
+% ===========================================================================
+% Shared CONTENT preamble.
+%
+% This holds only the packages and macros that the *content* depends on --
+% math, pseudocode styling, the syntax-highlight colour palette, and the
+% semantic macros (\code, \bl, \LineComment). It carries NO document-level
+% typesetting (geometry, hyperref, biblatex, title, doclicense, fancyhdr).
+%
+% It is \input by two places, which is the whole point of factoring it out:
+%   1. cpsat_search_core.tex        -> the print (PDF) build
+%   2. md_build/ standalone builder -> renders each pseudocode/figure float to
+%                                       an image, guaranteed identical to print.
+%
+% Keep this file in sync with the source: the macro definitions below are
+% copied verbatim from the original cpsat_search_core.tex preamble.
+% ===========================================================================
+
+% --- Fonts (fontspec defaults = Latin Modern, matching the article) --------
+\usepackage{fontspec}
+\usepackage{microtype}
+
+% --- Math ------------------------------------------------------------------
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+% --- Pseudocode ------------------------------------------------------------
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+% pseudocode styling: tighter indent, comment style
+\algrenewcommand\algorithmicindent{1.1em}
+\algrenewcommand\algorithmiccomment[1]{\hfill\textit{\footnotesize $\triangleright$\,#1}}
+% Phase comment: a normal numbered, indented code line (like in an editor), set apart
+% only by style --- a grey italic /* ... */ block reusing the listings' comment colour.
+\algnewcommand{\LineComment}[1]{\State\textcolor{codecom}{\textit{\footnotesize /*~#1~*/}}}
+
+% --- Colour palette (shared with the code/listings styling) ----------------
+\usepackage{xcolor}
+\definecolor{codekw}{HTML}{0033B3}      % keywords (blue)
+\definecolor{codebuiltin}{HTML}{6A2570} % builtins (purple)
+\definecolor{codestr}{HTML}{B35C00}     % strings (orange)
+\definecolor{codecom}{HTML}{6E737A}     % comments (grey)
+\definecolor{codenum}{HTML}{1E7C50}     % numbers (green)
+\definecolor{codedecorator}{HTML}{735A12}% decorators
+
+% --- Semantic inline macros ------------------------------------------------
+\usepackage{seqsplit}
+% inline monospace helper; long identifiers made breakable via \seqsplit.
+\DeclareRobustCommand{\code}[1]{\texttt{\seqsplit{#1}}}
+
+% bound-literal brackets: \bl{x \ge 5} -> [[x >= 5]]
+\newcommand{\bl}[1]{[\![#1]\!]}

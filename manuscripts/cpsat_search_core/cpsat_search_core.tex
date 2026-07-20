@@ -1,0 +1,308 @@
+% How CP-SAT Reasons: The Search Core
+% Compile with: xelatex cpsat_search_core.tex (run twice for cross-references)
+%
+% Typography: xelatex + fontspec, with a syntax-highlighting palette for code.
+%
+% On the use of AI:
+%   The conceptual core of this document -- its structure, argument, selection
+%   of topics, and the expert understanding behind them -- is human-authored.
+%   Working from that hand-crafted outline, large language models (agentic AI)
+%   were used as tools to help collect and organize source material, cross-check
+%   technical claims against the OR-Tools source and the literature, and refine
+%   the prose. All content was reviewed and is the author's responsibility; the
+%   AI did not originate the ideas or the overall design.
+
+\documentclass[11pt]{article}
+
+% --- Geometry -------------------------------------------------------------
+\usepackage[a4paper,margin=2.5cm]{geometry}
+
+% --- Tables, lists, floats (print-only) -----------------------------------
+% Loaded before the shared preamble so `float` precedes the `algorithm` package.
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{float}
+
+% --- Shared content preamble ----------------------------------------------
+% Fonts, math, pseudocode styling, the syntax-highlight colour palette, and the
+% semantic macros (\code, \bl, \LineComment) live in ONE file that is also used
+% to render the pseudocode/figures to images for the Markdown build (md_build/),
+% so the print and Markdown backends can never drift apart.
+\input{md_build/content_preamble.tex}
+
+% --- Listings (code blocks) -----------------------------------------------
+% The syntax palette (codekw, codecom, ...) comes from content_preamble.tex;
+% these two colours are print-only (the listings frame and background).
+\usepackage{listings}
+\definecolor{codeframe}{HTML}{D0D4DA}
+\definecolor{codebg}{HTML}{F8F8F8}
+
+\lstset{
+  basicstyle=\ttfamily\footnotesize,
+  keywordstyle=\color{codekw}\bfseries,
+  keywordstyle={[2]\color{codebuiltin}},
+  stringstyle=\color{codestr},
+  commentstyle=\color{codecom}\itshape,
+  numberstyle=\tiny\color{codecom},
+  emphstyle=\color{codedecorator}\bfseries,
+  breaklines=true,
+  breakatwhitespace=true,
+  breakindent=1.5em,
+  columns=fullflexible,
+  keepspaces=true,
+  showstringspaces=false,
+  frame=single,
+  framesep=4pt,
+  rulecolor=\color{codeframe},
+  backgroundcolor=\color{codebg},
+  xleftmargin=4pt,
+  xrightmargin=2pt,
+  aboveskip=8pt,
+  belowskip=8pt,
+  literate=%
+    {ä}{{\"a}}1 {ö}{{\"o}}1 {ü}{{\"u}}1
+    {Ä}{{\"A}}1 {Ö}{{\"O}}1 {Ü}{{\"U}}1
+    {ß}{{\ss}}2,
+}
+
+% Extend Python with extra keywords/builtins on top of listings' built-in
+% Python language definition (a second-keyword class for builtins/types).
+\lstset{
+  language=Python,
+  classoffset=1,
+  morekeywords={
+    True,False,None,self,cls,async,await,match,case,nonlocal,
+    int,float,str,bool,list,dict,tuple,set,frozenset,bytes,bytearray,
+    object,range,enumerate,zip,map,filter,sorted,reversed,sum,min,max,
+    abs,round,len,print,open,isinstance,issubclass,hasattr,getattr,
+    setattr,callable,property,staticmethod,classmethod,super,iter,next,
+    any,all,dataclass,field
+  },
+  classoffset=0,
+}
+
+% --- Hyperlinks -----------------------------------------------------------
+\usepackage[hidelinks]{hyperref}
+\usepackage[capitalise,noabbrev]{cleveref}
+
+% --- License (official CC badge + statement) ------------------------------
+\usepackage[
+  type={CC},
+  modifier={by},
+  version={4.0},
+]{doclicense}
+
+% Title-page footer carrying the license notice (badge + short statement).
+\usepackage{fancyhdr}
+\fancypagestyle{titlefooter}{%
+  \fancyhf{}%
+  \renewcommand{\headrulewidth}{0pt}%
+  \fancyfoot[C]{%
+    \footnotesize
+    \raisebox{-0.35em}{\doclicenseImage[imagewidth=3em]}\quad
+    \textcopyright\ Dominik Krupke. Licensed under
+    \href{https://creativecommons.org/licenses/by/4.0/}{CC~BY~4.0}.\quad
+    \href{https://github.com/d-krupke/cpsat-primer}{github.com/d-krupke/cpsat-primer}%
+  }%
+}
+
+% --- Bibliography (biblatex + biber) --------------------------------------
+% Numeric style, cited in order of appearance. Video/book references live in
+% references.bib; build with biber (see Makefile).
+\usepackage[backend=biber,style=numeric,sorting=none,maxbibnames=99]{biblatex}
+\addbibresource{references.bib}
+
+% TikZ is used for the propagator sequence diagram (sec:onepropagator). The
+% conflict-analysis implication graph is now an external Ipe figure
+% (figures/conflict_analysis.pdf), so its former node/edge styles were removed.
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc,shapes.geometric,fit,backgrounds}
+% Sequence-diagram styles for the propagator interaction (sec:onepropagator).
+\tikzset{
+  sdhead/.style={draw=codekw!65, fill=codekw!8, rounded corners=2pt,
+                 inner sep=5pt, font=\footnotesize\bfseries, align=center},
+  sdlife/.style={densely dashed, draw=codecom!70, semithick},
+  sdact/.style={draw=codekw!65, fill=codekw!12, line width=0.4pt},
+  sdcall/.style={-{Stealth[length=5pt]}, draw=codekw!75, semithick},  % synchronous call
+  sdret/.style={-{Stealth[length=5pt, open]}, densely dashed,
+                draw=codecom, semithick},                              % return
+  sdmsg/.style={font=\scriptsize, inner sep=1.5pt, align=center},
+  sdnote/.style={draw=codenum!60, fill=codenum!10, rounded corners=1pt,
+                 inner sep=3pt, font=\scriptsize, align=center},
+  sdevent/.style={draw=codecom!70, fill=codecom!12, rounded corners=6pt,
+                  inner sep=3pt, font=\scriptsize\itshape, align=center},
+  sdframe/.style={draw=codecom!75, line width=0.5pt},
+  sdguard/.style={font=\scriptsize\itshape, color=codestr!80!black, inner sep=1pt},
+}
+
+% --- Platypus callouts ----------------------------------------------------
+% Callout design: thick
+% colored left rule, pale tinted background, platypus icon in the top-left,
+% title set inline as the first line of the body in the accent color.
+% Icons live in figures/ (platypus_<name>.png).
+\usepackage{tcolorbox}
+\usepackage{graphicx}
+\tcbuselibrary{skins,breakable}
+\newcommand{\platypusassets}{figures}
+
+\newlength{\platypusiconwidth}\setlength{\platypusiconwidth}{42pt}
+\newlength{\platypusiconsep}\setlength{\platypusiconsep}{12pt}
+
+\newcommand{\platypustitle}[2]{%
+  {\bfseries\sffamily\large\color{#1!55!black}#2}\par\vspace{2pt}%
+}
+
+% Non-breakable variant (icon + title + body share a minipage layout, so the
+% frame always reaches at least as far down as the icon). Used for short notes.
+\tcbset{
+  platypusbase/.style n args={3}{%
+    enhanced, sharp corners, boxrule=0pt, leftrule=3pt,
+    colback=#1!4, colframe=#1!55!black,
+    left=12pt, right=12pt, top=12pt, bottom=12pt,
+    fontupper=\normalsize,
+    before upper={%
+      \begin{minipage}[t]{\platypusiconwidth}%
+        \vspace{0pt}%
+        \includegraphics[width=\platypusiconwidth,keepaspectratio]%
+          {\platypusassets/platypus_#2}%
+      \end{minipage}%
+      \hspace{\platypusiconsep}%
+      \begin{minipage}[t]{\dimexpr\linewidth-\platypusiconwidth-\platypusiconsep\relax}%
+        \vspace{0pt}%
+        \platypustitle{#1}{#3}%
+    },
+    after upper={\end{minipage}}%
+  }
+}
+
+% Optional float placement, exactly like a figure. Pass a placement specifier as
+% the FIRST optional argument (e.g. \begin{platypuswarning}[htb]) to let the box
+% float to the top/bottom of a page when it does not fit in place; omit it (or
+% pass an empty []) to pin the box exactly where it is written -- use this for the
+% boxes that must stay in the flow. The float carries no caption and no number.
+% For the titled callouts the title is the SECOND optional argument, so an
+% in-place box with a custom title is written [][My Title].
+\NewDocumentCommand{\platyfloatopen}{m}{%
+  \IfValueTF{#1}{%
+    \IfBlankTF{#1}{\let\platyfloatclose\relax}%
+                  {\begin{figure}[#1]\def\platyfloatclose{\end{figure}}}%
+  }{\let\platyfloatclose\relax}%
+}
+
+\NewDocumentEnvironment{platypusinfo}{o O{Note}}
+  {\platyfloatopen{#1}\begin{tcolorbox}[platypusbase={blue}{info}{#2}]}
+  {\end{tcolorbox}\platyfloatclose}
+\NewDocumentEnvironment{platypustip}{o O{Tip}}
+  {\platyfloatopen{#1}\begin{tcolorbox}[platypusbase={green!60!black}{tip}{#2}]}
+  {\end{tcolorbox}\platyfloatclose}
+\NewDocumentEnvironment{platypuswarning}{o O{Warning}}
+  {\platyfloatopen{#1}\begin{tcolorbox}[platypusbase={orange!85!black}{warning}{#2}]}
+  {\end{tcolorbox}\platyfloatclose}
+\NewDocumentEnvironment{platypusbook}{o O{Background}}
+  {\platyfloatopen{#1}\begin{tcolorbox}[platypusbase={violet}{book}{#2}]}
+  {\end{tcolorbox}\platyfloatclose}
+
+% "Solve log" callout: the recurring notes mapping a concept to what shows up in
+% CP-SAT's solve log. Same platypusbase layout as the other callouts (42pt icon
+% in the left column, title inline at the top of the body), with the platypus_log
+% icon and a steel-blue accent.
+\definecolor{logaccent}{HTML}{30688E}   % steel blue
+\NewDocumentEnvironment{platypuslog}{o}
+  {\platyfloatopen{#1}\begin{tcolorbox}[platypusbase={logaccent}{log}{In the solve log}]}
+  {\end{tcolorbox}\platyfloatclose}
+
+% "Tuning the search" callout: the recurring notes pointing at the parameter(s)
+% that let you steer a behavior just described (branching mode, portfolio
+% composition, ...). Same platypusbase layout; teal accent. PLACEHOLDER icon:
+% figures/platypus_tune.png is currently a copy of platypus_tip.png -- swap in a
+% dedicated "knob/gear" platypus when one exists. Parameters live in
+% ortools/sat/sat_parameters.proto (model-level strategies in cp_model.proto).
+\definecolor{tuneaccent}{HTML}{0B6E6E}   % teal
+\NewDocumentEnvironment{platypusparam}{o}
+  {\platyfloatopen{#1}\begin{tcolorbox}[platypusbase={tuneaccent}{tune}{Tuning the search}]}
+  {\end{tcolorbox}\platyfloatclose}
+
+% \code is defined in content_preamble.tex (shared with the Markdown build).
+\emergencystretch=2em
+
+% --- GitHub source permalinks --------------------------------------------------
+% Visible code citations are clickable permalinks into the pinned or-tools commit
+% below. To re-pin to a newer revision: update \orsha to the new full 40-char SHA
+% and RE-VERIFY every cited line number (they drift when the source changes).
+% File arguments are passed with escaped underscores (e.g. integer\_expr.cc);
+% hyperref normalises "\_" to a literal "_" in the URL, while \code renders it.
+\newcommand{\orsha}{98c165af62df62b3056c2ee0fca66b24e79097cb}
+\newcommand{\orbase}{https://github.com/google/or-tools/blob/\orsha/ortools/sat/}
+% \srcl{file.ext}{line}  -> clickable "file.ext:line", links to that exact line.
+\newcommand{\srcl}[2]{\href{\orbase#1\#L#2}{\code{#1:#2}}}
+% \srcf{file.ext}        -> clickable "file.ext", links to the whole file.
+\newcommand{\srcf}[1]{\href{\orbase#1}{\code{#1}}}
+% \srcla{file.ext}{line}{text} -> link to a line but display custom text.
+%   Also used for class names: link the bare class name to its declaration line.
+\newcommand{\srcla}[3]{\href{\orbase#1\#L#2}{\code{#3}}}
+
+% \bl (bound-literal double brackets) is defined in content_preamble.tex.
+
+\setlist[itemize]{leftmargin=1.4em,topsep=0.3em,itemsep=0.25em}
+
+\title{\textbf{How CP-SAT Reasons}\\[0.3em]\large The Search Core}
+\author{Dominik Krupke\\[0.2em]
+  \normalsize Algorithms Division, TU Braunschweig\\
+  \normalsize \href{mailto:krupked@gmail.com}{krupked@gmail.com}}
+\date{}
+
+\begin{document}
+\maketitle
+\vspace{-2.5em}
+
+\begin{center}
+\footnotesize\itshape
+This is an unofficial document. The author is not affiliated with Google or
+the OR-Tools team; any errors and outrageous lies are the author's own.
+\end{center}
+\vspace{0.5em}
+
+% License notice in the footer of the title page only.
+\thispagestyle{titlefooter}
+
+\begin{abstract}
+\noindent CP-SAT is easy to use as a black box: you declare variables and
+constraints, call \texttt{solve}, and read off an answer, often without knowing
+what the engine did in between. That is usually enough. But when a model is
+unexpectedly slow, a log line resists interpretation, or a small reformulation
+changes everything, there is nothing underneath to reason about. This text is for
+the reader who already builds CP-SAT models and now wants to understand how the
+solver reasons, both to model more deliberately and out of curiosity about the
+machinery.
+
+Google OR-Tools' CP-SAT behaves at once like a constraint-programming solver, a
+SAT solver, and a mixed-integer programming solver, and it is not obvious how one
+engine manages to be all three. At heart the search is a simple loop: propagate to
+rule out values that cannot work, branch by making a guess when propagation stalls,
+and learn from each dead end so the same mistake is not repeated. The idea that
+ties this loop together is \emph{lazy clause
+generation}. A CDCL learning core reasons over integer bounds rather than plain
+Booleans; constraint propagators and a linear relaxation feed it deductions it can
+record and reuse. A variable is a pair of bounds, every propagation carries a
+reason for why it fired, and each dead end is distilled into a learned clause that
+lets the search backjump past the choices that were never to blame. Around this
+core sit the accelerators that make it fast in practice: a lazy Boolean encoding
+that materializes only the literals the search actually touches, a dual-simplex LP
+relaxation that supplies bounds and cutting planes, restarts that reshape the
+search tree, and a parallel portfolio of complementary strategies that share what
+they learn. Seeing how these parts interlock is what turns the solver from a black
+box into a machine you can reason about.
+\end{abstract}
+
+% --- Body: one file per section (see sections/) ---
+\input{sections/01-what-kind-of-solver}
+\input{sections/02-foundations}
+\input{sections/03-learning-from-failure}
+\input{sections/04-lazy-encoding}
+\input{sections/05-putting-it-together}
+\input{sections/06-going-faster}
+\input{sections/07-reflection}
+
+\printbibliography[title={References}]
+
+\end{document}

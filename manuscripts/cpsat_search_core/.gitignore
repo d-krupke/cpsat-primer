@@ -1,0 +1,22 @@
+# Local reference materials (talk transcripts, downloaded sources, etc.).
+# Kept locally for fact-checking; not distributed. Cite the video/paper instead.
+materials/
+
+# LaTeX build artifacts
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.lof
+*.lot
+*.out
+*.run.xml
+*.synctex.gz
+*.toc
+*.xdv
+
+# Editor autosave cruft
+*.autosave.ipe

@@ -1,0 +1,521 @@
+\section{Foundations}\label{part:foundations}
+
+This section assembles the search core from its parts: the data model every other
+piece reads and writes, the propagation that reasons over it, and the branching
+that turns a pruned domain into a concrete solution. We start with how a variable
+is stored, look inside a single propagator, sort out which high-level constraints
+are expanded away versus kept as propagators, and finish with how search drives a
+range down to one value.
+
+\begin{platypusbook}[htb]
+A working familiarity with CDCL SAT solving (decisions, unit propagation,
+conflict analysis, clause learning, and backjumping) is not strictly required
+here, but it is highly recommended. CP-SAT layers a good deal on top of a CDCL
+core, so having seen how a plain CDCL solver works makes the rest considerably
+easier to follow. Readers who want that background first can start with Smock's
+gentle visual introduction
+\cite{smock2016peek} (about 35 minutes), move on to Nadel's more technical talk
+linking CDCL to optimization \cite{nadel2023cdcl}, and turn to Biere's in-depth
+tutorial \cite{biere2021satsolving} (about four and a half hours) for the full
+machinery. Knuth's fascicle \cite{knuth2015satisfiability} is the canonical
+written reference, useful either in place of the videos or alongside them.
+\end{platypusbook}
+
+\subsection{The data model: variables as bounds}\label{sec:bounds}
+% Sources (VERIFIED):
+%   ortools/sat/integer_base.h -- IntegerLiteral (x >= bound / x <= bound),
+%     GreaterOrEqual()/LowerOrEqual(); negation flips the bound.
+%   ortools/sat/integer.h -- IntegerTrail stores monotone lower bounds
+%     (upper bound = lower bound on NegationOf(var)); a var is fixed when lb==ub.
+
+Everything that follows rests on a single design decision: \emph{how the solver
+represents an integer variable while it is running}. Once this idea is clear,
+the rest of the architecture (propagation, reasons, and learning) falls into
+place almost inevitably.
+
+\textbf{Variables are bounds, not values.} An integer variable $x$ with domain
+$[0,10]$ is \emph{not} stored as a tentative value, such as ``$x$ is currently
+$3$.'' It carries no working assignment at all: nothing like the fractional
+value a MIP branch-and-bound node rounds, or the running guess a heuristic nudges
+toward feasibility. Instead it is stored as a pair of \textbf{current bounds}, a
+lower bound $\text{lb}(x)$ and an upper bound $\text{ub}(x)$. Search and
+propagation never \emph{assign} $x$; they only \emph{narrow} the gap between these
+two numbers, and $x$ is \emph{fixed} only once they meet.
+
+This puts CP-SAT close to a classical finite-domain solver, which also narrows
+rather than assigns, but with one decisive difference. A finite-domain solver
+keeps the full set of surviving candidate values and lets a propagator strike any
+one of them, every even number say, out of the interior of a domain. CP-SAT's
+propagators move only the lower and upper bounds. The integer trail reasons about
+$x$ through those two numbers alone, treating the live domain as the interval
+$[\text{lb}(x), \text{ub}(x)]$ between them. When the declared domain has holes,
+this interval is an \emph{over-approximation}: bound propagation works on the
+enclosing interval, while the holes themselves are tracked separately, by presolve
+canonicalization and the integer encoding of \cref{sec:encoding}. Until that
+section, treat every domain as a plain interval.
+
+As the solver descends the search tree, the bounds tighten ($\text{lb}$ rises and
+$\text{ub}$ falls); when it backtracks, they relax again. Domains therefore shrink
+from the outside in and grow back the same way.
+
+Two properties of this representation make it work:
+
+\begin{itemize}
+  \item \textbf{Monotonicity.} Within one root-to-node path, the bounds only move
+  inward. A propagator never has to reconcile competing updates; it only reads
+  the tightest bounds known so far.
+  \item \textbf{Reversibility.} Because a bound is a single number stamped with
+  the decision level that set it, undoing work on backtrack is simple: pop every
+  bound change made above the level to which the solver jumps. This integer
+  trail, a stack of bound changes, is the same one that powers conflict analysis
+  (\cref{sec:learning}).
+\end{itemize}
+
+\textbf{The atomic fact: a bound literal.} If variables are bounds, then the
+elementary statements the solver asserts and reasons about are \textbf{bound
+literals}: claims of the form
+\[
+  \bl{x \ge 5} \qquad\text{or}\qquad \bl{x \le 3} .
+\]
+The double brackets mark the claim as an \emph{object} the solver holds,
+enqueues, and gathers into reasons, as opposed to the bare arithmetic relation
+$x \ge 5$; we write them where that literal-as-object reading is what matters and
+drop them in running prose where it is not. A bound literal is the integer analog
+of a Boolean SAT literal, and, crucially, it behaves like one in the two ways the
+learning machinery needs. (These are
+exactly what the source calls an \srcla{integer\_base.h}{207}{IntegerLiteral}; this text says ``bound
+literal'' throughout, but the two names refer to the same object.) It
+\emph{negates cleanly}: over the integers, the negation of $x \ge 5$ is exactly
+$x \le 4$. Moreover, a conjunction of bound literals describes an interval, so
+the current domain $[\text{lb},\text{ub}]$ is just the two literals
+$x \ge \text{lb}$ and $x \le \text{ub}$ held true at once. A variable is
+\textbf{fixed} when its bounds meet, $\text{lb}(x) = \text{ub}(x)$: the interval
+has collapsed to a single value, and this is the only sense in which $x$ ever
+``has'' a value during search.
+
+\textbf{Why this unifies the whole solver.} This representation lets a single
+engine reason about a Boolean variable with domain $\{0,1\}$ and a wide integer
+variable with domain $[0,10^6]$ through one common atom: the literal. A Boolean
+assignment is already a literal, and an integer bound is a bound literal
+$\bl{x \ge v}$ of the kind the previous paragraph introduced.
+The two meet, but not because a Boolean is secretly an integer; it is the other
+way around. When search needs to decide an integer bound, that bound is
+\emph{reified}: turned into a Boolean literal (\cref{sec:encoding}) and handed to
+the SAT core, which then drives the search on it: it can take that literal as a
+decision, maintain its activity, and let learned clauses propagate it directly.
+Deciding a Boolean and committing to an integer bound thus become the same kind
+of step, recorded at \emph{one} shared decision level, which is precisely what
+lets the SAT half and the CP half cooperate under \emph{one} conflict-analysis
+mechanism rather than passing messages between two separate solvers.
+
+\subsection{The trail}\label{sec:trail}
+% Sources (VERIFIED):
+%   ortools/sat/sat_base.h -- class Trail (331): the Boolean trail; AssignmentInfo
+%     (277) stamps each entry with its decision level; EnqueueSearchDecision (425)
+%     opens a new level for a decision; Reason() (525) returns a forced literal's
+%     reason; Untrail() (595) truncates the trail on backjump.
+%   ortools/sat/integer.h -- class IntegerTrail (523): the integer trail; Enqueue()
+%     (745) pushes a bound change; integer_trail_ (1123) is the stack of bound
+%     entries; Untrail() (547) unwinds it in lockstep with the Boolean trail.
+
+A solver that guesses and backtracks needs a precise record of what it has
+assumed and what followed. That record is the \textbf{trail}
+(\srcla{sat\_base.h}{331}{Trail}): the ordered, append-only log of every literal
+asserted on the current path from the root of the search tree to the node being
+explored. Two kinds of entry land on it: \emph{decisions}, the literals the
+solver guesses (\srcla{sat\_base.h}{425}{EnqueueSearchDecision} and
+\cref{sec:complete}), and the literals propagation then forces from them.
+Each entry is stamped with the \textbf{decision level} at which it was added
+(\srcl{sat\_base.h}{277}), and each forced entry also carries a \emph{reason}
+(\srcl{sat\_base.h}{525}), the facts that entailed it (\cref{sec:learning}).
+Backtracking to level $k$ truncates the trail to its level-$k$ prefix
+(\srcla{sat\_base.h}{595}{Untrail}), undoing every later assertion in one
+step. The trail is thus both the solver's working memory and the substrate
+conflict analysis walks backward when a guess fails.
+
+CP-SAT reasons in two kinds of literal, so it keeps two coupled trails. Bound
+changes accumulate on the \textbf{integer trail}
+(\srcla{integer.h}{523}{IntegerTrail}, the stack \srcla{integer.h}{1123}{integer\_trail\_}), the stack of bound literals introduced above; Boolean
+assignments accumulate on the \textbf{Boolean trail}. The two are not
+independent: they share one decision-level counter, so they advance and unwind
+together (the integer trail's \srcla{integer.h}{547}{Untrail} fires with
+the Boolean one), and a bound the solver has reified into a Boolean is recorded
+on both. An ordinary propagated bound, by contrast, lives only on the integer
+trail. Keeping bound changes on a native integer trail, rather than as Booleans,
+is what makes the encoding of \cref{sec:encoding} lazy: most bound movements
+never touch the Boolean trail at all. Where this text says \emph{the} trail, it
+means the single timeline the two structures form together.
+
+\subsection{Propagation: the CP half}
+% Sources (VERIFIED):
+%   ortools/sat/integer.h -- PropagatorInterface (Propagate()/IncrementalPropagate());
+%     GenericLiteralWatcher schedules registered propagators to a fixed point
+%     (WatchLiteral/WatchLowerBound/WatchUpperBound, Register()).
+%   Global constraints live in ortools/sat/ (e.g. all_different.*, no_overlap*/
+%     scheduling*, circuit.*, cumulative.*, diffn.*).
+
+With variables reduced to bounds, we can say precisely what a constraint
+\emph{does} during search: it narrows those bounds. Each constraint comes with a
+\textbf{propagator}, a piece of reasoning that, given the current bounds of the
+variables it touches, tightens those bounds or reports a conflict when no value
+remains.
+
+Consider a simple example:
+\[
+  x \in [0, 10],\quad y \in [0, 10],\quad z \in [0, 10],
+  \qquad \text{constraint: } x + y \le z .
+\]
+If, at some point, $z \le 4$ and $y \ge 2$, the linear propagator deduces
+$x \le 2$ and pushes this new bound onto the trail. That deduction may wake
+another propagator watching $x$, which may tighten another bound, and so on.
+Propagators fire in cascade until the system reaches a \textbf{fixed point}: no
+propagator can deduce anything new. Alternatively, one of them may detect a
+\textbf{conflict}; for example, it may need $x \le 2$ while the trail already
+contains $x \ge 3$, leaving the domain of $x$ empty.
+
+Global constraints such as
+\srcla{all\_different.h}{52}{AllDifferent}, \srcla{disjunctive.h}{49}{NoOverlap} (scheduling), \srcla{circuit.h}{46}{Circuit} (routing),
+and \srcla{cumulative.h}{48}{Cumulative} (resources) carry specialized algorithms that prune far
+more aggressively than a collection of generic inequalities could. Yet however
+hard it prunes, \textbf{propagation alone never makes a choice}: everything it
+concludes is a forced consequence of the current bounds. When it runs out of
+necessary conclusions and the problem is not yet solved, search must guess.
+
+\Cref{fig:sudoku-propagation} shows this guess-and-cascade on a Sudoku. One caveat
+carries through the rest of this text: CP-SAT does \emph{not} carry hole-punched
+domains like the pencil marks in that figure. It propagates only each variable's
+lower and upper \emph{bounds} and hands every interior elimination to the SAT
+engine as a Boolean literal. The bound-literal form of exactly this reasoning is
+the implication graph in \Cref{fig:uipgraph}.
+
+\subsection{Example: a propagator for $3x + 6y \le z$}\label{sec:onepropagator}
+% Sources (VERIFIED):
+%   ortools/sat/integer_expr.h:71-169 -- class LinearConstraintPropagator<use_int128>
+%     : public PropagatorInterface, LazyReasonInterface; aliases IntegerSumLE /
+%     IntegerSumLE128. Constraint stored canonically as sum_i coeff_i*var_i <= ub
+%     (positive coeffs; a variable on the "other side" enters as NegationOf(var)).
+%   integer_expr.cc:444-458 -- RegisterWith(): WatchLowerBound(vars_[i], id) for
+%     every variable -> woken incrementally only when a watched LOWER bound moves.
+%   integer_expr.cc:300-311 -- slack = ub - sum_i coeff_i*lb(var_i).
+%   integer_expr.cc:334-368 -- Propagate(): for each i pushes new_ub_i = lb_i +
+%     floor(slack/coeff_i) via EnqueueWithLazyReason(LowerOrEqual(var_i,new_ub),
+%     0, propagation_slack, this).
+%   integer_expr.cc:228-233 -- Explain() (LazyReasonInterface) returns ONLY the
+%     raw reason: boolean_literals_at_false + vars_ + coeffs_ (ALL variables).
+%     It does NOT read the slack, does NOT drop the explained var, does NOT relax.
+%     (Args id/to_explain are unused in the body.)
+%   integer.h:1145 LazyReasonEntry::Explain -- the TRAIL sets reason->slack =
+%     propagation_slack (stored at EnqueueWithLazyReason time), then calls the
+%     propagator's Explain().
+%   integer.cc:1956-2022 ComputeLazyReasonIfNeeded -- the TRAIL drops the
+%     propagated var (to_ignore) and, if slack>0, calls RelaxLinearReason(
+%     reason->slack, coeffs, indices) at integer.cc:2021. THIS is where the
+%     stored slack is consumed for an ordinary push.
+%   integer_expr.cc:110-121 -- FillIntegerReason(): collects the bounds used.
+%   integer_expr.cc:299-327 -- CONFLICT path only (slack<0): the propagator
+%     itself calls RelaxLinearReason(-slack-1,...) at :314 + ReportConflict() at
+%     :325 (or EnqueueLiteral when a single enforcement literal is unassigned).
+
+In the CP-SAT source a propagator is wrapped in templates, watch lists, and
+lazy-reason plumbing, but the object underneath is small. As a worked example, consider the linear propagator for $3x + 6y \le z$ over
+$x, y \in [0,3]$ and $z \in [0,30]$, following what CP-SAT's
+\srcla{integer\_expr.h}{72}{LinearConstraintPropagator} actually does. CP-SAT stores
+every linear constraint in \emph{canonical form}, all terms on one side of a
+constant, so throughout we work with it as
+\[
+  3x + 6y - z \le 0 ,
+\]
+where the term $-z$ is the variable $\srcla{integer\_base.h}{175}{NegationOf}(z)$.
+The role comes with two duties. In a classical finite-domain
+solver a propagator has only the first: narrow domains, then say no more. A
+CP-SAT propagator must also \emph{justify} each deduction on demand, naming the
+bounds that forced it, so that the learning half (\cref{sec:learning}) can
+distill a failure into a permanent rule. That second duty, explaining a
+propagation rather than merely performing it, is what \emph{lazy clause
+generation} adds to ordinary propagation; it is the one a classical propagator
+does not carry.
+
+\textbf{We are called only when a watched bound changes.} Running the propagator on
+every change in the search would be wasteful; we want it to fire only when something
+has happened that could let us deduce more. So on creation we register with the
+\srcla{integer.h}{1324}{GenericLiteralWatcher}, asking to be called whenever the
+\emph{lower} bound of $x$, $y$, or $-z$ changes (\srcla{integer\_expr.cc}{449}{WatchLowerBound} on each); we are never run on a step that touched none of the
+three. For a ``$\le$'' constraint only the lower bounds matter: they are what can
+push the left-hand side up toward the bound. Because $z$ enters as $-z$, the update
+``$z$'s upper bound fell to $8$'' reaches us as ``the lower bound of $-z$ rose to
+$-8$,'' so a single watch direction already covers both sides of every variable,
+directly reflecting the bounds-as-everything data model of \cref{sec:bounds}.
+
+\textbf{If the constraint is violated, we report a conflict.} Whenever a watched
+bound moves, we recompute our \emph{slack}, the room left before the constraint
+binds (\srcl{integer\_expr.cc}{310}):
+\[
+  \text{slack} \;=\; \underbrace{0}_{\text{rhs}}
+  \;-\; \big(3\,\text{lb}(x) + 6\,\text{lb}(y) + 1\cdot\text{lb}(-z)\big) .
+\]
+If it is negative, the current bounds already rule the constraint out and there is
+nothing to deduce: we report a conflict. Suppose decisions have forced $x \ge 2$
+and $y \ge 1$ while $z \le 8$, so $\text{lb}(x) = 2$, $\text{lb}(y) = 1$, and
+$\text{lb}(-z) = -8$; then
+\[
+  \text{slack} \;=\; 0 - (3\cdot 2 + 6\cdot 1 + 1\cdot(-8)) \;=\; -4 \;<\; 0
+\]
+(\srcl{integer\_expr.cc}{312}). We do not backtrack or learn; that is the SAT
+half's job. We simply fill our reason $\{x \ge 2,\ y \ge 1,\ z \le 8\}$ and call
+\srcla{integer\_expr.cc}{325}{ReportConflict}, declaring that these bounds
+are jointly impossible. The conflict analysis of \cref{sec:learning}
+takes it from there.
+
+\textbf{What we read, and what we push.} When the slack is non-negative there is
+room to spare, and instead of failing we tighten bounds. Take the lighter state
+where $x$ and $y$ still sit at their lower bound $0$ while $z \le 8$, so the slack
+is $0 - (3\cdot 0 + 6\cdot 0 + 1\cdot(-8)) = 8$.
+This is not a conflict, but we could already prove that $x \le 2$ and $y \le 1$ must hold, since any higher would push the left-hand side above $8$.
+Reading only the \emph{lower} bounds of the other
+variables, we push an \emph{upper} bound on each variable
+(\srcl{integer\_expr.cc}{334}):
+\[
+  \text{new\_ub}_i =
+  \text{lb}_i + \left\lfloor \frac{\text{slack}}{\text{coeff}_i} \right\rfloor .
+\]
+For this example, the resulting bounds are
+\[
+  x \le 0 + \lfloor 8/3 \rfloor = 2, \qquad\qquad
+  y \le 0 + \lfloor 8/6 \rfloor = 1 .
+\]
+Both tighten the domain: $x$ shrinks from $[0,3]$ to $[0,2]$, and $y$ shrinks
+from $[0,3]$ to $[0,1]$. That is the whole job: read the other variables' bounds
+and push tighter bounds of our own. There is no guessing and no search, only
+forced consequences.
+% Source (VERIFIED): template LinearConstraintPropagator<use_int128> and the alias
+%   IntegerSumLE128 (integer_expr.h:71,168-169); int128 activity/slack at
+%   integer_expr.cc:258-310 ("absl::int128 lb_128 = 0;", "slack128 = int128(ub) - lb_128").
+\begin{platypusinfo}[htb]
+When a constraint's coefficients and bounds are large enough that the running
+activity could overflow $64$ bits, CP-SAT instantiates the linear-sum propagator
+in a $128$-bit variant (\srcla{integer\_expr.h}{169}{IntegerSumLE128}): the
+coefficients remain \code{int64}, but activity and slack accumulate in
+\code{int128}. The bound it pushes is therefore the exact integer bound, not a
+wrapped-around value: the solver keeps its arithmetic exact all the way down to a
+single linear row.
+\end{platypusinfo}
+
+\textbf{Why do we not directly add these insights as clauses?}
+In principle we could add a clause for the implication
+\[
+  (\bl{x \ge 0} \;\wedge\; \bl{z \le 8}) \;\Rightarrow\; \bl{y \le 1}
+\]
+outright, but that is both costly and unnecessary. For now it is enough to tell the
+search that $y \le 1$, which updates the bounds and may wake other propagators; we
+owe an explanation only if $\bl{y \le 1}$ later turns out to be part of a conflict, when
+conflict analysis needs the deduction to trace the root cause and learn a clause.
+And the more precise that reason, the more effective the learning: here it is
+trivial, but for a constraint over many variables it can pay to do real work at
+explain time and pinpoint exactly the subset of bounds that forced the deduction.
+CP-SAT's \srcla{cp\_constraints.cc}{123}{GreaterThanAtLeastOneOf} propagator does
+exactly this: its \code{Explain} drops the bounds already implied at the root and
+returns that trimmed subset rather than the whole row. Since most deductions never
+enter a conflict at all (look at how few bounds the conflict in
+\cref{fig:sudoku-conflict} actually rests on), computing and storing a precise
+reason for every one of them would be wasted effort.
+
+\textbf{So how is the reason attached?} Rather than record the justification, we
+call \srcla{integer\_expr.cc}{360}{EnqueueWithLazyReason} and hand the trail
+only a pointer back to ourselves. The trail enqueues $y \le 1$ and wakes whatever
+that unblocks, but stores no explanation alongside it. Only if this deduction is
+later dragged into a conflict does the engine call our \srcla{integer\_expr.cc}{228}{Explain} method; only then do we name the bounds that forced the push,
+$x \ge 0$ and $z \le 8$, handing back the implication above for conflict analysis
+(\cref{sec:learning}) to resolve and learn from. The reason is available the
+whole time, but built only for the deductions that turn out to need it. This is lazy
+clause generation at the scale of a single propagator.
+
+At its core, the entire object consists of two short
+procedures: one that pushes bounds and one that explains them on request. The
+trail owns the events, the propagator only responds, and the explanation is a
+deferred call-back that the trail makes only if a pushed bound is later dragged
+into a conflict.
+
+\begin{algorithm}[htbp]
+\caption{Linear propagator for $\sum_i c_i x_i \le u$ in canonical form (all $c_i > 0$)}
+\label{alg:linprop}
+\begin{algorithmic}[1]
+\Procedure{Propagate}{} \Comment{woken when a watched lower bound rises}
+  \State $\text{slack} \gets u - \sum_i c_i \cdot \text{lb}(x_i)$ \Comment{room before the constraint binds}
+  \If{$\text{slack} < 0$}
+    \State \Return \Call{ReportConflict}{$\{\, \bl{x_i \ge \text{lb}(x_i)} \,\}_i$} \Comment{bounds jointly impossible}
+  \EndIf
+  \ForAll{$i$}
+    \State $\text{newub} \gets \text{lb}(x_i) + \lfloor \text{slack}/c_i \rfloor$
+    \If{$\text{newub} < \text{ub}(x_i)$}
+      \State \Call{EnqueueWithLazyReason}{$\bl{x_i \le \text{newub}}$, \ \textbf{self}}
+    \EndIf
+  \EndFor
+\EndProcedure
+\Statex
+\Procedure{Explain}{$\bl{x_j \le v}$} \Comment{called \emph{only} if this pushed bound enters a conflict}
+  \State \Return $\{\, \bl{x_i \ge \text{lb}(x_i)} \,\}_i$ \Comment{the raw reason: \emph{all} variables, unrelaxed}
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Lifting the reason}\label{sec:relaxation}
+
+We kept the propagator deliberately simple: its \code{Explain} hands back the raw
+row, the full set of bounds that were in force, without hunting for the smallest or
+most general subset. CP-SAT makes up for that afterward. Conflict analysis
+(\cref{sec:learning}) turns each reason into a permanent clause, and a
+\emph{weaker} reason, one that holds in more states, becomes a clause that rules out
+more of them. So before learning, CP-SAT \emph{lifts} the reason
+(\srcla{integer.cc}{1083}{RelaxLinearReason}): it spends the slack the deduction
+left unused to loosen the bounds, recovering a more general clause than the
+propagator literally reported.
+
+Why is this sound? Because a push rarely uses all the room it had. Take the push of
+$y \le 1$, made when the slack was $8$; reading off $\lfloor 8/6 \rfloor = 1$ gave
+$y \le 1$, but the leftover
+\[
+  \ell \;=\; \big(\lfloor 8/6 \rfloor + 1\big)\cdot 6 \;-\; 8 \;-\; 1
+        \;=\; 2\cdot 6 - 8 - 1 \;=\; 3
+\]
+measures how much room was to spare. Forcing $y \le 1$ never needed the full bound
+$z \le 8$: even $z \le 11$ leaves $y \ge 2$ impossible once $x \ge 0$ is known,
+since $3\cdot 0 + 6\cdot 2 = 12 > 11$. So CP-SAT lifts $z \le 8$ to $z \le 11$,
+weakening the bound by exactly $\ell = 3$, and conflict analysis resolves against
+the broader implication
+\[
+  (x \ge 0 \;\wedge\; z \le 11) \;\Rightarrow\; y \le 1
+\]
+instead of the tighter $z \le 8$ form, learning a clause that can fire in more
+future states. The same trick broadens reported conflicts: there the slack is
+already negative, and its magnitude is the budget for loosening the bounds the
+violation did not strictly need.
+
+All the propagator had to store to make this possible was a single integer, the
+leftover slack, carried alongside its claim check rather than a copied reason. That
+one number is what lets CP-SAT recover not merely \emph{a} reason but a deliberately
+general one.
+
+\subsection{Expansion: which constraints keep a propagator}\label{sec:expansion}
+% Sources (VERIFIED):
+%   ortools/sat/cp_model_expand.cc -- ExpandElement (1159), ExpandPositiveTable
+%     (2288)/ExpandNegativeTable (1673), ExpandAutomaton (1318), ExpandInverse (679),
+%     MaybeExpandAllDiff (2713, heuristic: small / near-permutation / fully encoded),
+%     ExpandReservoir (406, default-ON via expand_reservoir_constraints=true),
+%     ExpandLinMax (808, size-gated; max_lin_max_size_for_expansion default 0 = kept). Default behavior
+%     KEEPS native propagators; expansion is heuristic / parameter-gated.
+%   ortools/sat/cp_model_loader.cc -- kept propagators are loaded here:
+%     LoadBoolOr/BoolAnd/BoolXor (clauses), LoadLinearConstraint (1213, supports
+%     enforcement literals = half-reification), LoadAllDiffConstraint -> AllDifferentOnBounds
+%     (1485), LoadCircuit/Routes (1664/1679), LoadNoOverlap/Cumulative/NoOverlap2d
+%     (1610/1629/1616), LoadIntProd/IntDiv/FixedModulo (1506/1553/1576).
+%   VISIBLE LINKS for kept constraints point past the one-line loader to the
+%     algorithm header where the propagator/factory + its doc comment live
+%     (re-verify these line numbers when re-pinning \orsha):
+%       AllDifferent (kept "on bounds") -> all_different.h:52 (AllDifferentOnBounds)
+%       NoOverlap    -> disjunctive.h:49 (AddDisjunctive)
+%       NoOverlap2d  -> diffn.h:89 (AddNonOverlappingRectangles)
+%       Cumulative   -> cumulative.h:48 (Cumulative)
+%       Circuit      -> circuit.h:46 (class CircuitPropagator)
+%       MultipleCircuit -> circuit.h:259 (LoadSubcircuitConstraint, wraps CircuitPropagator)
+%     The heuristically-expanded AllDifferent mention still links MaybeExpandAllDiff
+%     (cp_model_expand.cc:2713); the Expanded-away names keep their Expand* targets.
+
+\cref{sec:onepropagator} said that every constraint type has a
+propagator. That is only half the story. A modeling language offers dozens of
+high-level constraints, and CP-SAT does \emph{not} keep a bespoke propagator for
+each of them. During presolve, many constraints are \textbf{expanded}: rewritten
+into the small set of primitives that the engine reasons about natively, such
+as clauses, linear constraints, at-most-one constraints, and value literals.
+Only a curated subset is \textbf{kept} as dedicated global propagators.
+
+\textbf{Expanded away} (\srcf{cp\_model\_expand.cc}):
+\srcla{cp\_model\_expand.cc}{1159}{Element},
+\srcla{cp\_model\_expand.cc}{2288}{Table} (positive and negative),
+\srcla{cp\_model\_expand.cc}{1318}{Automaton}/regular, and
+\srcla{cp\_model\_expand.cc}{679}{Inverse}. CP-SAT may also expand
+\srcla{cp\_model\_expand.cc}{2713}{AllDifferent} heuristically when its domain
+is small or close to a permutation; in that case, it becomes value literals plus
+at-most-one constraints. Two more sit on a parameter-controlled line:
+\srcla{cp\_model\_expand.cc}{406}{Reservoir} is expanded \emph{by default} (a
+parameter can instead keep it native), while
+\srcla{cp\_model\_expand.cc}{808}{LinMax} constraints keep their propagator
+\emph{by default}, with a size threshold that opts only the \emph{small} ones into
+expansion.
+% LinMax gating (cp_model_expand.cc:2875): expand iff exprs().size() <=
+%   max_lin_max_size_for_expansion, default 0 (sat_parameters.proto:578) -> nothing
+%   expanded unless the threshold is raised, and then it is the SMALL constraints that
+%   get expanded, not the large ones. Prose previously said "large ... unless a size
+%   threshold opts them into expansion", which points the mechanism at the wrong end.
+The common thread is not
+that a stronger native propagator could never exist; it is that the decomposition
+is often cheap, exposes useful Boolean or value structure to the rest of the
+engine, or is competitive enough that a dedicated algorithm would not reliably
+pay for itself.
+
+\textbf{Kept as native propagators} (\srcf{cp\_model\_loader.cc}): Boolean
+constraints, loaded as clauses; \textbf{linear} constraints, crucially
+\emph{with enforcement literals}, that is, half-reified ``indicator'' constraints
+in which a literal $\ell$ enforces a linear constraint; integer \textbf{product}
+(variable~$\times$~variable), \textbf{division} (the divisor may be a variable),
+and \textbf{modulo} constraints (the modulus must be a fixed constant; a variable
+modulus is decomposed into division and product during presolve);
+% int_prod/int_div/int_mod loaded natively in cp_model_loader.cc (VERIFIED):
+%   LoadIntProd (1506) -> ProductConstraint (integer_expr.h:793); fully general var x var.
+%   LoadIntDiv  (1553): denom fixed -> FixedDivisionConstraint (integer_expr.h:836),
+%     ELSE DivisionConstraint (integer_expr.h:817). A variable divisor IS native --
+%     so "fixed divisors" was wrong for division (and meaningless for product).
+%   LoadIntMod  (1576): CHECK(IsFixed(mod)) -> FixedModuloConstraint (integer_expr.h:851);
+%     there is no variable-modulus propagator. ExpandIntMod (cp_model_expand.cc:575)
+%     rewrites a non-fixed modulus into int_div + int_prod + linear during presolve.
+\srcla{all\_different.h}{52}{AllDifferent} on bounds when it is \emph{not} a
+small permutation; \srcla{circuit.h}{46}{Circuit} and
+\srcla{circuit.h}{259}{MultipleCircuit} for routing; and the scheduling trio
+\srcla{disjunctive.h}{49}{NoOverlap}, \srcla{cumulative.h}{48}{Cumulative}, and
+\srcla{diffn.h}{89}{NoOverlap2d}. These are the constraints whose specialized
+algorithms (edge-finding, energetic reasoning, subtour elimination, and
+Hall-interval pruning) can prune far more than any clause decomposition could.
+This is where the ``CP'' in CP-SAT does its real work.
+
+This point is easy to oversimplify, so one nuance is worth stating plainly: the
+released code \emph{defaults to keeping} native propagators, and expansion is
+gated by size heuristics and parameters rather than applied wholesale. The
+reason ties directly back to the cost argument of this part. A dedicated global
+propagator is expensive, so CP-SAT keeps it only where its extra pruning tends
+to pay for itself; everything else is handed to the cheap, always-on clause and
+linear machinery.
+\subsection{Search: guessing when propagation stalls}\label{sec:complete}
+% Sources (VERIFIED):
+%   ortools/sat/integer_search.h -- BooleanOrIntegerLiteral (a decision is a
+%     Boolean OR an integer bound literal).
+%   ortools/sat/sat_solver.cc -- EnqueueDecisionAndBackjumpOnConflict (binary
+%     decisions, backjump on conflict). Heuristic detail moved to sec:search.
+
+Whether a constraint reasons through a native propagator or an expanded
+decomposition, propagation eventually runs dry: it reaches a fixed point with
+nothing left to deduce. If every variable happens to be fixed, that fixed point
+is a solution. Usually it is not. With no conflict, the fixed point may still
+leave $3 \le x \le 7$ open: if every constraint is satisfiable across that whole
+range, no propagator has any reason to tighten it. That is a consistent
+\emph{state}, but not a \emph{solution}. A solution must assign $x$ one concrete
+value, and propagation alone, which only ever draws forced conclusions, cannot
+supply it. Closing the gap falls to \emph{search}.
+
+The solver's only move at a stalled fixed point is to \emph{guess}. The guess is
+a \textbf{decision}: it asserts a single literal, for instance trying
+$\bl{x \le 7}$ true, with its negation $\bl{x \ge 8}$ held in reserve as the other branch. As \cref{sec:bounds}
+noted, an integer bound is itself a reified literal, so guessing
+$\bl{x \le 7}$ and flipping a native Boolean are the same step,
+both recorded at a new \textbf{decision level}.
+
+A decision sets off a fresh cascade of propagation, and the guess is judged by
+what that cascade returns: it may pin more variables and let the solver descend
+with another guess; it may fix everything with no conflict, giving a solution; or
+it may reach a conflict, proving the guess wrong and forcing the solver to
+\emph{backtrack} and learn (\cref{sec:learning}). Decisions stack on the
+\textbf{trail}, each tagged with its decision level, and backtracking pops them
+off and relaxes the bounds they imposed. Search is then just this loop: guess a
+literal, let the resulting cascade say whether it was right, wrong, or simply not
+yet decisive, and guess again until every variable is pinned. \emph{How} the
+solver picks each literal, and what it does once the Booleans are all assigned
+but an integer still spans a range, is the search machinery assembled in
+\cref{sec:search}.
