@@ -471,6 +471,9 @@ if __name__ == "__main__":
             MarkdownFile("./chapters/benchmarking.md", "benchmarking.md"),
             MarkdownFile("./chapters/lns.md", "lns.md"),
             MarkdownFile("./chapters/mathopt.md", "mathopt.md"),
+            MarkdownFile(
+                "./chapters/declarative_modeling.md", "declarative_modeling.md"
+            ),
         ]
     )
     document.write_readme("README.md")
