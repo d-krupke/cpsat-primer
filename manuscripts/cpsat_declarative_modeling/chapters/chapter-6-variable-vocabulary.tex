@@ -61,7 +61,7 @@ is_late = model.new_bool_var("is_late")
 not_take = ~take  # negation — a free view, no new variable
 \end{lstlisting}
 
-The \lstinline!\~! operator returns the negation as a
+The \lstinline!~! operator returns the negation as a
 \emph{view}: no new variable is allocated, and the negation participates
 in constraints exactly as the original Boolean would. This is a small
 but useful efficiency --- every Boolean in your model has a free

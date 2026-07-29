@@ -94,7 +94,7 @@ model.add_bool_xor([a, b, c])      # odd number true
 \end{lstlisting}
 
 The arguments are \emph{literals}: Boolean variables or their negations
-via \lstinline!\~!. An integer variable with domain
+via \lstinline!~!. An integer variable with domain
 \(\{0, 1\}\) is \emph{not} a literal and will be rejected --- if the
 model needs logical operations, declare the variable with
 \lstinline!new_bool_var! from the start.
@@ -178,7 +178,7 @@ A concrete consequence for the basic vocabulary above:
 (\(a \Rightarrow b\)). Implications with several antecedents
 (\(a \land b \Rightarrow c\)) flatten by definition of implication to
 \(\lnot a \lor \lnot b \lor c\) --- a single call to
-\lstinline!add_bool_or([\~a, \~b, c])! --- without
+\lstinline!add_bool_or([~a, ~b, c])! --- without
 needing an auxiliary.
 
 Three Boolean patterns appear in essentially every Boolean-rich model:

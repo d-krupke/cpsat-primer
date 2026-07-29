@@ -32,9 +32,9 @@ this folder.
 Requires a XeLaTeX toolchain (TeX Live) with the `doclicense` package.
 
 ```sh
-make          # build cpsat_declarative_modeling.pdf
-make clean    # remove LaTeX aux files
-make distclean# clean + remove the PDF
+make           # build cpsat_declarative_modeling.pdf
+make clean     # remove LaTeX aux files
+make distclean # clean + remove the PDF
 ```
 
 ## Layout
