@@ -1,0 +1,268 @@
+\chapter{From Procedure to Description}\label{chap:1}
+
+\begin{quote}
+\emph{``Civilization advances by extending the number of important
+operations which we can perform without thinking about them.''} ---
+Alfred North Whitehead
+\end{quote}
+
+A software engineer's instinct on a combinatorial problem is to design
+an algorithm: pick a strategy --- greedy, backtracking, branch-and-bound,
+dynamic programming --- and commit to the search structure, the data
+structures, the order of exploration, the pruning rules. The skill is
+real and worth keeping. Many problems are best solved by writing the
+procedure that solves them.
+
+On most real combinatorial problems, however, a hand-rolled procedure is
+far from the state of the art. Industrial solvers represent decades of
+accumulated engineering --- clause learning, constraint propagation,
+restart strategies, parallel workers, instance-tuned heuristics --- that
+no individual programmer can reproduce in a project. The pragmatic move
+on a hard combinatorial problem is therefore not to write a solver, but
+to \emph{describe} the problem in a form that an existing solver can
+consume, and let that solver search.
+
+This is a paradigm shift, not a swap of one technique for another. The
+two mindsets answer different questions:
+
+\begin{itemize}
+\item
+  The \textbf{procedural} view answers \emph{how do I compute an
+  answer?} It is the perspective of an algorithm designer. The output is
+  a procedure that, when run, produces a solution.
+\item
+  The \textbf{declarative} view answers \emph{what counts as an answer?}
+  It is the perspective of a problem describer. The output is a
+  \emph{model} --- a precise, executable statement of which
+  configurations are acceptable and which is best.
+\end{itemize}
+
+Both views are legitimate, and a working optimization practitioner moves
+between them. Most readers of this manuscript will have stronger code
+intuition than mathematical-notation intuition; that intuition does not
+become useless under the new paradigm --- most of the work is still code
+--- but it has to be redirected, since the code you write here
+\emph{describes} rather than \emph{executes}.
+
+The solver we will commit to in this manuscript is \textbf{CP-SAT}, the
+constraint-programming solver that ships inside Google's
+\href{https://developers.google.com/optimization}{OR-Tools}. The choice
+is not innocent: different solvers reward different idioms, and a model
+written for CP-SAT will not be byte-for-byte the model you would write
+for a mixed-integer programming solver or a SAT solver. The underlying
+paradigm shift, and most of the modeling vocabulary, transfers without
+change. The solver-specific details are local to the last few chapters.
+
+\section{A Concrete Contrast: 0/1 Knapsack}\label{sec:1.1}
+
+The classical \textbf{0/1 knapsack} makes the shift concrete. Given a
+set of items \(I\), each with a weight \(w_i\) and a value \(c_i\), and
+a knapsack of capacity \(C\), choose a subset of items whose total
+weight does not exceed \(C\) and whose total value is as large as
+possible. The problem is a useful contrast because both an algorithmic
+recipe and a declarative formulation are short enough to fit on one
+page.
+
+\subsection{The procedural answer}\label{sec:1.1.1}
+
+The textbook procedural solution is a dynamic program. We define a
+table \lstinline!dp[i][w]! whose entry is the best total value
+achievable using the first \(i\) items and capacity at most \(w\), and
+we fill the table by deciding, for each \((i, w)\), whether to take
+item \(i\) or leave it.
+
+\begin{lstlisting}[language=Python]
+def knapsack(weights, values, C):
+    n = len(weights)
+    dp = [[0] * (C + 1) for _ in range(n + 1)]
+    for i in range(1, n + 1):
+        for w in range(C + 1):
+            dp[i][w] = dp[i - 1][w]
+            if weights[i - 1] <= w:
+                take = dp[i - 1][w - weights[i - 1]] + values[i - 1]
+                if take > dp[i][w]:
+                    dp[i][w] = take
+    return dp[n][C]
+\end{lstlisting}
+
+Several non-trivial decisions sit inside that function. We chose the
+recursion (take versus leave), the table layout (items by capacity),
+the fill order (forward in \(i\), forward in \(w\)), and the off-by-one
+indexing between the table and the input arrays. None of these
+decisions is part of the \emph{problem}; all of them are part of one
+possible \emph{solution}.
+
+The running time is proportional to \(\lvert I \rvert \cdot C\), which
+is \emph{pseudo-polynomial}: linear in the numerical value of \(C\),
+not in the bits needed to write \(C\) down. When \(C\) reaches the
+millions the table no longer fits in memory, and the algorithm becomes
+unusable even for trivially small \(\lvert I \rvert\). Other
+algorithmic approaches exist, but they tend to be even more complex to
+implement.
+
+\subsection{The declarative answer}\label{sec:1.1.2}
+
+The same problem written as mathematics is three lines:
+
+\[
+\begin{aligned}
+\max \quad      & \sum_{i \in I} c_i\, x_i \\
+\text{s.t.} \quad   & \sum_{i \in I} w_i\, x_i \;\le\; C \\
+                    & x_i \in \{0, 1\} && \forall i \in I.
+\end{aligned}
+\]
+
+Read aloud: maximize the total value over a choice of items, subject to
+the total weight not exceeding the capacity, where each \(x_i\) is a
+binary decision (take or leave). Three lines describe the entire problem
+and commit to no algorithm at all. This is the form a paper or a
+textbook would use, and \Cref{chap:2} develops the notation needed to
+read it fluently.
+
+The translation from this math into a working CP-SAT model is almost
+line-for-line:
+
+\begin{lstlisting}[language=Python]
+from ortools.sat.python import cp_model
+
+model = cp_model.CpModel()
+x = [model.new_bool_var(f"x_{i}") for i in I]
+
+model.add(sum(w[i] * x[i] for i in I) <= C)
+model.maximize(sum(c[i] * x[i] for i in I))
+
+solver = cp_model.CpSolver()
+solver.solve(model)
+\end{lstlisting}
+
+One Boolean variable per item, one linear inequality for the capacity,
+one linear objective, one call to the solver. There is no loop over the
+capacity, no table, no decision about the order of exploration. CP-SAT
+does all of that internally. The gain, for this example, is primarily
+\emph{modeling style}: the code mirrors the mathematical statement
+directly and is easy to extend. For knapsack specifically, specialized
+algorithms remain very strong baselines, so the point of the example is
+the declarative form, not a claim that CP-SAT is the canonical fastest
+method for this problem family.
+
+\subsection{Comparing the two}\label{sec:1.1.3}
+
+The two formulations differ in three ways that matter.
+
+The first is performance. The dynamic program's \(\lvert I \rvert
+\cdot C\) running time is fine for moderate capacities and bad for
+large ones, while
+CP-SAT inherits decades of constraint-solver research --- clause
+learning, propagation, restarts, parallel workers --- none of which we
+had to write. This does not mean CP-SAT is automatically the best method
+for knapsack; on narrow problem classes a tailored algorithm is often
+the right baseline. The declarative model gives access to the solver's
+machinery without requiring its implementation.
+
+The second is reading effort. The procedural version mixes the problem
+with its solution: to read it six months from now, you have to
+reconstruct why the recursion is what it is, why the loops run in this
+order, and what each index means. The declarative version reads as a
+problem statement --- every line corresponds to a fact about the
+problem, and the model is reviewable and explainable in roughly the same
+form a colleague would expect on a whiteboard.
+
+The third is extensibility, and it is the deepest of the three. Suppose
+a new requirement appears: items A and B are mutually exclusive, or at
+least three of items C, D, E must be taken. In the dynamic program the
+recursion changes, the table changes, possibly the time complexity
+changes, and we are back at the whiteboard. In the declarative model
+each new requirement is one extra line --- \(x_A + x_B \le 1\) for the
+mutual exclusion, \(x_C + x_D + x_E \ge 3\) for the cardinality --- and
+the solver absorbs the addition without any change to how the search
+proceeds. Real problems mutate; their constraints arrive in waves, first
+the one in the textbook, then the regulatory rule, then the customer's
+preference, then the operational quirk. A model that absorbs new
+constraints by adding lines is incomparably easier to maintain than a
+procedure that has to be redesigned each time.
+
+\section{Modeling, Not Magic}\label{sec:1.2}
+
+Handing a problem to a solver does not make it easy. NP-hard problems
+remain NP-hard; the solver does not abolish complexity, it merely
+searches more cleverly than you would have. What changes with
+declarative modeling is not whether the problem is hard but how large an
+\emph{instance} you can practically solve.
+
+This last point is where the real skill of optimization modeling lives.
+The same problem can be encoded in many mathematically equivalent ways,
+and the encodings differ enormously in how well a solver handles them. A
+naive encoding may time out at fifty variables; an idiomatic encoding
+may solve in two seconds at five thousand. The two models are saying the
+same thing about the same problem, but only one of them is saying it in
+a way the solver can exploit.
+
+A few patterns recur. Solvers are tuned for certain shapes of
+constraint, so a formulation that reaches for the solver's native
+vocabulary --- global constraints, indicator variables, well-known
+reformulations --- usually beats one that reinvents the same logic from
+arithmetic primitives. Encodings that rule out symmetric or equivalent
+solutions, removing duplicates the solver would otherwise explore,
+outperform encodings that leave that freedom in, even when both are
+mathematically correct. None of this is visible from the problem
+statement; choosing the representation is part of the modeler's job, and
+two correct models for the same problem can differ in solving time by
+orders of magnitude.
+
+The remaining chapters cover the basics to get you rolling with building
+and solving your first models. Performance engineering of models is a
+topic for later.
+
+\section{What This Manuscript Develops}\label{sec:1.3}
+
+Four ideas run through the rest of the book, and each one is the subject
+of one or more chapters.
+
+The first is that \emph{mathematical notation is a tool, not
+gatekeeping}. Optimization papers and textbooks state problems in
+notation because notation is shorter and less ambiguous than prose ---
+not because the community is exclusive. Reading and writing it is a
+habit anyone working with optimization can pick up. \Cref{chap:2} is a fast
+alignment layer for that notation: sets, variables, expressions,
+predicates, and the bridges between the numeric and Boolean parts of the
+language.
+
+The second is that \emph{optimization models decompose into five parts}:
+the entities the problem talks about, the parameters that describe a
+particular instance, the decision variables, the constraints that
+restrict their combinations, and the objective that ranks the feasible
+ones. This decomposition is the structure every model in the manuscript
+uses. \Cref{chap:3} walks through it in a from-scratch recipe.
+
+The third is that \emph{a verifier is an orthogonal contract on what the
+problem actually means}. A verifier is a small piece of plain Python
+that takes a candidate solution and answers two questions: is it valid,
+and how good is it? It does not produce solutions; it judges them.
+Writing one is independent of which solver eventually does the search,
+and it pins the problem definition down in code so later modeling
+decisions cannot drift away from it. \Cref{chap:4} develops the verifier
+pattern; later chapters treat it as optional but useful.
+
+The fourth is that \emph{knowing the solver's language matters}. The
+same problem can be modeled in many mathematically equivalent ways, and
+an idiomatic encoding for one solver looks different from an idiomatic
+encoding for another. This manuscript commits to \textbf{CP-SAT}, the
+constraint-programming solver that ships inside Google's
+\href{https://developers.google.com/optimization}{OR-Tools}. CP-SAT has
+an expressive vocabulary --- global constraints for routing, scheduling,
+packing, and combinatorial structure --- and \Cref{chap:5}--\Cref{chap:8} lay it out: a
+first end-to-end model, then variables, constraints, and objectives in
+reference form. \Cref{chap:9} closes the manuscript by reflecting on these
+four ideas and naming a few practical moves that come up in real
+modeling work.
+
+\begin{platypusinfo}
+This manuscript works directly with CP-SAT's Python API
+rather than with an algebraic modeling language such as AMPL, GAMS,
+Pyomo, MiniZinc, or CPMpy. Algebraic modeling languages add a layer of
+abstraction above solver APIs and often allow the same model to target
+multiple solvers. They are valuable tools, but they would obscure the
+solver-specific idioms this manuscript wants to teach. CP-SAT's Python
+API is already high-level enough for introductory modeling, while still
+exposing the modeling choices that matter for performance.
+\end{platypusinfo}

@@ -1,0 +1,416 @@
+\chapter{Objectives and Status}\label{chap:8}
+
+\begin{quote}
+\emph{``Tell me how you measure me, and I'll tell you how I'll
+behave.''} --- Eliyahu Goldratt
+\end{quote}
+
+This chapter covers the objective on the model side, and the status
+code, bounds, and parameters that let us interpret the result on the
+solver side.
+
+\section{Stating the Objective}\label{sec:8.1}
+
+A CP-SAT model has at most one objective.
+
+\begin{lstlisting}[language=Python]
+model.minimize(linear_expression)
+model.maximize(linear_expression)
+\end{lstlisting}
+
+The expression must be \emph{linear} in the variables --- sums, scaled
+sums, and integer-coefficient combinations. As elsewhere in CP-SAT,
+mixing integer and Boolean variables is fine: a Boolean is a
+\(\{0, 1\}\) integer in arithmetic, and negations via
+\lstinline!\~! are accepted in objectives just like in
+constraints.
+
+\begin{lstlisting}[language=Python]
+# Total cost of selected items
+model.minimize(sum(cost[i] * take[i] for i in range(n)))
+
+# Mixing terms — Booleans contribute 0 or 1, with negation if useful
+model.minimize(sum(weight[i] * x[i] for i in range(n)) - 100 * ~all_done)
+\end{lstlisting}
+
+Calling \lstinline!minimize! or
+\lstinline!maximize! a second time \emph{replaces} the
+previous objective; it does not add to it. CP-SAT does not have a
+built-in concept of multiple simultaneous objectives. To combine several
+goals --- \emph{minimize lateness AND minimize cost} --- the modeler
+commits to a combination strategy, and \Cref{sec:8.3} covers the two standard
+ones.
+
+A model with no objective is a \emph{constraint-satisfaction} problem:
+the solver returns any feasible solution it can find, with no preference
+among them. CP-SAT is strong in this mode --- Sudoku, schedule
+feasibility, and configuration validation all fall here. A dummy
+objective like \lstinline!model.minimize(0)! is not
+needed; feasibility-only tells the solver \emph{find any solution},
+which is the natural question for many problems and frees the search
+from optimization overhead.
+
+\section{Nonlinear Objectives via Auxiliaries}\label{sec:8.2}
+
+The objective expression must be linear, but \emph{the quantity we want
+to optimize} often is not --- a maximum, an absolute value, a
+multiplicative cost. The standard move: introduce an auxiliary variable
+bound to the nonlinear quantity, then make the objective linear in the
+auxiliary. The pattern is the same one \Cref{chap:7}'s equality helpers
+(\Cref{sec:7.10}) used for nonlinear \emph{constraints}, applied to the
+\emph{objective}.
+
+The most common case is \emph{minimize a maximum} --- a makespan, a
+worst-case latency, a peak load. The direct route uses
+\lstinline!add_max_equality!:
+
+\begin{lstlisting}[language=Python]
+makespan = model.new_int_var(0, horizon, "makespan")
+model.add_max_equality(makespan, [end[t] for t in tasks])
+model.minimize(makespan)
+\end{lstlisting}
+
+The linear-bound trick from \Cref{sec:7.10} expresses the same thing without the
+equality constraint:
+
+\begin{lstlisting}[language=Python]
+makespan = model.new_int_var(0, horizon, "makespan")
+for t in tasks:
+    model.add(makespan >= end[t])
+model.minimize(makespan)
+\end{lstlisting}
+
+The bounds say \emph{makespan is at least every finish time}, and the
+minimization pulls the bound tight to the actual maximum on its own. The
+mirror pattern --- \emph{maximize a minimum} --- uses
+\(m \le \text{value}\) for each value with
+\lstinline!model.maximize(m)!.
+
+For other nonlinear shapes, the auxiliary-variable pattern carries
+through unchanged:
+
+\begin{lstlisting}[language=Python]
+# Total absolute deviation from per-task target dates
+total_dev = model.new_int_var(0, big, "total_dev")
+deviations = []
+for t in tasks:
+    d = model.new_int_var(0, big, f"dev_{t}")
+    model.add_abs_equality(d, finish_time[t] - target[t])
+    deviations.append(d)
+model.add(total_dev == sum(deviations))
+model.minimize(total_dev)
+\end{lstlisting}
+
+Same recipe: scaffold an auxiliary for each nonlinear piece (here an
+absolute value per task), sum the auxiliaries, make the sum the
+objective. The pattern handles modulo objectives, multiplicative
+penalties, and any other nonlinear corner of integer arithmetic.
+
+\section{Combining Multiple Goals}\label{sec:8.3}
+
+When the model has more than one goal, two standard patterns combine
+them into a single objective. They differ in whether the goals are
+negotiable against each other (weighted sum) or strictly prioritized
+(lexicographic).
+
+\subsection{Weighted sum}\label{sec:8.3.1}
+
+The simplest combination: pick weights and minimize the weighted sum.
+
+\begin{lstlisting}[language=Python]
+W_COST       = 1
+W_LATENESS   = 100
+W_PREFERENCE = 10
+
+model.minimize(
+      W_COST       * total_cost
+    + W_LATENESS   * total_lateness
+    - W_PREFERENCE * preference_score
+)
+\end{lstlisting}
+
+The weights encode how much one unit of one goal is worth in units of
+another --- \emph{one minute of lateness is worth one hundred dollars of
+cost}. Weighted sums are the right tool when the goals are genuinely
+commensurable and the trade-off rate is known or can be estimated.
+
+Setting one weight extremely large to mean ``this matters most'' ---
+\lstinline!W_LATENESS = 10**9! or similar --- tends to
+backfire: the objective becomes effectively \emph{only} the
+high-weighted term with the others lost in the noise, and the solver can
+struggle numerically when coefficients span many orders of magnitude.
+When a goal is genuinely top-priority --- optimized first, others as
+tie-breakers --- \emph{lexicographic ordering} expresses that directly.
+
+\subsection{Lexicographic priorities}\label{sec:8.3.2}
+
+When goals are strictly ranked --- \emph{first satisfy lateness, then
+minimize cost} --- solve in \emph{stages}. Each stage optimizes one
+objective; before moving to the next, the previous objective's optimal
+value is locked in as a constraint.
+
+\begin{lstlisting}[language=Python]
+# Stage 1: minimize lateness
+model.minimize(total_lateness)
+status = solver.solve(model)
+best_lateness = round(solver.objective_value)
+
+# Stage 2: lock lateness in, optimize cost as a tie-breaker
+model.add(total_lateness <= best_lateness)
+# model.clear_objective() is the explicit form; minimize() replaces it.
+model.minimize(total_cost)
+
+# Warm-start: the stage-1 solution is still feasible and usually
+# near-optimal for the new objective — hint from it.
+for v in decision_vars:
+    model.add_hint(v, solver.value(v))
+solver.parameters.repair_hint = True
+
+status = solver.solve(model)
+\end{lstlisting}
+
+The pattern generalizes to any number of stages: optimize, lock,
+optimize the next. The result is a strict priority ordering --- every
+later objective is optimized only over the optimal-for-the-earlier set.
+The hinting step matters: changing the objective does not change
+feasibility, so the previous solution is a free starting point for the
+next stage and can speed up the next solve substantially.
+
+A practical note: by the time a model reaches its third or fourth
+lexicographic stage, the search space has been trimmed aggressively by
+the locked-in constraints, and the remaining problem can be unexpectedly
+hard. Setting
+\lstinline!solver.parameters.max_time_in_seconds! on
+the secondary stages keeps a tie-breaker from consuming the entire time
+budget.
+
+\section{Reading the Solver's Answer}\label{sec:8.4}
+
+The solver returns a \emph{status}, an \emph{objective value} (when an
+objective is set), a \emph{best objective bound}, and a wall-clock time.
+
+\subsection{Solver parameters}\label{sec:8.4.1}
+
+A handful of parameters get set on essentially every nontrivial solve:
+
+\begin{lstlisting}[language=Python]
+solver = cp_model.CpSolver()
+solver.parameters.max_time_in_seconds = 30.0  # soft time limit
+solver.parameters.num_workers = 8             # parallel portfolio
+solver.parameters.log_search_progress = True  # readable progress log
+
+status = solver.solve(model)
+\end{lstlisting}
+
+\lstinline!max_time_in_seconds! is the most important.
+Without it, the solver runs until it finds the optimum, proves
+infeasibility, or exhausts memory --- which on hard instances can mean
+\emph{days}. Set a budget appropriate to the problem and the moment.
+
+\lstinline!num_workers! controls the parallel portfolio
+--- different workers run different strategies and share learned clauses
+with each other. Eight is a sensible default on a modern laptop, larger
+on a workstation; \Cref{sec:5.3}'s hardware sketch translates directly to a worker
+count. The default is \emph{all} cores including hyperthreads, which is
+not always best --- on heavily contended machines, capping at the number
+of physical cores often runs faster.
+
+\lstinline!log_search_progress! turns on a
+human-readable trace of the search. When debugging a slow model, the log
+is the first place to look --- it shows when bounds tighten, when the LP
+relaxation bites, and when LNS finds an improvement. The full parameter
+list is large; the OR-Tools documentation is the authoritative reference
+for the corners.
+
+\subsection{Status codes}\label{sec:8.4.2}
+
+The status returned by \lstinline!solver.solve(...)! is
+one of five values, each with a precise meaning:
+
+\begin{symboltable}{lL}
+Code & Meaning \\ \midrule
+\lstinline!OPTIMAL! & A solution was found \emph{and} proven to be the best possible. \\
+\lstinline!FEASIBLE! & A solution was found, but optimality has not been proven. \\
+\lstinline!INFEASIBLE! & The solver proved that \emph{no} solution exists. \\
+\lstinline!MODEL_INVALID! & The model itself is malformed (empty domains, integer overflow, API misuse). \\
+\lstinline!UNKNOWN! & The solver gave up before deciding either way. \\
+\end{symboltable}
+
+
+Three of these are \emph{proofs}: \lstinline!OPTIMAL!,
+\lstinline!INFEASIBLE!, and
+\lstinline!MODEL_INVALID! are mathematical certainties
+about the model. \lstinline!FEASIBLE! is a \emph{partial}
+result --- there is a solution, and we have it, but we have not proven
+that no better one exists. \lstinline!UNKNOWN! is the
+absence of any conclusion at all.
+
+The most common confusion is between \lstinline!OPTIMAL!
+and \lstinline!FEASIBLE!. A solver that returns
+\lstinline!FEASIBLE! after a 30-second time limit has not
+failed --- it has found a solution and reports its objective value, but
+the search ran out of time before proving optimality. The objective
+value is the best-known; the next subsection describes how to assess how
+close that best-known might be to the actual optimum.
+
+A typical branching pattern:
+
+\begin{lstlisting}[language=Python]
+if status in (cp_model.OPTIMAL, cp_model.FEASIBLE):
+    # We have a solution we can act on. Read it.
+    ...
+elif status == cp_model.INFEASIBLE:
+    # The problem is over-constrained — the model and the data
+    # together describe an impossible instance.
+    ...
+elif status == cp_model.MODEL_INVALID:
+    # The model itself is broken. Read the log carefully.
+    ...
+else:  # UNKNOWN
+    # The solver gave up. More time, more workers, or a tighter model.
+    ...
+\end{lstlisting}
+
+\lstinline!OPTIMAL! and \lstinline!FEASIBLE!
+go to the same branch because the \emph{answer} is usable in both cases
+--- the difference matters for monitoring and reporting, not for acting
+on the result.
+
+\subsection{The bound: what optimality looks like}\label{sec:8.4.3}
+
+When an objective is set, the solver maintains two values. The
+\emph{best known objective value} is the best feasible solution found so
+far. The \emph{best objective bound} is a proven limit beyond which the
+objective cannot improve: for a minimization problem, a \emph{lower
+bound} on the optimum; for maximization, an \emph{upper bound}.
+
+\begin{lstlisting}[language=Python]
+print(solver.objective_value)       # best-known solution (float)
+print(solver.best_objective_bound)  # best proven bound (dual side)
+print(solver.wall_time)             # seconds elapsed
+\end{lstlisting}
+
+When status is \lstinline!OPTIMAL!,
+\lstinline!objective_value! and
+\lstinline!best_objective_bound! are equal (modulo
+floating-point representation): the solver has both found a solution and
+proven that nothing better exists. When status is
+\lstinline!FEASIBLE!, the two differ, and the \emph{gap}
+between them is what tells us how close the best-known is to provable
+optimality.
+
+The standard relative-gap metric:
+
+\[
+\text{gap} \;=\; \frac{|\text{objective\_value} - \text{best\_objective\_bound}|}{|\text{objective\_value}|}.
+\]
+
+A gap of zero is a proof of optimality. A small gap (a few percent)
+means the best-known is within that fraction of the optimum, and
+continuing the search may not improve the answer much. A large gap means
+the bound is loose, the answer might be far from optimal, and either
+more time, a better model, or a stronger formulation is warranted. (The
+formula divides by \lstinline!|objective_value|! and is
+therefore undefined when the objective evaluates to zero; the OR-Tools
+logs handle this by guarding the denominator, but in user code one
+usually special-cases the zero-objective case.)
+
+If ``close enough'' is good enough for the application, the solver can
+stop on its own once the gap is below a threshold:
+
+\begin{lstlisting}[language=Python]
+solver.parameters.relative_gap_limit = 0.01    # stop at 1 %
+solver.parameters.absolute_gap_limit = 5       # or within 5 units
+\end{lstlisting}
+
+This is often a better fit for production than a fixed time limit,
+because it gives the solver permission to stop early on easy instances
+and keep working on hard ones.
+
+\lstinline!objective_value! is returned as a Python
+\lstinline!float! even on integer-only models. Round it
+explicitly if the downstream code expects an integer.
+
+\subsection{What to do with each status}\label{sec:8.4.4}
+
+A short field guide that combines the status, the bound, and the action:
+
+\begin{itemize}
+\item
+  \textbf{\lstinline!OPTIMAL!} --- done. Read the solution
+  and act on it.
+\item
+  \textbf{\lstinline!FEASIBLE!} with a small gap ---
+  usually done. Read the solution; consider whether the gap matters for
+  the application.
+\item
+  \textbf{\lstinline!FEASIBLE!} with a large gap --- the
+  model needs more time, a better formulation, or revisiting
+  representation choices (\Cref{sec:5.5}) or the model's scope (\Cref{chap:9}).
+\item
+  \textbf{\lstinline!INFEASIBLE!} --- the problem and the
+  data, \emph{together}, describe an impossible instance. Use the
+  verifier from \Cref{chap:4} to confirm: hand-craft a solution you believe
+  should be valid and run it through the evaluator. If the evaluator
+  accepts it, the encoding is wrong; if the evaluator rejects it, your
+  understanding of the rules was wrong. Common fixes: relax a hard
+  constraint into the slack-and-penalty form of \Cref{sec:8.5}, fix a data error,
+  or accept that no plan exists for the given inputs.
+\item
+  \textbf{\lstinline!MODEL_INVALID!} --- the model itself
+  is broken. Read the log; look for variables with empty domains,
+  expressions outside the supported integer range, or API misuses.
+  (Logical contradictions between \emph{constraints} surface as
+  \lstinline!INFEASIBLE!, not
+  \lstinline!MODEL_INVALID! --- the latter is reserved
+  for structural problems with the model itself.)
+\item
+  \textbf{\lstinline!UNKNOWN!} --- the solver had no time
+  to conclude. More time, more workers, or a smaller model.
+\end{itemize}
+
+\section{Soft Constraints: Slack and Penalty}\label{sec:8.5}
+
+Some rules are preferred but not absolute --- \emph{total hours should
+not exceed the cap, but overtime is allowed at a cost}; \emph{the
+schedule should respect preferences, but the schedule must be filled
+even if some preferences cannot be honored}. The standard CP-SAT pattern
+combines a relaxed constraint with a penalty in the objective:
+
+\begin{lstlisting}[language=Python]
+overtime = model.new_int_var(0, max_overtime, "overtime")
+
+# The hard cap is relaxed; overtime is the slack.
+model.add(total_hours <= regular_cap + overtime)
+
+# The penalty discourages — but does not forbid — overtime.
+model.minimize(total_cost + 1000 * overtime)
+\end{lstlisting}
+
+The slack variable \lstinline!overtime! measures \emph{how
+much} the original cap would have been violated, and its coefficient in
+the objective is the per-unit penalty. The solver chooses on its own
+when paying for slack is cheaper than the alternatives --- the
+optimization performs the trade-off.
+
+This is the CP-SAT realization of the \emph{hard versus soft}
+distinction from \Cref{sec:4.3}. A \emph{hard} rule is encoded as a constraint
+with no slack; a \emph{soft} rule is encoded as a constraint \emph{with}
+slack, and the slack's coefficient in the objective is the rule's
+per-unit penalty. A model with only hard rules has a binary feasibility
+verdict; a model with soft rules has a richer answer that captures
+\emph{how much} and \emph{where} the rules were violated.
+
+On the verifier side, the matching \lstinline!Rule!
+reports its violation through \lstinline!Metric.cost!
+rather than \lstinline!Metric.violation! --- slack
+semantics stay in lockstep on both sides.
+
+The slack pattern also has a workflow purpose: it is the standard
+response to an \lstinline!INFEASIBLE! status from \Cref{sec:8.4}
+when the infeasibility is real and the rule is genuinely soft. Rather
+than refusing to plan, the model returns the \emph{cheapest} violation
+of the soft rule that the rest of the constraints permit. This is often
+what is wanted in production --- a binary ``no plan exists'' answer is
+rarely actionable, while ``the cheapest plan violates rule X by 3 units
+at cost 3000'' is.

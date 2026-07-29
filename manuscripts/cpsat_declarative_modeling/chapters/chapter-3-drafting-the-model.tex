@@ -1,0 +1,369 @@
+\chapter{Drafting the Model}\label{chap:3}
+
+\begin{quote}
+\emph{``All models are wrong, but some are useful.''} --- George E. P.
+Box
+\end{quote}
+
+There are two fundamental challenges to overcome before implementing an
+optimization model in a solver. The first is to express the problem in a
+precise form. The second is to translate that form into something the
+interface of your chosen solver can understand. Further challenges will
+follow later, especially making the model run fast, but this chapter
+focuses only on the first two.
+
+The previous chapter gave us the notation needed to start sketching a
+model. In this chapter, we look at a structured way to do so. The
+structure is not linear: for a complicated problem, you usually identify
+the core, formulate it, get it into a runnable form, and then extend it
+with the remaining rules and objectives.
+
+The five modeling ingredients in this chapter --- entities, parameters,
+variables, constraints, and objective --- are therefore not a checklist
+that you complete once. They are a recurring guide. New constraints may
+require new variables; a new objective term may change which parameters
+matter; a newly discovered entity may force you to restructure earlier
+parts of the formulation. With experience, the iterations tend to become
+fewer and smaller.
+
+\section{The Five Components}\label{sec:3.1}
+
+A complete optimization model has five components that provide structure
+for thinking and writing:
+
+\begin{enumerate}
+\item
+  \textbf{Entities} --- what objects does the problem talk about? They
+  become \emph{sets}.
+\item
+  \textbf{Parameters} --- what data is known up front? They become
+  \emph{constants indexed by the sets}.
+\item
+  \textbf{Variables} --- what is the solver allowed to choose? They
+  become \emph{unknowns with a domain}.
+\item
+  \textbf{Constraints} --- what makes a choice valid? They become
+  \emph{relations on variables}.
+\item
+  \textbf{Objective} --- what makes one valid choice better than
+  another? It becomes \emph{one expression with sense
+  \lstinline!min! or \lstinline!max!};
+  multi-objective optimization is a topic of its own.
+\end{enumerate}
+
+The order is a guideline. Entities and parameters define the language;
+variables depend on that language; constraints relate the variables; the
+objective evaluates valid choices.
+
+For the Knapsack problem from the previous chapter, the five components
+read:
+
+\begin{enumerate}
+\item
+  \textbf{Entities.} The items, \(I\).
+\item
+  \textbf{Parameters.} A value \(c_i \in \mathbb{R}_{\ge 0}\) and a
+  weight \(w_i \in \mathbb{R}_{\ge 0}\) for every \(i \in I\), plus a
+  knapsack capacity \(C \in \mathbb{R}_{\ge 0}\).
+\item
+  \textbf{Variables.} One binary variable per item, \(x_i \in \{0, 1\}\)
+  for \(i \in I\), with \(x_i = 1\) meaning \emph{take item \(i\)}.
+\item
+  \textbf{Constraints.} The total weight must not exceed capacity:
+  \(\sum_{i \in I} w_i x_i \le C\).
+\item
+  \textbf{Objective.} Maximize total value:
+  \(\max \sum_{i \in I} c_i x_i\).
+\end{enumerate}
+
+Now suppose we want to integrate the scenario-based worst-case objective
+from the previous chapter. We have to change a few components, but the
+model still looks similar:
+
+\begin{enumerate}
+\item
+  \textbf{Entities.} Items \(I\) and scenarios \(S\).
+\item
+  \textbf{Parameters.} A per-scenario value
+  \(c_i^s \in \mathbb{R}_{\ge 0}\) for every \(i \in I\) and
+  \(s \in S\); weights \(w_i\) and capacity \(C\) as before.
+\item
+  \textbf{Variables.} Unchanged: \(x_i \in \{0, 1\}\) for \(i \in I\).
+\item
+  \textbf{Constraints.} Unchanged: \(\sum_{i \in I} w_i x_i \le C\).
+\item
+  \textbf{Objective.} Maximize the worst-case value:
+  \(\max \min_{s \in S} \sum_{i \in I} c_i^s x_i\).
+\end{enumerate}
+
+This is a precise paper formulation, but it is not yet in a form
+suitable for most solvers. The objective contains a \(\min\) over
+scenarios inside the maximization, and most solvers will not accept that
+nested expression as written. The standard remedy is an
+auxiliary-variable reformulation: introduce a variable \(z\) for the
+worst-case value and bound it from above by every scenario's value.
+
+The solver-facing version is:
+
+\begin{enumerate}
+\item
+  \textbf{Entities.} Items \(I\) and scenarios \(S\).
+\item
+  \textbf{Parameters.} \(c_i^s\), \(w_i\), and \(C\).
+\item
+  \textbf{Variables.} \(x_i \in \{0, 1\}\) for \(i \in I\), and an
+  auxiliary variable \(z\) representing the worst-case value.
+\item
+  \textbf{Constraints.} The capacity constraint \[
+  \sum_{i \in I} w_i x_i \le C,
+  \] and the scenario-value constraints \[
+  z \le \sum_{i \in I} c_i^s x_i \qquad \forall s \in S.
+  \]
+\item
+  \textbf{Objective.} Maximize \(z\).
+\end{enumerate}
+
+Maximizing \(z\) subject to one inequality per scenario forces \(z\) up
+to the smallest scenario value, recovering the original
+\(\min_{s \in S}\) exactly.
+
+\section{A Worked Example: Hospital Ward Rostering}\label{sec:3.2}
+
+Consider the following problem. A small hospital ward needs to schedule
+its nursing staff for the coming week. The ward has a fixed list of
+shifts to fill. Each shift has a date, a required skill --- say,
+\emph{ICU}, \emph{pediatrics}, or \emph{general care} --- and a
+headcount specifying how many nurses must be on duty. The ward employs a
+roster of nurses, each of whom holds a personal set of skills and is
+available on certain days but not others. Assigning a particular nurse
+to a particular shift incurs a cost that captures wage rates, shift
+differentials, and union overtime rules.
+
+The ward manager wants to staff every shift, respect availability and
+skills, and spend as little as possible.
+
+We will now extract the five components. Unlike in the knapsack example,
+they are no longer almost forced by the problem statement. We have
+several kinds of objects, several indexed data tables, and constraints
+that refer to different combinations of workers, shifts, days, and
+skills. The point of the five-component structure is to keep that
+complexity visible and organized.
+
+\subsection{Step 1 --- Entities become sets}\label{step-1-entities-become-sets}
+
+Read the problem statement and underline every noun that names a class
+of objects. \emph{Nurses, shifts, days, skills.} Each class becomes a
+set.
+
+\begin{symboltable}{lL}
+Symbol & Description \\ \midrule
+\(W\) & Workers (nurses) --- the staff to be scheduled. \\
+\(S\) & Shifts --- the work blocks to be filled this week. \\
+\(T\) & Days --- the calendar dimension, \(T = \{1, \dots, 7\}\). \\
+\(K\) & Skills --- the qualifications the ward tracks. \\
+\end{symboltable}
+
+
+A set is the \emph{type} of an index. Once we have written \(w \in W\)
+and \(s \in S\), we can index any quantity in the model by \((w, s)\)
+--- variables, parameters, constraints, neighborhoods.
+
+\subsection{Step 2 --- Parameters are the input data}\label{step-2-parameters-are-the-input-data}
+
+Anything known before we solve is a parameter. Parameters are often
+indexed by the sets from step 1, and each one should carry a domain ---
+the values it may take --- together with an informal description that
+fixes what the symbol means. Some parameters are raw input data; others
+are derived from that input to make the model easier to write.
+
+\begin{symboltable}{lllL}
+Symbol & Indices & Domain & Description \\ \midrule
+\(c_{w,s}\) & \(w \in W,\; s \in S\) & \(\mathbb{R}_{\ge 0}\) & Cost of assigning worker \(w\) to shift \(s\). \\
+\(a_{w,s}\) & \(w \in W,\; s \in S\) & \(\{0, 1\}\) & Availability flag: \lstinline!1! iff \(w\) is available for \(s\). \\
+\(r_s\) & \(s \in S\) & \(K\) & Skill required by shift \(s\). \\
+\(h_w\) & \(w \in W\) & \(2^K\) & Set of skills held by worker \(w\). \\
+\(n_s\) & \(s \in S\) & \(\mathbb{N}_0\) & Number of workers needed on shift \(s\). \\
+\(S_t\) & \(t \in T\) & \(2^S\) & Subset of shifts that fall on day \(t\) (derived from shift dates). \\
+\end{symboltable}
+
+
+The domains are explicit. \(c_{w,s}\) is a non-negative real,
+\(a_{w,s}\) is binary, \(n_s\) is a non-negative integer, and \(h_w\) is
+a subset of \(K\) (so its domain is the power set \(2^K\)). Each shift
+requires one skill, while each worker may hold multiple skills --- a
+detail that matters once we write the skill-match constraint.
+
+The last row illustrates that a parameter need not be raw input. \(S_t\)
+is derived from the dates of the shifts: for each day \(t\), it collects
+exactly those shifts that occur on that day. Including such derived
+parameters in the table is useful because it gives later constraints a
+clean vocabulary. Instead of repeatedly writing ``all shifts that fall
+on day \(t\),'' we can simply write \(S_t\).
+
+\subsection{Step 3 --- Variables are the unknowns}\label{step-3-variables-are-the-unknowns}
+
+This is the step where the problem stops being only a description and
+becomes a model. Each decision unit becomes one variable, declared with
+three things: a name, an index range, and a domain. What counts as a
+single decision unit is itself a modeling choice: the same problem can
+often be modeled at different granularities, with real consequences for
+solver performance.
+
+For the rostering problem, the natural first decision unit is \emph{does
+worker \(w\) take shift \(s\)?} --- one binary choice per worker--shift
+pair.
+
+\begin{symboltable}{lllL}
+Symbol & Indices & Domain & Description \\ \midrule
+\(x_{w,s}\) & \(w \in W,\; s \in S\) & \(\{0, 1\}\) & \lstinline!1! iff worker \(w\) is assigned to shift \(s\), else \lstinline!0!. \\
+\end{symboltable}
+
+
+That single line declares \(|W| \cdot |S|\) variables --- one per cell
+of the worker--shift matrix. Many of those combinations may be trivially
+infeasible: the worker may be unavailable, or may lack the skill
+required by the shift. In the simple formulation, we still declare the
+full matrix and let constraints rule out the invalid combinations.
+
+One could prune the index set up front and create variables only for
+worker--shift pairs that are possible in principle. That is often a
+useful implementation choice, but it is not needed for the first paper
+model. At this stage, the full matrix is easier to read: every potential
+assignment has a variable, and every rule appears explicitly as a
+constraint. If an implementation detail is important enough to remember,
+record it as a note rather than complicating the first formulation.
+
+The decision here is \emph{take or leave}, so the natural variable is
+binary. Other problems suggest other shapes:
+
+\begin{symboltable}{lL}
+Decision phrasing & Variable shape \\ \midrule
+``Take it or not?'' & \(x_i \in \{0, 1\}\) --- binary \\
+``How many?'' & \(x_i \in \mathbb{N}_0\) --- non-negative integer \\
+``When does it start?'' & \(\text{st}_i \in [0, H]\) --- time variable, bounded by horizon \(H\) \\
+``Which slot does it go into?'' & either \(x_i \in \{1, \dots, K\}\) \emph{or} \(y_{i,k} \in \{0,1\}\) --- index \emph{vs.} one-hot \\
+``Which edge is used?'' & \(x_{ij} \in \{0,1\} \;\forall (i,j) \in E\) --- one Boolean per edge \\
+\end{symboltable}
+
+
+The fourth row deserves attention because it is a common modeling
+decision: when the answer is ``which of \(K\) options,'' do you use a
+single integer variable taking values in \(\{1, \dots, K\}\), or \(K\)
+Boolean variables that sum to 1? Both can be correct. They differ in the
+kinds of constraints they make easy to write and in the structure a
+solver can exploit.
+
+\begin{platypusinfo}
+Real workforce-scheduling systems often use more
+aggregate variables than the simple worker--shift assignment variable
+above. In a column-generation model, for example, a variable may
+represent an entire shift pattern for one worker over the planning
+horizon. Since the number of possible patterns is usually enormous, the
+model is solved iteratively: start with a manageable subset of patterns,
+solve the restricted model, then generate additional useful patterns
+through a separate pricing problem. That is a powerful technique, but it
+is a different modeling level from the first paper formulation developed
+here.
+\end{platypusinfo}
+
+\subsection{Step 4 --- Constraints encode validity}\label{step-4-constraints-encode-validity}
+
+Constraints are usually the most complex part of the model. For simple
+textbook examples, it may be enough to translate each ``must'' sentence
+directly into one formula. But even the scenario-based knapsack example
+showed that this is not always the whole story: sometimes a clear paper
+statement needs auxiliary variables and additional constraints before it
+becomes solver-friendly. In richer applications, one must also
+distinguish between hard constraints, which define feasibility, and soft
+constraints, which may be violated at a penalty. The present example is
+cleanly specified, so we can ignore soft constraints for now.
+
+We now identify the constraint families and formulate them one by one.
+For hard constraints, each new rule narrows the feasible region: it
+removes assignments that are not allowed, but it does not make
+previously invalid assignments valid. This makes constraints relatively
+modular. Still, a single rule may require several formulas, and part of
+a rule may already be enforced by earlier constraints or by variable
+domains. In this example, however, the mapping is pleasantly direct:
+four business rules become four constraint families.
+
+\paragraph{Coverage.} Every shift must be staffed with exactly the
+headcount it requires.
+
+\[
+\sum_{w \in W} x_{w,s} \;=\; n_s \qquad \forall s \in S.
+\]
+
+This is one equation per shift. The sum on the left counts the number of
+workers assigned to \(s\), and the right-hand side is the demanded
+headcount. The \(\forall s \in S\) is doing real work: it makes this not
+a single equation but a family of \(|S|\) equations.
+
+\paragraph{Availability.} A worker may not be assigned to a shift they are
+not available for.
+
+\[
+x_{w,s} \;\le\; a_{w,s} \qquad \forall w \in W, \; s \in S.
+\]
+
+If \(a_{w,s} = 0\), the inequality forces \(x_{w,s} = 0\). If
+\(a_{w,s} = 1\), the inequality becomes \(x_{w,s} \le 1\), which is
+already implied by the variable's domain, so the constraint is silent.
+
+\paragraph{Skill match.} If a worker is assigned to a shift, the worker
+must hold the skill the shift requires.
+
+\[
+x_{w,s} = 1 \;\Rightarrow\; r_s \in h_w \qquad \forall w \in W, \; s \in S.
+\]
+
+This is a clear paper-level statement, but it is not the most useful
+solver-facing form because the right-hand side is a fact about the input
+data, not a decision. The direct rewrite is:
+
+\[
+x_{w,s} \;\le\; [r_s \in h_w] \qquad \forall w \in W, \; s \in S,
+\]
+
+where the indicator on the right is \lstinline!1! if the
+skill requirement is met and \lstinline!0! otherwise. The
+compatibility values are computed from the data before the solver is
+called; incompatible pairs are forced to zero, compatible pairs are left
+to the other constraints.
+
+\paragraph{No double-booking.} No worker may be assigned to more than one
+shift on the same day.
+
+\[
+\sum_{s \in S_t} x_{w,s} \;\le\; 1 \qquad \forall w \in W, \; t \in T.
+\]
+
+For every worker--day combination, the sum runs only over the shifts
+that fall on that day and requires that no more than one of them be
+assigned to this worker. This is a typical use of a derived parameter
+(\(S_t\)) to keep the constraint readable.
+
+\subsection{Step 5 --- The objective picks among valid choices}\label{step-5-the-objective-picks-among-valid-choices}
+
+We have specified what counts as a valid roster. Now we say which valid
+roster we prefer.
+
+\paragraph{Total cost.} Minimize the total cost of the assignments we make.
+
+\[
+\min \;\sum_{w \in W} \sum_{s \in S} c_{w,s} \, x_{w,s}.
+\]
+
+The sum runs over all worker--shift pairs, but only the pairs with
+\(x_{w,s} = 1\) contribute.
+
+Two notes on objectives. First, the sense ---
+\lstinline!min! or \lstinline!max! --- is
+part of the specification; ``optimize \(f\)'' is incomplete. Second, an
+objective is a single expression. If the problem talks about several
+goals at once --- cost \emph{and} overtime \emph{and} fairness --- you
+must combine them yourself, by weighted sum or lexicographic ordering.
+There is no implicit averaging. And a model can have no objective at
+all: pure feasibility (``is \emph{any} valid roster possible?'') is a
+legitimate question, and forcing an artificial objective onto it is a
+mistake.
