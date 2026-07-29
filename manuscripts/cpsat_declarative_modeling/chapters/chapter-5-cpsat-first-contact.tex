@@ -27,8 +27,8 @@ valuable when learning: it keeps the connection between the model and
 the solver visible.
 
 CP-SAT has won the \href{https://www.minizinc.org/challenge/}{MiniZinc
-Challenge} --- the standard annual benchmark in the
-constraint-programming community --- every year since 2018. For
+Challenge}, the standard annual benchmark in the
+constraint-programming community, every year since 2018. For
 combinatorial problems with discrete decisions, it is one of the
 strongest tools available.
 
@@ -67,10 +67,10 @@ A short tour of what is inside:
   solvers. This is what makes CP-SAT extraordinarily good at logical
   constraints.
 \item
-  A \textbf{CP} layer adds the global constraints ---
+  A \textbf{CP} layer adds the global constraints,
   \lstinline!all_different!,
   \lstinline!circuit!,
-  \lstinline!cumulative!, and others --- with dedicated
+  \lstinline!cumulative!, and others, with dedicated
   propagators that reason about whole structures at once rather than
   constraint by constraint.
 \item
@@ -79,7 +79,7 @@ A short tour of what is inside:
   into territory traditionally dominated by MIP solvers.
 \item
   \textbf{Large Neighborhood Search} (LNS) takes a current solution,
-  freezes most of it, and re-optimizes the rest --- a way of escaping
+  freezes most of it, and re-optimizes the rest, a way of escaping
   local minima that hand-rolled procedures rarely match.
 \item
   An aggressive \textbf{presolve} simplifies the model before search
@@ -94,8 +94,8 @@ A short tour of what is inside:
 The crucial implication for the modeler: \emph{you typically do not pick
 the strategy explicitly}. You hand the solver a model and call
 \lstinline!solve!; the portfolio races itself for the best
-answer. Advanced usage does involve steering --- branching strategies,
-LNS parameters, worker counts, time limits, and so on --- but most of
+answer. Advanced usage does involve steering (branching strategies,
+LNS parameters, worker counts, time limits, and so on), but most of
 the leverage on real problems comes from the model itself rather than
 from solver tuning; for the cases where tuning matters, later chapters
 discuss it. For now, ``build a model, call
@@ -113,20 +113,20 @@ are dominantly discrete and whose constraints are richly logical:
 
 \begin{itemize}
 \item
-  \textbf{Scheduling and rostering} --- assigning tasks to machines,
+  \textbf{Scheduling and rostering}: assigning tasks to machines,
   workers to shifts, courses to rooms.
 \item
-  \textbf{Routing and tour problems} --- vehicle routing on small to
+  \textbf{Routing and tour problems}: vehicle routing on small to
   medium graphs, sequencing.
 \item
-  \textbf{Packing, assignment, and matching} --- bin packing,
+  \textbf{Packing, assignment, and matching}: bin packing,
   generalized assignment, stable matching with side constraints.
 \item
   \textbf{Discrete planning} with rich logical rules, especially when
   the rules are messy in ways that pure linear formulations do not
   handle gracefully.
 \item
-  \textbf{Feasibility checking} --- \emph{is there any valid
+  \textbf{Feasibility checking}: \emph{is there any valid
   configuration at all?} CP-SAT is exceptionally good at this; problems
   with hundreds of logical rules that look intractable are often solved
   or proven infeasible in seconds.
@@ -171,7 +171,7 @@ pip install ortools
 \end{lstlisting}
 
 That is the entire installation. The package ships precompiled wheels
-for the major platforms --- Linux, macOS, Windows, on x86-64 and ARM ---
+for the major platforms (Linux, macOS, Windows, on x86-64 and ARM)
 so there is no C++ build step on a fresh machine. Python 3.9 and newer
 are supported.
 
@@ -181,10 +181,10 @@ Two imports are used in essentially every CP-SAT program:
 from ortools.sat.python import cp_model
 \end{lstlisting}
 
-\lstinline!cp_model.CpModel! is the model \emph{builder}
---- the object you populate with variables and constraints.
+\lstinline!cp_model.CpModel! is the model \emph{builder},
+the object you populate with variables and constraints.
 \lstinline!cp_model.CpSolver! is the \emph{solver
-wrapper} --- the object that takes a built model, runs the search, and
+wrapper}, the object that takes a built model, runs the search, and
 exposes the answer. Every example in the rest of the manuscript starts
 with this import.
 
@@ -193,7 +193,7 @@ does not use a GPU. The two resources that matter are cores (CP-SAT runs
 multiple workers in parallel) and memory (presolve, LP relaxation, and
 learned clauses all need RAM). Four cores and 16 GB of RAM is a
 reasonable starting point for learning, but serious projects usually
-benefit from more --- both more workers and more memory headroom.
+benefit from more: both more workers and more memory headroom.
 Smaller machines are still usable for modest instances.
 
 \section{A Complete Example: Facility Location}\label{sec:5.4}
@@ -215,8 +215,8 @@ Shipping goods from warehouse \(i\) to customer \(j \in C\) costs
 \(c_{i,j}\). Every customer must be served by exactly one warehouse, and
 a warehouse can only ship goods if it is actually opened. The company
 needs to decide which warehouse locations to open and which warehouse
-will serve each customer so that the total cost --- opening costs plus
-shipping costs --- is as small as possible.
+will serve each customer so that the total cost, opening costs plus
+shipping costs, is as small as possible.
 \end{quote}
 
 We apply the five-step recipe from \Cref{chap:3} to this statement, working through the components in order.
@@ -239,9 +239,9 @@ Symbol & Indices & Domain & Description \\ \midrule
 \(c_{i,j}\) & \(i \in F,\; j \in C\) & \(\mathbb{N}_0\) & Cost of shipping from warehouse \(i\) to customer \(j\) \emph{if} that assignment is made. \\
 \end{symboltable}
 
-\paragraph{Variables.} There are two atomic decisions to make --- whether
+\paragraph{Variables.} There are two atomic decisions to make, whether
 to open each warehouse, and whether each warehouse serves each
-customer --- giving one variable family per decision.
+customer, giving one variable family per decision.
 
 \begin{symboltable}{lllL}
 Symbol & Indices & Domain & Description \\ \midrule
@@ -266,13 +266,13 @@ x_{i,j} \;\le\; y_i \qquad \forall i \in F, \; j \in C.
 \]
 
 If \(y_i = 0\) (warehouse closed), the inequality forces \(x_{i,j} = 0\)
-for every customer \(j\) --- that warehouse cannot serve anyone. If
+for every customer \(j\). That warehouse cannot serve anyone. If
 \(y_i = 1\) (warehouse open), the inequality is \(x_{i,j} \le 1\), which
 the variable's domain already implies, so the constraint is silent. One
 line captures the implication ``closed → cannot serve'' with no
 implication arrow on paper.
 
-\paragraph{Objective.} Minimize total cost --- the fixed cost of every
+\paragraph{Objective.} Minimize total cost: the fixed cost of every
 warehouse opened, plus the shipping cost of every customer assignment
 made.
 
@@ -334,21 +334,21 @@ else:
 \end{lstlisting}
 
 \paragraph{Variables.} The code declares two families, mirroring the two
-variable rows in the math model. \(y\) is one Boolean per potential location --- \emph{is
-this warehouse opened?} --- created by
+variable rows in the math model. \(y\) is one Boolean per potential location (\emph{is
+this warehouse opened?}) created by
 \lstinline!model.new_bool_var(name)! and corresponding
 to \(y_i \in \{0, 1\}\) on paper. The \lstinline!name! is
 metadata for debugging output and does not affect the search. \(x\) is
-one Boolean per (location, customer) pair --- \emph{does this warehouse
-serve this customer?} --- keyed by a tuple, corresponding to
+one Boolean per (location, customer) pair (\emph{does this warehouse
+serve this customer?}) keyed by a tuple, corresponding to
 \(x_{i,j} \in \{0, 1\}\). The dictionary keying is a Python convenience
 that lets us write \lstinline!x[i, j]! later instead of
 indexing into a flattened list.
 
 Each paper variable here lifts directly into a CP-SAT variable with the
 same domain and indexing. In larger models the correspondence is looser
---- some paper variables are dropped as redundant, others are split into
-auxiliary solver variables --- but for this example the mapping is
+(some paper variables are dropped as redundant, others are split into
+auxiliary solver variables) but for this example the mapping is
 direct.
 
 \paragraph{Constraints.} The two families translate one-to-one into
@@ -377,7 +377,7 @@ model.add(x[i, j] <= y[i])
 
 This is the line whose semantics we noted on paper: when \(y_i = 0\) the
 right-hand side forces \(x_{i,j} = 0\); when \(y_i = 1\) the inequality
-is slack. The Python expression is exactly the math --- CP-SAT accepts
+is slack. The Python expression is exactly the math: CP-SAT accepts
 the linear inequality directly, with no extra machinery.
 
 \paragraph{Objective.} \lstinline!model.minimize(expr)!
@@ -393,7 +393,7 @@ instantiates the wrapper, and
 and returns a status code. For a first model the two outcomes to know
 are \lstinline!OPTIMAL! (a solution was found and proven optimal) and
 \lstinline!FEASIBLE! (a solution was found, but optimality was not
-proven --- on hard problems this is a first-class outcome, often the
+proven, on hard problems this is a first-class outcome, often the
 answer you ship). The remaining codes (\lstinline!INFEASIBLE!,
 \lstinline!UNKNOWN!, \lstinline!MODEL_INVALID!) and time-limit handling
 are covered in \Cref{chap:8}.
@@ -402,7 +402,7 @@ are covered in \Cref{chap:8}.
 reading from the solver after a successful run.
 
 \lstinline!solver.value(var)! returns the assigned value
-of each variable as an integer --- \lstinline!0! or
+of each variable as an integer: \lstinline!0! or
 \lstinline!1! for Booleans, the assigned integer for an
 integer variable. The companion
 \lstinline!solver.boolean_value(literal)! returns the
@@ -410,7 +410,7 @@ same information as a Python \lstinline!bool! and is the
 cleaner choice when downstream code wants
 \lstinline!True!/\lstinline!False! directly.
 Reading the answer through the \emph{solver} (not the \emph{variable})
-is important either way --- the variable object is just a handle; the
+is important either way: the variable object is just a handle; the
 value lives in the solver's internal state after the search.
 
 \lstinline!solver.objective_value! returns the objective
@@ -434,8 +434,8 @@ customer assignment: {1: 1, 2: 1, 3: 1}
 total cost: 160
 \end{lstlisting}
 
-In this trivial instance, opening only warehouse 1 --- the cheapest at
-100 to open, with shipping costs 10/20/30 to the three customers ---
+In this trivial instance, opening only warehouse 1 (the cheapest at
+100 to open, with shipping costs 10/20/30 to the three customers)
 costs \lstinline!100 + 60 = 160!, which beats every other
 configuration. CP-SAT proves this is optimal in essentially zero time.
 
@@ -457,7 +457,7 @@ salesman problem} (TSP): given \(n\) cities and pairwise distances
 \lstinline!cost[i][j]!, find a shortest tour visiting
 every city exactly once and returning to the start.
 
-The natural way to think about a tour is as a permutation --- city
+The natural way to think about a tour is as a permutation: city
 \(x_i\) is visited at position \(i\). And indeed, CP-SAT provides an
 \lstinline!AllDifferent! constraint that handles exactly
 this:
@@ -468,16 +468,16 @@ model.add_all_different(x)
 \end{lstlisting}
 
 So far so good. But the objective is
-\lstinline!cost[x_0][x_1] + cost[x_1][x_2] + ...! ---
+\lstinline!cost[x_0][x_1] + cost[x_1][x_2] + ...!,
 and \(x_0\), \(x_1\) are \emph{variables}, not constants. We cannot
 index into a Python list with a CP-SAT variable. Browsing the constraint
 catalogue, we find \lstinline!add_element!, which
-performs variable-indexed lookups --- but only into one-dimensional
+performs variable-indexed lookups, but only into one-dimensional
 arrays. For a two-dimensional distance matrix, we would need nested
 element constraints, each requiring auxiliary variables. The natural
 formulation has no clean translation into CP-SAT.
 
-But browsing further, we find \lstinline!add_circuit! ---
+But browsing further, we find \lstinline!add_circuit!,
 a constraint that enforces a Hamiltonian cycle over a set of arcs. This
 solves the problem directly, if we remodel. Instead of ``which city at
 each position,'' ask ``which arcs are used?'' A Boolean per city pair
@@ -491,7 +491,7 @@ model.add_circuit([(i, j, x[i, j]) for i, j in x])
 model.minimize(sum(cost[i][j] * x[i, j] for i, j in x))
 \end{lstlisting}
 
-The objective is now a plain linear sum ---
+The objective is now a plain linear sum:
 \lstinline!cost[i][j]! is a constant per arc, no variable
 indexing needed. And \lstinline!add_circuit! handles
 subtour elimination internally.
@@ -516,7 +516,7 @@ four steps directly mirroring the recipe from \Cref{chap:3}:
   \textbf{Add variables.} Calls to
   \lstinline!model.new_bool_var(...)!,
   \lstinline!model.new_int_var(...)!, or the other
-  variable factories --- typically one factory call per variable family
+  variable factories, typically one factory call per variable family
   in the paper model, plus any auxiliary variables the encoding needs
   (Step 3 of the recipe).
 \item
@@ -534,7 +534,7 @@ four steps directly mirroring the recipe from \Cref{chap:3}:
   \lstinline!model.minimize(expr)! or
   \lstinline!model.maximize(expr)!. The expression is the
   same one the math model wrote (Step 5 of the recipe). Pure feasibility
-  models --- \emph{is there any valid configuration?} --- skip this
+  models (\emph{is there any valid configuration?}) skip this
   step.
 \item
   \textbf{Solve.} \lstinline!solver.solve(model)! returns
@@ -549,7 +549,7 @@ four steps directly mirroring the recipe from \Cref{chap:3}:
 The facility-location example used the simplest version of every piece;
 the TSP example showed that not every problem is that smooth and that
 knowing CP-SAT's vocabulary matters. The chapters that follow provide
-that vocabulary. \Cref{chap:6} catalogs the variable types --- integers with
+that vocabulary. \Cref{chap:6} catalogs the variable types: integers with
 bounded domains, intervals for scheduling, and several others. \Cref{chap:7}
 catalogs the constraint families, including the global constraints
 (\lstinline!add_all_different!,

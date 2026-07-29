@@ -7,16 +7,16 @@ Alfred North Whitehead
 \end{quote}
 
 A software engineer's instinct on a combinatorial problem is to design
-an algorithm: pick a strategy --- greedy, backtracking, branch-and-bound,
-dynamic programming --- and commit to the search structure, the data
+an algorithm: pick a strategy (greedy, backtracking, branch-and-bound,
+dynamic programming) and commit to the search structure, the data
 structures, the order of exploration, the pruning rules. The skill is
 real and worth keeping. Many problems are best solved by writing the
 procedure that solves them.
 
 On most real combinatorial problems, however, a hand-rolled procedure is
 far from the state of the art. Industrial solvers represent decades of
-accumulated engineering --- clause learning, constraint propagation,
-restart strategies, parallel workers, instance-tuned heuristics --- that
+accumulated engineering (clause learning, constraint propagation,
+restart strategies, parallel workers, instance-tuned heuristics) that
 no individual programmer can reproduce in a project. The pragmatic move
 on a hard combinatorial problem is therefore not to write a solver, but
 to \emph{describe} the problem in a form that an existing solver can
@@ -33,15 +33,15 @@ two mindsets answer different questions:
 \item
   The \textbf{declarative} view answers \emph{what counts as an answer?}
   It is the perspective of a problem describer. The output is a
-  \emph{model} --- a precise, executable statement of which
+  \emph{model}: a precise, executable statement of which
   configurations are acceptable and which is best.
 \end{itemize}
 
 Both views are legitimate, and a working optimization practitioner moves
 between them. Most readers of this manuscript will have stronger code
 intuition than mathematical-notation intuition; that intuition does not
-become useless under the new paradigm --- most of the work is still code
---- but it has to be redirected, since the code you write here
+become useless under the new paradigm (most of the work is still code)
+but it has to be redirected, since the code you write here
 \emph{describes} rather than \emph{executes}.
 
 The solver we will commit to in this manuscript is \textbf{CP-SAT}, the
@@ -152,8 +152,8 @@ The two formulations differ in three ways that matter.
 The first is performance. The dynamic program's \(\lvert I \rvert
 \cdot C\) running time is fine for moderate capacities and bad for
 large ones, while
-CP-SAT inherits decades of constraint-solver research --- clause
-learning, propagation, restarts, parallel workers --- none of which we
+CP-SAT inherits decades of constraint-solver research (clause
+learning, propagation, restarts, parallel workers) none of which we
 had to write. This does not mean CP-SAT is automatically the best method
 for knapsack; on narrow problem classes a tailored algorithm is often
 the right baseline. The declarative model gives access to the solver's
@@ -163,7 +163,7 @@ The second is reading effort. The procedural version mixes the problem
 with its solution: to read it six months from now, you have to
 reconstruct why the recursion is what it is, why the loops run in this
 order, and what each index means. The declarative version reads as a
-problem statement --- every line corresponds to a fact about the
+problem statement: every line corresponds to a fact about the
 problem, and the model is reviewable and explainable in roughly the same
 form a colleague would expect on a whiteboard.
 
@@ -172,8 +172,8 @@ a new requirement appears: items A and B are mutually exclusive, or at
 least three of items C, D, E must be taken. In the dynamic program the
 recursion changes, the table changes, possibly the time complexity
 changes, and we are back at the whiteboard. In the declarative model
-each new requirement is one extra line --- \(x_A + x_B \le 1\) for the
-mutual exclusion, \(x_C + x_D + x_E \ge 3\) for the cardinality --- and
+each new requirement is one extra line (\(x_A + x_B \le 1\) for the
+mutual exclusion, \(x_C + x_D + x_E \ge 3\) for the cardinality) and
 the solver absorbs the addition without any change to how the search
 proceeds. Real problems mutate; their constraints arrive in waves, first
 the one in the textbook, then the regulatory rule, then the customer's
@@ -199,8 +199,8 @@ a way the solver can exploit.
 
 A few patterns recur. Solvers are tuned for certain shapes of
 constraint, so a formulation that reaches for the solver's native
-vocabulary --- global constraints, indicator variables, well-known
-reformulations --- usually beats one that reinvents the same logic from
+vocabulary (global constraints, indicator variables, well-known
+reformulations) usually beats one that reinvents the same logic from
 arithmetic primitives. Encodings that rule out symmetric or equivalent
 solutions, removing duplicates the solver would otherwise explore,
 outperform encodings that leave that freedom in, even when both are
@@ -249,8 +249,8 @@ an idiomatic encoding for one solver looks different from an idiomatic
 encoding for another. This manuscript commits to \textbf{CP-SAT}, the
 constraint-programming solver that ships inside Google's
 \href{https://developers.google.com/optimization}{OR-Tools}. CP-SAT has
-an expressive vocabulary --- global constraints for routing, scheduling,
-packing, and combinatorial structure --- and \Cref{chap:5}--\Cref{chap:8} lay it out: a
+an expressive vocabulary (global constraints for routing, scheduling,
+packing, and combinatorial structure) and \Cref{chap:5}--\Cref{chap:8} lay it out: a
 first end-to-end model, then variables, constraints, and objectives in
 reference form. \Cref{chap:9} closes the manuscript by reflecting on these
 four ideas and naming a few practical moves that come up in real

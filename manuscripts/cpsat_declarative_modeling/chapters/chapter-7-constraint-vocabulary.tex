@@ -6,7 +6,7 @@ Ludwig Wittgenstein
 \end{quote}
 
 Constraints are the verbs of a CP-SAT model. Where \Cref{chap:6} showed how
-to declare the unknowns, this chapter shows how to bind them --- every
+to declare the unknowns, this chapter shows how to bind them: every
 relation, restriction, and rule that distinguishes a valid configuration
 from an invalid one. CP-SAT ships with a curated set of constraint
 families. Some \emph{global} families in the catalogue carry a dedicated
@@ -42,8 +42,8 @@ The expressions on the left are built by overloading:
 variables (and integer constants) all return CP-SAT expression or
 constraint objects. Python's built-in \lstinline!sum(...)!
 chains the additions for you, so a generator expression over a family of
-variables --- the workhorse pattern for capacity and counting
-constraints --- drops directly into
+variables (the workhorse pattern for capacity and counting
+constraints) drops directly into
 \lstinline!model.add(...)!. The constraint object that
 comes out is registered with the model.
 
@@ -51,8 +51,8 @@ CP-SAT works exclusively in integers, so strict inequalities are
 rewritten to non-strict-with-shift: \(x < y\) becomes \(x \le y - 1\).
 The semantics are identical, but knowing that the rewrite happens
 prevents confusion when reading the solver's logs or inspecting an
-exported model. For double-bounded expressions --- \emph{the load is
-between 50 and 100} ---
+exported model. For double-bounded expressions (\emph{the load is
+between 50 and 100})
 \lstinline!add_linear_constraint(expr, lb, ub)! is
 occasionally cleaner than two separate
 \lstinline!model.add! calls; both forms produce the same
@@ -65,13 +65,13 @@ budget constraints, and flow conservation per node
 (\(\sum_{j \in \delta^+(i)} x_{ij} - \sum_{j \in \delta^-(i)} x_{ji} = b_i\)).
 
 With practice, almost any constraint can be \emph{expressed or
-approximated} as a linear (in)equality --- often with a few helper
+approximated} as a linear (in)equality, often with a few helper
 Booleans or auxiliary variables. Mixed-Integer Programming solvers
 (Gurobi, CPLEX, HiGHS) accept \emph{only} this family of constraints,
 and entire industries run on models built from
 \lstinline!model.add(...)! alone. CP-SAT exposes a much
-richer vocabulary in the sections ahead --- Boolean logic, reification,
-scheduling globals, routing globals --- but the linear shape is the
+richer vocabulary in the sections ahead (Boolean logic, reification,
+scheduling globals, routing globals), but the linear shape is the
 universal one. The richer constraints are \emph{convenience and
 propagation strength}, not necessity. Understanding linear-only modeling
 is therefore a transferable skill: it carries over to every MIP solver
@@ -80,7 +80,7 @@ choice for a given problem.
 
 \section{\texorpdfstring{Boolean Logic --- \texttt{add\_bool\_or}, \texttt{add\_bool\_and}, \texttt{add\_implication}}{Boolean Logic --- add\_bool\_or, add\_bool\_and, add\_implication}}\label{sec:7.2}
 
-Pure logical constraints over Boolean \emph{literals} --- Booleans or
+Pure logical constraints over Boolean \emph{literals}: Booleans or
 their negations.
 
 \begin{lstlisting}[language=Python]
@@ -95,21 +95,21 @@ model.add_bool_xor([a, b, c])      # odd number true
 
 The arguments are \emph{literals}: Boolean variables or their negations
 via \lstinline!~!. An integer variable with domain
-\(\{0, 1\}\) is \emph{not} a literal and will be rejected --- if the
+\(\{0, 1\}\) is \emph{not} a literal and will be rejected. If the
 model needs logical operations, declare the variable with
 \lstinline!new_bool_var! from the start.
 
-CP-SAT does not let you nest Boolean constraints --- each call takes
+CP-SAT does not let you nest Boolean constraints: each call takes
 \emph{literals}, never formulas. In modeling, however, the rules you
 want to express rarely arrive in flat form. A typical specification
 might read \emph{``at least one of three production lines is fully
-prepared''} --- formally
+prepared''} (formally
 \((a_1 \land b_1) \lor (a_2 \land b_2) \lor (a_3 \land b_3)\), a
-disjunction of conjunctions --- or \emph{``if either of two combined
+disjunction of conjunctions) or \emph{``if either of two combined
 conditions holds, ship today''}, mixing conjunction, disjunction, and
 implication in a single formula. CP-SAT will not accept these as
 written. Unfolding the formula into flat clauses is part of the modeling
-work, and it is \emph{classical propositional logic} --- the same
+work, and it is \emph{classical propositional logic}, the same
 machinery any first course on logic introduces: De Morgan's laws,
 distribution, conjunctive normal form, and Tseitin's transformation.
 
@@ -121,7 +121,7 @@ Morgan (\(\lnot(x \land y) \equiv \lnot x \lor \lnot y\),
 \(\lnot(x \lor y) \equiv \lnot x \land \lnot y\)) and distribute
 disjunction over conjunction
 (\(x \lor (y \land z) \equiv (x \lor y) \land (x \lor z)\)) until the
-formula is in \emph{conjunctive normal form} --- a conjunction of
+formula is in \emph{conjunctive normal form}, a conjunction of
 clauses, where each clause is a disjunction of literals. Each clause
 maps to one \lstinline!add_bool_or!. Distribution can
 blow up the formula size: a disjunction of \(n\) binary conjunctions has
@@ -146,7 +146,7 @@ pick one literal from each, giving \(2^3 = 8\) clauses such as
 \(a_1 \lor a_2 \lor a_3\), \(a_1 \lor a_2 \lor b_3\), \ldots,
 \(b_1 \lor b_2 \lor b_3\). Eight \lstinline!add_bool_or!
 calls. With four pairs the count rises to sixteen, with eight pairs to
-256 --- direct distribution does not scale.
+256. Direct distribution does not scale.
 
 \emph{Tseitin form.} Introduce \(t_1, t_2, t_3\) with each
 \(t_i \Leftrightarrow a_i \land b_i\), then assert the disjunction over
@@ -168,7 +168,7 @@ original variables; they differ in how they exploit the solver's
 machinery.
 
 \lstinline!only_enforce_if! (\Cref{sec:7.3}) automates a narrow
-slice of this --- specifically, conditional enforcement of a single
+slice of this: specifically, conditional enforcement of a single
 constraint under a literal or short conjunction of literals. It does not
 generalize to arbitrary nested formulas; for those, the manual unfolding
 above is the standard approach.
@@ -177,19 +177,19 @@ A concrete consequence for the basic vocabulary above:
 \lstinline!add_implication! is binary only
 (\(a \Rightarrow b\)). Implications with several antecedents
 (\(a \land b \Rightarrow c\)) flatten by definition of implication to
-\(\lnot a \lor \lnot b \lor c\) --- a single call to
-\lstinline!add_bool_or([~a, ~b, c])! --- without
+\(\lnot a \lor \lnot b \lor c\) (a single call to
+\lstinline!add_bool_or([~a, ~b, c])!) without
 needing an auxiliary.
 
 Three Boolean patterns appear in essentially every Boolean-rich model:
-exactly-one over an assignment row --- \emph{each customer goes to
-exactly one warehouse}, the FLP assignment constraint from \Cref{sec:5.5} ---
+exactly-one over an assignment row (\emph{each customer goes to
+exactly one warehouse}, the FLP assignment constraint from \Cref{sec:5.5}),
 at-most-one for mutually exclusive flags such as pricing tiers or
 compatibility classes, and binary implication for \emph{if A then B}
 rules.
 
-Short clauses --- binary \lstinline!add_bool_or([a, b])!
-in particular --- are among the cheapest propagation CP-SAT performs,
+Short clauses (binary \lstinline!add_bool_or([a, b])!
+in particular) are among the cheapest propagation CP-SAT performs,
 and the SAT layer's clause-learning machinery tends to do well when the
 encoded logic decomposes into many small clauses rather than a few wide
 ones.
@@ -213,13 +213,13 @@ model.add(x + y == 10).only_enforce_if([b1, ~b2])
 \lstinline!only_enforce_if! is the
 conditional-constraint operator. The constraint is in force when the
 literal (or all of the literals in the list) is true; when any of them
-is false, the constraint is treated as inactive --- neither violated nor
+is false, the constraint is treated as inactive, neither violated nor
 satisfied, simply absent for that solution. It is the typical way to
 express that a constraint should depend on a Boolean.
 
 Not every constraint supports
 \lstinline!only_enforce_if!, and the cost of using it
-varies considerably across those that do --- cheap on linear and Boolean
+varies considerably across those that do: cheap on linear and Boolean
 constraints, much heavier on the scheduling and routing globals, where a
 native mechanism (optional intervals, self-loop literals) is usually the
 better expression of conditionality. The OR-Tools documentation lists
@@ -229,8 +229,8 @@ which constraints accept it.
 
 \lstinline!only_enforce_if! from \Cref{sec:7.3} is \emph{half}
 reification: it forces a constraint when a literal is true but says
-nothing about the false case. Posting it in both directions --- once for
-the literal, once for its negation --- gives the full equivalence and
+nothing about the false case. Posting it in both directions (once for
+the literal, once for its negation) gives the full equivalence and
 turns a numeric relation (\emph{exceeds threshold}, \emph{is over
 budget}) into a Boolean the rest of the model can reason about.
 
@@ -251,16 +251,16 @@ constraints (\emph{if over the limit, route through warehouse two}), or
 anywhere else a literal is accepted.
 
 Any time the model needs to \emph{talk about} whether a numeric relation
-holds --- to penalize it, branch on it, combine it with other logic ---
+holds (to penalize it, branch on it, combine it with other logic),
 full reification produces the Boolean to talk about.
 
 Often, however, half-reification is enough. If the Boolean's only
-purpose is to drive a penalty in the objective --- pay when
-\lstinline!over! goes high, no rule when it does not ---
+purpose is to drive a penalty in the objective (pay when
+\lstinline!over! goes high, no rule when it does not),
 the second \lstinline!only_enforce_if! is unnecessary:
 the minimization keeps \lstinline!over! at zero whenever
 the relation does not force it to one. Full reification is required only
-when the \emph{false} direction itself drives logic --- \emph{if not
+when the \emph{false} direction itself drives logic: \emph{if not
 over, then route through warehouse two}. Posting both directions when
 one would do costs extra constraints and propagation, so drop the half
 that is not needed.
@@ -280,8 +280,8 @@ model.add_all_different([queens[i] - i for i in range(n)])
 Mathematically equivalent to \(\binom{n}{2}\) pairwise
 \passthrough{\lstinline"!="} constraints, but with a \emph{strictly
 stronger} propagator in the domain-reasoning sense: the global form
-reasons about the entire list at once --- bipartite matching, in essence
---- and prunes domain values that no pairwise
+reasons about the entire list at once (bipartite matching, in essence)
+and prunes domain values that no pairwise
 \passthrough{\lstinline"!="} could discover.
 
 One small note: CP-SAT will auto-lift a cluster of pairwise
@@ -303,7 +303,7 @@ express the entire problem.
 Typical uses are conflict and uniqueness rules in real models. Time-slot
 conflicts where no two tasks may share a start time. Strict orderings,
 where the variables encode positions in a permutation and every position
-must be distinct. Unique resource assignment --- each task takes its own
+must be distinct. Unique resource assignment: each task takes its own
 machine, each request gets its own identifier, each vehicle a distinct
 depot. Frequency assignment where neighboring transmitters must not
 share a frequency. Anything that reads \emph{``no two X share a Y''}
@@ -326,8 +326,8 @@ model.add_circuit(arcs)
 model.minimize(sum(cost[u, v] * lit for (u, v, lit) in arcs))
 \end{lstlisting}
 
-The circuit propagator handles subtour elimination internally ---
-generating the cuts that exclude shorter cycles on the fly --- so the
+The circuit propagator handles subtour elimination internally
+(generating the cuts that exclude shorter cycles on the fly) so the
 model does not need position variables, element constraints, or any of
 the manual scaffolding the natural formulation would require.
 
@@ -342,9 +342,9 @@ worth visiting. Multiple tours sharing a depot are covered by
 variant.
 
 CP-SAT's \lstinline!add_circuit! handles surprisingly
-large routing instances --- a few hundred nodes, in many cases, and with
-rich side constraints. For \emph{very} large pure TSP --- tens of
-thousands of cities --- specialist solvers like Concorde and LKH still
+large routing instances: a few hundred nodes, in many cases, and with
+rich side constraints. For \emph{very} large pure TSP (tens of
+thousands of cities), specialist solvers like Concorde and LKH still
 win, as \Cref{sec:5.2} noted.
 
 \section{\texorpdfstring{\texttt{add\_no\_overlap} --- Single-Machine Scheduling}{add\_no\_overlap --- Single-Machine Scheduling}}\label{sec:7.7}
@@ -359,12 +359,12 @@ intervals = [
 model.add_no_overlap(intervals)
 \end{lstlisting}
 
-Captures a single resource --- machine, room, employee --- that does at
+Captures a single resource (machine, room, employee) that does at
 most one thing at a time. Optional intervals (\Cref{sec:6.4}) are respected
 automatically: when their presence Boolean is false, they are ignored.
 
-For job-shop scheduling --- multiple machines, each running its own
-subset of tasks --- the natural shape is one
+For job-shop scheduling (multiple machines, each running its own
+subset of tasks), the natural shape is one
 \lstinline!add_no_overlap! call per machine:
 
 \begin{lstlisting}[language=Python]
@@ -395,7 +395,7 @@ y_intervals = [
 model.add_no_overlap_2d(x_intervals, y_intervals)
 \end{lstlisting}
 
-Each rectangle is described by two intervals --- one for its x-extent,
+Each rectangle is described by two intervals: one for its x-extent,
 one for its y-extent. The constraint enforces that for every pair of
 rectangles, \emph{either} their x-intervals are disjoint \emph{or} their
 y-intervals are disjoint, which is exactly the geometric definition of
@@ -403,7 +403,7 @@ non-overlap.
 
 Typical uses are 2D bin packing, pallet loading, floor planning, chip
 placement, and cutting-stock with rectangular pieces. Optional
-rectangles work the same way --- items that may or may not be packed
+rectangles work the same way: items that may or may not be packed
 have their presence Boolean carried by both interval components.
 
 \section{\texorpdfstring{\texttt{add\_cumulative} --- Resource-Capacity Scheduling}{add\_cumulative --- Resource-Capacity Scheduling}}\label{sec:7.9}
@@ -430,8 +430,8 @@ is the warehouse size.
 
 Capacity itself can be a CP-SAT variable rather than a constant:
 declaring \lstinline!capacity! as an integer variable and
-minimizing it returns the smallest pool that still completes the work
---- a useful answer to capacity-planning questions.
+minimizing it returns the smallest pool that still completes the work:
+a useful answer to capacity-planning questions.
 
 When the capacity is exactly 1, the specialized
 \lstinline!add_no_overlap! exists for the
@@ -440,9 +440,9 @@ single-resource case and tends to propagate more strongly than
 
 \section{Equality Helpers --- Max, Min, Abs, Multiplication, Division, Modulo}\label{sec:7.10}
 
-The non-linear corners of integer arithmetic ---
-\lstinline!max!, \lstinline!min!, \(|x|\),
-\(x \cdot y\), \(x \div y\), \(x \mod m\) --- are not legal inside
+The non-linear corners of integer arithmetic
+(\lstinline!max!, \lstinline!min!, \(|x|\),
+\(x \cdot y\), \(x \div y\), \(x \mod m\)) are not legal inside
 \lstinline!model.add! directly. CP-SAT exposes them as
 auxiliary-variable equalities:
 
@@ -471,7 +471,7 @@ matching \lstinline!add_*_equality! to bind it to the
 non-linear expression. The auxiliary then participates in further
 constraints just like any other integer variable.
 
-Some of these can be sidestepped with linear inequalities ---
+Some of these can be sidestepped with linear inequalities:
 \emph{minimizing the max} of values, for instance, needs only
 \(m \ge \text{value}_i\) for each \(i\) and
 \lstinline!model.minimize(m)!. Reach for the equality
@@ -482,41 +482,41 @@ helpers when the relation is genuinely nonlinear in the model.
 A handful of constraints we will not dwell on but that are worth
 recognizing when the problem calls for them.
 
-\textbf{\lstinline!add_element!} --- binds a target to an
+\textbf{\lstinline!add_element!}: binds a target to an
 array entry whose index is a decision variable:
 \lstinline!target == array[index]!. Useful for lookup
 tables, piecewise functions on a discrete domain, and any ``pick the
 value at this index'' rule. Array entries may be constants or variables.
 
 \textbf{\lstinline!add_allowed_assignments!} /
-\textbf{\lstinline!add_forbidden_assignments!} --- a
+\textbf{\lstinline!add_forbidden_assignments!}: a
 tuple of variables must take its joint value from (or avoid) an explicit
 list of allowed combinations. Useful for allowed shift patterns,
 compatible feature bundles, and truth-table-style rules. Cost grows with
 the number of rows; when the rule has sequential structure,
 \lstinline!add_automaton! below is often more compact.
 
-\textbf{\lstinline!add_multiple_circuit!} ---
+\textbf{\lstinline!add_multiple_circuit!}:
 vehicle-routing-style problems where several tours share a depot. Same
 triple-list shape as \lstinline!add_circuit!; the
 propagator allows multiple disjoint circuits provided they all pass
 through the designated depot vertex.
 
-\textbf{\lstinline!add_reservoir_constraint!} --- a
+\textbf{\lstinline!add_reservoir_constraint!}: a
 running level (inventory, staff on duty, water in a tank) bounded by
 \([\min, \max]\) as discrete \lstinline!+/-! events fire
 over time. Inputs are a list of times and a list of per-event level
 changes; the constraint enforces that the running sum stays within the
 bounds.
 
-\textbf{\lstinline!add_automaton!} --- a sequence of
+\textbf{\lstinline!add_automaton!}: a sequence of
 integer variables must follow a finite-state machine. Useful for
 forbidden patterns in a roster (\emph{no more than three night shifts in
 a row}), protocol compliance, batch-scheduling state transitions. The
 right tool when the rule is naturally stated as ``the sequence is
 accepted by this DFA.''
 
-\textbf{\lstinline!add_inverse(v, w)!} --- two
+\textbf{\lstinline!add_inverse(v, w)!}: two
 equal-length variable arrays that must be each other's inverses:
 \lstinline!v[i] = j! if and only if
 \lstinline!w[j] = i!. Used in stable-matching shapes and

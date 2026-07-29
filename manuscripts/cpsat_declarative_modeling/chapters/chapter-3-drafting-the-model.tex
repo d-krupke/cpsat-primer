@@ -18,8 +18,8 @@ structure is not linear: for a complicated problem, you usually identify
 the core, formulate it, get it into a runnable form, and then extend it
 with the remaining rules and objectives.
 
-The five modeling ingredients in this chapter --- entities, parameters,
-variables, constraints, and objective --- are therefore not a checklist
+The five modeling ingredients in this chapter (entities, parameters,
+variables, constraints, and objective) are therefore not a checklist
 that you complete once. They are a recurring guide. New constraints may
 require new variables; a new objective term may change which parameters
 matter; a newly discovered entity may force you to restructure earlier
@@ -33,19 +33,19 @@ for thinking and writing:
 
 \begin{enumerate}
 \item
-  \textbf{Entities} --- what objects does the problem talk about? They
+  \textbf{Entities}: what objects does the problem talk about? They
   become \emph{sets}.
 \item
-  \textbf{Parameters} --- what data is known up front? They become
+  \textbf{Parameters}: what data is known up front? They become
   \emph{constants indexed by the sets}.
 \item
-  \textbf{Variables} --- what is the solver allowed to choose? They
+  \textbf{Variables}: what is the solver allowed to choose? They
   become \emph{unknowns with a domain}.
 \item
-  \textbf{Constraints} --- what makes a choice valid? They become
+  \textbf{Constraints}: what makes a choice valid? They become
   \emph{relations on variables}.
 \item
-  \textbf{Objective} --- what makes one valid choice better than
+  \textbf{Objective}: what makes one valid choice better than
   another? It becomes \emph{one expression with sense
   \lstinline!min! or \lstinline!max!};
   multi-objective optimization is a topic of its own.
@@ -131,8 +131,8 @@ to the smallest scenario value, recovering the original
 
 Consider the following problem. A small hospital ward needs to schedule
 its nursing staff for the coming week. The ward has a fixed list of
-shifts to fill. Each shift has a date, a required skill --- say,
-\emph{ICU}, \emph{pediatrics}, or \emph{general care} --- and a
+shifts to fill. Each shift has a date, a required skill (say,
+\emph{ICU}, \emph{pediatrics}, or \emph{general care}) and a
 headcount specifying how many nurses must be on duty. The ward employs a
 roster of nurses, each of whom holds a personal set of skills and is
 available on certain days but not others. Assigning a particular nurse
@@ -165,14 +165,14 @@ Symbol & Description \\ \midrule
 
 
 A set is the \emph{type} of an index. Once we have written \(w \in W\)
-and \(s \in S\), we can index any quantity in the model by \((w, s)\)
---- variables, parameters, constraints, neighborhoods.
+and \(s \in S\), we can index any quantity in the model by \((w, s)\):
+variables, parameters, constraints, neighborhoods.
 
 \subsection{Step 2 --- Parameters are the input data}\label{step-2-parameters-are-the-input-data}
 
 Anything known before we solve is a parameter. Parameters are often
-indexed by the sets from step 1, and each one should carry a domain ---
-the values it may take --- together with an informal description that
+indexed by the sets from step 1, and each one should carry a domain (the
+values it may take) together with an informal description that
 fixes what the symbol means. Some parameters are raw input data; others
 are derived from that input to make the model easier to write.
 
@@ -190,7 +190,7 @@ Symbol & Indices & Domain & Description \\ \midrule
 The domains are explicit. \(c_{w,s}\) is a non-negative real,
 \(a_{w,s}\) is binary, \(n_s\) is a non-negative integer, and \(h_w\) is
 a subset of \(K\) (so its domain is the power set \(2^K\)). Each shift
-requires one skill, while each worker may hold multiple skills --- a
+requires one skill, while each worker may hold multiple skills: a
 detail that matters once we write the skill-match constraint.
 
 The last row illustrates that a parameter need not be raw input. \(S_t\)
@@ -219,7 +219,7 @@ Symbol & Indices & Domain & Description \\ \midrule
 \end{symboltable}
 
 
-That single line declares \(|W| \cdot |S|\) variables --- one per cell
+That single line declares \(|W| \cdot |S|\) variables: one per cell
 of the worker--shift matrix. Many of those combinations may be trivially
 infeasible: the worker may be unavailable, or may lack the skill
 required by the shift. In the simple formulation, we still declare the
@@ -357,11 +357,11 @@ roster we prefer.
 The sum runs over all worker--shift pairs, but only the pairs with
 \(x_{w,s} = 1\) contribute.
 
-Two notes on objectives. First, the sense ---
-\lstinline!min! or \lstinline!max! --- is
+Two notes on objectives. First, the sense
+(\lstinline!min! or \lstinline!max!) is
 part of the specification; ``optimize \(f\)'' is incomplete. Second, an
 objective is a single expression. If the problem talks about several
-goals at once --- cost \emph{and} overtime \emph{and} fairness --- you
+goals at once (cost \emph{and} overtime \emph{and} fairness) you
 must combine them yourself, by weighted sum or lexicographic ordering.
 There is no implicit averaging. And a model can have no objective at
 all: pure feasibility (``is \emph{any} valid roster possible?'') is a

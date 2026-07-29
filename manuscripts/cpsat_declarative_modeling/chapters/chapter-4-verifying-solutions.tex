@@ -79,13 +79,13 @@ containers and can be reused elsewhere in the codebase:
 
 \begin{enumerate}
 \item
-  \textbf{\lstinline!Instance!} --- a frozen dataclass
+  \textbf{\lstinline!Instance!}, a frozen dataclass
   holding the input data.
 \item
-  \textbf{\lstinline!Solution!} --- a frozen dataclass
+  \textbf{\lstinline!Solution!}, a frozen dataclass
   holding one completed candidate solution.
 \item
-  \textbf{\lstinline!evaluate(instance, solution)!} --- a
+  \textbf{\lstinline!evaluate(instance, solution)!}, a
   pure function that checks feasibility and, if the solution is
   feasible, returns its objective value. If a constraint family fails,
   it raises an exception that identifies the failing rule.
@@ -139,15 +139,15 @@ class Solution:
 The \lstinline!Instance! carries the sets and parameters
 from the math model; the \lstinline!Solution! carries the
 values of the decision variables. The solution uses the \emph{sparse}
-representation --- we record only the pairs where \(x_{w,s} = 1\), not
-the full zero-one matrix --- which scales with what was assigned rather
+representation (we record only the pairs where \(x_{w,s} = 1\), not
+the full zero-one matrix) which scales with what was assigned rather
 than with the size of the index space.
 
 \begin{platypusinfo}
 For teaching purposes we use
-\lstinline!dataclass!, but at the system boundary ---
-wherever an instance is built from a CSV, a database, or a JSON payload
---- a properly validated data schema (typically
+\lstinline!dataclass!, but at the system boundary,
+wherever an instance is built from a CSV, a database, or a JSON payload,
+a properly validated data schema (typically
 \href{https://docs.pydantic.dev/}{Pydantic}) earns its keep.
 Inconsistent input data is extremely common in practice, and a
 surprising share of ``the model is wrong'' debugging sessions turn out
@@ -231,8 +231,8 @@ is the direction, not a blueprint.
 The simple \lstinline!evaluate! function answers a binary
 question per rule: did the rule pass, or did it reject the solution?
 That throws away information that becomes essential once a project has
-\emph{soft} rules --- rules that may be violated at a penalty rather
-than forbidden outright --- or any kind of repair-style search. Three
+\emph{soft} rules (rules that may be violated at a penalty rather
+than forbidden outright) or any kind of repair-style search. Three
 minutes of overlap and three hours of overlap are very different
 solutions, but the simple form cannot distinguish them.
 
@@ -261,8 +261,8 @@ magnitude often becomes part of the cost instead of making the solution
 infeasible.
 
 The \lstinline!messages! field carries the witness-naming
-we already used in the simple form's exception strings --- for example,
-\lstinline!(cover) shift 'S3': need 3, got 2! --- but now
+we already used in the simple form's exception strings (for example,
+\lstinline!(cover) shift 'S3': need 3, got 2!) but now
 per witness rather than only for the first failure. A debugging session
 can therefore see every place a rule failed instead of only the point at
 which \lstinline!evaluate! raised.
@@ -285,9 +285,9 @@ four rules, that is fine; with twenty, it becomes hard to navigate, hard
 to test in isolation, and hard to give per-rule precomputation a natural
 place to live.
 
-Splitting the rules across modules --- typically as classes, grouped
+Splitting the rules across modules (typically as classes, grouped
 however makes sense for the project, such as one file per rule or one
-file per related family of rules --- addresses all three issues. The
+file per related family of rules) addresses all three issues. The
 example below shows the pattern with a single rule per class:
 
 \begin{lstlisting}[language=Python]

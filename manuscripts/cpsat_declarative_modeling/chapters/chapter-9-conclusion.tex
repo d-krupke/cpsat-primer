@@ -7,18 +7,18 @@ are not.''}\\
 \end{quote}
 
 Four ideas run through this manuscript. \emph{Notation is a tool, not
-gatekeeping} --- mathematical notation gives a problem a precise shape
+gatekeeping}: mathematical notation gives a problem a precise shape
 that prose cannot, and reading it is a habit anyone working with
 optimization can pick up rather than a barrier put up by a community.
 \emph{Optimization models decompose into five parts}: the entities the
 problem talks about, the parameters that describe an instance, the
 decision variables, the constraints that restrict their combinations,
 and the objective that ranks the feasible ones. \emph{The verifier is
-orthogonal} to whichever solver eventually finds a solution --- it does
+orthogonal} to whichever solver eventually finds a solution. It does
 not help find one, but it pins the problem definition down in code and
 flags any candidate that breaks a rule, which protects every later
 modeling decision from drifting away from what was actually meant.
-\emph{Knowing your solver's language matters} --- CP-SAT has an
+\emph{Knowing your solver's language matters}: CP-SAT has an
 expressive vocabulary (reified Booleans,
 \lstinline!add_circuit!,
 \lstinline!add_no_overlap!,
@@ -30,7 +30,7 @@ when the paper formulation is identical.
 Two further moves come up often enough in practice to be worth naming,
 even if a thorough treatment is outside this manuscript's scope.
 \emph{Trimming the model's scope:} not every dimension a problem carries
-needs to be a decision variable. Some ``decisions'' are downstream ---
+needs to be a decision variable. Some ``decisions'' are downstream:
 they follow trivially from the genuinely hard ones and can be resolved
 by a post-processing step. An exam planner that fixes day and room and
 then packs the times greedily within each day is a typical example.
@@ -40,8 +40,8 @@ the discipline is verifying that the decomposition really is lossless
 before committing to it. \emph{Two models, one verifier:} a model that
 mirrors the paper formulation closely is sometimes too slow for the
 instances a project actually faces. Once the speed modifications grow
-beyond a tweak --- alternative representations, symmetry breaking,
-problem-specific reductions --- it can be cleaner to maintain a
+beyond a tweak (alternative representations, symmetry breaking,
+problem-specific reductions), it can be cleaner to maintain a
 \emph{faithful} model alongside a \emph{tractable} one and let the
 verifier judge both on the same instances. Most projects never need
 this, and benchmarking should drive the decision rather than instinct.
@@ -51,7 +51,7 @@ landscape, but not all of it: continuous variables push toward LP/MIP
 solvers (Gurobi, HiGHS, CPLEX), instances too large for exact methods
 push toward metaheuristics, and gradient-based optimization lives in
 another world entirely. What carries across is the part of this
-manuscript that is not CP-SAT-specific --- the paper notation of \Cref{chap:2} and the coded verifier of \Cref{chap:4}. A
+manuscript that is not CP-SAT-specific: the paper notation of \Cref{chap:2} and the coded verifier of \Cref{chap:4}. A
 \lstinline!Solution! and an
 \lstinline!evaluate(instance, sol)! know nothing about
 which solver produced the input, and the habit of writing a yardstick

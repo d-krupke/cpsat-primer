@@ -11,7 +11,7 @@ of five constructor families. The vocabulary is small by design: most of
 the modeling work is recognizing which constructor matches a given
 decision, and the recognition becomes reflex after a few examples.
 
-CP-SAT has no continuous variables --- there is no
+CP-SAT has no continuous variables: there is no
 \lstinline!new_real_var!. Quantities that are naturally
 fractional (prices, distances, ratios) must be scaled to integers,
 working in cents, millimeters, or some other unit small enough to
@@ -46,11 +46,11 @@ which a meeting begins}); discrete spatial coordinates (\emph{the x- and
 y-position of a piece on a grid}); counts and totals; indices into a
 list (\emph{which warehouse serves customer C}, in
 \(\{0, 1, \dots, n-1\}\)). For indices specifically, there is often a
-competing encoding using one Boolean per choice --- see \Cref{sec:6.2}.
+competing encoding using one Boolean per choice (see \Cref{sec:6.2}).
 
 \section{\texorpdfstring{Boolean Variables --- \texttt{new\_bool\_var}}{Boolean Variables --- new\_bool\_var}}\label{sec:6.2}
 
-Booleans are the real workhorse of CP-SAT --- the SAT core is built
+Booleans are the real workhorse of CP-SAT: the SAT core is built
 around them. A Boolean is a 0/1 integer \emph{and} a logical literal at
 the same time. This dual nature is what makes CP-SAT models concise.
 
@@ -64,7 +64,7 @@ not_take = ~take  # negation — a free view, no new variable
 The \lstinline!~! operator returns the negation as a
 \emph{view}: no new variable is allocated, and the negation participates
 in constraints exactly as the original Boolean would. This is a small
-but useful efficiency --- every Boolean in your model has a free
+but useful efficiency: every Boolean in your model has a free
 negation that can appear in any constraint position.
 
 The dual nature is on display in expressions like:
@@ -81,7 +81,7 @@ same variable can appear in both kinds of constraint without conversion.
 
 Typical uses for Booleans include: yes/no decisions (\emph{include
 item}, \emph{use edge}, \emph{schedule task}, \emph{hire candidate});
-assignments expressed as Bool-per-pair --- the matrix idiom from the FLP
+assignments expressed as Bool-per-pair, the matrix idiom from the FLP
 example of \Cref{sec:5.5}, with \(x_{i,j} \in \{0, 1\}\) indexed by pairs; state
 indicators that other constraints react to (\emph{did the budget get
 exceeded?}, \emph{is this nurse working a late shift?}); reified
@@ -180,12 +180,11 @@ usage).
 
 An interval is only interesting in combination with an interval-aware
 constraint. By itself, an interval variable is a small bundle of three
-integer variables with one arithmetic relation between them --- no
+integer variables with one arithmetic relation between them, no
 special semantics. The reason intervals exist is that CP-SAT's
-\emph{interval-aware constraints} ---
-\lstinline!add_no_overlap!,
+\emph{interval-aware constraints} (\lstinline!add_no_overlap!,
 \lstinline!add_no_overlap_2d!,
-\lstinline!add_cumulative! --- accept intervals as input
+\lstinline!add_cumulative!) accept intervals as input
 and run dedicated scheduling propagators on the result.
 
 If you only need a \lstinline![start, end]! span and never
@@ -195,15 +194,15 @@ subject; for now, treat intervals as the input shape to a scheduling
 vocabulary you have not yet seen.
 
 Intervals fit some shapes of scheduling better than others. They shine
-when the time (or space) axis is \emph{somewhat continuous} --- start
+when the time (or space) axis is \emph{somewhat continuous}: start
 times anywhere in a wide horizon, sizes drawn from a range, optional
 rectangles to be packed into a free 2D area. When the problem instead
 has a small number of \emph{discrete slots} and tasks occupy known-sized
 blocks, a Bool-per-(task, slot) encoding often models the same situation
 more efficiently than intervals plus
 \lstinline!add_no_overlap!. And when transitions between
-tasks dominate the cost --- sequence-dependent setup times, vehicle
-routing --- the problem is closer to routing than to scheduling, and
+tasks dominate the cost, sequence-dependent setup times, vehicle
+routing, the problem is closer to routing than to scheduling, and
 \lstinline!add_circuit! (next chapter) is the better
 starting point.
 
@@ -228,7 +227,7 @@ internally, so declaring
 \lstinline!new_int_var(0, 100, ...)! does not eagerly
 materialize one hundred Booleans, and a wide bound is not, in itself, a
 wide cost. Pruning the domain to values you believe are reachable can
-still help --- sometimes substantially --- but it can also hurt, and
+still help (sometimes substantially) but it can also hurt, and
 worse, it can introduce subtle bugs when a value you excluded turns out
 to be feasible after all. As a rule, start with the bounds the problem
 gives you, and treat sparse-domain pruning as a tuning lever to

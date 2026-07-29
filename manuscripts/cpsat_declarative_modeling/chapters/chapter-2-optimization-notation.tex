@@ -9,9 +9,9 @@ This chapter introduces a common notation for discrete optimization. The
 focus is on MIP- and CP-style notation that dominates much of the
 modeling literature; much of the same vocabulary carries over to SAT
 modeling, even though that community uses its own surface syntax. Other
-communities and textbooks adopt variants---different letter conventions,
-bracket styles, and shorthands for global constraints---and we do not
-claim that the choices below are universal.
+communities and textbooks adopt variants (different letter
+conventions, bracket styles, and shorthands for global constraints)
+and we do not claim that the choices below are universal.
 
 Fluency in this notation yields three benefits. First, it makes research
 papers and textbooks readable, allowing you to extract ideas rather than
@@ -83,8 +83,8 @@ Each line serves a distinct purpose. The decomposition also exposes
 structure: the feasible regions \(\mathcal{F}_0\) and \(\mathcal{F}_1\)
 are independent of the scenarios, whereas the objective depends on them.
 Thus, uncertainty affects \emph{what is optimized}, not \emph{what is
-feasible}. Once defined, these regions can be reused---for example, to
-state bounds, define relaxations, or compare variants---without
+feasible}. Once defined, these regions can be reused (for example, to
+state bounds, define relaxations, or compare variants) without
 repeating their definitions.
 
 The notation integrates naturally with prose: symbols appear inline
@@ -114,7 +114,7 @@ N_f \;=\; \{\, c \in C \;\mid\; d(c, f) \le 5 \,\}.
 
 The braces with a vertical bar denote \emph{set-builder notation}: all
 elements of \(C\) that satisfy the condition. The subscript \(f\)
-indicates that this defines one set per candidate site---an indexed
+indicates that this defines one set per candidate site, an indexed
 family \(\{N_f\}_{f \in F}\).
 
 \begin{platypustip}
@@ -175,8 +175,8 @@ assignments, or the edge set of a conflict graph.
 A few naming conventions recur. Sets typically use uppercase Latin
 letters, with corresponding lowercase symbols for elements: \(i \in I\),
 \(j \in J\), \(v \in V\). Certain letters carry conventional
-meanings---\(V, E\) for vertices and edges, \(T\) for time periods,
-\(K\) for constraint indices---but these are conventions, not
+meanings (\(V, E\) for vertices and edges, \(T\) for time periods,
+\(K\) for constraint indices) but these are conventions, not
 requirements. A symbol is defined by its declaration, not by its name.
 
 Data can be written in two interchangeable forms. A parameter may appear
@@ -201,7 +201,7 @@ G = (V, E), \qquad \{v, w\} \in E.
 \]
 
 The choice between directed and undirected graphs depends on the
-application---flows are directed, whereas relationships such as
+application: flows are directed, whereas relationships such as
 friendships are not. The modeling choice can significantly affect the
 resulting formulation.
 
@@ -281,7 +281,7 @@ cases, solve the problem directly, as in this example.
 \section{Variables and Domains}\label{sec:2.4}
 
 The decision variables \(x_i\) in the Knapsack problem lived in
-\(\{0, 1\}^{|I|}\)---one bit per item, indicating whether the item is
+\(\{0, 1\}^{|I|}\), one bit per item, indicating whether the item is
 selected. Consider the same model with a modified domain:
 
 \[
@@ -300,8 +300,8 @@ is NP-hard. Changing the domain again to \(x_i \in \mathbb{N}_0\) yields
 the \emph{unbounded knapsack} problem, where any non-negative number of
 copies of each item may be selected.
 
-Each \(x_i\) is a \emph{decision variable}---a quantity determined by
-the solver---and its \emph{domain} specifies the admissible values.
+Each \(x_i\) is a \emph{decision variable} (a quantity determined by
+the solver) and its \emph{domain} specifies the admissible values.
 Common domains include:
 
 \begin{symboltable}{lL}
@@ -321,9 +321,9 @@ equivalent to \(x_i \in [l_i, u_i]\), and \(x_i \ge 0\) to
 write \(x \in \mathbb{R}^n\), \(x \in \mathbb{Z}^n\), or
 \(x \in \{0,1\}^n\).
 
-Variable names follow informal conventions---\(x\) for primary
+Variable names follow informal conventions (\(x\) for primary
 decisions, \(y\) for auxiliary variables, \(s\) for slack variables, and
-\(z\) for objective values---but these conventions are not binding.
+\(z\) for objective values) but these conventions are not binding.
 
 \section{Expressions}\label{sec:2.5}
 
@@ -331,8 +331,8 @@ Expressions are quantities formed from variables and parameters; once
 the variables are fixed, an expression evaluates to a scalar. It is
 useful to distinguish between linear and nonlinear expressions, because
 the distinction has algorithmic consequences. Models composed entirely
-of linear expressions---\emph{linear programs} and \emph{mixed-integer
-linear programs}---are significantly better understood than their
+of linear expressions (\emph{linear programs} and \emph{mixed-integer
+linear programs}) are significantly better understood than their
 nonlinear counterparts. In practice, nonlinear formulations are often
 transformed into linear ones, either exactly or through approximation.
 
@@ -469,7 +469,7 @@ pursued here.
 
 \section{Constraints}\label{sec:2.7}
 
-A constraint is a \emph{predicate}---a statement that evaluates to true
+A constraint is a \emph{predicate}: a statement that evaluates to true
 or false for a given assignment of values. While expressions answer
 ``what is the value?'', constraints answer ``is the condition
 satisfied?''.
@@ -497,7 +497,7 @@ the form
 P_k(x) \qquad \forall k \in K,
 \]
 
-where each \(P_k\) is a predicate on the variable vector---for example,
+where each \(P_k\) is a predicate on the variable vector: for example,
 a linear inequality, an \emph{AllDifferent} constraint, a
 \emph{NoOverlap} constraint, or another relation.
 
@@ -572,8 +572,8 @@ Once named, it fits into the same logical syntax:
 \(P_1(x) \land P_2(x)\), \(P(x) \Rightarrow Q(x)\), or
 \(\bigvee_{k \in K} P_k(x)\).
 
-The two layers---Boolean variables and predicates over richer
-variables---meet in \emph{reification}. Reification ties a Boolean
+The two layers (Boolean variables and predicates over richer
+variables) meet in \emph{reification}. Reification ties a Boolean
 indicator \(z \in \{0,1\}\) to the truth value of a predicate:
 
 \[
