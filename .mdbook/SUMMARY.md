@@ -28,3 +28,9 @@
 - [CP-SAT vs. ML vs. QC](./machine_learning.md)
 - [Large Neighborhood Search](./lns.md)
 - [Benchmarking your Model](./benchmarking.md)
+
+---
+
+# Further Material
+
+- [Declarative Modeling with CP-SAT](./declarative_modeling.md)

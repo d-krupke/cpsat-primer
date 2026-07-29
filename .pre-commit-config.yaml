@@ -7,6 +7,8 @@ repos:
     rev: v4.4.0
     hooks:
       - id: check-added-large-files
+        # Manuscript PDFs and cover art are intentionally shipped uncompressed.
+        exclude: "^manuscripts/.*\\.(pdf|png)$"
       - id: check-case-conflict
       - id: check-merge-conflict
       - id: check-symlinks

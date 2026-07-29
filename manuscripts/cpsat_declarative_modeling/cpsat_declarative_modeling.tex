@@ -1,0 +1,205 @@
+% Declarative Modeling with CP-SAT — main LaTeX source
+% Compile with: xelatex cpsat_declarative_modeling.tex (run twice for ToC),
+% or simply `make`.
+%
+% On the use of AI:
+%   The conceptual core of this document -- its structure, argument, selection
+%   of topics, and the expert understanding behind them -- is human-authored.
+%   Working from that hand-crafted outline, large language models (agentic AI)
+%   were used as tools to help collect and organize source material, cross-check
+%   technical claims against the OR-Tools documentation, and refine the prose.
+%   All content was reviewed and is the author's responsibility; the AI did not
+%   originate the ideas or the overall design.
+
+\documentclass[11pt]{report}
+
+% --- Geometry & fonts -----------------------------------------------------
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{fontspec}
+\usepackage{microtype}
+
+% --- Math -----------------------------------------------------------------
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+% --- Pandoc-emitted helpers (longtable, lists, etc.) ----------------------
+\usepackage{longtable,booktabs,array}
+\usepackage{tabularx}
+\usepackage{environ}
+\newcolumntype{L}{>{\raggedright\arraybackslash}X}
+
+% Symbol/description tables used throughout the chapters.
+% Usage:
+%   \begin{symboltable}{lL}
+%     Symbol & Description \\ \midrule
+%     ...
+%   \end{symboltable}
+% \NewEnviron is used because tabularx needs to scan its own \end token.
+\NewEnviron{symboltable}[1]{%
+  \par\medskip\noindent
+  \begingroup
+    \renewcommand{\arraystretch}{1.25}%
+    \begin{tabularx}{\linewidth}{@{}#1@{}}\toprule
+      \BODY
+    \bottomrule\end{tabularx}%
+  \endgroup
+  \par\medskip
+}
+\usepackage{calc}
+\usepackage{etoolbox}
+\makeatletter
+\providecommand{\real}[1]{#1}
+\newcounter{none}  % pandoc longtable uses \LTcaptype=none for uncaptioned tables
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\makeatother
+
+% --- Listings (code blocks) -----------------------------------------------
+\usepackage{listings}
+\usepackage{xcolor}
+% Pandoc's helper for inline \lstinline inside other commands
+\providecommand{\passthrough}[1]{\lstset{mathescape=false}#1\lstset{mathescape=true}}
+
+\definecolor{codekw}{HTML}{0033B3}      % keywords (blue)
+\definecolor{codebuiltin}{HTML}{6A2570} % builtins (purple)
+\definecolor{codestr}{HTML}{B35C00}     % strings (orange)
+\definecolor{codecom}{HTML}{6E737A}     % comments (grey)
+\definecolor{codenum}{HTML}{1E7C50}     % numbers (green)
+\definecolor{codedecorator}{HTML}{735A12}% decorators
+\definecolor{codeframe}{HTML}{D0D4DA}
+\definecolor{codebg}{HTML}{F8F8F8}
+
+\lstset{
+  basicstyle=\ttfamily\footnotesize,
+  keywordstyle=\color{codekw}\bfseries,
+  keywordstyle={[2]\color{codebuiltin}},
+  stringstyle=\color{codestr},
+  commentstyle=\color{codecom}\itshape,
+  numberstyle=\tiny\color{codecom},
+  emphstyle=\color{codedecorator}\bfseries,
+  breaklines=true,
+  breakatwhitespace=true,
+  breakindent=1.5em,
+  columns=fullflexible,
+  keepspaces=true,
+  showstringspaces=false,
+  frame=single,
+  framesep=4pt,
+  rulecolor=\color{codeframe},
+  backgroundcolor=\color{codebg},
+  xleftmargin=4pt,
+  xrightmargin=2pt,
+  aboveskip=8pt,
+  belowskip=8pt,
+  literate=%
+    {ä}{{\"a}}1 {ö}{{\"o}}1 {ü}{{\"u}}1
+    {Ä}{{\"A}}1 {Ö}{{\"O}}1 {Ü}{{\"U}}1
+    {ß}{{\ss}}2,
+}
+
+% Extend Python with extra keywords/builtins on top of listings' built-in
+% Python language definition (a second-keyword class for builtins/types).
+\lstset{
+  language=Python,
+  classoffset=1,
+  morekeywords={
+    True,False,None,self,cls,async,await,match,case,nonlocal,
+    int,float,str,bool,list,dict,tuple,set,frozenset,bytes,bytearray,
+    object,range,enumerate,zip,map,filter,sorted,reversed,sum,min,max,
+    abs,round,len,print,open,isinstance,issubclass,hasattr,getattr,
+    setattr,callable,property,staticmethod,classmethod,super,iter,next,
+    any,all,dataclass,field
+  },
+  classoffset=0,
+}
+
+% --- Hyperlinks -----------------------------------------------------------
+\usepackage[hidelinks]{hyperref}
+\usepackage[capitalise,noabbrev]{cleveref}
+
+% --- License (official CC badge + statement on the title page) -------------
+\usepackage[
+  type={CC},
+  modifier={by},
+  version={4.0},
+]{doclicense}
+
+% --- Callouts (tcolorbox-based platypus boxes) and title page ------------
+\input{.assets/callouts.tex}
+
+% --- Document metadata ----------------------------------------------------
+\title{Declarative Modeling with CP-SAT}
+\author{Dominik Krupke --- Algorithms Division, TU Braunschweig}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+% --- Abstract -------------------------------------------------------------
+\thispagestyle{empty}
+\vspace*{2cm}
+\begin{center}
+{\Large\bfseries Abstract}
+\end{center}
+\vspace{0.8cm}
+\noindent
+When combinatorial problems grow beyond what ad hoc modeling can handle,
+hands-on solver experience alone is not enough. Modelers need a structured way
+to reason about the problem before writing solver code. This manuscript
+presents such a structure, organized around four ideas: mathematical notation
+is a working tool rather than a gatekeeping ritual; optimization models
+decompose cleanly into five parts: entities, parameters, decision variables,
+constraints, and an objective; a \emph{verifier}, implemented as a lightweight
+Python function that judges the feasibility and quality of candidate solutions,
+provides an orthogonal contract on what the problem actually means,
+independent of any solver; and the choice of solver shapes how a model is best
+expressed, with this manuscript committing to CP-SAT.
+
+\vspace{0.6cm}
+\noindent
+This manuscript accompanies the
+\href{https://github.com/d-krupke/cpsat-primer}{CP-SAT Primer}, the broader and
+more extensive resource, which covers CP-SAT in depth, including much of the
+modeling material treated here, alongside a great deal more. This text is
+deliberately narrower: it concentrates on the discipline of \emph{modeling}
+itself, the path from an informal problem to a formulation that is correct
+before it is ever handed to the solver. It overlaps with the Primer on
+purpose, so that it stands on its own as a self-contained read rather than
+requiring the Primer first.
+
+\vspace{0.6cm}
+\noindent
+The manuscript focuses on managing the mental complexity of turning an
+informal problem into a structured model. It does not aim to cover
+optimization theory or solver internals in depth, nor does it provide a
+comprehensive CP-SAT reference. Instead, it emphasizes a disciplined modeling
+workflow that produces a correct formulation: one that a verifier can check
+and a solver can execute. Performance engineering, which tightens formulations,
+exploits structure, and tunes solvers, is treated as a subsequent step.
+
+\vspace{0.6cm}
+\noindent
+The primary audience is computer scientists and software engineers with
+experience in Python and basic discrete mathematics who want a systematic
+approach to modeling combinatorial optimization problems. Readers with a
+background in mathematical optimization will find much of the material
+familiar, although the verifier concept may still offer a useful perspective.
+\newpage
+
+% --- Table of contents ----------------------------------------------------
+\tableofcontents
+\clearpage
+
+% --- Chapters -------------------------------------------------------------
+\input{chapters/chapter-1-procedure-to-description}
+\input{chapters/chapter-2-optimization-notation}
+\input{chapters/chapter-3-drafting-the-model}
+\input{chapters/chapter-4-verifying-solutions}
+\input{chapters/chapter-5-cpsat-first-contact}
+\input{chapters/chapter-6-variable-vocabulary}
+\input{chapters/chapter-7-constraint-vocabulary}
+\input{chapters/chapter-8-objectives-and-status}
+\input{chapters/chapter-9-conclusion}
+
+\end{document}

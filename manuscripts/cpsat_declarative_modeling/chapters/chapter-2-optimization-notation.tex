@@ -1,0 +1,616 @@
+\chapter{The Language of Optimization Models}\label{chap:2}
+
+\begin{quote}
+\emph{``A good notation has a subtlety and suggestiveness which at times
+makes it almost seem like a live teacher.''} --- Bertrand Russell
+\end{quote}
+
+This chapter introduces a common notation for discrete optimization. The
+focus is on MIP- and CP-style notation that dominates much of the
+modeling literature; much of the same vocabulary carries over to SAT
+modeling, even though that community uses its own surface syntax. Other
+communities and textbooks adopt variants---different letter conventions,
+bracket styles, and shorthands for global constraints---and we do not
+claim that the choices below are universal.
+
+Fluency in this notation yields three benefits. First, it makes research
+papers and textbooks readable, allowing you to extract ideas rather than
+rederive them. Second, once a problem exceeds what fits in working
+memory, it is faster to sketch a precise model on paper than to move
+directly to code. Third, it provides a shared, unambiguous language for
+personal notes, whiteboard discussions, and paper drafts.
+
+Most of the material is standard, and the chapter also serves as a
+reference. If you are unsure how much you already know, use the section
+headings as a checklist.
+
+\section{Notation in Action}\label{sec:2.1}
+
+Recall the 0/1 knapsack: items \(I\) with weights \(w_i\) and values
+\(c_i\), a knapsack of capacity \(C\), and a binary choice per item.
+Compressed into a single line, the model reads
+
+\[
+\max_{x \in \{0,1\}^{|I|}} \;\Bigl\{\, \sum_{i \in I} c_i\, x_i \;\;\Big|\;\; \sum_{i \in I} w_i\, x_i \le C \,\Bigr\}.
+\]
+
+This line specifies, in order, \emph{what we choose} (a binary vector
+\(x\), one component per item), \emph{what we optimize} (a weighted sum
+of values), and \emph{what is allowed} (the weighted sum of weights
+does not exceed \(C\)). Each symbol is functional, and a reader
+familiar with the conventions can reconstruct the problem without
+additional prose.
+
+Now suppose the values are uncertain: a simulator provides \(|S|\)
+scenarios, and we require a packing that performs well in the worst
+case. The model changes minimally:
+
+\[
+\max_{x \in \{0,1\}^{|I|}} \; \min_{s \in S} \;\Bigl\{\, \sum_{i \in I} c^s_i\, x_i \;\;\Big|\;\; \sum_{i \in I} w_i\, x_i \le C \,\Bigr\}.
+\]
+
+The decision variables, parameters, and constraint remain unchanged;
+only the objective acquires a \(\min_{s \in S}\), and the values carry a
+scenario index. The formulation remains flexible: replacing
+\(\min_{s \in S}\) with \(\sum_{s \in S} p_s\) yields an expected-value
+objective under scenario probabilities \(p_s\); replacing it with a
+quantile operator yields a value-at-risk objective. The remainder of the
+model is unaffected. In contrast, a prose formulation would require
+substantial rewriting for each variant.
+
+Next, consider two knapsacks: the original with capacity \(C\), and a
+second with capacity \(C'\) that only accepts light items,
+\(I' = \{i \in I \mid w_i \le w'\}\). We must choose one knapsack and
+pack it, while still maximizing the worst-case value. Rather than
+inlining everything into a single expression, define the feasible
+regions:
+
+\[
+\mathcal{F}_0 \;=\; \bigl\{\, x \in \{0,1\}^{|I|} \;\big|\; \textstyle\sum_{i \in I} w_i x_i \le C \,\bigr\},
+\]
+
+\[
+\mathcal{F}_1 \;=\; \bigl\{\, x \in \{0,1\}^{|I|} \;\big|\; \textstyle\sum_{i \in I} w_i x_i \le C',\;\; x_i = 0 \;\;\forall i \in I \setminus I' \,\bigr\},
+\]
+
+and combine them using a set union:
+
+\[
+\max_{x \;\in\; \mathcal{F}_0 \,\cup\, \mathcal{F}_1} \; \min_{s \in S} \;\sum_{i \in I} c^s_i\, x_i.
+\]
+
+Each line serves a distinct purpose. The decomposition also exposes
+structure: the feasible regions \(\mathcal{F}_0\) and \(\mathcal{F}_1\)
+are independent of the scenarios, whereas the objective depends on them.
+Thus, uncertainty affects \emph{what is optimized}, not \emph{what is
+feasible}. Once defined, these regions can be reused---for example, to
+state bounds, define relaxations, or compare variants---without
+repeating their definitions.
+
+The notation integrates naturally with prose: symbols appear inline
+(\(I'\), \(\mathcal{F}_1\)), in displayed equations, and across
+paragraphs without friction. The two registers remain consistent and
+mutually reinforcing.
+
+The remainder of this chapter develops the vocabulary underlying these
+examples: sets and indices, parameters, graphs, variables and domains,
+expressions, objectives, constraints, and logical connectives.
+
+\section{Sets, Indices, and Parameters}\label{sec:2.2}
+
+Consider a city planning problem: choose locations for ambulance
+stations. Let \(C\) denote the set of neighborhoods to serve and \(F\)
+the set of candidate sites. The goal is to open as few stations as
+possible while ensuring that every neighborhood lies within a
+five-minute drive of at least one open station. A drive-time function
+\(d : C \times F \to \mathbb{R}_{\ge 0}\) returns the travel time in
+minutes; for \(c \in C\) and \(f \in F\), \(d(c, f)\) is the time from
+\(c\) to \(f\). For a fixed site \(f \in F\), the neighborhoods
+reachable within five minutes form a subset of \(C\):
+
+\[
+N_f \;=\; \{\, c \in C \;\mid\; d(c, f) \le 5 \,\}.
+\]
+
+The braces with a vertical bar denote \emph{set-builder notation}: all
+elements of \(C\) that satisfy the condition. The subscript \(f\)
+indicates that this defines one set per candidate site---an indexed
+family \(\{N_f\}_{f \in F}\).
+
+\begin{platypustip}
+Maintain a table of sets and parameters as a glossary. For
+the ambulance problem:
+
+\begin{symboltable}{lL}
+Symbol & Meaning \\ \midrule
+\(C\) & set of neighborhoods to serve \\
+\(F\) & set of candidate sites \\
+\(d : C \times F \to \mathbb{R}_{\ge 0}\) & drive-time function \\
+\(N_f\) & neighborhoods reachable from site \(f\) within five minutes \\
+\end{symboltable}
+
+
+If multiple variable types appear, create an analogous table for
+variables, including their domains.
+\end{platypustip}
+
+The decision is to select a subset \(F^\star \subseteq F\) of sites to
+open. The coverage requirement is
+
+\[
+\bigcup_{f \in F^\star} N_f \;=\; C.
+\]
+
+Given \(F^\star\), the neighborhoods uniquely covered by an open site
+\(f \in F^\star\) are
+
+\[
+N_f \;\setminus\; \bigcup_{g \in F^\star \setminus \{f\}} N_g.
+\]
+
+If this set is empty, site \(f\) is redundant. Another useful
+observation: if \(N_g \subseteq N_f\) for some \(g \in F\), then \(g\)
+is dominated and can be removed from \(F\) before solving, since any
+coverage it provides is already achieved by \(f\).
+
+The set operators used above, along with several standard ones:
+
+\begin{symboltable}{lL}
+\(a \in A\) & membership: \(a\) is an element of \(A\) \\
+\(a \notin A\) & non-membership: \(a\) is not an element of \(A\) \\
+\(A \cup B\) & union: elements in \(A\) or \(B\) (or both) \\
+\(A \cap B\) & intersection: elements in both \\
+\(A \setminus B\) & difference: elements in \(A\) but not in \(B\) \\
+\(A \subseteq B\) & subset relation \\
+\(A \times B\) & Cartesian product: ordered pairs \((a,b)\) \\
+\(\lvert A \rvert\) & cardinality: number of elements \\
+\(\emptyset\) & empty set \\
+\(\{a \in A \mid P(a)\}\) & set-builder notation \\
+\end{symboltable}
+
+Cartesian products describe relations and graphs: for example, an arc
+set \(E \subseteq V \times V\), a set of feasible (worker, job)
+assignments, or the edge set of a conflict graph.
+
+A few naming conventions recur. Sets typically use uppercase Latin
+letters, with corresponding lowercase symbols for elements: \(i \in I\),
+\(j \in J\), \(v \in V\). Certain letters carry conventional
+meanings---\(V, E\) for vertices and edges, \(T\) for time periods,
+\(K\) for constraint indices---but these are conventions, not
+requirements. A symbol is defined by its declaration, not by its name.
+
+Data can be written in two interchangeable forms. A parameter may appear
+as a subscripted quantity, such as \(w_i\) or \(a_{ij}\), or as a
+function, such as \(d(c, f)\). Formally, these are equivalent:
+\((w_i)_{i \in I}\) and \(w : I \to \mathbb{R}\) define the same
+mapping. Subscripts are compact for tabulated data; functional notation
+reads more naturally when arguments span multiple index sets or when the
+value is conceptually computed (e.g., a distance or cost query). The
+notation \(d(c, f)\) reflects the latter interpretation.
+
+\section{Graphs}\label{sec:2.3}
+
+A graph is a common form of structured set: a pair \(G = (V, E)\), where
+\(V\) is a finite set of vertices and \(E \subseteq V \times V\) is a
+set of arcs. Vertices are typically denoted by \(v\) (or \(w\) when
+needed), and \((v, w) \in E\) denotes an arc from \(v\) to \(w\), often
+abbreviated as \(vw\). An \emph{undirected graph} uses unordered pairs:
+
+\[
+G = (V, E), \qquad \{v, w\} \in E.
+\]
+
+The choice between directed and undirected graphs depends on the
+application---flows are directed, whereas relationships such as
+friendships are not. The modeling choice can significantly affect the
+resulting formulation.
+
+For a directed graph, the \emph{out-neighborhood} and
+\emph{in-neighborhood} of a vertex \(v\) are
+
+\[
+N^+(v) = \{\, w \in V \mid (v, w) \in E \,\}, \qquad N^-(v) = \{\, u \in V \mid (u, v) \in E \,\}.
+\]
+
+The notation follows the standard upstream/downstream interpretation
+\(u \to v \to w\): \(u\) is a predecessor of \(v\), and \(w\) is a
+successor. For an undirected graph, there is a single neighborhood,
+
+\[
+N(v) = \{\, w \in V \mid \{v, w\} \in E \,\}.
+\]
+
+A related convention reserves \(\delta^+(v)\) and \(\delta^-(v)\) for
+the \emph{sets of arcs} leaving and entering \(v\),
+
+\[
+\delta^+(v) = \{\, (v, w) \in E \,\}, \qquad \delta^-(v) = \{\, (u, v) \in E \,\}.
+\]
+
+The distinction matters in flow formulations, where the natural sums are
+over arcs rather than over neighboring vertices.
+
+A \emph{subgraph} is a pair \((V', E')\) with \(V' \subseteq V\) and
+\(E' \subseteq E\). It is \emph{induced} by \(V'\) if its edge set
+consists exactly of those edges in \(G\) with both endpoints in \(V'\):
+
+\[
+E' = \{\, (v, w) \in E \mid v, w \in V' \,\}.
+\]
+
+The same definition applies to undirected graphs by interpreting
+\((v, w)\) as \(\{v, w\}\). We write \(G[V']\) for the subgraph induced
+by \(V'\). Induced subgraphs underlie structures such as cliques,
+independent sets, and dense subgraphs. For example, a clique is a set
+\(V' \subseteq V\) such that \(G[V']\) is complete.
+
+As an example, consider constructing a worker's shift from a set of
+tasks \(T\). Each task \(t \in T\) has a start time \(s_t\) and an end
+time \(e_t \ge s_t\), and transitioning from \(t\) to \(t'\) requires
+time \(\tau_{t,t'} \ge 0\). The feasible sequences of tasks can be
+represented as a graph with
+
+\[
+V = T \cup \{v_{\text{start}}, v_{\text{end}}\}, \qquad
+E \;=\; \bigl\{\, (t, t') \in T \times T \;\big|\; e_t + \tau_{t,t'} \le s_{t'} \,\bigr\}
+\;\cup\; \bigl(\{v_{\text{start}}\} \times T\bigr)
+\;\cup\; \bigl(T \times \{v_{\text{end}}\}\bigr).
+\]
+
+An arc \((t, t')\) indicates that \(t'\) can follow \(t\) in a feasible
+schedule. The vertices \(v_{\text{start}}\) and \(v_{\text{end}}\)
+represent the beginning and end of the shift. Since \(e_t \ge s_t\) and
+\(\tau \ge 0\), all arcs move forward in time, so \(G\) is a
+\emph{directed acyclic graph} (DAG).
+
+A single worker's schedule corresponds to a path from
+\(v_{\text{start}}\) to \(v_{\text{end}}\) in \(G\). If every task must
+be assigned to exactly one worker and each worker performs one feasible
+sequence, then minimizing the number of workers is the minimum
+path-cover problem on this DAG, which reduces to bipartite matching.
+With per-arc costs, the same structure yields a minimum-cost flow
+formulation, typically after splitting each task vertex to enforce that
+exactly one unit of flow uses it.
+
+\begin{platypustip}
+Modeling a problem as a graph provides access to a broad
+range of graph algorithms, which can serve as subroutines or, in some
+cases, solve the problem directly, as in this example.
+\end{platypustip}
+
+\section{Variables and Domains}\label{sec:2.4}
+
+The decision variables \(x_i\) in the Knapsack problem lived in
+\(\{0, 1\}^{|I|}\)---one bit per item, indicating whether the item is
+selected. Consider the same model with a modified domain:
+
+\[
+\max \;\sum_{i \in I} c_i\, x_i
+\quad\text{s.t.}\quad
+\sum_{i \in I} w_i\, x_i \le C,
+\qquad x_i \in [0, 1].
+\]
+
+The objective, constraint, and data are unchanged; only the domain
+differs. This is the \emph{fractional knapsack} problem, where items can
+be taken in any proportion between zero and one. It admits a greedy
+solution in \(\mathcal{O}(|I| \log |I|)\) time by sorting items by value
+density. In contrast, the original formulation with \(x_i \in \{0,1\}\)
+is NP-hard. Changing the domain again to \(x_i \in \mathbb{N}_0\) yields
+the \emph{unbounded knapsack} problem, where any non-negative number of
+copies of each item may be selected.
+
+Each \(x_i\) is a \emph{decision variable}---a quantity determined by
+the solver---and its \emph{domain} specifies the admissible values.
+Common domains include:
+
+\begin{symboltable}{lL}
+Domain & Typical use \\ \midrule
+\(\mathbb{R}\) & continuous quantities (flows, prices, fractions) \\
+\(\mathbb{Z}\) & integers (indices, offsets) \\
+\(\mathbb{N}_0\) & non-negative integers (counts, quantities) \\
+\(\{0,1\}\) & binary decisions \\
+\(\{1,2,\dots,k\}\) & finite enumerations (machines, modes) \\
+\(\{\text{red}, \text{green}\}\) & symbolic enumerations \\
+\end{symboltable}
+
+
+Bounds are a special case of domains: \(l_i \le x_i \le u_i\) is
+equivalent to \(x_i \in [l_i, u_i]\), and \(x_i \ge 0\) to
+\(x_i \in [0, \infty)\). When multiple variables share a domain, we
+write \(x \in \mathbb{R}^n\), \(x \in \mathbb{Z}^n\), or
+\(x \in \{0,1\}^n\).
+
+Variable names follow informal conventions---\(x\) for primary
+decisions, \(y\) for auxiliary variables, \(s\) for slack variables, and
+\(z\) for objective values---but these conventions are not binding.
+
+\section{Expressions}\label{sec:2.5}
+
+Expressions are quantities formed from variables and parameters; once
+the variables are fixed, an expression evaluates to a scalar. It is
+useful to distinguish between linear and nonlinear expressions, because
+the distinction has algorithmic consequences. Models composed entirely
+of linear expressions---\emph{linear programs} and \emph{mixed-integer
+linear programs}---are significantly better understood than their
+nonlinear counterparts. In practice, nonlinear formulations are often
+transformed into linear ones, either exactly or through approximation.
+
+\subsection{Linear expressions}\label{sec:2.5.1}
+
+A linear expression is a weighted sum of variables:
+
+\[
+\sum_{i \in I} c_i x_i.
+\]
+
+This form appears in many contexts: total value in knapsack, total
+assignment cost, or total flow into a vertex. Nested sums extend the
+structure over Cartesian products:
+
+\[
+\sum_{i \in I} \sum_{j \in J} a_{ij} x_{ij}
+\;=\;
+\sum_{(i,j) \in I \times J} a_{ij} x_{ij}.
+\]
+
+The right-hand form is convenient when the index set is a subset of
+\(I \times J\), such as the edge set of a graph:
+
+\[
+\sum_{(i,j) \in E} x_{ij}.
+\]
+
+In vector notation, \(\sum_i c_i x_i\) is written as \(c^\top x\), and a
+system of linear constraints as \(A x \le b\). The indexed and vector
+forms represent the same object, differing only in presentation.
+
+\subsection{Nonlinear expressions}\label{sec:2.5.2}
+
+Any expression that is not a linear combination of variables is
+\emph{nonlinear}. Three common patterns recur.
+
+The first consists of variables passed through nonlinear functions, such
+as products or transcendental functions:
+
+\[
+x_i^2, \quad x_i x_j, \quad \exp(x_i), \quad \log(x_i).
+\]
+
+The second pattern aggregates over an index set, analogous to \(\sum\)
+in \Cref{sec:2.5.1}, but produces a nonlinear result:
+
+\[
+\max_{i \in I} g_i(x), \quad \min_{i \in I} g_i(x), \quad
+\operatorname{median}_{i \in I} g_i(x), \quad
+\operatorname{mode}_{i \in I} g_i(x), \quad
+\operatorname{quantile}_{i \in I}^{\,q} g_i(x).
+\]
+
+The third pattern connects logical predicates to numeric expressions.
+The \emph{Iverson bracket} maps a predicate \(P\) to a binary value:
+
+\[
+[P] \;=\; \begin{cases} 1 & \text{if } P \text{ is true}, \\ 0 & \text{otherwise.} \end{cases}
+\]
+
+For example, the number of variables taking a specific value is
+
+\[
+\sum_{i \in I} [\, x_i = v \,],
+\]
+
+and the condition ``at most \(k\) of the predicates \(P_1, \dots, P_n\)
+hold'' can be written as \(\sum_{i=1}^{n} [P_i] \le k\).
+
+\subsection{Declaring functions}\label{sec:2.5.3}
+
+A function is declared by specifying its \emph{signature}:
+
+\[
+f : A \to B,
+\]
+
+which defines the function name \(f\), its domain \(A\), and its
+codomain \(B\). Optionally, a definition follows:
+
+\[
+f(a) := \dots.
+\]
+
+The domain and codomain may be Cartesian products, as in
+\(d : C \times F \to \mathbb{R}_{\ge 0}\). This notation covers
+parameters (data expressed as functions rather than indexed symbols),
+derived expressions (e.g., \(\mathrm{slack}(x) := C - \sum_i w_i x_i\)),
+and predicates (with codomain \(\{0,1\}\) or
+\(\{\text{true}, \text{false}\}\)).
+
+\begin{platypusinfo}
+An optimization problem can itself be viewed as a
+function: parameters map to an optimal value. For the 0/1 knapsack,
+\begin{align*}
+\mathrm{knapsack} :\; & \mathbb{R}_{\ge 0}^{n} \times \mathbb{R}_{\ge 0}^{n} \times \mathbb{R}_{\ge 0} \to \mathbb{R}_{\ge 0}, \\
+\mathrm{knapsack}(c, w, C) \;=\; & \max_{x \in \{0,1\}^{n}} \Bigl\{\, \textstyle\sum_{i} c_i x_i \;\Big|\; \sum_i w_i x_i \le C \,\Bigr\}.
+\end{align*}
+\end{platypusinfo}
+
+\section{Objectives}\label{sec:2.6}
+
+An optimization problem selects \(x\) from a feasible region
+\(\mathcal{F}\) to minimize a scalar objective \(f : D \to \mathbb{R}\):
+
+\[
+\min_{x \in \mathcal{F}} f(x).
+\]
+
+Maximization replaces \(\min\) with \(\max\), or equivalently
+minimizes \(-f\). The minimum attained is the \emph{optimal value},
+
+\[
+f^\star = \min_{x \in \mathcal{F}} f(x),
+\]
+
+and the set of \emph{optimal solutions} is
+
+\[
+\arg\min_{x \in \mathcal{F}} f(x) \;=\; \{\, x \in \mathcal{F} \mid f(x) = f^\star \,\}.
+\]
+
+We write \(x^\star \in \arg\min\) rather than \(x^\star = \arg\min\),
+because the optimum need not be unique; many problems admit multiple
+optimal solutions, sometimes forming a continuum.
+
+When multiple criteria are considered, we obtain a vector of objective
+values \((f_1(x), \dots, f_m(x))\). Such vectors are not minimized by
+the usual scalar order; one must choose a notion of preference, such as
+Pareto dominance, a weighted sum, a minimax objective, or a
+lexicographic order. The choice is a modeling decision and is not
+pursued here.
+
+\section{Constraints}\label{sec:2.7}
+
+A constraint is a \emph{predicate}---a statement that evaluates to true
+or false for a given assignment of values. While expressions answer
+``what is the value?'', constraints answer ``is the condition
+satisfied?''.
+
+The most common predicates in optimization are linear (in)equalities:
+
+\[
+\sum_{j \in J} a_{ij} x_j \;\le\; b_i \qquad \forall i \in I.
+\]
+
+The quantifier \(\forall i \in I\) is essential: this defines a family
+of \(|I|\) constraints, not a single one. For example, if
+\(I = \{1,2,3\}\), the family expands to
+
+\[
+\sum_j a_{1j} x_j \le b_1, \qquad \sum_j a_{2j} x_j \le b_2, \qquad \sum_j a_{3j} x_j \le b_3.
+\]
+
+Equalities and reverse inequalities follow the same pattern.
+
+Linearity is convenient but not required. In general, a constraint has
+the form
+
+\[
+P_k(x) \qquad \forall k \in K,
+\]
+
+where each \(P_k\) is a predicate on the variable vector---for example,
+a linear inequality, an \emph{AllDifferent} constraint, a
+\emph{NoOverlap} constraint, or another relation.
+
+\section{Logic and Quantifiers}\label{sec:2.8}
+
+Many decisions are yes/no decisions: \emph{open this station},
+\emph{take this course}, \emph{make this assignment}. A 0/1 variable is
+enough to encode them. Models built from such Boolean variables use the
+standard logical connectives
+
+\[
+\land, \quad \lor, \quad \neg, \quad \Rightarrow, \quad \Leftrightarrow,
+\]
+
+possibly quantified over index sets with \(\forall\) and \(\exists\).
+Two common large-operator forms are
+
+\[
+\bigwedge_{k \in K} \phi_k, \qquad \bigvee_{k \in K} \phi_k.
+\]
+
+They denote the conjunction and disjunction of an indexed family of
+Boolean expressions \(\phi_k\). The first is equivalent to the
+constraint family \(\phi_k ;\forall k \in K\); the second means that at
+least one \(\phi_k\) must hold, and therefore cannot be replaced by a
+family of separate constraints.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\paragraph{Example.} After an office prank, three suspects remain: Anna,
+Ben, and Cara. Let \(x_a, x_b, x_c \in \{0,1\}\) encode whether each
+person is guilty. Witnesses provide four facts. Anna would only act with
+Ben, so \(x_a \Rightarrow x_b\). Ben and Cara have never gotten along,
+so \(\neg(x_b \land x_c)\). Cara would only join if Anna did, so
+\(x_c \Rightarrow x_a\). Finally, someone did it, so
+\(x_a \lor x_b \lor x_c\). Together, the facts give
+
+\[
+(x_a \Rightarrow x_b) \;\land\; \neg(x_b \land x_c) \;\land\; (x_c \Rightarrow x_a) \;\land\; (x_a \lor x_b \lor x_c).
+\]
+
+Chaining the implications gives \(x_c \Rightarrow x_a \Rightarrow x_b\).
+But \(x_b\) implies \(\neg x_c\), because Ben and Cara cannot both be
+guilty. Hence \(x_c \Rightarrow \neg x_c\), so \(x_c = 0\). With Cara
+cleared, the condition that someone is guilty reduces to
+\(x_a \lor x_b\). Together with \(x_a \Rightarrow x_b\), this forces
+\(x_b = 1\), regardless of Anna's role. The clues implicate Ben, clear
+Cara, and leave Anna's status undetermined.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+The connectives are not limited to Boolean variables; they also compose
+predicates over richer variables. Suppose two jobs share a machine. With
+start times \(s_1, s_2 \in \mathbb{N}_0\) and durations \(d_1, d_2\),
+the jobs must run one after the other:
+
+\[
+s_1 + d_1 \le s_2 \;\;\lor\;\; s_2 + d_2 \le s_1.
+\]
+
+This is a disjunction of two linear inequalities over integer variables.
+The same logical connectives apply to inequalities, equalities,
+\(\text{AllDifferent}(y_1,\ldots,y_k)\), \(\text{NoOverlap}\)
+constraints, or any other relation. A predicate, like a function, can be
+named for reuse:
+
+\[
+P(x) \;:=\; \sum_{i \in I} w_i x_i \le C.
+\]
+
+Once named, it fits into the same logical syntax:
+\(P_1(x) \land P_2(x)\), \(P(x) \Rightarrow Q(x)\), or
+\(\bigvee_{k \in K} P_k(x)\).
+
+The two layers---Boolean variables and predicates over richer
+variables---meet in \emph{reification}. Reification ties a Boolean
+indicator \(z \in \{0,1\}\) to the truth value of a predicate:
+
+\[
+z \;\Leftrightarrow\; (x \ge 5).
+\]
+
+Once reified, \(z\) can appear in logical connectives like any other
+Boolean variable. The special case \(z \Rightarrow a^\top x \le b\) is
+known as an \emph{indicator constraint} in MIP terminology. How a solver
+encodes such patterns is separate from how the model states them.
+
+\section{A Standard Model Template}\label{sec:2.9}
+
+Many optimization models share a common skeleton. In its simplest form,
+it is
+
+\[
+\begin{aligned}
+\min_{x} \quad      & f(x) \\
+\text{s.t.} \quad   & P_k(x) && \forall k \in K, \\
+                    & x \in D.
+\end{aligned}
+\]
+
+The objective \(f\), predicates \(P_k\), and domain \(D\) are specified
+by the application. The corresponding feasible region is
+
+\[
+\mathcal{F} = \{\, x \in D \mid P_k(x) \;\forall k \in K \,\},
+\]
+
+with optimal value and optimal solution written as
+
+\[
+f^\star = \min_{x \in \mathcal{F}} f(x),\qquad
+x^\star \in \arg\min_{x \in \mathcal{F}} f(x).
+\]
+
+Many formulations you encounter will fit this template, often with only
+minor notational variations.

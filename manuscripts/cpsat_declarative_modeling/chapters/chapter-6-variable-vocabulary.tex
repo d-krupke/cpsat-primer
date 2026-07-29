@@ -1,0 +1,235 @@
+\chapter{The Variable Vocabulary}\label{chap:6}
+
+\begin{quote}
+\emph{``The beginning of wisdom is to call things by their proper
+name.''} --- Confucius
+\end{quote}
+
+Variables are the nouns of a CP-SAT model. Every decision the solver is
+allowed to make is held by a variable, and every variable belongs to one
+of five constructor families. The vocabulary is small by design: most of
+the modeling work is recognizing which constructor matches a given
+decision, and the recognition becomes reflex after a few examples.
+
+CP-SAT has no continuous variables --- there is no
+\lstinline!new_real_var!. Quantities that are naturally
+fractional (prices, distances, ratios) must be scaled to integers,
+working in cents, millimeters, or some other unit small enough to
+capture the precision the problem actually needs. The integer-only
+restriction is part of the design.
+
+\section{\texorpdfstring{Integer Variables --- \texttt{new\_int\_var}}{Integer Variables --- new\_int\_var}}\label{sec:6.1}
+
+A bounded integer.
+
+\begin{lstlisting}[language=Python]
+x = model.new_int_var(lb=0, ub=100, name="x")  # closed [0, 100]
+qty = model.new_int_var(0, 50, "qty")
+delta = model.new_int_var(-10, 10, "delta")
+\end{lstlisting}
+
+The constructor takes a lower bound, an upper bound, and a name. Both
+bounds are \emph{inclusive}: the variable's domain is the integer
+interval \(\{lb, lb+1, \dots, ub\}\).
+
+Tighter bounds tend to help. A bound is information the solver uses for
+propagation, branching, and presolve. A variable declared as
+\lstinline![0, 100]! is much cheaper to reason about than
+the same variable declared as \([0, 10^9]\), even if the second bound is
+technically valid. The looser bound forces the solver to consider
+possibilities it never needed to.
+
+Typical uses for integer variables include: quantities (\emph{how many
+units to ship}, \emph{how many nurses on this shift}); times on a
+discrete grid (\emph{the start hour of task A}, \emph{the minute at
+which a meeting begins}); discrete spatial coordinates (\emph{the x- and
+y-position of a piece on a grid}); counts and totals; indices into a
+list (\emph{which warehouse serves customer C}, in
+\(\{0, 1, \dots, n-1\}\)). For indices specifically, there is often a
+competing encoding using one Boolean per choice --- see \Cref{sec:6.2}.
+
+\section{\texorpdfstring{Boolean Variables --- \texttt{new\_bool\_var}}{Boolean Variables --- new\_bool\_var}}\label{sec:6.2}
+
+Booleans are the real workhorse of CP-SAT --- the SAT core is built
+around them. A Boolean is a 0/1 integer \emph{and} a logical literal at
+the same time. This dual nature is what makes CP-SAT models concise.
+
+\begin{lstlisting}[language=Python]
+take = model.new_bool_var("take_item")
+edge_used = model.new_bool_var("edge_a_b")
+is_late = model.new_bool_var("is_late")
+not_take = ~take  # negation — a free view, no new variable
+\end{lstlisting}
+
+The \lstinline!~! operator returns the negation as a
+\emph{view}: no new variable is allocated, and the negation participates
+in constraints exactly as the original Boolean would. This is a small
+but useful efficiency --- every Boolean in your model has a free
+negation that can appear in any constraint position.
+
+The dual nature is on display in expressions like:
+
+\begin{lstlisting}[language=Python]
+model.add(take + take2 + take3 <= 2)     # arithmetic: Bool as 0/1
+model.add_bool_or([take, take2, take3])  # logic:      Bool as literal
+\end{lstlisting}
+
+The first treats the Booleans as integers and asserts a linear
+inequality on their sum. The second treats them as logical literals and
+asserts a disjunction. Both are legitimate, both are efficient, and the
+same variable can appear in both kinds of constraint without conversion.
+
+Typical uses for Booleans include: yes/no decisions (\emph{include
+item}, \emph{use edge}, \emph{schedule task}, \emph{hire candidate});
+assignments expressed as Bool-per-pair --- the matrix idiom from the FLP
+example of \Cref{sec:5.5}, with \(x_{i,j} \in \{0, 1\}\) indexed by pairs; state
+indicators that other constraints react to (\emph{did the budget get
+exceeded?}, \emph{is this nurse working a late shift?}); reified
+relations, where a Boolean is constrained to be true exactly when some
+other relation holds, used in conditional logic via
+\lstinline!only_enforce_if!.
+
+Booleans are typically a natural starting point for routing, scheduling,
+and graph problems, where CP-SAT's SAT core is at its strongest. A
+Bool-per-pair assignment encoding often works well because it exposes
+many logical relations directly to the SAT layer. But it is not
+universally better than a single integer ``which of \emph{k}'' variable:
+integer-valued encodings can be superior when they enable stronger
+global constraints or cleaner arithmetic. Treat the choice as a modeling
+tradeoff and benchmark when it matters.
+
+\section{\texorpdfstring{Constants --- \texttt{new\_constant}}{Constants --- new\_constant}}\label{sec:6.3}
+
+A variable whose domain is a single value.
+
+\begin{lstlisting}[language=Python]
+zero = model.new_constant(0)
+seven = model.new_constant(7)
+\end{lstlisting}
+
+We use this sparingly. The main case is \emph{interface uniformity}: a
+function expects a variable, but for some inputs the value is fixed by
+the data.
+
+\begin{lstlisting}[language=Python]
+def add_capacity(model, weight, capacity):
+    model.add(weight <= capacity)
+
+add_capacity(model, model.new_int_var(0, 100, "w"), 50)
+add_capacity(model, model.new_constant(42), 50)
+\end{lstlisting}
+
+The second call passes a constant where the function expects a variable,
+avoiding a separate code path for the fixed-value case. For most
+expressions, CP-SAT also accepts a plain Python integer in place of a
+variable, so \lstinline!new_constant! is genuinely needed
+only when the API requires a variable object specifically.
+
+Beyond uniformity, there is a modest debugging benefit:
+\lstinline!new_constant! creates an actual
+\lstinline!IntVar! (with an auto-generated name) that
+appears in the exported model and the solver logs, where a bare integer
+folded into a coefficient would not.
+
+\section{\texorpdfstring{Interval Variables --- \texttt{new\_interval\_var}}{Interval Variables --- new\_interval\_var}}\label{sec:6.4}
+
+An interval variable represents a span on a discrete axis: a
+\emph{start}, a \emph{size} (duration), and an \emph{end}, with the
+relation \lstinline!start + size = end! enforced
+automatically. CP-SAT offers four flavors, increasing in expressiveness
+and cost.
+
+\begin{lstlisting}[language=Python]
+# Fixed size, mandatory
+fix = model.new_fixed_size_interval_var(start=s, size=5, name="fix")
+
+# Variable size, mandatory
+flex = model.new_interval_var(start=s, size=d, end=e, name="flex")
+
+# Fixed size, optional (presence Boolean)
+opt = model.new_optional_fixed_size_interval_var(
+    s, 5, is_present=p, name="opt"
+)
+
+# Variable size, optional
+opt_flex = model.new_optional_interval_var(
+    s, d, e, is_present=p, name="opt_flex"
+)
+\end{lstlisting}
+
+The \emph{mandatory} flavors require the interval to be present in any
+feasible solution. The \emph{optional} flavors take an additional
+Boolean \lstinline!is_present!. When
+\lstinline!is_present = False!, the interval is treated
+as \emph{absent} by every interval-aware constraint that touches it: it
+does not occupy resources, does not interact with no-overlap
+propagators, and effectively disappears from the scheduling problem for
+that solution.
+
+The cost rises with each step of expressiveness. A fixed-size mandatory
+interval has the smallest representation; a variable-size optional
+interval has the largest. The rule of thumb is to take the cheapest
+flavor that expresses the problem.
+
+Typical uses for intervals include: tasks on a timeline, with start,
+duration, and end bundled into one object; optional tasks (\emph{this
+maintenance might or might not happen this week}); rectangles in 2D
+packing, where each rectangle is two intervals (one in x, one in y);
+reservations on a shared resource (meetings, room bookings, machine
+usage).
+
+An interval is only interesting in combination with an interval-aware
+constraint. By itself, an interval variable is a small bundle of three
+integer variables with one arithmetic relation between them --- no
+special semantics. The reason intervals exist is that CP-SAT's
+\emph{interval-aware constraints} ---
+\lstinline!add_no_overlap!,
+\lstinline!add_no_overlap_2d!,
+\lstinline!add_cumulative! --- accept intervals as input
+and run dedicated scheduling propagators on the result.
+
+If you only need a \lstinline![start, end]! span and never
+feed it into one of these constraints, plain integer variables are
+cheaper and clearer. The matching constraints are the next chapter's
+subject; for now, treat intervals as the input shape to a scheduling
+vocabulary you have not yet seen.
+
+Intervals fit some shapes of scheduling better than others. They shine
+when the time (or space) axis is \emph{somewhat continuous} --- start
+times anywhere in a wide horizon, sizes drawn from a range, optional
+rectangles to be packed into a free 2D area. When the problem instead
+has a small number of \emph{discrete slots} and tasks occupy known-sized
+blocks, a Bool-per-(task, slot) encoding often models the same situation
+more efficiently than intervals plus
+\lstinline!add_no_overlap!. And when transitions between
+tasks dominate the cost --- sequence-dependent setup times, vehicle
+routing --- the problem is closer to routing than to scheduling, and
+\lstinline!add_circuit! (next chapter) is the better
+starting point.
+
+\section{\texorpdfstring{Sparse Domains --- \texttt{new\_int\_var\_from\_domain}}{Sparse Domains --- new\_int\_var\_from\_domain}}\label{sec:6.5}
+
+A variable whose domain is an explicit set of values rather than a
+contiguous range.
+
+\begin{lstlisting}[language=Python]
+allowed = cp_model.Domain.from_values([2, 5, 8, 10, 20, 50, 90])
+freq    = model.new_int_var_from_domain(allowed, "frequency_MHz")
+\end{lstlisting}
+
+This is the right tool when the restriction is \emph{part of the
+problem}: allowed broadcast frequencies, standardized paper sizes,
+container capacities, supported product configurations, the discrete set
+of speeds at which a motor can run.
+
+Using sparse domains as a \emph{performance} tool is also legitimate,
+but it is a later move: CP-SAT uses \emph{lazy order encoding}
+internally, so declaring
+\lstinline!new_int_var(0, 100, ...)! does not eagerly
+materialize one hundred Booleans, and a wide bound is not, in itself, a
+wide cost. Pruning the domain to values you believe are reachable can
+still help --- sometimes substantially --- but it can also hurt, and
+worse, it can introduce subtle bugs when a value you excluded turns out
+to be feasible after all. As a rule, start with the bounds the problem
+gives you, and treat sparse-domain pruning as a tuning lever to
+experiment with once a correctness baseline is in place.
