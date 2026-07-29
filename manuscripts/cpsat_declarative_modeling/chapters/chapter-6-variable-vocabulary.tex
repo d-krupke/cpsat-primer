@@ -18,7 +18,7 @@ working in cents, millimeters, or some other unit small enough to
 capture the precision the problem actually needs. The integer-only
 restriction is part of the design.
 
-\section{\texorpdfstring{Integer Variables --- \texttt{new\_int\_var}}{Integer Variables --- new\_int\_var}}\label{sec:6.1}
+\section{\texorpdfstring{Integer Variables: \texttt{new\_int\_var}}{Integer Variables: new\_int\_var}}\label{sec:6.1}
 
 A bounded integer.
 
@@ -48,7 +48,7 @@ list (\emph{which warehouse serves customer C}, in
 \(\{0, 1, \dots, n-1\}\)). For indices specifically, there is often a
 competing encoding using one Boolean per choice (see \Cref{sec:6.2}).
 
-\section{\texorpdfstring{Boolean Variables --- \texttt{new\_bool\_var}}{Boolean Variables --- new\_bool\_var}}\label{sec:6.2}
+\section{\texorpdfstring{Boolean Variables: \texttt{new\_bool\_var}}{Boolean Variables: new\_bool\_var}}\label{sec:6.2}
 
 Booleans are the real workhorse of CP-SAT: the SAT core is built
 around them. A Boolean is a 0/1 integer \emph{and} a logical literal at
@@ -98,7 +98,7 @@ integer-valued encodings can be superior when they enable stronger
 global constraints or cleaner arithmetic. Treat the choice as a modeling
 tradeoff and benchmark when it matters.
 
-\section{\texorpdfstring{Constants --- \texttt{new\_constant}}{Constants --- new\_constant}}\label{sec:6.3}
+\section{\texorpdfstring{Constants: \texttt{new\_constant}}{Constants: new\_constant}}\label{sec:6.3}
 
 A variable whose domain is a single value.
 
@@ -131,7 +131,7 @@ Beyond uniformity, there is a modest debugging benefit:
 appears in the exported model and the solver logs, where a bare integer
 folded into a coefficient would not.
 
-\section{\texorpdfstring{Interval Variables --- \texttt{new\_interval\_var}}{Interval Variables --- new\_interval\_var}}\label{sec:6.4}
+\section{\texorpdfstring{Interval Variables: \texttt{new\_interval\_var}}{Interval Variables: new\_interval\_var}}\label{sec:6.4}
 
 An interval variable represents a span on a discrete axis: a
 \emph{start}, a \emph{size} (duration), and an \emph{end}, with the
@@ -206,7 +206,7 @@ routing, the problem is closer to routing than to scheduling, and
 \lstinline!add_circuit! (next chapter) is the better
 starting point.
 
-\section{\texorpdfstring{Sparse Domains --- \texttt{new\_int\_var\_from\_domain}}{Sparse Domains --- new\_int\_var\_from\_domain}}\label{sec:6.5}
+\section{\texorpdfstring{Sparse Domains: \texttt{new\_int\_var\_from\_domain}}{Sparse Domains: new\_int\_var\_from\_domain}}\label{sec:6.5}
 
 A variable whose domain is an explicit set of values rather than a
 contiguous range.

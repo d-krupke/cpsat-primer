@@ -15,7 +15,7 @@ inequalities; others are flattened internally to clauses or linear
 constraints. Either way, calling the global by name expresses intent and
 lets the solver pick the best encoding.
 
-\section{\texorpdfstring{Linear Constraints --- \texttt{model.add}}{Linear Constraints --- model.add}}\label{sec:7.1}
+\section{\texorpdfstring{Linear Constraints: \texttt{model.add}}{Linear Constraints: model.add}}\label{sec:7.1}
 
 The bread and butter of any CP-SAT model.
 \lstinline!model.add(...)! accepts any linear (in)equality
@@ -78,7 +78,7 @@ is therefore a transferable skill: it carries over to every MIP solver
 and remains the lingua franca even when CP-SAT's globals are the better
 choice for a given problem.
 
-\section{\texorpdfstring{Boolean Logic --- \texttt{add\_bool\_or}, \texttt{add\_bool\_and}, \texttt{add\_implication}}{Boolean Logic --- add\_bool\_or, add\_bool\_and, add\_implication}}\label{sec:7.2}
+\section{\texorpdfstring{Boolean Logic: \texttt{add\_bool\_or}, \texttt{add\_bool\_and}, \texttt{add\_implication}}{Boolean Logic: add\_bool\_or, add\_bool\_and, add\_implication}}\label{sec:7.2}
 
 Pure logical constraints over Boolean \emph{literals}: Booleans or
 their negations.
@@ -194,7 +194,7 @@ and the SAT layer's clause-learning machinery tends to do well when the
 encoded logic decomposes into many small clauses rather than a few wide
 ones.
 
-\section{\texorpdfstring{Reification --- \texttt{only\_enforce\_if}}{Reification --- only\_enforce\_if}}\label{sec:7.3}
+\section{\texorpdfstring{Reification: \texttt{only\_enforce\_if}}{Reification: only\_enforce\_if}}\label{sec:7.3}
 
 Apply a constraint only \emph{when} a Boolean (or a conjunction of
 Booleans) is true.
@@ -225,7 +225,7 @@ native mechanism (optional intervals, self-loop literals) is usually the
 better expression of conditionality. The OR-Tools documentation lists
 which constraints accept it.
 
-\section{Full Reification --- A Boolean Equivalent to a Relation}\label{sec:7.4}
+\section{Full Reification: A Boolean Equivalent to a Relation}\label{sec:7.4}
 
 \lstinline!only_enforce_if! from \Cref{sec:7.3} is \emph{half}
 reification: it forces a constraint when a literal is true but says
@@ -312,7 +312,7 @@ the same pattern, but the constraint earns its place by appearing in
 scheduling, allocation, and routing models far more often than in
 puzzles.
 
-\section{\texorpdfstring{\texttt{add\_circuit} --- TSP and Routing}{add\_circuit --- TSP and Routing}}\label{sec:7.6}
+\section{\texorpdfstring{\texttt{add\_circuit}: TSP and Routing}{add\_circuit: TSP and Routing}}\label{sec:7.6}
 
 A list of \lstinline!(tail, head, literal)! triples; the
 chosen arcs (literal = true) must form a single Hamiltonian circuit.
@@ -347,7 +347,7 @@ rich side constraints. For \emph{very} large pure TSP (tens of
 thousands of cities), specialist solvers like Concorde and LKH still
 win, as \Cref{sec:5.2} noted.
 
-\section{\texorpdfstring{\texttt{add\_no\_overlap} --- Single-Machine Scheduling}{add\_no\_overlap --- Single-Machine Scheduling}}\label{sec:7.7}
+\section{\texorpdfstring{\texttt{add\_no\_overlap}: Single-Machine Scheduling}{add\_no\_overlap: Single-Machine Scheduling}}\label{sec:7.7}
 
 A list of intervals that may not overlap on the time axis.
 
@@ -378,7 +378,7 @@ on \emph{edge finding}, \emph{detectable precedences}, and
 pairwise disjunctions on integer start times is correct but tends to be
 slower on non-trivial sizes.
 
-\section{\texorpdfstring{\texttt{add\_no\_overlap\_2d} --- 2D Packing}{add\_no\_overlap\_2d --- 2D Packing}}\label{sec:7.8}
+\section{\texorpdfstring{\texttt{add\_no\_overlap\_2d}: 2D Packing}{add\_no\_overlap\_2d: 2D Packing}}\label{sec:7.8}
 
 The two-dimensional analogue: axis-aligned rectangles in the plane that
 may not overlap.
@@ -406,7 +406,7 @@ placement, and cutting-stock with rectangular pieces. Optional
 rectangles work the same way: items that may or may not be packed
 have their presence Boolean carried by both interval components.
 
-\section{\texorpdfstring{\texttt{add\_cumulative} --- Resource-Capacity Scheduling}{add\_cumulative --- Resource-Capacity Scheduling}}\label{sec:7.9}
+\section{\texorpdfstring{\texttt{add\_cumulative}: Resource-Capacity Scheduling}{add\_cumulative: Resource-Capacity Scheduling}}\label{sec:7.9}
 
 The capacitated generalization of
 \lstinline!add_no_overlap!. Each interval has a
@@ -438,7 +438,7 @@ When the capacity is exactly 1, the specialized
 single-resource case and tends to propagate more strongly than
 \lstinline!add_cumulative! on that specialization.
 
-\section{Equality Helpers --- Max, Min, Abs, Multiplication, Division, Modulo}\label{sec:7.10}
+\section{Equality Helpers: Max, Min, Abs, Multiplication, Division, Modulo}\label{sec:7.10}
 
 The non-linear corners of integer arithmetic
 (\lstinline!max!, \lstinline!min!, \(|x|\),

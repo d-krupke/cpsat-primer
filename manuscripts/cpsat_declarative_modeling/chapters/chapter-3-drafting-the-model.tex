@@ -149,7 +149,7 @@ that refer to different combinations of workers, shifts, days, and
 skills. The point of the five-component structure is to keep that
 complexity visible and organized.
 
-\subsection{Step 1 --- Entities become sets}\label{step-1-entities-become-sets}
+\subsection{Step 1: Entities become sets}\label{step-1-entities-become-sets}
 
 Read the problem statement and underline every noun that names a class
 of objects. \emph{Nurses, shifts, days, skills.} Each class becomes a
@@ -157,10 +157,10 @@ set.
 
 \begin{symboltable}{lL}
 Symbol & Description \\ \midrule
-\(W\) & Workers (nurses) --- the staff to be scheduled. \\
-\(S\) & Shifts --- the work blocks to be filled this week. \\
-\(T\) & Days --- the calendar dimension, \(T = \{1, \dots, 7\}\). \\
-\(K\) & Skills --- the qualifications the ward tracks. \\
+\(W\) & Workers (nurses): the staff to be scheduled. \\
+\(S\) & Shifts: the work blocks to be filled this week. \\
+\(T\) & Days: the calendar dimension, \(T = \{1, \dots, 7\}\). \\
+\(K\) & Skills: the qualifications the ward tracks. \\
 \end{symboltable}
 
 
@@ -168,7 +168,7 @@ A set is the \emph{type} of an index. Once we have written \(w \in W\)
 and \(s \in S\), we can index any quantity in the model by \((w, s)\):
 variables, parameters, constraints, neighborhoods.
 
-\subsection{Step 2 --- Parameters are the input data}\label{step-2-parameters-are-the-input-data}
+\subsection{Step 2: Parameters are the input data}\label{step-2-parameters-are-the-input-data}
 
 Anything known before we solve is a parameter. Parameters are often
 indexed by the sets from step 1, and each one should carry a domain (the
@@ -200,7 +200,7 @@ parameters in the table is useful because it gives later constraints a
 clean vocabulary. Instead of repeatedly writing ``all shifts that fall
 on day \(t\),'' we can simply write \(S_t\).
 
-\subsection{Step 3 --- Variables are the unknowns}\label{step-3-variables-are-the-unknowns}
+\subsection{Step 3: Variables are the unknowns}\label{step-3-variables-are-the-unknowns}
 
 This is the step where the problem stops being only a description and
 becomes a model. Each decision unit becomes one variable, declared with
@@ -238,11 +238,11 @@ binary. Other problems suggest other shapes:
 
 \begin{symboltable}{lL}
 Decision phrasing & Variable shape \\ \midrule
-``Take it or not?'' & \(x_i \in \{0, 1\}\) --- binary \\
-``How many?'' & \(x_i \in \mathbb{N}_0\) --- non-negative integer \\
-``When does it start?'' & \(\text{st}_i \in [0, H]\) --- time variable, bounded by horizon \(H\) \\
-``Which slot does it go into?'' & either \(x_i \in \{1, \dots, K\}\) \emph{or} \(y_{i,k} \in \{0,1\}\) --- index \emph{vs.} one-hot \\
-``Which edge is used?'' & \(x_{ij} \in \{0,1\} \;\forall (i,j) \in E\) --- one Boolean per edge \\
+``Take it or not?'' & \(x_i \in \{0, 1\}\): binary \\
+``How many?'' & \(x_i \in \mathbb{N}_0\): non-negative integer \\
+``When does it start?'' & \(\text{st}_i \in [0, H]\): time variable, bounded by horizon \(H\) \\
+``Which slot does it go into?'' & either \(x_i \in \{1, \dots, K\}\) \emph{or} \(y_{i,k} \in \{0,1\}\): index \emph{vs.} one-hot \\
+``Which edge is used?'' & \(x_{ij} \in \{0,1\} \;\forall (i,j) \in E\): one Boolean per edge \\
 \end{symboltable}
 
 
@@ -266,7 +266,7 @@ is a different modeling level from the first paper formulation developed
 here.
 \end{platypusinfo}
 
-\subsection{Step 4 --- Constraints encode validity}\label{step-4-constraints-encode-validity}
+\subsection{Step 4: Constraints encode validity}\label{step-4-constraints-encode-validity}
 
 Constraints are usually the most complex part of the model. For simple
 textbook examples, it may be enough to translate each ``must'' sentence
@@ -343,7 +343,7 @@ that fall on that day and requires that no more than one of them be
 assigned to this worker. This is a typical use of a derived parameter
 (\(S_t\)) to keep the constraint readable.
 
-\subsection{Step 5 --- The objective picks among valid choices}\label{step-5-the-objective-picks-among-valid-choices}
+\subsection{Step 5: The objective picks among valid choices}\label{step-5-the-objective-picks-among-valid-choices}
 
 We have specified what counts as a valid roster. Now we say which valid
 roster we prefer.
