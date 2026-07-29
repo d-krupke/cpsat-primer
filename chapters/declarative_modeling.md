@@ -2,15 +2,15 @@
 
 <a name="chapters-declarative_modeling"></a>
 
-[**Declarative Modeling with CP-SAT**](https://github.com/d-krupke/cpsat-primer/blob/main/manuscripts/cpsat_declarative_modeling/cpsat_declarative_modeling.pdf)
+[**Declarative Modeling with CP-SAT**](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/manuscripts/cpsat_declarative_modeling/cpsat_declarative_modeling.pdf)
 is a standalone companion manuscript to this primer, available as a typeset PDF.
 
 <p align="center">
-  <a href="https://github.com/d-krupke/cpsat-primer/blob/main/manuscripts/cpsat_declarative_modeling/cpsat_declarative_modeling.pdf">
+  <a href="https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/manuscripts/cpsat_declarative_modeling/cpsat_declarative_modeling.pdf">
     <img src="https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/declarative_modeling_titlepage.png" alt="Declarative Modeling with CP-SAT — title page" width="320">
   </a>
   <br>
-  <em><a href="https://github.com/d-krupke/cpsat-primer/blob/main/manuscripts/cpsat_declarative_modeling/cpsat_declarative_modeling.pdf">Click the cover to read the typeset PDF</a></em>
+  <em><a href="https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/manuscripts/cpsat_declarative_modeling/cpsat_declarative_modeling.pdf">Click the cover to read the typeset PDF</a></em>
 </p>
 
 The primer is the broader, more extensive resource: it covers CP-SAT in depth,
