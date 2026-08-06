@@ -61,7 +61,7 @@ repos:
       - id: prettier
         types_or: [yaml, markdown, html, css, scss, javascript, json]
         args: [--prose-wrap=always]
-        # README.md and chapters/search_core.md are generated (build.py /
+        # README.md and chapters/search_core.md are generated (.scripts/build.py /
         # the Search Core LaTeX pipeline); leave their formatting authoritative.
         exclude: "README.md|chapters/search_core.md"
 
@@ -79,7 +79,7 @@ repos:
         exclude: .pre-commit-config.yaml
       - id: build-readme
         name: Build the README.md from the subfiles
-        entry: python3 ./build.py
+        entry: python3 ./.scripts/build.py
         language: system
         always_run: true
         files: "README.md"
