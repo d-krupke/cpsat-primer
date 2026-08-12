@@ -115,9 +115,11 @@ engine can learn. The result is a CP solver with a SAT solver's memory.
 > The developers trace CP-SAT's lineage directly to the lazy-clause-generation work of
 > the late 2000s, notably Peter Stuckey's pointed “search is dead” framing, and
 > built CP-SAT by deliberately discarding the classic CP search machinery in favor
-> of a learning SAT core. For the fuller story, see Stuckey's
-> [talk on lazy clause generation](https://youtu.be/lxiCHRFNgno) [[1](#ref-stuckey2014lcg)]
-> and the CP-SAT developers' own overview talks [[2](#ref-perron2020cpaior), [3](#ref-perron2024scheduling), [4](#ref-perron-ewo-ortools)].
+> of a learning SAT core. For a general introduction to the technique itself, see
+> Krunal Patel's [“What is Lazy
+> Clause Generation?”](https://www.youtube.com/watch?v=vPJz6SCvC_Q) [[1](#ref-patel2026lcg)]; for the fuller story, see Stuckey's
+> [talk on lazy clause generation](https://youtu.be/lxiCHRFNgno) [[2](#ref-stuckey2014lcg)]
+> and the CP-SAT developers' own overview talks [[3](#ref-perron2020cpaior), [4](#ref-perron2024scheduling), [5](#ref-perron-ewo-ortools)].
 
 Two further ingredients complete the picture. The rest of this text treats them
 as accelerators bolted onto the core ([Section 6](#part-faster), _Going faster_),
@@ -165,10 +167,10 @@ range down to one value.
 > core, so having seen how a plain CDCL solver works makes the rest considerably
 > easier to follow. Readers who want that background first can start with Smock's
 > gentle visual introduction
-> [[5](#ref-smock2016peek)] (about 35 minutes), move on to Nadel's more technical talk
-> linking CDCL to optimization [[6](#ref-nadel2023cdcl)], and turn to Biere's in-depth
-> tutorial [[7](#ref-biere2021satsolving)] (about four and a half hours) for the full
-> machinery. Knuth's fascicle [[8](#ref-knuth2015satisfiability)] is the canonical
+> [[6](#ref-smock2016peek)] (about 35 minutes), move on to Nadel's more technical talk
+> linking CDCL to optimization [[7](#ref-nadel2023cdcl)], and turn to Biere's in-depth
+> tutorial [[8](#ref-biere2021satsolving)] (about four and a half hours) for the full
+> machinery. Knuth's fascicle [[9](#ref-knuth2015satisfiability)] is the canonical
 > written reference, useful either in place of the videos or alongside them.
 
 <a name="sec-bounds"></a>
@@ -955,7 +957,7 @@ Boolean worlds actually need to meet.
 **The order encoding.** When that bridge is built, it uses the
 _order encoding_, also called the “list encoding.” CP-SAT follows Feydy
 and Stuckey's _“Lazy Clause Generation Reengineered”_ (CP
-2009) [[9](#ref-feydy2009lcg)].
+2009) [[10](#ref-feydy2009lcg)].
 
 For a variable $x$, the bound
 literals have the form $[\\![x \\ge v]\\!]$, and they are linked by
@@ -1533,8 +1535,8 @@ without a useful solution.
 > dramatically before a single decision is made. We leave presolve out of scope
 > here; the general ideas, drawn from the SAT and MIP traditions CP-SAT inherits,
 > are covered in lectures on SAT and MaxSAT
-> preprocessing [[10](#ref-preprocsat), [11](#ref-preprocmaxsat)] and in Achterberg et al.'s survey
-> of MIP presolve reductions [[12](#ref-achterberg2016presolve)].
+> preprocessing [[11](#ref-preprocsat), [12](#ref-preprocmaxsat)] and in Achterberg et al.'s survey
+> of MIP presolve reductions [[13](#ref-achterberg2016presolve)].
 
 <a name="sec-lp"></a>
 
@@ -1547,7 +1549,7 @@ reduced-cost arguments. CP-SAT therefore carries a continuous **LP
 relaxation** of part of the model alongside the search and uses it as one more
 propagator. This is the bridge to the MIP world, and it is where the dual
 simplex enters. The developers' own account of these MIP aspects is a useful
-companion here [[13](#ref-didier2025mipaspects)].
+companion here [[14](#ref-didier2025mipaspects)].
 
 **It is just a propagator.**
 [LinearProgrammingConstraint](https://github.com/google/or-tools/blob/98c165af62df62b3056c2ee0fca66b24e79097cb/ortools/sat/linear_programming_constraint.h#L137)
@@ -1919,7 +1921,7 @@ may crack the instance.
 > bolted onto the exact core.
 >
 > For the curious reader, the constraint-based local-search worker is described in
-> a paper by the developers [[14](#ref-davies2024violationls)]; and [[15](#ref-berthold2025primal)]
+> a paper by the developers [[15](#ref-davies2024violationls)]; and [[16](#ref-berthold2025primal)]
 > is a compact, readable book covering both families above, including Large
 > Neighborhood Search, for integer programming in general.
 
@@ -2063,6 +2065,7 @@ same learning system.
 ### References
 
 <ol>
+<li id="ref-patel2026lcg">Patel, Krunal. <em>What is Lazy Clause Generation?</em>. <a href="https://www.youtube.com/watch?v=vPJz6SCvC_Q">https://www.youtube.com/watch?v=vPJz6SCvC_Q</a>.</li>
 <li id="ref-stuckey2014lcg">Stuckey, Peter J. <em>Those Who Cannot Remember the Past Are Condemned to Repeat It</em>. <a href="https://youtu.be/lxiCHRFNgno">https://youtu.be/lxiCHRFNgno</a>.</li>
 <li id="ref-perron2020cpaior">Perron, Laurent, Didier, Frédéric. <em>CPAIOR 2020 Master Class: Constraint Programming</em>. 2020. <a href="https://youtu.be/lmy1ddn4cyw">https://youtu.be/lmy1ddn4cyw</a>.</li>
 <li id="ref-perron2024scheduling">Perron, Laurent. <em>The CP-SAT Solver</em>. 2024. <a href="https://youtu.be/vvUxusrUcpU">https://youtu.be/vvUxusrUcpU</a>.</li>
