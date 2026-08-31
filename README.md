@@ -6,6 +6,9 @@
 
 # The CP-SAT Primer: Using and Understanding Google OR-Tools' CP-SAT Solver
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/cover.webp" alt="The CP-SAT Primer — cover" width="340">
+</p>
 
 _By [Dominik Krupke](https://krupke.cc), TU Braunschweig, with contributions
 from Leon Lan, Michael Perk, and

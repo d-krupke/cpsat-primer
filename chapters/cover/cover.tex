@@ -1,0 +1,156 @@
+% cover.tex --- Book cover for "The CP-SAT Primer".
+%
+% What this is:
+%   A single-page, 6x9in LaTeX document that composes the cover artwork
+%   (jetpack_platypus.png) with the primer's title, subtitle and author block.
+%   `make` renders it to cover.pdf and rasterises that to ../../images/cover.webp,
+%   which is the image the book/README embed. Same idea as the title pages of the
+%   manuscripts under manuscripts/, just standalone so the cover can be re-rendered
+%   without building a whole document.
+%
+% How to change it:
+%   - Text lives in the "Cover content" macros right below the preamble; edit
+%     those rather than hunting through the TikZ picture.
+%   - The layout is one absolutely-positioned TikZ picture keyed off the page
+%     corners. Vertical positions are `yshift` offsets from `current page.north`
+%     (top block) or `current page.south` (author band), so moving one element
+%     never silently pushes the others around.
+%   - Page tone (\coverpaper) is deliberately NOT pure white: the artwork's own
+%     paper sits at grey 252-254, so the page is set to 253 (FDFDFD) and the
+%     square edge of the image disappears into it. Pure white leaves a faint
+%     seam; only switch to it if the artwork itself is whitened first.
+%
+% Compile with: xelatex cover.tex (twice, `remember picture` needs the second
+% pass), or simply `make`.
+
+\documentclass[11pt]{article}
+
+% --- Page: 6x9in trade-book proportions, no margins (TikZ places everything) ---
+\usepackage[paperwidth=6in,paperheight=9in,margin=0pt]{geometry}
+\pagestyle{empty}
+
+% --- Fonts ---------------------------------------------------------------
+% Libertinus (serif + sans) rather than the Latin Modern used inside the
+% documents: a cover is display typography, and Libertinus has the sturdier
+% caps and the sans companion used for the author band.
+% The families are loaded by OTF filename (not by fontconfig name) so this
+% compiles on any TeX Live install without the fonts being registered with the
+% system; no monospace family is requested, as the cover uses none.
+\usepackage{fontspec}
+\setmainfont{LibertinusSerif}[
+  Extension      = .otf,
+  UprightFont    = *-Regular,
+  ItalicFont     = *-Italic,
+  BoldFont       = *-Bold,
+  BoldItalicFont = *-BoldItalic,
+]
+\setsansfont{LibertinusSans}[
+  Extension   = .otf,
+  UprightFont = *-Regular,
+  ItalicFont  = *-Italic,
+  BoldFont    = *-Bold,
+]
+\usepackage{microtype}
+
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{tikz}
+
+% --- Palette -------------------------------------------------------------
+% coverband/coverrule are the steel-blue family already used for the callout
+% accents in manuscripts/cpsat_search_core (logaccent, HTML 30688E).
+\definecolor{coverpaper}{HTML}{FDFDFD}  % page tone; matches the artwork's paper
+\definecolor{coverink}{HTML}{1B1B1D}    % title
+\definecolor{coverslate}{HTML}{3F4A52}  % subtitle
+\definecolor{coverrule}{HTML}{30688E}   % hairlines
+\definecolor{coverband}{HTML}{1D4B66}   % author band
+
+% --- Cover content -------------------------------------------------------
+% Edit these; the layout below consumes them.
+\newcommand{\coverTitle}{The CP-SAT Primer}
+\newcommand{\coverSubtitle}{Using and Understanding\\ Google OR-Tools' CP-SAT Solver}
+\newcommand{\coverAuthor}{Dominik M. Krupke}
+\newcommand{\coverCoauthors}{Leon Lan, Michael Perk, et al.}
+\newcommand{\coverURL}{d-krupke.github.io/cpsat-primer}
+\newcommand{\coverArt}{jetpack_platypus.png}
+
+% Artwork crop, in image pixels (= bp): the source is a 1254x1254 square with a
+% wide empty right margin and a strip of empty sky on top. Trimming both centres
+% the platypus optically and lets it be set larger. Order is left bottom right top.
+% (Written out at the \includegraphics call site -- graphicx's key parser chokes
+% on a macro that expands to several space-separated lengths.)
+
+% Letterspaced caps for the author name (fontspec feature; \textsc alone reads
+% too tight at display size on a dark ground).
+% The word space is widened along with the letters; letterspacing alone leaves
+% the gap between the names looking narrower than the gaps inside them.
+\newcommand{\coverCaps}[1]{{%
+  \addfontfeature{LetterSpace=14.0}%
+  \spaceskip=2.1\fontdimen2\font\relax
+  \MakeUppercase{#1}}}
+
+% Widened interword space for the display title. fontspec's WordSpace feature is
+% rejected inside \addfontfeatures, so the current font's own space dimensions
+% (\fontdimen 2/3/4) are scaled instead; call it AFTER \selectfont.
+\newcommand{\coverWideWords}{%
+  \spaceskip=1.12\fontdimen2\font plus 1.12\fontdimen3\font minus 1.12\fontdimen4\font
+  \relax}
+
+\begin{document}
+\begin{tikzpicture}[remember picture, overlay]
+
+  % --- Page tone ---------------------------------------------------------
+  \fill[coverpaper]
+    (current page.south west) rectangle (current page.north east);
+
+  % --- Top hairline (full bleed) -----------------------------------------
+  \fill[coverrule]
+    (current page.north west) rectangle ([yshift=-0.22cm]current page.north east);
+
+  % --- Title -------------------------------------------------------------
+  \node[anchor=north, text width=12.6cm, align=center, inner sep=0pt]
+    at ([yshift=-2.35cm]current page.north)
+    {\color{coverink}\fontsize{34}{40}\selectfont\bfseries
+     \coverWideWords \coverTitle};
+
+  % --- Ornament rule between title and subtitle --------------------------
+  \fill[coverrule]
+    ([xshift=-1.6cm,yshift=-4.70cm]current page.north) rectangle
+    ([xshift= 1.6cm,yshift=-4.75cm]current page.north);
+
+  % --- Subtitle ----------------------------------------------------------
+  \node[anchor=north, text width=12.6cm, align=center, inner sep=0pt]
+    at ([yshift=-5.40cm]current page.north)
+    {\color{coverslate}\fontsize{14.5}{20}\selectfont\itshape \coverSubtitle};
+
+  % --- Artwork -----------------------------------------------------------
+  \node[anchor=north, inner sep=0pt]
+    at ([yshift=-7.0cm]current page.north)
+    {\includegraphics[trim=0 0 200 50, clip, width=10.6cm]{\coverArt}};
+
+  % --- Author band (full bleed, bottom) ----------------------------------
+  % A single byline: the lead author, then the co-authors set close underneath in
+  % the same white, one size down. No rule between them -- the size step alone
+  % carries the billing, and a separator would read as demoting the second line
+  % to a footnote. Height and the yshifts are hand-balanced; if you add or drop a
+  % line here, adjust the band height AND the artwork's yshift/width together so
+  % the gap above the band stays around 0.75cm.
+  \fill[coverband]
+    (current page.south west) rectangle
+    ([yshift=3.0cm]current page.south east);
+
+  \node[anchor=north, text width=12.6cm, align=center, inner sep=0pt]
+    at ([yshift=2.55cm]current page.south)
+    {\color{white}\sffamily\fontsize{14}{18}\selectfont \coverCaps{\coverAuthor}};
+
+  \node[anchor=north, text width=12.6cm, align=center, inner sep=0pt]
+    at ([yshift=1.90cm]current page.south)
+    {\color{white!95!coverband}\sffamily\fontsize{11.5}{15}\selectfont
+     \coverCoauthors};
+
+  \node[anchor=south, text width=12.6cm, align=center, inner sep=0pt]
+    at ([yshift=0.50cm]current page.south)
+    {\color{white!62!coverband}\sffamily\fontsize{9.5}{12}\selectfont \coverURL};
+
+\end{tikzpicture}
+\end{document}

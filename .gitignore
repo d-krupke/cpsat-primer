@@ -147,3 +147,14 @@ evaluations/tsp/2023-11-18_tsplib/PRIVATE_DATA
 !.mdbook/404.md
 .DS_Store
 tests/test_data/knapsack
+
+# Cover build intermediates (chapters/cover/): the tracked artefact is
+# images/cover.webp, which `make -C chapters/cover` regenerates from cover.tex.
+chapters/cover/cover.pdf
+chapters/cover/cover.png
+chapters/cover/*.aux
+chapters/cover/*.log
+chapters/cover/*.out
+chapters/cover/*.fls
+chapters/cover/*.fdb_latexmk
+chapters/cover/*.synctex.gz
