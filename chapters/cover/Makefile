@@ -22,11 +22,12 @@ TEX_SRC    := $(MAIN).tex
 PDF        := $(MAIN).pdf
 ART        := jetpack_platypus.png
 
-# 200 dpi over a 6x9in page => 1200x1800 px: sharp on retina displays at the
-# ~340px width the pages embed it at, without a multi-megabyte file.
+# 300 dpi over a 6x9in page => 1800x2700 px. The cover is embedded at the full
+# text width of the page, so it needs to survive a 2x retina display at roughly
+# 900 CSS px; 200 dpi (1200 px) was visibly short of that.
 PNG       := $(MAIN).png
 WEBP      := ../../images/cover.webp
-PNG_DPI   := 200
+PNG_DPI   := 300
 WEBP_QUAL := 94
 
 AUX_EXT := aux log out fls fdb_latexmk synctex.gz
