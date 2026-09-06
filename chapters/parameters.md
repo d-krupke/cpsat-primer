@@ -104,15 +104,17 @@ Starting presolve at 0.00s
 ```
 
 Given the complexity of the log, I developed a tool to visualize and comment on
-it. You can copy and paste your log into the tool, which will automatically
-highlight the most important details. Be sure to check out the examples.
+it. Copy and paste your log into
+[the Log Analyzer](https://cpsat-loganalyzer.krupke-algorithms.de/) and it will
+highlight the most important details, explain every section, and point out the
+situations worth reacting to. Be sure to check out the examples.
 
-[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://cpsat-log-analyzer.streamlit.app/)
+[![Open the Log Analyzer](https://img.shields.io/badge/Open-CP--SAT%20Log%20Analyzer-brightgreen?style=for-the-badge)](https://cpsat-loganalyzer.krupke-algorithms.de/)
 [![d-krupke - CP-SAT Log Analyzer](https://img.shields.io/badge/d--krupke-CP--SAT%20Log%20Analyzer-blue?style=for-the-badge&logo=github)](https://github.com/d-krupke/CP-SAT-Log-Analyzer)
 
-|                                                                                                                       ![Search Progress](https://github.com/d-krupke/cpsat-primer/blob/main/images/search_progress.png)                                                                                                                       |
-| :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
-| A plot of the search progress over time as visualized by the log analyzer using information from the log (a different log than displayed above). This plot helps you understand which part of your problem is more challenging: finding a good solution or proving its quality. Based on this, you can implement appropriate countermeasures. |
+|                                                                                                                  ![The overview of a run](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/log_analyzer_overview.png)                                                                                                                   |
+| :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+| The overview the analyzer builds from a log (a different log than the one displayed above): the numbers that characterize the run, and a box for each situation it recognizes. Here it points out that the search ended with a gap of about 2%, which tells you whether finding a good solution or proving its quality is the harder part of your problem. |
 
 We will revisit the logs in the next chapter.
 

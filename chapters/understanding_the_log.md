@@ -16,10 +16,12 @@ The log consists of different parts. Let us go through them step by step.
 
 > [!TIP]
 >
-> Use the [Log Analyzer](https://cpsat-log-analyzer.streamlit.app/) to get your
-> own logs explained to you.
+> Use the [Log Analyzer](https://cpsat-loganalyzer.krupke-algorithms.de/) to get
+> your own logs explained to you. Paste a log, upload a file, or open one of the
+> bundled examples; nothing is stored, and you can also run the whole thing
+> locally with a single `docker compose up`.
 >
-> [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://cpsat-log-analyzer.streamlit.app/)
+> [![Open the Log Analyzer](https://img.shields.io/badge/Open-CP--SAT%20Log%20Analyzer-brightgreen?style=for-the-badge)](https://cpsat-loganalyzer.krupke-algorithms.de/)
 >
 > [![d-krupke - CP-SAT Log Analyzer](https://img.shields.io/badge/d--krupke-CP--SAT%20Log%20Analyzer-blue?style=for-the-badge&logo=github)](https://github.com/d-krupke/CP-SAT-Log-Analyzer)
 
@@ -304,14 +306,14 @@ Starting search at 0.05s with 16 workers.
 ```
 
 As this log is event-driven, it can be challenging to interpret. The
-[Log Analyzer](https://cpsat-log-analyzer.streamlit.app/) helps by automatically
-plotting these values in a more understandable way. Since the values at the
-beginning of the search are often out of scale, use the zoom function to focus
-on the relevant parts of the search.
+[Log Analyzer](https://cpsat-loganalyzer.krupke-algorithms.de/) helps by
+plotting these values for you. Since the values at the beginning of the search
+are often out of scale, it hides the early outliers by default, and a click on
+any point takes you to the log line that produced it.
 
-| ![Search Progress](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/search_progress_plot_1.png) | ![Optimality Gap](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/search_progress_plot_2.png) | ![Model Changes](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/search_progress_plot_3.png) |
-| :----------------------------------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------------: |
-|                               Shows how the lower and upper bounds change over time.                               |                                  Shows how quickly the optimality gap converges.                                  |     Shows how the model changes over time as new insights from the search allow the solver to fix variables.     |
+|                                         ![Search Progress](https://raw.githubusercontent.com/d-krupke/cpsat-primer/main/images/log_analyzer_progress.png)                                          |
+| :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+| The incumbent objective and the proven bound over time. A flat objective with a rising bound means the solver is busy proving; a flat bound with improving solutions means the relaxation is weak. |
 
 ### Subsolver Details
 
