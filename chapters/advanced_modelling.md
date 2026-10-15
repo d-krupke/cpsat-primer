@@ -1017,7 +1017,7 @@ transition_triples = [
 ]
 
 model.add_automaton(
-    transition_variables=transition_variables,
+    transition_variables,
     starting_state=0,
     final_states=[3],
     transition_triples=transition_triples,
@@ -1275,7 +1275,7 @@ y = model.new_int_var(0, 5, "y")
 
 # use boolean variables to decide for a segment
 segment_active = [model.new_bool_var("segment_1"), model.new_bool_var("segment_2")]
-model.add_at_most_one(segment_active)  # enforce one segment to be active
+model.add_exactly_one(segment_active)  # enforce one segment to be active
 
 # Segment 1
 # if 0<=x<=3, then y >= 0.5*x + 0.5
