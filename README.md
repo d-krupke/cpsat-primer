@@ -10565,7 +10565,7 @@ def plot_comparison_grid(
     if figsize is None:
         figsize = (5 * n_cols, 5 * n_rows)
 
-    fig, axes = plt.subplots(n_rows, n_cols, figsize=figsize)
+    fig, axes = plt.subplots(n_rows, n_cols, figsize=figsize, squeeze=False)
     axes = axes.flatten()
 
     for ax, (column_name, direction) in zip(axes, metrics):
@@ -10576,7 +10576,7 @@ def plot_comparison_grid(
         plot_performance_scatter(
             ax,
             baseline_data[column_name],
-            new_data[column_name],
+            new_data.loc[baseline_data.index, column_name],
             lower_is_better=(direction == "min"),
             title=column_name,
             **merged_kwargs,
