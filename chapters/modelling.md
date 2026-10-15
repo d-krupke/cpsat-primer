@@ -757,8 +757,8 @@ truck_a = model.new_bool_var("truck_a")
 truck_b = model.new_bool_var("truck_b")
 truck_c = model.new_bool_var("truck_c")
 
-# Only rent one truck
-model.add_at_most_one([truck_a, truck_b, truck_c])
+# Rent exactly one truck
+model.add_exactly_one([truck_a, truck_b, truck_c])
 
 # Depending on which truck is rented, the load value is limited
 model.add(load_value <= 50).only_enforce_if(truck_a)
