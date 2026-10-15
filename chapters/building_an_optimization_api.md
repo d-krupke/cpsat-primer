@@ -360,12 +360,16 @@ class TspSolver:
             solver.log_callback = log_callback
         status = solver.Solve(self.model)
         if status in (cp_model.OPTIMAL, cp_model.FEASIBLE):
+            successor = {
+                source: target
+                for (source, target), var in self.edge_vars.items()
+                if solver.value(var)
+            }
+            node_order = [0]
+            for _ in range(self.tsp_instance.num_nodes - 1):
+                node_order.append(successor[node_order[-1]])
             return TspSolution(
-                node_order=[
-                    source
-                    for (source, target), var in self.edge_vars.items()
-                    if solver.value(var)
-                ],
+                node_order=node_order,
                 cost=solver.objective_value,
                 lower_bound=solver.best_objective_bound,
             )
