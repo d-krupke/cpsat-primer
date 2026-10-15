@@ -1,7 +1,20 @@
+import pytest
 from ortools.sat.python import cp_model
 
 
-def test_truck_example():
+@pytest.mark.parametrize(
+    ("load", "has_license", "expected_cost"),
+    [
+        (1, False, 30),
+        (50, False, 30),
+        (51, False, 40),
+        (80, False, 40),
+        (81, True, 80),
+        (100, True, 80),
+        (81, False, None),
+    ],
+)
+def test_truck_example(load, has_license, expected_cost):
     model = cp_model.CpModel()
     # A value representing the load that needs to be transported
     load_value = model.new_int_var(0, 100, "load_value")
@@ -13,8 +26,8 @@ def test_truck_example():
     truck_b = model.new_bool_var("truck_b")
     truck_c = model.new_bool_var("truck_c")
 
-    # only rent one truck
-    model.add_at_most_one([truck_a, truck_b, truck_c])
+    # Rent exactly one truck
+    model.add_exactly_one([truck_a, truck_b, truck_c])
 
     # Depending on which truck is rented, the load value is limited
     model.add(load_value <= 50).only_enforce_if(truck_a)
@@ -31,6 +44,20 @@ def test_truck_example():
 
     # Minimize the rent cost
     model.minimize(30 * truck_a + 40 * truck_b + 80 * truck_c)
+
+    model.add(load_value == load)
+    model.add(driver_has_big_truck_license == has_license)
+    model.add(driver_has_special_license == 0)
+    solver = cp_model.CpSolver()
+    solver.parameters.num_workers = 1
+    solver.parameters.max_time_in_seconds = 3
+    status = solver.solve(model)
+    if expected_cost is None:
+        assert status == cp_model.INFEASIBLE
+    else:
+        assert status == cp_model.OPTIMAL
+        assert solver.objective_value == expected_cost
+        assert sum(solver.value(v) for v in [truck_a, truck_b, truck_c]) == 1
 
 
 def test_only_enforce_if_list_with_negation():
