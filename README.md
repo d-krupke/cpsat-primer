@@ -379,7 +379,7 @@ model.maximize(30 * x + 50 * y)
 # Solve
 solver = cp_model.CpSolver()
 status_code = solver.solve(model)
-status_name = solver.status_name()
+status_name = solver.status_name(status_code)
 
 # Print the solver status and the optimal solution.
 print(f"{status_name} ({status_code})")
@@ -1359,11 +1359,11 @@ abs_xz = model.new_int_var(0, 200, "|x+z|")
 model.add_abs_equality(target=abs_xz, expr=x + z)
 
 # Create variables to capture the maximum and minimum of x, (y-1), and z
-max_xyz = model.new_int_var(0, 100, "max(x, y-1, z)")
+max_xyz = model.new_int_var(-100, 100, "max(x, y-1, z)")
 # Changed in ortools 9.15: was add_max_equality(target=max_xyz, exprs=[x, y - 1, z])
 model.add_max_equality(max_xyz, x, y - 1, z)
 
-min_xyz = model.new_int_var(-100, 100, "min(x, y-1, z)")
+min_xyz = model.new_int_var(-101, 100, "min(x, y-1, z)")
 # Changed in ortools 9.15: was add_min_equality(target=min_xyz, exprs=[x, y - 1, z])
 model.add_min_equality(min_xyz, x, y - 1, z)
 ```
@@ -1416,19 +1416,24 @@ to represent the result of the operation.
 model = cp_model.CpModel()
 x = model.new_int_var(-100, 100, "x")
 y = model.new_int_var(-100, 100, "y")
-z = model.new_int_var(-100, 100, "z")
+z = model.new_int_var_from_domain(
+    cp_model.Domain.from_intervals([[-100, -1], [1, 100]]), "z"
+)
 
 xyz = model.new_int_var(-(100**3), 100**3, "x*y*z")
 model.add_multiplication_equality(xyz, [x, y, z])  # xyz = x*y*z
 
-model.add_modulo_equality(x, y, 3)  # x = y % 3
-model.add_division_equality(x, y, z)  # x = y // z
+model.add_modulo_equality(x, y, 3)  # remainder has the sign of y
+model.add_division_equality(x, y, z)  # x = y / z, truncated toward zero
 ```
 
 When using these operations, you often transition from linear to non-linear
 optimization, which is generally more challenging to solve. In cases of
 division, it is essential to remember that operations are on integers;
-therefore, `5 // 2` results in `2`, not `2.5`.
+therefore, `5 / 2` results in `2`, not `2.5`. Division truncates toward zero:
+`-5 / 2` gives `-2`, unlike Python's `-5 // 2`, which gives `-3`. The divisor's
+domain must exclude zero. Modulo uses the corresponding remainder, so `-5`
+modulo `3` is `-2`, unlike Python's `%` operator.
 
 Many problems initially involve non-linear expressions that can often be
 reformulated or approximated using linear expressions. This transformation can
@@ -1469,7 +1474,7 @@ b2 = model.new_bool_var("b2")
 b1b2 = model.new_bool_var("b1b2")
 model.add_implication(~b1, ~b1b2)
 model.add_implication(~b2, ~b1b2)
-model.add_bool_or(~b1, ~b2, b1b2)  # optional, for a penalty term to be minimized.
+model.add_bool_or(~b1, ~b2, b1b2)  # required for a penalty term to be minimized.
 ```
 
 There are numerous further instances where non-linear expressions can be
@@ -2759,7 +2764,7 @@ transition_triples = [
 ]
 
 model.add_automaton(
-    transition_variables=transition_variables,
+    transition_variables,
     starting_state=0,
     final_states=[3],
     transition_triples=transition_triples,
@@ -3017,7 +3022,7 @@ y = model.new_int_var(0, 5, "y")
 
 # use boolean variables to decide for a segment
 segment_active = [model.new_bool_var("segment_1"), model.new_bool_var("segment_2")]
-model.add_at_most_one(segment_active)  # enforce one segment to be active
+model.add_exactly_one(segment_active)  # enforce one segment to be active
 
 # Segment 1
 # if 0<=x<=3, then y >= 0.5*x + 0.5
@@ -11666,8 +11671,8 @@ You can also use expression handles, which can make the model more readable and
 easier to maintain.
 
 ```python
-in_vars = [mo.variable(name=f"in_{i}") for i in range(1, 6)]
-out_vars = [mo.variable(name=f"out_{i}") for i in range(1, 6)]
+in_vars = [model.add_variable(name=f"in_{i}") for i in range(1, 6)]
+out_vars = [model.add_variable(name=f"out_{i}") for i in range(1, 6)]
 incoming_flow = mo.fast_sum(in_vars)
 outgoing_flow = mo.fast_sum(out_vars)
 model.add_linear_constraint(incoming_flow == outgoing_flow, name="flow_conservation")
@@ -11835,8 +11840,7 @@ term = result.termination
 print(f"Termination: {term.reason.name}")
 
 if not result.has_primal_feasible_solution():
-    print("No feasible solution found.")
-    return
+    raise RuntimeError("No feasible solution found.")
 
 print(f"Minimum cost: €{result.objective_value():.2f}")
 
@@ -11918,8 +11922,7 @@ result = mo.solve(model, solver_type=mo.SolverType.CP_SAT, params=params)
 
 print(f"[SetCover] Termination: {result.termination.reason.name}")
 if not result.has_primal_feasible_solution():
-    print("[SetCover] No feasible solution found.")
-    return
+    raise RuntimeError("[SetCover] No feasible solution found.")
 
 vals = result.variable_values()
 chosen = [s for s in subsets if int(round(vals.get(z[s], 0.0)))]
