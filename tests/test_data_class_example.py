@@ -6,6 +6,7 @@ The chapter's `add_test_case`/`test_saved_test_cases` store test cases next to
 
 from pathlib import Path
 
+import pytest
 from _snippets import run_snippet
 
 
@@ -14,9 +15,13 @@ def regression_tests(test_file: Path) -> dict:
 
 
 def test_saved_test_cases():
-    """The solver still agrees with the solutions saved in `test_data/knapsack`."""
+    """The solver still agrees with locally saved cases in `test_data/knapsack`.
+
+    That folder is git-ignored (cases are generated per machine), so CI has
+    none; `test_added_test_case_is_checked` covers the pattern everywhere."""
     test_file = Path(__file__)
-    assert len(list((test_file.parent / "test_data" / "knapsack").iterdir())) == 3
+    if not any((test_file.parent / "test_data" / "knapsack").glob("*")):
+        pytest.skip("no locally saved knapsack test cases")
     regression_tests(test_file)["test_saved_test_cases"]()
 
 
