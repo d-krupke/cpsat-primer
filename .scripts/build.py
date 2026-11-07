@@ -10,12 +10,12 @@ root (the parent of this script's directory), so the working directory does not 
 import logging
 import re
 from pathlib import Path
-from typing import List, Callable
+from typing import Any, List, Callable
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
 # Configuration for each box type
-BOX_CONFIG = {
+BOX_CONFIG: dict[str, dict[str, Any]] = {
     "warning": {
         "tokens": ["> :warning:", "> [!WARNING]"],
         "icon": "warning_platypus.webp",

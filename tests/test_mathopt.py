@@ -177,8 +177,8 @@ def solve_fixed_charge_flow():
     print("\nChosen arcs (y=1) and flows:")
     used_edges = []
     for u, v in G.edges:
-        y = values.get(use[(u, v)])
-        f = values.get(flow[(u, v)])
+        y = values[use[(u, v)]]
+        f = values[flow[(u, v)]]
         if y > 0.5 or abs(f) > 1e-9:
             used_edges.append((u, v, f))
             print(

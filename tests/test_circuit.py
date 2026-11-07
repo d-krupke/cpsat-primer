@@ -32,7 +32,7 @@ def test_circuit():
 
     # Objective: minimize the total cost of edges
     obj = sum(dgraph[(u, v)] * x for (u, v), x in edge_vars.items())
-    model.Minimize(obj)
+    model.minimize(obj)
 
     # Solve
     solver = cp_model.CpSolver()
@@ -73,7 +73,7 @@ def test_shortest_path():
     edge_vars = {(u, v): model.new_bool_var(f"e_{u}_{v}") for (u, v) in dgraph.keys()}
 
     # Add a circuit constraint to the model
-    circuit = [
+    circuit: list[tuple[int, int, cp_model.LiteralT]] = [
         (u, v, var)
         for (u, v), var in edge_vars.items()  # (source, destination, variable)
     ]
