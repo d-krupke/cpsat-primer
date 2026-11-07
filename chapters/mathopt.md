@@ -121,8 +121,8 @@ You can also use expression handles, which can make the model more readable and
 easier to maintain.
 
 ```python
-in_vars = [mo.variable(name=f"in_{i}") for i in range(1, 6)]
-out_vars = [mo.variable(name=f"out_{i}") for i in range(1, 6)]
+in_vars = [model.add_variable(name=f"in_{i}") for i in range(1, 6)]
+out_vars = [model.add_variable(name=f"out_{i}") for i in range(1, 6)]
 incoming_flow = mo.fast_sum(in_vars)
 outgoing_flow = mo.fast_sum(out_vars)
 model.add_linear_constraint(incoming_flow == outgoing_flow, name="flow_conservation")
@@ -290,8 +290,7 @@ term = result.termination
 print(f"Termination: {term.reason.name}")
 
 if not result.has_primal_feasible_solution():
-    print("No feasible solution found.")
-    return
+    raise RuntimeError("No feasible solution found.")
 
 print(f"Minimum cost: €{result.objective_value():.2f}")
 
@@ -373,8 +372,7 @@ result = mo.solve(model, solver_type=mo.SolverType.CP_SAT, params=params)
 
 print(f"[SetCover] Termination: {result.termination.reason.name}")
 if not result.has_primal_feasible_solution():
-    print("[SetCover] No feasible solution found.")
-    return
+    raise RuntimeError("[SetCover] No feasible solution found.")
 
 vals = result.variable_values()
 chosen = [s for s in subsets if int(round(vals.get(z[s], 0.0)))]

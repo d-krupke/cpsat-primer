@@ -64,7 +64,7 @@ model.maximize(30 * x + 50 * y)
 # Solve
 solver = cp_model.CpSolver()
 status_code = solver.solve(model)
-status_name = solver.status_name()
+status_name = solver.status_name(status_code)
 
 # Print the solver status and the optimal solution.
 print(f"{status_name} ({status_code})")
