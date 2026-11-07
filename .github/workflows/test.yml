@@ -28,4 +28,5 @@ jobs:
           pip install --group dev
 
       - name: Run tests
-        run: pytest tests/
+        # examples/cvrp has its own tests; other examples are standalone projects.
+        run: pytest tests/ examples/cvrp
