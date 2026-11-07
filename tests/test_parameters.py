@@ -1,129 +1,61 @@
+"""Check solver-parameter behavior the parameters chapter describes.
+
+The chapter's parameter snippets are smoke-tested via their markers; these
+tests cover behavior that needs a harder model or extra assertions.
+"""
+
 import random
+
+import pytest
+from _snippets import run_snippet
 from ortools.sat.python import cp_model
 
 
-def test_basic_parameters_for_attribute_errors():
-    model = cp_model.CpModel()
-    solver = cp_model.CpSolver()
-    solver.parameters.max_time_in_seconds = 60
-    solver.parameters.relative_gap_limit = 0.05
-    status = solver.solve(model)
-    if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
-        print("We have a solution.")
-    else:
-        print("Help?! No solution available! :( ")
-
-    status_name = solver.status_name(status)  # noqa: F841
-    bound = solver.best_objective_bound  # noqa: F841
-
-
-def test_callback():
-    model = cp_model.CpModel()
-    x = model.new_int_var(0, 100, "x")
-
-    class MySolutionCallback(cp_model.CpSolverSolutionCallback):
-        def __init__(self, stuff):
-            cp_model.CpSolverSolutionCallback.__init__(self)
-            self.stuff = (
-                stuff  # just to show that we can save some data in the callback.
-            )
-
-        def on_solution_callback(self):
-            obj = self.objective_value  # best solution value
-            bound = self.best_objective_bound  # best bound
-            print(f"The current value of x is {self.value(x)}")
-            if abs(obj - bound) < 10:
-                self.StopSearch()  # abort search for better solution
-            # ...
-
-    solver = cp_model.CpSolver()
-    solver.solve(model, MySolutionCallback(None))
-
-
 def test_further_properties():
+    """The search statistics the chapter mentions are still available."""
     model = cp_model.CpModel()
     solver = cp_model.CpSolver()
-    status = solver.solve(model)  # noqa: F841
-    solver.num_booleans
-    solver.num_branches
-    solver.num_conflicts
+    assert solver.solve(model) == cp_model.OPTIMAL
+    assert min(solver.num_booleans, solver.num_branches, solver.num_conflicts) >= 0
 
 
-def test_bound_callback():
+def random_tsp(n: int = 80) -> cp_model.CpModel:
+    """A TSP that presolve cannot resolve; its optimum (906) is far above the
+    callbacks' thresholds, so they have to stop the search."""
+    rng = random.Random(0)
     model = cp_model.CpModel()
-    x = model.new_int_var(0, 100, "x")  # noqa: F841
-
-    solver = cp_model.CpSolver()
-
-    def bound_callback(bound):
-        print(f"New bound: {bound}")
-        if bound > 100:
-            solver.stop_search()
-
-    solver.best_bound_callback = bound_callback
-    status = solver.solve(model)  # noqa: F841
-
-
-def test_callbacks_via_tsp():
-    # create a random tsp problem so we have something to solve that
-    # cannot be resolved in the preprocessing phase
-    model = cp_model.CpModel()
-    vertices = range(80)
-    arcs = [(i, j) for i in vertices for j in vertices if i != j]
-    costs = {(i, j): random.randint(1, 100) for i, j in arcs}
+    arcs = [(i, j) for i in range(n) for j in range(n) if i != j]
     x = {(i, j): model.new_bool_var(f"x_{i}_{j}") for i, j in arcs}
-    model.add_circuit([(v, w, x) for (v, w), x in x.items()])
-    model.minimize(sum(costs[i, j] * x[i, j] for i, j in arcs))
+    model.add_circuit([(v, w, var) for (v, w), var in x.items()])
+    model.minimize(sum(rng.randint(10, 100) * x[arc] for arc in arcs))
+    return model
+
+
+@pytest.mark.parametrize("num_workers", [1, 8])
+def test_bound_callback_stops_search(capsys, num_workers):
+    """The chapter's function callback sees the bound pass 100 and stops.
+
+    Whether a solution exists by then depends on the number of workers, so
+    only the bound is checked, not the status."""
+    solver = run_snippet("parameters/bound_callback")["solver"]
+    solver.parameters.num_workers = num_workers
+    solver.parameters.max_time_in_seconds = 30
+    solver.solve(random_tsp())
+    assert 100 < solver.best_objective_bound
+    assert "New bound:" in capsys.readouterr().out
+
+
+@pytest.mark.parametrize("num_workers", [1, 8])
+def test_bound_callback_class_stops_search(capsys, num_workers):
+    """The callable class works the same way, here with a threshold of 200."""
+    bound_callback = run_snippet("parameters/bound_callback_class")["BoundCallback"]
     solver = cp_model.CpSolver()
-
-    def bound_callback(bound):
-        print(f"New bound: {bound}")
-        if bound > 200:
-            print("Abort search due to bound")
-            solver.stop_search()
-
-    solver.best_bound_callback = bound_callback
-    status = solver.solve(model)
-    print(solver.status_name(status))
-
-
-def test_callbacks_via_tsp_callable():
-    # create a random tsp problem so we have something to solve that
-    # cannot be resolved in the preprocessing phase
-    model = cp_model.CpModel()
-    vertices = range(80)
-    arcs = [(i, j) for i in vertices for j in vertices if i != j]
-    costs = {(i, j): random.randint(1, 100) for i, j in arcs}
-    x = {(i, j): model.new_bool_var(f"x_{i}_{j}") for i, j in arcs}
-    model.add_circuit([(v, w, x) for (v, w), x in x.items()])
-    model.minimize(sum(costs[i, j] * x[i, j] for i, j in arcs))
-    solver = cp_model.CpSolver()
-
-    class BoundCallback:
-        def __init__(self, solver) -> None:
-            self.solver = solver
-
-        def __call__(self, bound):
-            print(f"New bound: {bound}")
-            if bound > 200:
-                print("Abort search due to bound")
-                self.solver.stop_search()
-
-    solver.best_bound_callback = BoundCallback(solver)
-    status = solver.solve(model)
-    print(solver.status_name(status))
-
-
-def test_assumptions():
-    model = cp_model.CpModel()
-    b1 = model.new_bool_var("b1")
-    b2 = model.new_bool_var("b2")
-    b3 = model.new_bool_var("b3")
-
-    model.add_assumptions([b1, ~b2])  # assume b1=True, b2=False
-    model.add_assumption(b3)  # assume b3=True (single literal)
-    # ... solve again and analyze ...
-    model.clear_assumptions()  # clear all assumptions
+    solver.parameters.num_workers = num_workers
+    solver.parameters.max_time_in_seconds = 30
+    solver.best_bound_callback = bound_callback(solver)
+    solver.solve(random_tsp())
+    assert 200 < solver.best_objective_bound
+    assert "Abort search due to bound" in capsys.readouterr().out
 
 
 def test_bad_hints():
@@ -145,12 +77,3 @@ def test_bad_hints():
     solver.parameters.fix_variables_to_their_hinted_value = True
     status = solver.solve(model)
     assert status == cp_model.INFEASIBLE, "Expected INFEASIBLE due to conflicting hints"
-
-
-def test_presolve_parameters_exist():
-    model = cp_model.CpModel()
-    solver = cp_model.CpSolver()
-    solver.parameters.cp_model_presolve = False
-    solver.parameters.max_presolve_iterations = 3
-    solver.parameters.cp_model_probing_level = 1
-    solver.parameters.presolve_probing_deterministic_time_limit = 5

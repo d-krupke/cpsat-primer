@@ -9,6 +9,7 @@ spec = spec_from_file_location(
     "optimization_api_solver",
     Path(__file__).resolve().parents[1] / "examples/optimization_api/app/solver.py",
 )
+assert spec is not None and spec.loader is not None
 api = module_from_spec(spec)
 spec.loader.exec_module(api)
 

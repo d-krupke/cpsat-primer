@@ -46,6 +46,8 @@ Our first problem has no deeper meaning, except for showing the basic workflow
 of creating the variables (x and y), adding the constraint $x+y<=30$ on them,
 setting the objective function (maximize $30x + 50y$), and obtaining a solution:
 
+<!-- snippet: example/first_model -->
+
 ```python
 from ortools.sat.python import cp_model
 

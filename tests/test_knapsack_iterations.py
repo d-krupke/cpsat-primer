@@ -1,23 +1,13 @@
 """Regressions for the solver class shown in Coding Patterns."""
 
 from itertools import product
-from pathlib import Path
-import re
 
 import pytest
-from ortools.sat.python import cp_model
+from _snippets import run_snippet
 
 
 def documented_solver(weights, values, capacity):
-    text = (
-        Path(__file__).resolve().parents[1] / "chapters/coding_patterns.md"
-    ).read_text(encoding="utf-8")
-    blocks = re.findall(r"```python\n(.*?)```", text, re.S)
-    namespace = {"cp_model": cp_model}
-    exec(next(b for b in blocks if "class KnapsackInstance" in b), namespace)
-    exec(
-        next(b for b in blocks if "class MultiObjectiveKnapsackSolver" in b), namespace
-    )
+    namespace = run_snippet("coding_patterns/multi_objective_solver")
     instance = namespace["KnapsackInstance"](
         weights=weights, values=values, capacity=capacity
     )

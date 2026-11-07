@@ -49,6 +49,8 @@ In the following, I give a brief overview of the MathOpt API.
 As in CP-SAT, you first need to import the MathOpt module and create a model
 instance.
 
+<!-- snippet: mathopt/model -->
+
 ```python
 from ortools.math_opt.python import mathopt as mo
 
@@ -62,6 +64,10 @@ binary, and integer variables. By default, continuous and integer variables are
 non-negative (i.e., they have a lower bound of 0). You can specify different
 bounds using the `lb` and `ub` parameters.
 
+<!-- snippet: mathopt/continuous_variables requires=mathopt/model
+import math
+-->
+
 ```python
 x = model.add_variable(lb=0.0, ub=10.0, name="x")  # Continuous variable in [0, 10]
 # Unlike CP-SAT, you do not have to name variables
@@ -71,13 +77,15 @@ x_unbounded = model.add_variable(lb=-math.inf, ub=math.inf, name="x_unbounded") 
 
 To create binary or integer variables, use the corresponding methods:
 
+<!-- snippet: mathopt/integer_variables requires=mathopt/continuous_variables -->
+
 ```python
 y = model.add_binary_variable(name="y")  # Binary variable in {0, 1}
 z = model.add_integer_variable(lb=0, ub=100, name="z")  # Integer variable in [0, 100]
 # Integer variable with no upper bound
 z_unbounded = model.add_integer_variable(name="z_unbounded")
-# or explicitly
-z_unbounded = model.add_integer_variable(lb=0, ub=math.inf, name="z_unbounded")
+# or explicitly (MathOpt requires unique names, unlike CP-SAT)
+z_unbounded_2 = model.add_integer_variable(lb=0, ub=math.inf, name="z_unbounded_2")
 ```
 
 > [!WARNING]
@@ -92,6 +100,8 @@ z_unbounded = model.add_integer_variable(lb=0, ub=math.inf, name="z_unbounded")
 You can add linear constraints to the model using the `add_linear_constraint`
 method. There are two ways to do this: the inequality/equality form and the
 boxed form.
+
+<!-- snippet: mathopt/constraints requires=mathopt/integer_variables -->
 
 ```python
 # Inequality/equality form using Python operators
@@ -112,6 +122,8 @@ If you want to sum over a list of terms, you can use standard Python sums as in
 CP-SAT. However, MathOpt provides a more efficient function, `mo.fast_sum`,
 which is optimized for performance.
 
+<!-- snippet: mathopt/fast_sum requires=mathopt/continuous_variables -->
+
 ```python
 terms = [i * x for i in range(1, 11)]  # Create a list of terms
 model.add_linear_constraint(mo.fast_sum(terms) <= 100, name="sum_constraint")
@@ -119,6 +131,8 @@ model.add_linear_constraint(mo.fast_sum(terms) <= 100, name="sum_constraint")
 
 You can also use expression handles, which can make the model more readable and
 easier to maintain.
+
+<!-- snippet: mathopt/expression_handles requires=mathopt/model -->
 
 ```python
 in_vars = [model.add_variable(name=f"in_{i}") for i in range(1, 6)]
@@ -133,6 +147,8 @@ model.add_linear_constraint(incoming_flow == outgoing_flow, name="flow_conservat
 You can define the model’s objective using the `set_objective` method and
 specify whether you want to maximize or minimize it.
 
+<!-- snippet: mathopt/objective requires=mathopt/integer_variables -->
+
 ```python
 model.set_objective(3 * x + 4 * y + 2 * z, is_maximize=True)  # Maximize
 model.set_objective(x + 2 * z, is_maximize=False)  # Minimize
@@ -142,6 +158,10 @@ model.set_objective(x + 2 * z, is_maximize=False)  # Minimize
 
 To solve the model, use the `mo.solve` function, which takes the model, the
 solver type, and optional solver parameters.
+
+<!-- snippet: mathopt/solve requires=mathopt/constraints,mathopt/objective
+from datetime import timedelta
+-->
 
 ```python
 params = mo.SolveParameters(
@@ -164,6 +184,8 @@ object returned by `mo.solve`.
 
 Check the termination reason:
 
+<!-- snippet: mathopt/termination requires=mathopt/solve -->
+
 ```python
 term = result.termination
 print(f"Termination: {term.reason.name}")
@@ -172,6 +194,8 @@ if term.detail:
 ```
 
 Check whether a primal feasible solution was found:
+
+<!-- snippet: mathopt/solution requires=mathopt/solve -->
 
 ```python
 if result.has_primal_feasible_solution():
@@ -185,6 +209,8 @@ else:
 The `variable_values()` method returns a mapping from variables to their values.
 You can also pass a list of variables to get their values in the same order,
 which can be convenient if you only need a subset.
+
+<!-- snippet: mathopt/solution_values requires=mathopt/solve -->
 
 ```python
 values = result.variable_values([x, y, z])
@@ -217,6 +243,8 @@ protein, and calcium. This model serves as a small, illustrative example of how
 mathematical optimization can be applied to dietary planning. The units and
 values used here are for demonstration purposes only and should not be
 interpreted as nutritional facts.
+
+<!-- snippet: mathopt/stigler_diet -->
 
 ```python
 from ortools.math_opt.python import mathopt as mo
@@ -332,6 +360,8 @@ standard integer formulation is:
 
 Since all variables are integral, this problem can be modeled using CP-SAT and
 compared directly with MIP solvers such as Gurobi or HiGHS.
+
+<!-- snippet: mathopt/set_cover -->
 
 ```python
 from ortools.math_opt.python import mathopt as mo

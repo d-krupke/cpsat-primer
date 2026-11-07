@@ -327,6 +327,8 @@ issues by providing a clear interface and validating input data. Additionally,
 you can create an API for your code effortlessly using FastAPI, which is built
 on top of Pydantic.
 
+<!-- snippet: coding_patterns/knapsack_data -->
+
 ```python
 # pip install pydantic
 from pydantic import (
@@ -385,6 +387,8 @@ class KnapsackSolution(BaseModel):
 
 The original code needs to be adapted to use these data classes.
 
+<!-- snippet: coding_patterns/solve_knapsack requires=coding_patterns/knapsack_data -->
+
 ```python
 from ortools.sat.python import cp_model
 
@@ -418,6 +422,8 @@ quickly generate test cases based on real data. While you cannot be certain that
 your code is correct with such tests, they will at least notify you if the logic
 changes unexpectedly. If you refactor your code, you will immediately see if its
 behavior changes accidentally.
+
+<!-- snippet: coding_patterns/regression_tests requires=coding_patterns/solve_knapsack -->
 
 ```python
 from datetime import datetime
@@ -470,6 +476,8 @@ def test_saved_test_cases():
 You can now easily generate test cases and validate them with the following
 code. Ideally, you should use real instances for this, potentially by
 automatically saving 1% of the instances used in production.
+
+<!-- snippet: coding_patterns/regression_usage mode=compile -->
 
 ```python
 # Define a knapsack instance
@@ -727,6 +735,8 @@ automatically be called if the `solve` found a feasible solution. To not
 degenerate on previous objectives, we added a method to fix the current
 objective value based on some ratio.
 
+<!-- snippet: coding_patterns/multi_objective_solver requires=coding_patterns/knapsack_data -->
+
 ```python
 from math import ceil, floor
 
@@ -807,6 +817,14 @@ class MultiObjectiveKnapsackSolver:
 ```
 
 We can use the `MultiObjectiveKnapsackSolver` class as follows:
+
+<!-- snippet: coding_patterns/multi_objective_usage requires=coding_patterns/multi_objective_solver
+instance = KnapsackInstance(
+    weights=[23, 31, 29, 44, 53, 38, 63, 85, 89, 82],
+    values=[92, 57, 49, 68, 60, 43, 67, 84, 87, 72],
+    capacity=165,
+)
+-->
 
 ```python
 config = KnapsackSolverConfig(time_limit=15, opt_tol=0.01, log_search_progress=True)

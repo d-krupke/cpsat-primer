@@ -115,6 +115,8 @@ but they are actually rather a combination of integral variables and discussed
 [later](#04-modelling-intervals). For the integer variables, you have to specify
 a lower and an upper bound.
 
+<!-- snippet: modelling/variables -->
+
 ```python
 model = cp_model.CpModel()
 
@@ -136,6 +138,10 @@ Additionally, you can use `model.new_int_var_series` and
 Index. This is especially useful if your data is given in a pandas DataFrame.
 However, there is no performance benefit in using this method, it is just more
 convenient.
+
+<!-- snippet: modelling/variable_series
+import pandas as pd
+-->
 
 ```python
 model = cp_model.CpModel()
@@ -268,6 +274,8 @@ its use until performance optimization becomes necessary.
 If you choose to utilize domain variables for their benefits in specific
 scenarios, here is how to define them:
 
+<!-- snippet: modelling/domains -->
+
 ```python
 from ortools.sat.python import cp_model
 
@@ -307,6 +315,8 @@ constraints. To specify an objective function, you can use the `model.minimize`
 or `model.maximize` commands with a linear expression. This flexibility makes
 CP-SAT a robust tool for a variety of optimization tasks.
 
+<!-- snippet: modelling/objective -->
+
 ```python
 # Basic model with variables and constraints
 model = cp_model.CpModel()
@@ -320,6 +330,8 @@ model.maximize(30 * x + 50 * y)
 
 Let us look on how to model more complicated expressions, using boolean
 variables and generators.
+
+<!-- snippet: modelling/boolean_objective -->
 
 ```python
 model = cp_model.CpModel()
@@ -336,6 +348,8 @@ This objective evaluates to
 To implement a
 [lexicographic optimization](https://en.wikipedia.org/wiki/Lexicographic_optimization),
 you can do multiple rounds and always fix the previous objective as constraint.
+
+<!-- snippet: modelling/lexicographic -->
 
 ```python
 # some basic model
@@ -372,6 +386,11 @@ value. Shortly, you will learn more about setting up these types of constraints.
 Below is a Python example demonstrating how to model and minimize the absolute
 value of a variable `x`:
 
+<!-- snippet: modelling/abs_objective
+model = cp_model.CpModel()
+x = model.new_int_var(-100, 100, "x")
+-->
+
 ```python
 # Assuming x is already defined in your model
 abs_x = model.new_int_var(
@@ -393,6 +412,13 @@ that you are still not allowed to use floating point numbers within it. Same as
 for linear optimization: You are not allowed to multiply a variable with
 anything else than a constant and also not to apply any further mathematical
 operations.
+
+<!-- snippet: modelling/linear_constraints
+model = cp_model.CpModel()
+x = model.new_int_var(-100, 100, "x")
+y = model.new_int_var(-100, 100, "y")
+z = model.new_int_var(-100, 100, "z")
+-->
 
 ```python
 model.add(10 * x + 15 * y <= 10)
@@ -439,6 +465,8 @@ x, y \geq 0
 You can verify that $x=4/3$ and $y=4/3$ is a feasible solution. However, coding
 this in CP-SAT results in an infeasible solution:
 
+<!-- snippet: modelling/integer_infeasibility -->
+
 ```python
 model = cp_model.CpModel()
 x = model.new_int_var(-100, 100, "x")
@@ -477,6 +505,12 @@ If you have a lower and an upper bound for a linear expression, you can also use
 the `add_linear_constraint`-method, which allows you to specify both bounds in
 one go.
 
+<!-- snippet: modelling/linear_constraint_bounds
+model = cp_model.CpModel()
+x = model.new_int_var(-100, 100, "x")
+y = model.new_int_var(-100, 100, "y")
+-->
+
 ```python
 model.add_linear_constraint(linear_expr=10 * x + 15 * y, lb=-100, ub=10)
 ```
@@ -491,6 +525,10 @@ Propositional logic allows us to describe relationships between true or false
 statements using logical operators. Consider a simple scenario where we define
 three Boolean variables:
 
+<!-- snippet: modelling/bool_vars
+model = cp_model.CpModel()
+-->
+
 ```python
 b1 = model.new_bool_var("b1")
 b2 = model.new_bool_var("b2")
@@ -503,6 +541,8 @@ truth values are to be determined by the model.
 You can obtain the negation of a Boolean variable by using `~` or the
 `.Not()`-method. The resulting variable can be used just like the original
 variable:
+
+<!-- snippet: modelling/negation requires=modelling/bool_vars -->
 
 ```python
 not_b1 = ~b1  # Negation of b1
@@ -526,6 +566,8 @@ examples, except for `add_implication` which is only defined for two variables.
 The logical OR operation ensures that at least one of the specified conditions
 holds true. To model this, you can use:
 
+<!-- snippet: modelling/bool_or requires=modelling/bool_vars -->
+
 ```python
 model.add_bool_or(b1, b2, b3)  # b1 or b2 or b3 must be true
 model.add_at_least_one([b1, b2, b3])  # Alternative notation
@@ -539,6 +581,8 @@ Both lines ensure that at least one of `b1`, `b2`, or `b3` is true.
 The logical AND operation specifies that all conditions must be true
 simultaneously. To model conditions where `b1` is true and both `b2` and `b3`
 are false, you can use:
+
+<!-- snippet: modelling/bool_and requires=modelling/bool_vars -->
 
 ```python
 model.add_bool_and(b1, b2.Not(), b3.Not())  # b1 and not b2 and not b3 must all be true
@@ -574,6 +618,8 @@ implications when applied to more than two variables:
 This characteristic of XOR can be somewhat complex but is crucial for modeling
 scenarios where the number of true conditions needs to be odd:
 
+<!-- snippet: modelling/bool_xor requires=modelling/bool_vars -->
+
 ```python
 model.add_bool_xor(b1, b2)  # Returns true if exactly one of b1 or b2 is true
 model.add_bool_xor(
@@ -585,6 +631,8 @@ model.add_bool_xor(
 
 To enforce that exactly one or at most one of the variables is true, use:
 
+<!-- snippet: modelling/exactly_one requires=modelling/bool_vars -->
+
 ```python
 model.add_exactly_one([b1, b2, b3])  # Exactly one of the variables must be true
 model.add_at_most_one([b1, b2, b3])  # No more than one of the variables should be true
@@ -594,6 +642,8 @@ These constraints are useful for scenarios where exclusive choices must be
 modeled.
 
 You could alternatively also use `add`.
+
+<!-- snippet: modelling/exactly_one_linear requires=modelling/bool_vars -->
 
 ```python
 model.add(b1 + b2 + b3 == 1)  # Exactly one of the variables must be true
@@ -605,11 +655,15 @@ model.add(b1 + b2 + b3 <= 1)  # No more than one of the variables should be true
 Logical implication, denoted as `->`, indicates that if the first condition is
 true, the second must also be true. This can be modeled as:
 
+<!-- snippet: modelling/implication requires=modelling/bool_vars -->
+
 ```python
 model.add_implication(b1, b2)  # If b1 is true, then b2 must also be true
 ```
 
 You could also use `add`.
+
+<!-- snippet: modelling/implication_linear requires=modelling/bool_vars -->
 
 ```python
 model.add(b2 >= b1)  # If b1 is true, then b2 must also be true
@@ -746,6 +800,10 @@ only typically more efficient than traditional methods like the
 [Big-M method](https://en.wikipedia.org/wiki/Big_M_method) but also simplifies
 the model by eliminating the need to determine an appropriate Big-M value.
 
+<!-- snippet: modelling/truck
+model = cp_model.CpModel()
+-->
+
 ```python
 # A value representing the load that needs to be transported
 load_value = model.new_int_var(0, 100, "load_value")
@@ -779,6 +837,14 @@ model.minimize(30 * truck_a + 40 * truck_b + 80 * truck_c)
 
 You can also use negations in the `only_enforce_if` method.
 
+<!-- snippet: modelling/enforce_negated
+model = cp_model.CpModel()
+x = model.new_int_var(-100, 100, "x")
+y = model.new_int_var(-100, 100, "y")
+b1 = model.new_bool_var("b1")
+b2 = model.new_bool_var("b2")
+-->
+
 ```python
 model.add(x + y == 10).only_enforce_if(~b1)
 ```
@@ -786,6 +852,8 @@ model.add(x + y == 10).only_enforce_if(~b1)
 You can also pass a list of Boolean variables to `only_enforce_if`, in which
 case the constraint is only enforced if all of the variables in the list are
 true.
+
+<!-- snippet: modelling/enforce_conjunction requires=modelling/enforce_negated -->
 
 ```python
 model.add(x + y == 10).only_enforce_if([b1, ~b2])  # only enforce if b1 AND NOT b2
@@ -814,6 +882,8 @@ constraints that map these variables to the desired values. The auxiliary
 variables can then be used in other constraints, representing the desired
 subexpression.
 
+<!-- snippet: modelling/abs_min_max -->
+
 ```python
 model = cp_model.CpModel()
 x = model.new_int_var(-100, 100, "x")
@@ -840,6 +910,10 @@ predominantly based on empirical evidence and specific use-case scenarios. It is
 also worth noting that, surprisingly often, these constraints can be substituted
 with more efficient linear constraints. Here is an example for achieving maximum
 equality in a more efficient way:
+
+<!-- snippet: modelling/max_without_equality
+model = cp_model.CpModel()
+-->
 
 ```python
 x = model.new_int_var(0, 100, "x")
@@ -878,6 +952,8 @@ However, CP-SAT supports multiplication, division, and modulo operations.
 Similar to using `abs`, `max`, and `min`, you must create an auxiliary variable
 to represent the result of the operation.
 
+<!-- snippet: modelling/arithmetic -->
+
 ```python
 model = cp_model.CpModel()
 x = model.new_int_var(-100, 100, "x")
@@ -889,17 +965,18 @@ z = model.new_int_var_from_domain(
 xyz = model.new_int_var(-(100**3), 100**3, "x*y*z")
 model.add_multiplication_equality(xyz, [x, y, z])  # xyz = x*y*z
 
-model.add_modulo_equality(x, y, 3)  # remainder has the sign of y
+model.add_modulo_equality(x, y, 3)  # x = y mod 3, with the sign of y
 model.add_division_equality(x, y, z)  # x = y / z, truncated toward zero
 ```
 
 When using these operations, you often transition from linear to non-linear
 optimization, which is generally more challenging to solve. In cases of
 division, it is essential to remember that operations are on integers;
-therefore, `5 / 2` results in `2`, not `2.5`. Division truncates toward zero:
-`-5 / 2` gives `-2`, unlike Python's `-5 // 2`, which gives `-3`. The divisor's
-domain must exclude zero. Modulo uses the corresponding remainder, so `-5`
-modulo `3` is `-2`, unlike Python's `%` operator.
+therefore, dividing `5` by `2` results in `2`, not `2.5`. Division truncates
+toward zero: dividing `-5` by `2` gives `-2`, unlike Python's `-5 // 2`, which
+gives `-3`. The divisor's domain must exclude zero. Modulo uses the
+corresponding remainder, so `-5` modulo `3` is `-2`, unlike Python's `%`
+operator.
 
 Many problems initially involve non-linear expressions that can often be
 reformulated or approximated using linear expressions. This transformation can
@@ -931,6 +1008,8 @@ $\sum_{e,e'\in E} concost(e, e')\cdot x_e\cdot x_{e'}$. However, such cases can
 often be modeled linearly using an auxiliary variable, avoiding the complexities
 of non-linear modeling.
 
+<!-- snippet: modelling/boolean_product -->
+
 ```python
 model = cp_model.CpModel()
 
@@ -940,7 +1019,7 @@ b2 = model.new_bool_var("b2")
 b1b2 = model.new_bool_var("b1b2")
 model.add_implication(~b1, ~b1b2)
 model.add_implication(~b2, ~b1b2)
-model.add_bool_or(~b1, ~b2, b1b2)  # required for a penalty term to be minimized.
+model.add_bool_or(~b1, ~b2, b1b2)  # needed if b1b2=0 can pay off, e.g., a penalty
 ```
 
 There are numerous further instances where non-linear expressions can be
@@ -967,6 +1046,8 @@ constraints. However, a more elegant solution involves using the
 list take unique values. This constraint is particularly useful in solving
 puzzles like Sudoku or the
 [N-queens problem](https://developers.google.com/optimization/cp/queens).
+
+<!-- snippet: modelling/all_different -->
 
 ```python
 model = cp_model.CpModel()
@@ -1030,6 +1111,8 @@ employees, and you have a table of feasible combinations for each shift:
 In CP-SAT, this can be modeled efficiently using the `add_allowed_assignments`
 method:
 
+<!-- snippet: modelling/allowed_assignments -->
+
 ```python
 model = cp_model.CpModel()
 x_employee_1 = model.new_bool_var("x_employee_1")
@@ -1053,6 +1136,14 @@ model.add_allowed_assignments(
 Alternatively, forbidden combinations can be specified using
 `add_forbidden_assignments`:
 
+<!-- snippet: modelling/forbidden_assignments
+model = cp_model.CpModel()
+x_employee_1 = model.new_bool_var("x_employee_1")
+x_employee_2 = model.new_bool_var("x_employee_2")
+x_employee_3 = model.new_bool_var("x_employee_3")
+x_employee_4 = model.new_bool_var("x_employee_4")
+-->
+
 ```python
 prohibit_assignments = [
     [1, 0, 1, 0],
@@ -1071,6 +1162,8 @@ all variables. If the table covered all variables, one could theoretically
 evaluate each row to identify the best solution without the need for
 sophisticated optimization techniques. However, consider this scenario where
 constraints are integrated across multiple shifts:
+
+<!-- snippet: modelling/allowed_assignments_shifts requires=modelling/allowed_assignments -->
 
 ```python
 NUM_SHIFTS = 7
@@ -1112,6 +1205,8 @@ A related method for managing linear expressions instead of direct assignments
 is `add_linear_expression_in_domain`. Suppose we know a certain linear
 expression, \(10x + 5y\), must equal 20, 50, or 100:
 
+<!-- snippet: modelling/linear_domain -->
+
 ```python
 model = cp_model.CpModel()
 x = model.new_int_var(-100, 100, "x")
@@ -1139,6 +1234,8 @@ as the index. Accessing a variable in an array with a constant index is
 straightforward; however, integrating a variable index into your model adds
 complexity. This constraint can also be used to ensure that a variable matches
 the value at a specific array position.
+
+<!-- snippet: modelling/element -->
 
 ```python
 model = cp_model.CpModel()
@@ -1170,6 +1267,8 @@ equally sized arrays of variables $v$ and $w$, each of size $|v|$, it imposes a
 bijective relationship: $v[i]=j \Leftrightarrow w[j]=i$ for all
 $i,j \in 0,\ldots,|v|-1$. This constraint limits the variables' values to
 $0,\ldots, |v|-1$.
+
+<!-- snippet: modelling/inverse -->
 
 ```python
 model = cp_model.CpModel()

@@ -4,7 +4,7 @@ ci:
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
+    rev: v6.0.0
     hooks:
       - id: check-added-large-files
         # Manuscript PDFs and cover art are intentionally shipped uncompressed.
@@ -33,15 +33,24 @@ repos:
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     # Ruff version.
-    rev: v0.12.4
+    rev: v0.17.4
     hooks:
       # Run the linter.
-      - id: ruff
+      - id: ruff-check
         types_or: [python, pyi, jupyter]
         args: [--fix]
       # Run the formatter.
       - id: ruff-format
         types_or: [python, pyi, jupyter]
+
+  - repo: https://github.com/astral-sh/ty-pre-commit
+    # ty version.
+    rev: v0.0.99
+    hooks:
+      # Type-checks the paths configured in pyproject.toml ([tool.ty.src]).
+      # --isolated: do not create a uv.lock or .venv in the repository.
+      - id: ty
+        args: [--isolated]
 
   # - repo: https://github.com/codespell-project/codespell
   #   rev: v2.2.4
@@ -55,12 +64,17 @@ repos:
   #    hooks:
   #      - id: shellcheck
 
+  # Kept at Prettier 3.1: later releases line-wrap inside inline $...$ math.
+  # This mirror is archived; rbubley/mirrors-prettier continues it.
   - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: "v3.0.0-alpha.9-for-vscode"
+    rev: v3.1.0
     hooks:
       - id: prettier
         types_or: [yaml, markdown, html, css, scss, javascript, json]
         args: [--prose-wrap=always]
+        # Pinned: nodeenv otherwise picks the newest Node release and cannot
+        # parse alpha versions such as 27.0.0-alpha.
+        language_version: 24.11.1
         # README.md and chapters/search_core.md are generated (.scripts/build.py /
         # the Search Core LaTeX pipeline); leave their formatting authoritative.
         exclude: "README.md|chapters/search_core.md"

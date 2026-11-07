@@ -1,0 +1,30 @@
+# Tooling configuration for the book's tests and scripts; the book itself is
+# not a Python package. Added in November 2026 so the ty pre-commit hook can
+# resolve the test dependencies (it runs `uv check` on this project).
+
+[project]
+name = "cpsat-primer"
+version = "0"
+requires-python = ">=3.12"
+dependencies = []
+
+[dependency-groups]
+# What the tests in tests/ import; keep in sync with .github/workflows/test.yml.
+dev = ["ortools", "pytest", "pydantic", "pandas", "networkx", "matplotlib"]
+
+[tool.uv]
+package = false
+
+[tool.ruff.lint]
+# Ruff's defaults before 0.15. Newer defaults enable far more rules and would
+# flag hundreds of findings in the examples and evaluations.
+select = ["E4", "E7", "E9", "F"]
+
+[tool.ty.src]
+# The examples and evaluations are standalone projects with their own
+# dependencies; only the tests and build scripts are type-checked.
+include = ["tests", ".scripts"]
+
+[tool.ty.environment]
+# Tests import their helpers (`_snippets`, `_solve`) as top-level modules.
+extra-paths = ["tests"]
