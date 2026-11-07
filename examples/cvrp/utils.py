@@ -214,7 +214,7 @@ class ExpectOptimalWithinTime:
 def solve(
     model,
     solver: cp_model.CpSolver | None = None,
-    expect: int | list[int] = cp_model.OPTIMAL,
+    expect: cp_model.CpSolverStatus | list[cp_model.CpSolverStatus] = cp_model.OPTIMAL,
     time_limit: float | None = None,
 ) -> cp_model.CpSolver:
     """
@@ -233,7 +233,8 @@ def solve(
       AssertionError if the solver’s status != expect.
     """
     solver = cp_model.CpSolver() if solver is None else solver
-    if isinstance(expect, int):
+    # Statuses are an enum (not int) since OR-Tools 9.15, so test for the list.
+    if not isinstance(expect, list):
         expect = [expect]
     if time_limit is not None:
         solver.parameters.max_time_in_seconds = time_limit

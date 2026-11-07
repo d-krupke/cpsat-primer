@@ -1,4 +1,9 @@
-# dirty hack to import the local module from inside
+import sys
+from pathlib import Path
+
+# dirty hack to import this folder as the package `cvrp`, as in example.ipynb
+sys.path.append(str(Path(__file__).resolve().parent.parent))
+
 from generate_instance import generate_random_euclidean_graph_with_demands
 
 # for saving the results easily
@@ -6,7 +11,7 @@ from algbench import Benchmark  # pip install algbench
 
 
 def solve_via_add_circuit(_graph, vehicle_capacity, instance_name):
-    from cvrp_circuit import CvrpDuplicatedCircuits
+    from cvrp.cvrp_circuit import CvrpDuplicatedCircuits
 
     from ortools.sat.python import cp_model
 
@@ -21,14 +26,13 @@ def solve_via_add_circuit(_graph, vehicle_capacity, instance_name):
     solver.parameters.log_search_progress = True
     solver.parameters.max_time_in_seconds = 60
 
-    status = solver.solve(cvrp1.model)
-    tours1 = cvrp1.extract_tours(solver)
+    solver.solve(cvrp1.model)
 
     return {"objective": solver.objective_value, "bound": solver.best_objective_bound}
 
 
 def solve_via_multiple_circuits(_graph, vehicle_capacity, instance_name):
-    from cvrp_multi_circuit import CvrpMultiCircuit
+    from cvrp.cvrp_multi_circuit import CvrpMultiCircuit
 
     from ortools.sat.python import cp_model
 
@@ -37,14 +41,13 @@ def solve_via_multiple_circuits(_graph, vehicle_capacity, instance_name):
     solver = cp_model.CpSolver()
     solver.parameters.log_search_progress = True
     solver.parameters.max_time_in_seconds = 60
-    status = solver.solve(cvrp2.model)
-    tours2 = cvrp2.extract_tours(solver)
+    solver.solve(cvrp2.model)
 
     return {"objective": solver.objective_value, "bound": solver.best_objective_bound}
 
 
 def solve_via_mtz(_graph, vehicle_capacity, instance_name):
-    from cvrp_mtz import CvrpVanillaMtz
+    from cvrp.cvrp_mtz import CvrpVanillaMtz
 
     from ortools.sat.python import cp_model
 
@@ -53,8 +56,7 @@ def solve_via_mtz(_graph, vehicle_capacity, instance_name):
     solver = cp_model.CpSolver()
     solver.parameters.log_search_progress = True
     solver.parameters.max_time_in_seconds = 60
-    status = solver.solve(cvrp3.model)
-    tours3 = cvrp3.extract_tours(solver)
+    solver.solve(cvrp3.model)
 
     return {"objective": solver.objective_value, "bound": solver.best_objective_bound}
 
