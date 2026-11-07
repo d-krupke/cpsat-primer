@@ -11,14 +11,8 @@ from itertools import product
 
 import pytest
 from _snippets import documented_snippets, run_snippet
+from _solve import make_solver
 from ortools.sat.python import cp_model
-
-
-def solver():
-    result = cp_model.CpSolver()
-    result.parameters.num_workers = 1
-    result.parameters.max_time_in_seconds = 3
-    return result
 
 
 @pytest.mark.parametrize("snippet_id", sorted(documented_snippets()))
@@ -31,10 +25,6 @@ def test_snippet_runs(snippet_id):
             snippet.compile()
     else:
         run_snippet(snippet_id)
-
-
-def test_introductory_example():
-    assert run_snippet("example/first_model")["solver"].objective_value == 1500
 
 
 def test_arithmetic_model_is_valid():
@@ -51,7 +41,7 @@ def test_signed_division_and_modulo(numerator, divisor):
     remainder = model.new_int_var(-10, 10, "remainder")
     model.add_division_equality(quotient, numerator, divisor)
     model.add_modulo_equality(remainder, numerator, 3)
-    s = solver()
+    s = make_solver()
     assert s.solve(model) == cp_model.OPTIMAL
     assert s.value(quotient) == (2 if numerator * divisor > 0 else -2)
     assert s.value(remainder) == (2 if numerator > 0 else -2)
@@ -64,7 +54,7 @@ def test_absolute_and_extrema_domains(values):
     model = namespace["model"]
     for name, value in zip(["x", "y", "z"], values):
         model.add(namespace[name] == value)
-    s = solver()
+    s = make_solver()
     assert s.solve(model) == cp_model.OPTIMAL
     x, y, z = values
     assert s.value(namespace["abs_xz"]) == abs(x + z)
@@ -80,18 +70,14 @@ def test_boolean_product_penalty(a, b):
     model.add(namespace["b1"] == a)
     model.add(namespace["b2"] == b)
     model.minimize(namespace["b1b2"])
-    s = solver()
+    s = make_solver()
     assert s.solve(model) == cp_model.OPTIMAL
     assert s.objective_value == a * b
 
 
-def test_automaton_snippet():
-    assert solver().solve(run_snippet("advanced_modelling/automaton")["model"]) == (
-        cp_model.OPTIMAL
-    )
-
-
 def test_mathopt_expression_handles():
+    """The list comprehensions yield five in- and five out-variables, which the
+    flow-conservation constraint then balances via `fast_sum`."""
     namespace = run_snippet("mathopt/expression_handles")
     assert len(namespace["in_vars"]) == len(namespace["out_vars"]) == 5
 

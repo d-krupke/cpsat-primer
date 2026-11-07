@@ -2,16 +2,8 @@
 
 import pytest
 from _snippets import run_snippet
+from _solve import status_with
 from ortools.sat.python import cp_model
-
-
-def status_with(
-    namespace: dict, variables: list, values: list
-) -> cp_model.CpSolverStatus:
-    model = namespace["model"]
-    for variable, value in zip(variables, values, strict=True):
-        model.add(variable == value)
-    return cp_model.CpSolver().solve(model)
 
 
 @pytest.mark.parametrize(
@@ -29,7 +21,7 @@ def test_element(x, y, z, index, value, feasible):
     namespace = run_snippet("modelling/element")
     names = ("x", "y", "z", "index_var", "value_at_index_var")
     variables = [namespace[name] for name in names]
-    status = status_with(namespace, variables, [x, y, z, index, value])
+    status = status_with(namespace["model"], variables, [x, y, z, index, value])
     assert status == (cp_model.OPTIMAL if feasible else cp_model.INFEASIBLE)
 
 
@@ -46,5 +38,5 @@ def test_inverse(v_values, w_values, feasible):
     """`v[i] == j` holds exactly if `w[j] == i`."""
     namespace = run_snippet("modelling/inverse")
     variables = [*namespace["v"], *namespace["w"]]
-    status = status_with(namespace, variables, v_values + w_values)
+    status = status_with(namespace["model"], variables, v_values + w_values)
     assert status == (cp_model.OPTIMAL if feasible else cp_model.INFEASIBLE)

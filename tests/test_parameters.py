@@ -6,11 +6,13 @@ tests cover behavior that needs a harder model or extra assertions.
 
 import random
 
+import pytest
 from _snippets import run_snippet
 from ortools.sat.python import cp_model
 
 
 def test_further_properties():
+    """The search statistics the chapter mentions are still available."""
     model = cp_model.CpModel()
     solver = cp_model.CpSolver()
     assert solver.solve(model) == cp_model.OPTIMAL
@@ -29,22 +31,30 @@ def random_tsp(n: int = 80) -> cp_model.CpModel:
     return model
 
 
-def test_bound_callback_stops_search(capsys):
-    """The chapter's function callback sees the bound pass 100 and stops."""
+@pytest.mark.parametrize("num_workers", [1, 8])
+def test_bound_callback_stops_search(capsys, num_workers):
+    """The chapter's function callback sees the bound pass 100 and stops.
+
+    Whether a solution exists by then depends on the number of workers, so
+    only the bound is checked, not the status."""
     solver = run_snippet("parameters/bound_callback")["solver"]
+    solver.parameters.num_workers = num_workers
     solver.parameters.max_time_in_seconds = 30
-    assert solver.solve(random_tsp()) in (cp_model.FEASIBLE, cp_model.OPTIMAL)
-    assert solver.best_objective_bound > 100
+    solver.solve(random_tsp())
+    assert 100 < solver.best_objective_bound
     assert "New bound:" in capsys.readouterr().out
 
 
-def test_bound_callback_class_stops_search(capsys):
+@pytest.mark.parametrize("num_workers", [1, 8])
+def test_bound_callback_class_stops_search(capsys, num_workers):
     """The callable class works the same way, here with a threshold of 200."""
     bound_callback = run_snippet("parameters/bound_callback_class")["BoundCallback"]
     solver = cp_model.CpSolver()
+    solver.parameters.num_workers = num_workers
     solver.parameters.max_time_in_seconds = 30
     solver.best_bound_callback = bound_callback(solver)
-    assert solver.solve(random_tsp()) in (cp_model.FEASIBLE, cp_model.OPTIMAL)
+    solver.solve(random_tsp())
+    assert 200 < solver.best_objective_bound
     assert "Abort search due to bound" in capsys.readouterr().out
 
 

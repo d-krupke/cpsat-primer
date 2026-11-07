@@ -1,14 +1,15 @@
 """Check the linear-constraint snippets of the modelling chapter."""
 
 from _snippets import run_snippet
+from _solve import solve
 from ortools.sat.python import cp_model
 
 
 def test_linear_constraints_hold():
     """A solution satisfies all constraints, including the strict `<` and `>`."""
     namespace = run_snippet("modelling/linear_constraints")
-    solver = cp_model.CpSolver()
-    assert solver.solve(namespace["model"]) == cp_model.OPTIMAL
+    status, solver = solve(namespace["model"])
+    assert status == cp_model.OPTIMAL
     x, y, z = (solver.value(namespace[name]) for name in ("x", "y", "z"))
     assert 10 * x + 15 * y <= 10
     assert x + z == 2 * y
@@ -24,6 +25,6 @@ def test_lin_constraint_sum():
     weights = [i for i in range(5)]
     model.add(cp_model.LinearExpr.sum(vars) >= 1)
     model.minimize(cp_model.LinearExpr.weighted_sum(vars, weights))
-    solver = cp_model.CpSolver()
-    assert solver.solve(model) == cp_model.OPTIMAL
+    status, solver = solve(model)
+    assert status == cp_model.OPTIMAL
     assert solver.objective_value == 0  # x0 has weight 0

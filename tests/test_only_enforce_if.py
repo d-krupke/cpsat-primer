@@ -1,13 +1,8 @@
 """Check that the `only_enforce_if` snippets enforce what the text says."""
 
 from _snippets import run_snippet
+from _solve import solve
 from ortools.sat.python import cp_model
-
-
-def solve(model: cp_model.CpModel) -> tuple[cp_model.CpSolverStatus, cp_model.CpSolver]:
-    solver = cp_model.CpSolver()
-    solver.parameters.num_workers = 1
-    return solver.solve(model), solver
 
 
 def test_truck_limits_the_load():

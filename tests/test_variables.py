@@ -3,6 +3,7 @@
 import pandas as pd
 import pytest
 from _snippets import run_snippet
+from _solve import all_values
 from ortools.sat.python import cp_model
 
 
@@ -18,16 +19,7 @@ def test_variable_series():
 def test_domain_variable_takes_only_domain_values():
     """`x` can take exactly the seven listed values."""
     namespace = run_snippet("modelling/domains")
-    solver = cp_model.CpSolver()
-    solver.parameters.enumerate_all_solutions = True
-    solver.parameters.num_workers = 1
-    values = set()
-
-    class Collect(cp_model.CpSolverSolutionCallback):
-        def on_solution_callback(self):
-            values.add(self.value(namespace["x"]))
-
-    solver.solve(namespace["model"], Collect())
+    values = all_values(namespace["model"], namespace["x"])
     assert values == {2, 5, 8, 10, 20, 50, 90}
 
 

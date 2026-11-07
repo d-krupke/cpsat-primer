@@ -1,15 +1,26 @@
 """Round-trip models through the chapter's `export_model`/`import_model`."""
 
 import tempfile
+from functools import cache
 from pathlib import Path
 
 import pytest
 from _snippets import run_snippet
 from ortools.sat.python import cp_model
 
-SERIALIZATION = run_snippet("parameters/serialization")
-export_model = SERIALIZATION["export_model"]
-import_model = SERIALIZATION["import_model"]
+
+# Run lazily: a broken snippet must fail these tests, not the whole collection.
+@cache
+def serialization() -> dict:
+    return run_snippet("parameters/serialization")
+
+
+def export_model(*args, **kwargs) -> None:
+    serialization()["export_model"](*args, **kwargs)
+
+
+def import_model(*args, **kwargs) -> cp_model.CpModel:
+    return serialization()["import_model"](*args, **kwargs)
 
 
 def build_model() -> cp_model.CpModel:
@@ -56,5 +67,6 @@ def test_renamed_model_still_solves(tmp_path):
 
 
 def test_unknown_extension_is_rejected(tmp_path):
+    """Guessing a format for an unknown extension could write the wrong one."""
     with pytest.raises(ValueError, match="Unknown extension"):
         export_model(build_model(), str(tmp_path / "model.json"))

@@ -1,7 +1,8 @@
 """MathOpt examples beyond the chapter's snippets.
 
-The chapter's own examples (tour, Stigler diet, set cover) are tested via
-their snippet markers in `test_documented_snippets.py`.
+The chapter's own examples (the step-by-step walkthrough, the Stigler diet
+and set cover) are tested via their snippet markers in
+`test_documented_snippets.py`.
 """
 
 import math

@@ -15,8 +15,10 @@ It is invisible on GitHub, in mdBook and in the generated README::
     ...
     ```
 
-Blank lines between marker and fence are fine (Prettier inserts one). The id
-must start with the chapter's file name. Optional ``key=value`` options:
+Blank lines between marker and fence are fine (Prettier inserts one). Markers
+inside fenced blocks are examples and ignored; a comment that mentions
+"snippet" but does not match the format is an error. The id must start with
+the chapter's file name. Optional ``key=value`` options:
 
 * ``requires=a/x,b/y`` -- run these snippets first, in the same namespace
   (e.g. a class that needs a data class defined in an earlier block).
@@ -54,6 +56,8 @@ _MARKER = re.compile(r"^\s*<!--\s*snippet:\s*(?P<body>.*?)\s*-->\s*$")
 _MARKER_OPEN = re.compile(r"^\s*<!--\s*snippet:\s*(?P<body>.*?)\s*$")
 _OPEN_FENCE = re.compile(r"^(?P<indent>\s*)```(?P<lang>\S*)\s*$")
 _CLOSE_FENCE = re.compile(r"^\s*```\s*$")
+_ANY_FENCE = re.compile(r"^\s*(?P<fence>`{3,}|~{3,})")
+_NEAR_MISS = re.compile(r"snip", re.IGNORECASE)
 _MODES = ("run", "compile")
 
 
@@ -82,11 +86,24 @@ class Snippet:
 
 
 def parse_markdown(text: str, path: Path) -> list[Snippet]:
-    """Extract all marked python blocks of one chapter (pure, no file access)."""
+    """Extract all marked python blocks of one chapter (pure, no file access).
+
+    Markers inside fenced blocks are examples (e.g., in a markdown block that
+    documents this format) and are skipped. Comments that look like a marker
+    but do not match the grammar are errors, so a typo cannot silently drop a
+    block from testing.
+    """
     lines = text.splitlines()
     snippets = []
-    for i, line in enumerate(lines):
-        where = f"{path}:{i + 1}"
+    fence = None  # opening fence of the block being skipped, if any
+    i = 0
+    while i < len(lines):
+        line, where = lines[i], f"{path}:{i + 1}"
+        if fence is not None:
+            if _closes(line, fence):
+                fence = None
+            i += 1
+            continue
         if match := _MARKER.match(line):
             end = i  # single-line marker
         elif match := _MARKER_OPEN.match(line):
@@ -94,14 +111,39 @@ def parse_markdown(text: str, path: Path) -> list[Snippet]:
             if end is None or lines[end].strip() != "-->":
                 raise SnippetError(f"{where}: close the marker with a line '-->'")
         else:
+            if _looks_like_marker(lines, i):
+                raise SnippetError(
+                    f"{where}: looks like a snippet marker but is not "
+                    "'<!-- snippet: <chapter>/<name> ... -->' on its own line"
+                )
+            if opening := _ANY_FENCE.match(line):
+                fence = opening["fence"]
+            i += 1
             continue
         snippet_id, options = _parse_marker(match["body"], path.stem, where)
-        snippet = _read_block(lines, end + 1, path, snippet_id, options, where)
+        snippet, after = _read_block(lines, end + 1, path, snippet_id, options, where)
         if end > i:
             setup = textwrap.dedent("".join(f"{s}\n" for s in lines[i + 1 : end]))
             snippet = replace(snippet, setup=setup, setup_line=i + 2)
         snippets.append(snippet)
+        i = after
     return snippets
+
+
+def _closes(line: str, fence: str) -> bool:
+    """A fence closes with at least as many of the same characters, nothing else."""
+    stripped = line.strip()
+    return len(stripped) >= len(fence) and stripped == fence[0] * len(stripped)
+
+
+def _looks_like_marker(lines: list[str], i: int) -> bool:
+    """An HTML comment mentioning "snip" on its line or right after `<!--`."""
+    if "<!--" not in lines[i]:
+        return False
+    text = lines[i]
+    if lines[i].strip() == "<!--" and i + 1 < len(lines):
+        text += lines[i + 1]
+    return bool(_NEAR_MISS.search(text))
 
 
 def _parse_marker(body: str, chapter: str, where: str) -> tuple[str, dict[str, str]]:
@@ -123,7 +165,8 @@ def _parse_marker(body: str, chapter: str, where: str) -> tuple[str, dict[str, s
     return snippet_id, options
 
 
-def _read_block(lines, start, path, snippet_id, options, where) -> Snippet:
+def _read_block(lines, start, path, snippet_id, options, where) -> tuple[Snippet, int]:
+    """The python block after a marker, and the index of the line after it."""
     while start < len(lines) and not lines[start].strip():
         start += 1
     fence = _OPEN_FENCE.match(lines[start]) if start < len(lines) else None
@@ -136,7 +179,7 @@ def _read_block(lines, start, path, snippet_id, options, where) -> Snippet:
         raise SnippetError(f"{where}: python block is never closed")
     body = "".join(line + "\n" for line in lines[start + 1 : end])
     requires = tuple(r for r in options.get("requires", "").split(",") if r)
-    return Snippet(
+    snippet = Snippet(
         id=snippet_id,
         code=textwrap.dedent(body),
         path=path,
@@ -144,6 +187,7 @@ def _read_block(lines, start, path, snippet_id, options, where) -> Snippet:
         requires=requires,
         mode=options.get("mode", "run"),
     )
+    return snippet, end + 1
 
 
 def index_snippets(snippets: list[Snippet]) -> dict[str, Snippet]:
@@ -172,17 +216,19 @@ def index_snippets(snippets: list[Snippet]) -> dict[str, Snippet]:
 def execution_order(index: dict[str, Snippet], snippet_id: str) -> list[Snippet]:
     """Requirements depth-first, each once, ending with the snippet itself."""
     order: list[Snippet] = []
+    done: set[str] = set()
     active: list[str] = []
 
     def visit(current: str) -> None:
         if current in active:
             raise SnippetError(f"requirement cycle: {' -> '.join([*active, current])}")
-        if any(s.id == current for s in order):
+        if current in done:
             return
         active.append(current)
         for required in index[current].requires:
             visit(required)
         active.pop()
+        done.add(current)
         order.append(index[current])
 
     visit(snippet_id)
@@ -208,7 +254,9 @@ def run_snippet(snippet_id: str, **predefined: Any) -> dict[str, Any]:
     snippets = documented_snippets()
     if snippets[snippet_id].mode == "compile":
         raise SnippetError(f"{snippet_id} is compile-only and cannot be run")
-    namespace: dict[str, Any] = {"cp_model": cp_model, **predefined}
+    # Snippets run like a script, so `if __name__ == "__main__":` blocks execute.
+    namespace: dict[str, Any] = {"__name__": "__main__", "cp_model": cp_model}
+    namespace.update(predefined)
     for snippet in execution_order(snippets, snippet_id):
         exec(snippet.compile(), namespace)  # noqa: S102 -- running the book is the point
     return namespace

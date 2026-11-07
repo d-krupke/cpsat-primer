@@ -1,6 +1,6 @@
 """Unit tests for the snippet-marker parser in `_snippets.py`.
 
-These pin down the marker grammar that chapters rely on, using small inline
+Created in November 2026 together with the parser. These pin down the marker grammar that chapters rely on, using small inline
 markdown documents instead of the real chapters, so a parser change cannot
 hide behind a chapter edit.
 """
@@ -8,6 +8,7 @@ hide behind a chapter edit.
 import traceback
 from pathlib import Path
 
+import _snippets
 import pytest
 from _snippets import SnippetError, execution_order, index_snippets, parse_markdown
 
@@ -107,6 +108,48 @@ def test_hidden_setup_reports_its_markdown_line():
     assert (frame.filename, frame.lineno) == (str(CHAPTER), 3)
 
 
+def test_markers_inside_fenced_blocks_are_examples():
+    """A markdown block that documents the marker format (as CONTRIBUTING.md
+    does) must not register a snippet; the next real marker still counts."""
+    text = md(
+        "````markdown",
+        "<!-- snippet: demo/example -->",
+        "```python",
+        "placeholder()",
+        "```",
+        "````",
+        "~~~",
+        "<!-- snipet: not checked inside a fence -->",
+        "~~~",
+        "<!-- snippet: demo/real -->",
+        "```python",
+        "x = 1",
+        "```",
+    )
+    assert [s.id for s in parse_markdown(text, CHAPTER)] == ["demo/real"]
+
+
+def test_unrelated_comments_are_fine():
+    """Only comments that mention snippets are checked against the grammar."""
+    text = md("<!-- TODO: explain hints -->", "<!--", "a note", "-->")
+    assert parse_markdown(text, CHAPTER) == []
+
+
+def test_run_snippet_runs_as_main(monkeypatch):
+    """Snippets run like scripts: `__main__` guards execute and predefined
+    names (here `__file__`) are visible."""
+    text = md(
+        "<!-- snippet: demo/script -->",
+        "```python",
+        'if __name__ == "__main__":',
+        "    ran = __file__",
+        "```",
+    )
+    index = index_snippets(parse_markdown(text, CHAPTER))
+    monkeypatch.setattr(_snippets, "documented_snippets", lambda: index)
+    assert _snippets.run_snippet("demo/script", __file__="x.py")["ran"] == "x.py"
+
+
 @pytest.mark.parametrize(
     "text, message",
     [
@@ -123,6 +166,10 @@ def test_hidden_setup_reports_its_markdown_line():
             md("<!-- snippet: demo/a", "x = 1 -->", "```python", "```"),
             "close the marker",
         ),
+        (md("<!-- snipet: demo/a -->", "```python", "```"), "looks like"),
+        (md("<!-- Snippet: demo/a -->", "```python", "```"), "looks like"),
+        (md("<!--", "snippet: demo/a -->", "```python", "```"), "looks like"),
+        (md("> <!-- snippet: demo/a -->", "> ```python", "> ```"), "looks like"),
     ],
 )
 def test_malformed_markers_fail_loudly(text, message):
@@ -132,6 +179,7 @@ def test_malformed_markers_fail_loudly(text, message):
 
 
 def test_index_rejects_duplicates_and_unknown_requirements():
+    """Ids are what tests refer to, so they must be unique and resolvable."""
     duplicated = parse_markdown(
         md("<!-- snippet: demo/a -->", "```python", "```") * 2, CHAPTER
     )
@@ -146,6 +194,8 @@ def test_index_rejects_duplicates_and_unknown_requirements():
 
 
 def test_index_rejects_cycles_and_compile_only_requirements():
+    """A cycle has no execution order, and a compile-only sketch cannot be run
+    to provide names for another snippet."""
     cyclic = parse_markdown(
         md(
             "<!-- snippet: demo/a requires=demo/b -->",

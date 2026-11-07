@@ -1,6 +1,7 @@
 """Check the objective snippets of the modelling chapter."""
 
 from _snippets import run_snippet
+from _solve import solve
 from ortools.sat.python import cp_model
 
 
@@ -14,6 +15,6 @@ def test_lexicographic_optimization():
 def test_abs_objective():
     """Minimizing |x| over x in [-100, 100] reaches 0."""
     namespace = run_snippet("modelling/abs_objective")
-    solver = cp_model.CpSolver()
-    assert solver.solve(namespace["model"]) == cp_model.OPTIMAL
+    status, solver = solve(namespace["model"])
+    assert status == cp_model.OPTIMAL
     assert solver.objective_value == 0
