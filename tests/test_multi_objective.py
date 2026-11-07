@@ -73,21 +73,21 @@ class MultiObjectiveKnapsackSolver:
 
     def _set_solution_as_hint(self):
         """Use the current solution as a hint for the next solve."""
-        for i, v in enumerate(self.model.proto.variables):
-            v_ = self.model.get_int_var_from_proto_index(i)
-            assert v.name == v_.name, "Variable names should match"
-            self.model.add_hint(v_, self.solver.value(v_))
+        self.model.clear_hints()
+        for i in range(len(self.model.proto.variables)):
+            var = self.model.get_int_var_from_proto_index(i)
+            self.model.add_hint(var, self.solver.value(var))
 
     def fix_current_objective(self, ratio: float = 1.0):
         """Fix the current objective value to prevent degeneration."""
         if ratio == 1.0:
-            self.model.add(self._objective == self.solver.objective_value)
+            self.model.add(self._objective == self.solver.value(self._objective))
         elif ratio > 1.0:
-            self.model.add(self._objective <= ceil(self.solver.objective_value * ratio))
-        else:
             self.model.add(
-                self._objective >= floor(self.solver.objective_value * ratio)
+                self._objective <= floor(self.solver.objective_value * ratio)
             )
+        else:
+            self.model.add(self._objective >= ceil(self.solver.objective_value * ratio))
 
     def _add_constraints(self):
         """Add the weight constraint to the model."""
