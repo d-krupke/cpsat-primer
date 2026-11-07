@@ -1,14 +1,29 @@
-# dirty hack to import the local module from inside
-from generate_instance import generate_random_euclidean_graph_with_demands
+import sys
+from pathlib import Path
+
+# dirty hack to import this folder as the package `cvrp`, as in example.ipynb
+sys.path.append(str(Path(__file__).resolve().parent.parent))
+
+from cvrp.generate_instance import generate_random_euclidean_graph_with_demands
 
 # for saving the results easily
 from algbench import Benchmark  # pip install algbench
+from ortools.sat.python import cp_model
+
+
+def _result(solver: cp_model.CpSolver, status) -> dict:
+    """Objective and bound only if a solution was found; otherwise CP-SAT
+    reports 0.0 for both, which would read as a proven optimum."""
+    solved = status in (cp_model.OPTIMAL, cp_model.FEASIBLE)
+    return {
+        "status": solver.status_name(status),
+        "objective": solver.objective_value if solved else None,
+        "bound": solver.best_objective_bound if solved else None,
+    }
 
 
 def solve_via_add_circuit(_graph, vehicle_capacity, instance_name):
-    from cvrp_circuit import CvrpDuplicatedCircuits
-
-    from ortools.sat.python import cp_model
+    from cvrp.cvrp_circuit import CvrpDuplicatedCircuits
 
     # solve first model
     cvrp1 = CvrpDuplicatedCircuits(
@@ -22,15 +37,12 @@ def solve_via_add_circuit(_graph, vehicle_capacity, instance_name):
     solver.parameters.max_time_in_seconds = 60
 
     status = solver.solve(cvrp1.model)
-    tours1 = cvrp1.extract_tours(solver)
 
-    return {"objective": solver.objective_value, "bound": solver.best_objective_bound}
+    return _result(solver, status)
 
 
 def solve_via_multiple_circuits(_graph, vehicle_capacity, instance_name):
-    from cvrp_multi_circuit import CvrpMultiCircuit
-
-    from ortools.sat.python import cp_model
+    from cvrp.cvrp_multi_circuit import CvrpMultiCircuit
 
     cvrp2 = CvrpMultiCircuit(_graph, depot=0, capacity=vehicle_capacity)
     cvrp2.minimize_weight()
@@ -38,15 +50,12 @@ def solve_via_multiple_circuits(_graph, vehicle_capacity, instance_name):
     solver.parameters.log_search_progress = True
     solver.parameters.max_time_in_seconds = 60
     status = solver.solve(cvrp2.model)
-    tours2 = cvrp2.extract_tours(solver)
 
-    return {"objective": solver.objective_value, "bound": solver.best_objective_bound}
+    return _result(solver, status)
 
 
 def solve_via_mtz(_graph, vehicle_capacity, instance_name):
-    from cvrp_mtz import CvrpVanillaMtz
-
-    from ortools.sat.python import cp_model
+    from cvrp.cvrp_mtz import CvrpVanillaMtz
 
     cvrp3 = CvrpVanillaMtz(_graph, depot=0, capacity=vehicle_capacity)
     cvrp3.minimize_weight()
@@ -54,9 +63,8 @@ def solve_via_mtz(_graph, vehicle_capacity, instance_name):
     solver.parameters.log_search_progress = True
     solver.parameters.max_time_in_seconds = 60
     status = solver.solve(cvrp3.model)
-    tours3 = cvrp3.extract_tours(solver)
 
-    return {"objective": solver.objective_value, "bound": solver.best_objective_bound}
+    return _result(solver, status)
 
 
 if __name__ == "__main__":

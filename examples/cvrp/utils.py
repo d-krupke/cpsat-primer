@@ -33,6 +33,8 @@ def test_example():
 ```
 """
 
+from collections.abc import Iterable
+
 from ortools.sat.python import cp_model
 
 
@@ -212,28 +214,31 @@ class ExpectOptimalWithinTime:
 
 
 def solve(
-    model,
+    model: cp_model.CpModel,
     solver: cp_model.CpSolver | None = None,
-    expect: int | list[int] = cp_model.OPTIMAL,
+    expect=cp_model.OPTIMAL,
     time_limit: float | None = None,
 ) -> cp_model.CpSolver:
     """
     Solve a CP-SAT model and assert its status.
 
     Args:
-      model: any object with a `.model` attribute (a CpModel).
+      model:       the CpModel to solve (e.g. `cvrp.model` of a formulation).
       solver:      optional CpSolver to use (new one if None).
-      expect:      expected status code (e.g. OPTIMAL or FEASIBLE).
+      expect:      expected status, or a collection of them
+                   (e.g. OPTIMAL or [OPTIMAL, FEASIBLE]).
       time_limit:  optional max_time_in_seconds.
 
     Returns:
       The solver after solving.
 
     Raises:
-      AssertionError if the solver’s status != expect.
+      AssertionError if the solver’s status is not in expect.
     """
     solver = cp_model.CpSolver() if solver is None else solver
-    if isinstance(expect, int):
+    # A single status is an int before OR-Tools 9.15 and an enum since; neither
+    # is iterable, unlike a list or tuple of statuses.
+    if not isinstance(expect, Iterable):
         expect = [expect]
     if time_limit is not None:
         solver.parameters.max_time_in_seconds = time_limit
