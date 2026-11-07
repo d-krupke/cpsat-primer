@@ -9,7 +9,7 @@ requires-python = ">=3.12"
 dependencies = []
 
 [dependency-groups]
-# What the tests in tests/ import; keep in sync with .github/workflows/test.yml.
+# What the tests in tests/ import; CI installs it (.github/workflows/test.yml).
 dev = ["ortools", "pytest", "pydantic", "pandas", "networkx", "matplotlib"]
 
 [tool.uv]

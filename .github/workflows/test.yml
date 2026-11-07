@@ -1,7 +1,11 @@
-name: Run Pytest to autoamtically check for changes in CP-SAT's behavior
+name: Run Pytest to automatically check for changes in CP-SAT's behavior
 
 on:
+  pull_request:
+  push:
+    branches: [main]
   workflow_dispatch:
+  # Weekly, to catch changes in new OR-Tools releases.
   schedule:
     - cron: "0 0 * * FRI"
 
@@ -10,17 +14,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v5
 
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
           python-version: 3.12
 
       - name: Install dependencies
+        # The dev group in pyproject.toml lists what the tests import.
         run: |
           python -m pip install --upgrade pip
-          pip install ortools pytest pydantic networkx matplotlib
+          pip install --group dev
 
       - name: Run tests
         run: pytest tests/
