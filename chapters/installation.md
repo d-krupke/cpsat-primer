@@ -28,9 +28,6 @@ encountered wrong behavior, i.e., bugs, in earlier versions that then have been
 fixed by updates (this was on some more advanced features, do not worry about
 correctness with basic usage).
 
-I personally like to use [Jupyter Notebooks](https://jupyter.org/) for
-experimenting with CP-SAT.
-
 ### What hardware do you need?
 
 It is important to note that for CP-SAT usage, you do not need the capabilities
