@@ -361,6 +361,8 @@ Our first problem has no deeper meaning, except for showing the basic workflow
 of creating the variables (x and y), adding the constraint $x+y<=30$ on them,
 setting the objective function (maximize $30x + 50y$), and obtaining a solution:
 
+<!-- snippet: example/first_model -->
+
 ```python
 from ortools.sat.python import cp_model
 
@@ -1348,6 +1350,8 @@ constraints that map these variables to the desired values. The auxiliary
 variables can then be used in other constraints, representing the desired
 subexpression.
 
+<!-- snippet: modelling/abs_min_max -->
+
 ```python
 model = cp_model.CpModel()
 x = model.new_int_var(-100, 100, "x")
@@ -1412,6 +1416,8 @@ However, CP-SAT supports multiplication, division, and modulo operations.
 Similar to using `abs`, `max`, and `min`, you must create an auxiliary variable
 to represent the result of the operation.
 
+<!-- snippet: modelling/arithmetic -->
+
 ```python
 model = cp_model.CpModel()
 x = model.new_int_var(-100, 100, "x")
@@ -1423,17 +1429,18 @@ z = model.new_int_var_from_domain(
 xyz = model.new_int_var(-(100**3), 100**3, "x*y*z")
 model.add_multiplication_equality(xyz, [x, y, z])  # xyz = x*y*z
 
-model.add_modulo_equality(x, y, 3)  # remainder has the sign of y
+model.add_modulo_equality(x, y, 3)  # x = y mod 3, with the sign of y
 model.add_division_equality(x, y, z)  # x = y / z, truncated toward zero
 ```
 
 When using these operations, you often transition from linear to non-linear
 optimization, which is generally more challenging to solve. In cases of
 division, it is essential to remember that operations are on integers;
-therefore, `5 / 2` results in `2`, not `2.5`. Division truncates toward zero:
-`-5 / 2` gives `-2`, unlike Python's `-5 // 2`, which gives `-3`. The divisor's
-domain must exclude zero. Modulo uses the corresponding remainder, so `-5`
-modulo `3` is `-2`, unlike Python's `%` operator.
+therefore, dividing `5` by `2` results in `2`, not `2.5`. Division truncates
+toward zero: dividing `-5` by `2` gives `-2`, unlike Python's `-5 // 2`, which
+gives `-3`. The divisor's domain must exclude zero. Modulo uses the
+corresponding remainder, so `-5` modulo `3` is `-2`, unlike Python's `%`
+operator.
 
 Many problems initially involve non-linear expressions that can often be
 reformulated or approximated using linear expressions. This transformation can
@@ -1465,6 +1472,8 @@ $\sum_{e,e'\in E} concost(e, e')\cdot x_e\cdot x_{e'}$. However, such cases can
 often be modeled linearly using an auxiliary variable, avoiding the complexities
 of non-linear modeling.
 
+<!-- snippet: modelling/boolean_product -->
+
 ```python
 model = cp_model.CpModel()
 
@@ -1474,7 +1483,7 @@ b2 = model.new_bool_var("b2")
 b1b2 = model.new_bool_var("b1b2")
 model.add_implication(~b1, ~b1b2)
 model.add_implication(~b2, ~b1b2)
-model.add_bool_or(~b1, ~b2, b1b2)  # required for a penalty term to be minimized.
+model.add_bool_or(~b1, ~b2, b1b2)  # needed if b1b2=0 can pay off, e.g., a penalty
 ```
 
 There are numerous further instances where non-linear expressions can be
@@ -2748,6 +2757,8 @@ leads to a final state (possibly via a loop); otherwise, the model remains
 infeasible.
 
 The state machine from the example can be modeled as follows:
+
+<!-- snippet: advanced_modelling/automaton -->
 
 ```python
 model = cp_model.CpModel()
@@ -5098,6 +5109,8 @@ issues by providing a clear interface and validating input data. Additionally,
 you can create an API for your code effortlessly using FastAPI, which is built
 on top of Pydantic.
 
+<!-- snippet: coding_patterns/knapsack_data -->
+
 ```python
 # pip install pydantic
 from pydantic import (
@@ -5497,6 +5510,8 @@ introduced methods to set the solution as a hint for the next solve which will
 automatically be called if the `solve` found a feasible solution. To not
 degenerate on previous objectives, we added a method to fix the current
 objective value based on some ratio.
+
+<!-- snippet: coding_patterns/multi_objective_solver requires=coding_patterns/knapsack_data -->
 
 ```python
 from math import ceil, floor
@@ -11606,6 +11621,8 @@ In the following, I give a brief overview of the MathOpt API.
 As in CP-SAT, you first need to import the MathOpt module and create a model
 instance.
 
+<!-- snippet: mathopt/model -->
+
 ```python
 from ortools.math_opt.python import mathopt as mo
 
@@ -11676,6 +11693,8 @@ model.add_linear_constraint(mo.fast_sum(terms) <= 100, name="sum_constraint")
 
 You can also use expression handles, which can make the model more readable and
 easier to maintain.
+
+<!-- snippet: mathopt/expression_handles requires=mathopt/model -->
 
 ```python
 in_vars = [model.add_variable(name=f"in_{i}") for i in range(1, 6)]
@@ -11774,6 +11793,8 @@ protein, and calcium. This model serves as a small, illustrative example of how
 mathematical optimization can be applied to dietary planning. The units and
 values used here are for demonstration purposes only and should not be
 interpreted as nutritional facts.
+
+<!-- snippet: mathopt/stigler_diet -->
 
 ```python
 from ortools.math_opt.python import mathopt as mo
@@ -11889,6 +11910,8 @@ standard integer formulation is:
 
 Since all variables are integral, this problem can be modeled using CP-SAT and
 compared directly with MIP solvers such as Gurobi or HiGHS.
+
+<!-- snippet: mathopt/set_cover -->
 
 ```python
 from ortools.math_opt.python import mathopt as mo

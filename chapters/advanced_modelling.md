@@ -1002,6 +1002,8 @@ infeasible.
 
 The state machine from the example can be modeled as follows:
 
+<!-- snippet: advanced_modelling/automaton -->
+
 ```python
 model = cp_model.CpModel()
 

@@ -814,6 +814,8 @@ constraints that map these variables to the desired values. The auxiliary
 variables can then be used in other constraints, representing the desired
 subexpression.
 
+<!-- snippet: modelling/abs_min_max -->
+
 ```python
 model = cp_model.CpModel()
 x = model.new_int_var(-100, 100, "x")
@@ -878,6 +880,8 @@ However, CP-SAT supports multiplication, division, and modulo operations.
 Similar to using `abs`, `max`, and `min`, you must create an auxiliary variable
 to represent the result of the operation.
 
+<!-- snippet: modelling/arithmetic -->
+
 ```python
 model = cp_model.CpModel()
 x = model.new_int_var(-100, 100, "x")
@@ -889,17 +893,18 @@ z = model.new_int_var_from_domain(
 xyz = model.new_int_var(-(100**3), 100**3, "x*y*z")
 model.add_multiplication_equality(xyz, [x, y, z])  # xyz = x*y*z
 
-model.add_modulo_equality(x, y, 3)  # remainder has the sign of y
+model.add_modulo_equality(x, y, 3)  # x = y mod 3, with the sign of y
 model.add_division_equality(x, y, z)  # x = y / z, truncated toward zero
 ```
 
 When using these operations, you often transition from linear to non-linear
 optimization, which is generally more challenging to solve. In cases of
 division, it is essential to remember that operations are on integers;
-therefore, `5 / 2` results in `2`, not `2.5`. Division truncates toward zero:
-`-5 / 2` gives `-2`, unlike Python's `-5 // 2`, which gives `-3`. The divisor's
-domain must exclude zero. Modulo uses the corresponding remainder, so `-5`
-modulo `3` is `-2`, unlike Python's `%` operator.
+therefore, dividing `5` by `2` results in `2`, not `2.5`. Division truncates
+toward zero: dividing `-5` by `2` gives `-2`, unlike Python's `-5 // 2`, which
+gives `-3`. The divisor's domain must exclude zero. Modulo uses the
+corresponding remainder, so `-5` modulo `3` is `-2`, unlike Python's `%`
+operator.
 
 Many problems initially involve non-linear expressions that can often be
 reformulated or approximated using linear expressions. This transformation can
@@ -931,6 +936,8 @@ $\sum_{e,e'\in E} concost(e, e')\cdot x_e\cdot x_{e'}$. However, such cases can
 often be modeled linearly using an auxiliary variable, avoiding the complexities
 of non-linear modeling.
 
+<!-- snippet: modelling/boolean_product -->
+
 ```python
 model = cp_model.CpModel()
 
@@ -940,7 +947,7 @@ b2 = model.new_bool_var("b2")
 b1b2 = model.new_bool_var("b1b2")
 model.add_implication(~b1, ~b1b2)
 model.add_implication(~b2, ~b1b2)
-model.add_bool_or(~b1, ~b2, b1b2)  # required for a penalty term to be minimized.
+model.add_bool_or(~b1, ~b2, b1b2)  # needed if b1b2=0 can pay off, e.g., a penalty
 ```
 
 There are numerous further instances where non-linear expressions can be

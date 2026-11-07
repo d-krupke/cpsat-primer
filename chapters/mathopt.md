@@ -49,6 +49,8 @@ In the following, I give a brief overview of the MathOpt API.
 As in CP-SAT, you first need to import the MathOpt module and create a model
 instance.
 
+<!-- snippet: mathopt/model -->
+
 ```python
 from ortools.math_opt.python import mathopt as mo
 
@@ -119,6 +121,8 @@ model.add_linear_constraint(mo.fast_sum(terms) <= 100, name="sum_constraint")
 
 You can also use expression handles, which can make the model more readable and
 easier to maintain.
+
+<!-- snippet: mathopt/expression_handles requires=mathopt/model -->
 
 ```python
 in_vars = [model.add_variable(name=f"in_{i}") for i in range(1, 6)]
@@ -217,6 +221,8 @@ protein, and calcium. This model serves as a small, illustrative example of how
 mathematical optimization can be applied to dietary planning. The units and
 values used here are for demonstration purposes only and should not be
 interpreted as nutritional facts.
+
+<!-- snippet: mathopt/stigler_diet -->
 
 ```python
 from ortools.math_opt.python import mathopt as mo
@@ -332,6 +338,8 @@ standard integer formulation is:
 
 Since all variables are integral, this problem can be modeled using CP-SAT and
 compared directly with MIP solvers such as Gurobi or HiGHS.
+
+<!-- snippet: mathopt/set_cover -->
 
 ```python
 from ortools.math_opt.python import mathopt as mo

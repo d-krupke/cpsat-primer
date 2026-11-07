@@ -327,6 +327,8 @@ issues by providing a clear interface and validating input data. Additionally,
 you can create an API for your code effortlessly using FastAPI, which is built
 on top of Pydantic.
 
+<!-- snippet: coding_patterns/knapsack_data -->
+
 ```python
 # pip install pydantic
 from pydantic import (
@@ -726,6 +728,8 @@ introduced methods to set the solution as a hint for the next solve which will
 automatically be called if the `solve` found a feasible solution. To not
 degenerate on previous objectives, we added a method to fix the current
 objective value based on some ratio.
+
+<!-- snippet: coding_patterns/multi_objective_solver requires=coding_patterns/knapsack_data -->
 
 ```python
 from math import ceil, floor
