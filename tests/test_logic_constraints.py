@@ -1,24 +1,10 @@
-from ortools.sat.python import cp_model
+"""Pin down CP-SAT's boolean semantics that the modelling chapter relies on.
+
+The chapter's boolean snippets themselves are smoke-tested via their markers.
+"""
 
 import pytest
-
-
-def test_bool_constraints():
-    model = cp_model.CpModel()
-    b1 = model.new_bool_var("b1")
-    b2 = model.new_bool_var("b2")
-    b3 = model.new_bool_var("b3")
-
-    model.add_bool_or(b1, b2, b3)  # b1 or b2 or b3 (at least one)
-    model.add_at_least_one([b1, b2, b3])  # alternative notation
-    model.add_bool_and(b1, ~b2, ~b3)  # b1 and not b2 and not b3 (all)
-    model.add_bool_and(b1, ~b2, ~b3)  # Alternative notation for `Not()`
-    model.add_bool_xor(b1, b2, b3)  # b1 xor b2 xor b3
-    model.add_exactly_one([b1, b2, b3])  # exactly one of them
-    model.add_implication(a=b1, b=b2)  # b1 -> b2
-    model.add_at_most_one(
-        [b1, b2, b3]
-    )  # at most one of them. This is actually a more complex constraint.
+from ortools.sat.python import cp_model
 
 
 def test_one_true_xor_feasible():
@@ -106,7 +92,7 @@ def test_integer_cannot_be_used_in_boolean_logic():
 
     x = model.new_int_var(0, 100, "x")
     with pytest.raises(TypeError):
-        ~x  # This should raise an error because x is an integer variable
+        ~x  # noqa: B018 -- This should raise an error because x is an integer variable
 
     b1 = model.new_bool_var("b1")
     with pytest.raises(TypeError):

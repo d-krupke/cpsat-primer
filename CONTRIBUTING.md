@@ -56,6 +56,30 @@ To preview the changes that you make to the book:
 6. After any changes, rerun `python3 .scripts/build.py` from the root directory
    to see the changes reflected in your browser.
 
+## Testing the Code Snippets
+
+The tests run the python blocks of the chapters themselves, so a snippet that
+breaks with a new OR-Tools release is caught by `pytest tests/`. A block is
+tested if an HTML comment, invisible in the rendered book, marks it:
+
+````markdown
+<!-- snippet: modelling/abs_objective -->
+
+```python
+model = cp_model.CpModel()
+...
+```
+````
+
+The id starts with the chapter's file name. `requires=modelling/bool_vars` runs
+other snippets first in the same namespace, and `mode=compile` only checks that
+a sketch with placeholders compiles. A fragment that relies on context from the
+prose can get hidden setup lines inside the comment, closed by a line `-->`.
+Every marked block is run automatically; to check what a snippet computes, call
+`run_snippet("modelling/abs_objective")` in a test and assert on the returned
+namespace. When you add or change a snippet, please mark it, or keep its marker
+working. `tests/_snippets.py` documents the format in detail.
+
 ## Submitting a Pull Request
 
 1. Fork the repository to your GitHub account.

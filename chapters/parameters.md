@@ -147,6 +147,10 @@ during model testing and giving the solver enough time to find a good solution.
 To set a time limit (in seconds) before running the solver, use the following
 command:
 
+<!-- snippet: parameters/time_limit
+solver = cp_model.CpSolver()
+-->
+
 ```python
 solver.parameters.max_time_in_seconds = 60  # 60s time limit
 ```
@@ -154,6 +158,11 @@ solver.parameters.max_time_in_seconds = 60  # 60s time limit
 After running the solver, it is important to check the status to determine
 whether an optimal solution, a feasible solution, or no solution at all has been
 found:
+
+<!-- snippet: parameters/status
+model = cp_model.CpModel()
+solver = cp_model.CpSolver()
+-->
 
 ```python
 status = solver.solve(model)
@@ -197,6 +206,13 @@ To add a solution callback, inherit from the base class
 `CpSolverSolutionCallback`. Documentation for this base class and its operations
 is available
 [here](https://or-tools.github.io/docs/pdoc/ortools/sat/python/cp_model.html#CpSolverSolutionCallback).
+
+<!-- snippet: parameters/solution_callback
+model = cp_model.CpModel()
+x = model.new_int_var(0, 100, "x")
+model.maximize(x)
+solver = cp_model.CpSolver()
+-->
 
 ```python
 class MySolutionCallback(cp_model.CpSolverSolutionCallback):
@@ -247,6 +263,8 @@ the bound is sufficiently good. The syntax for bound callbacks differs from that
 of solution callbacks, as they are implemented as free functions that directly
 access the solver object.
 
+<!-- snippet: parameters/bound_callback -->
+
 ```python
 solver = cp_model.CpSolver()
 
@@ -263,6 +281,8 @@ solver.best_bound_callback = bound_callback
 Instead of using a simple function, you can also use a callable object to store
 a reference to the solver object. This approach allows you to define the
 callback outside the local scope, providing greater flexibility.
+
+<!-- snippet: parameters/bound_callback_class -->
 
 ```python
 class BoundCallback:
@@ -505,6 +525,8 @@ load the model on a different machine and run the solver.
 > (`pip install cpsat-utils`) as `export_model` and `import_model`, tested
 > across multiple ortools versions.
 
+<!-- snippet: parameters/serialization -->
+
 ```python
 from ortools.sat.python import cp_model
 from ortools.sat import cp_model_pb2
@@ -594,6 +616,13 @@ their hinted values and check if the model becomes infeasible. This is also
 available as `assert_hint_feasible` in
 [`cpsat-utils`](https://github.com/d-krupke/cpsat-utils).
 
+<!-- snippet: parameters/check_hints
+model = cp_model.CpModel()
+x = model.new_int_var(0, 100, "x")
+model.add_hint(x, 42)
+solver = cp_model.CpSolver()
+-->
+
 ```python
 solver.parameters.fix_variables_to_their_hinted_value = True
 status = solver.solve(model)
@@ -641,6 +670,8 @@ below before solving the model. Adjust the time limit based on the difficulty of
 completing the hint. If the values can be determined through simple propagation,
 even large models can be processed quickly. This function is also available as
 `complete_hint` in [`cpsat-utils`](https://github.com/d-krupke/cpsat-utils).
+
+<!-- snippet: parameters/complete_hint -->
 
 ```python
 def complete_hint(
@@ -734,6 +765,10 @@ Another way to explore the impact of forcing certain variables to specific
 values is by means of assumptions, which is a common feature in many SAT
 solvers. Unlike fixing hinted values, assumptions are restricted to boolean
 literals in CP-SAT.
+
+<!-- snippet: parameters/assumptions
+model = cp_model.CpModel()
+-->
 
 ```python
 b1 = model.new_bool_var("b1")
@@ -838,6 +873,10 @@ presolve effort.
 
 For example, you can disable presolve entirely with:
 
+<!-- snippet: parameters/disable_presolve
+solver = cp_model.CpSolver()
+-->
+
 ```python
 solver.parameters.cp_model_presolve = False
 ```
@@ -847,6 +886,10 @@ rather than disabling it completely.
 
 To reduce the number of presolve iterations, you can use:
 
+<!-- snippet: parameters/presolve_iterations
+solver = cp_model.CpSolver()
+-->
+
 ```python
 solver.parameters.max_presolve_iterations = 3
 ```
@@ -855,6 +898,10 @@ You can also limit specific presolve techniques. For instance, you can constrain
 the time or intensity of probing, which is a technique that tries to fix
 variables and observe the outcome. Although probing can be powerful, it is also
 time-intensive.
+
+<!-- snippet: parameters/probing
+solver = cp_model.CpSolver()
+-->
 
 ```python
 solver.parameters.cp_model_probing_level = 1

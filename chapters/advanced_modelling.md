@@ -92,6 +92,8 @@ skipped to avoid isolation and infeasibility in the circuit.
 Here is an example using the CP-SAT solver to address a directed Traveling
 Salesperson Problem (TSP):
 
+<!-- snippet: advanced_modelling/circuit mode=compile -->
+
 ```python
 from ortools.sat.python import cp_model
 
@@ -130,6 +132,8 @@ The `add_circuit` constraint can be creatively adapted to solve various related
 problems. While there are more efficient algorithms for solving the Shortest
 Path Problem, let us demonstrate how to adapt the `add_circuit` constraint for
 educational purposes.
+
+<!-- snippet: advanced_modelling/shortest_path mode=compile -->
 
 ```python
 from ortools.sat.python import cp_model
@@ -384,6 +388,8 @@ for modeling problems with multiple resources or optional tasks. Instead of a
 pure integer variable, all arguments also accept an affine expression, e.g.,
 `start=5*start_var+3`.
 
+<!-- snippet: advanced_modelling/intervals -->
+
 ```python
 model = cp_model.CpModel()
 
@@ -438,9 +444,12 @@ must not exceed the capacity of the resource.
 The `add_no_overlap` constraints takes a list of (optional) interval variables
 and ensures that no two present intervals overlap.
 
+<!-- snippet: advanced_modelling/no_overlap requires=advanced_modelling/intervals -->
+
 ```python
+# Changed in ortools 9.15: was add_no_overlap(interval_vars=[...])
 model.add_no_overlap(
-    interval_vars=[
+    intervals=[
         flexible_interval,
         fixed_interval,
         optional_interval,
@@ -456,6 +465,8 @@ or `y_intervals[i]` and `y_intervals[j]` do not overlap. Thus, both lists must
 have the same length as `x_intervals[i]` and `y_intervals[i]` are considered
 belonging together. If either `x_intervals[i]` or `y_intervals[i]` are optional,
 the whole object is optional.
+
+<!-- snippet: advanced_modelling/no_overlap_2d requires=advanced_modelling/intervals -->
 
 ```python
 model.add_no_overlap_2d(
@@ -485,6 +496,8 @@ a capacity variable. The list of demands must have the same length as the list
 of intervals, as the demands of the intervals are matched by index. As capacity
 and demands can be variables (or affine expressions), quite complex resource
 constraints can be modeled.
+
+<!-- snippet: advanced_modelling/cumulative requires=advanced_modelling/intervals -->
 
 ```python
 demand_vars = [model.new_int_var(1, 10, f"demand_{i}") for i in range(4)]
@@ -529,7 +542,12 @@ model the range of possible start times.
 To handle input data, let us define a `namedtuple` to store the meeting and two
 functions to convert between time and index.
 
+<!-- snippet: advanced_modelling/meeting_helpers -->
+
 ```python
+from collections import namedtuple
+
+
 # Convert time to index and back
 def t_to_idx(hour, minute):
     return (hour - 8) * 12 + minute // 5
@@ -546,6 +564,8 @@ MeetingInfo = namedtuple("MeetingInfo", ["start_times", "duration"])
 ```
 
 Then let us create a few meetings we want to schedule.
+
+<!-- snippet: advanced_modelling/meetings requires=advanced_modelling/meeting_helpers -->
 
 ```python
 # Meeting definitions
@@ -581,6 +601,8 @@ meetings = {
 
 Now we can create the CP-SAT model and add the intervals and constraints.
 
+<!-- snippet: advanced_modelling/meeting_model requires=advanced_modelling/meetings -->
+
 ```python
 # Create a new CP-SAT model
 model = cp_model.CpModel()
@@ -609,6 +631,8 @@ model.add_no_overlap(list(interval_vars.values()))
 ```
 
 And finally, we can solve the model and extract the solution.
+
+<!-- snippet: advanced_modelling/meeting_solution requires=advanced_modelling/meeting_model -->
 
 ```python
 # Solve the model

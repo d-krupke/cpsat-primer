@@ -76,6 +76,37 @@ def test_compiled_code_reports_markdown_lines():
     assert (frame.filename, frame.lineno) == (str(CHAPTER), 5)
 
 
+def test_hidden_setup_runs_before_the_code():
+    """Setup lines inside the marker provide context the prose only assumes."""
+    text = md(
+        "<!-- snippet: demo/fragment",
+        "    x = 41",
+        "-->",
+        "",
+        "```python",
+        "y = x + 1",
+        "```",
+    )
+    (snippet,) = parse_markdown(text, CHAPTER)
+    assert snippet.setup == "x = 41\n"
+    assert snippet.code == "y = x + 1\n"
+    namespace = {}
+    exec(snippet.compile(), namespace)  # noqa: S102
+    assert namespace["y"] == 42
+
+
+def test_hidden_setup_reports_its_markdown_line():
+    """A broken setup line is reported where it is written, inside the marker."""
+    text = md(
+        "<!-- snippet: demo/fragment", "ok = 1", "1 / 0", "-->", "```python", "```"
+    )
+    (snippet,) = parse_markdown(text, CHAPTER)
+    with pytest.raises(ZeroDivisionError) as info:
+        exec(snippet.compile(), {})  # noqa: S102
+    frame = traceback.extract_tb(info.value.__traceback__)[-1]
+    assert (frame.filename, frame.lineno) == (str(CHAPTER), 3)
+
+
 @pytest.mark.parametrize(
     "text, message",
     [
@@ -87,6 +118,11 @@ def test_compiled_code_reports_markdown_lines():
         (md("<!-- snippet: demo/a mode=fast -->", "```python", "```"), "mode"),
         (md("<!-- snippet: demo/a mode -->", "```python", "```"), "key=value"),
         (md("<!-- snippet: -->", "```python", "```"), "no snippet id"),
+        (md("<!-- snippet: demo/a", "x = 1", "```python", "```"), "close the marker"),
+        (
+            md("<!-- snippet: demo/a", "x = 1 -->", "```python", "```"),
+            "close the marker",
+        ),
     ],
 )
 def test_malformed_markers_fail_loudly(text, message):

@@ -651,6 +651,8 @@ but they are actually rather a combination of integral variables and discussed
 [later](#04-modelling-intervals). For the integer variables, you have to specify
 a lower and an upper bound.
 
+<!-- snippet: modelling/variables -->
+
 ```python
 model = cp_model.CpModel()
 
@@ -672,6 +674,10 @@ Additionally, you can use `model.new_int_var_series` and
 Index. This is especially useful if your data is given in a pandas DataFrame.
 However, there is no performance benefit in using this method, it is just more
 convenient.
+
+<!-- snippet: modelling/variable_series
+import pandas as pd
+-->
 
 ```python
 model = cp_model.CpModel()
@@ -804,6 +810,8 @@ its use until performance optimization becomes necessary.
 If you choose to utilize domain variables for their benefits in specific
 scenarios, here is how to define them:
 
+<!-- snippet: modelling/domains -->
+
 ```python
 from ortools.sat.python import cp_model
 
@@ -843,6 +851,8 @@ constraints. To specify an objective function, you can use the `model.minimize`
 or `model.maximize` commands with a linear expression. This flexibility makes
 CP-SAT a robust tool for a variety of optimization tasks.
 
+<!-- snippet: modelling/objective -->
+
 ```python
 # Basic model with variables and constraints
 model = cp_model.CpModel()
@@ -856,6 +866,8 @@ model.maximize(30 * x + 50 * y)
 
 Let us look on how to model more complicated expressions, using boolean
 variables and generators.
+
+<!-- snippet: modelling/boolean_objective -->
 
 ```python
 model = cp_model.CpModel()
@@ -872,6 +884,8 @@ This objective evaluates to
 To implement a
 [lexicographic optimization](https://en.wikipedia.org/wiki/Lexicographic_optimization),
 you can do multiple rounds and always fix the previous objective as constraint.
+
+<!-- snippet: modelling/lexicographic -->
 
 ```python
 # some basic model
@@ -908,6 +922,11 @@ value. Shortly, you will learn more about setting up these types of constraints.
 Below is a Python example demonstrating how to model and minimize the absolute
 value of a variable `x`:
 
+<!-- snippet: modelling/abs_objective
+model = cp_model.CpModel()
+x = model.new_int_var(-100, 100, "x")
+-->
+
 ```python
 # Assuming x is already defined in your model
 abs_x = model.new_int_var(
@@ -929,6 +948,13 @@ that you are still not allowed to use floating point numbers within it. Same as
 for linear optimization: You are not allowed to multiply a variable with
 anything else than a constant and also not to apply any further mathematical
 operations.
+
+<!-- snippet: modelling/linear_constraints
+model = cp_model.CpModel()
+x = model.new_int_var(-100, 100, "x")
+y = model.new_int_var(-100, 100, "y")
+z = model.new_int_var(-100, 100, "z")
+-->
 
 ```python
 model.add(10 * x + 15 * y <= 10)
@@ -975,6 +1001,8 @@ x, y \geq 0
 You can verify that $x=4/3$ and $y=4/3$ is a feasible solution. However, coding
 this in CP-SAT results in an infeasible solution:
 
+<!-- snippet: modelling/integer_infeasibility -->
+
 ```python
 model = cp_model.CpModel()
 x = model.new_int_var(-100, 100, "x")
@@ -1013,6 +1041,12 @@ If you have a lower and an upper bound for a linear expression, you can also use
 the `add_linear_constraint`-method, which allows you to specify both bounds in
 one go.
 
+<!-- snippet: modelling/linear_constraint_bounds
+model = cp_model.CpModel()
+x = model.new_int_var(-100, 100, "x")
+y = model.new_int_var(-100, 100, "y")
+-->
+
 ```python
 model.add_linear_constraint(linear_expr=10 * x + 15 * y, lb=-100, ub=10)
 ```
@@ -1027,6 +1061,10 @@ Propositional logic allows us to describe relationships between true or false
 statements using logical operators. Consider a simple scenario where we define
 three Boolean variables:
 
+<!-- snippet: modelling/bool_vars
+model = cp_model.CpModel()
+-->
+
 ```python
 b1 = model.new_bool_var("b1")
 b2 = model.new_bool_var("b2")
@@ -1039,6 +1077,8 @@ truth values are to be determined by the model.
 You can obtain the negation of a Boolean variable by using `~` or the
 `.Not()`-method. The resulting variable can be used just like the original
 variable:
+
+<!-- snippet: modelling/negation requires=modelling/bool_vars -->
 
 ```python
 not_b1 = ~b1  # Negation of b1
@@ -1062,6 +1102,8 @@ examples, except for `add_implication` which is only defined for two variables.
 The logical OR operation ensures that at least one of the specified conditions
 holds true. To model this, you can use:
 
+<!-- snippet: modelling/bool_or requires=modelling/bool_vars -->
+
 ```python
 model.add_bool_or(b1, b2, b3)  # b1 or b2 or b3 must be true
 model.add_at_least_one([b1, b2, b3])  # Alternative notation
@@ -1075,6 +1117,8 @@ Both lines ensure that at least one of `b1`, `b2`, or `b3` is true.
 The logical AND operation specifies that all conditions must be true
 simultaneously. To model conditions where `b1` is true and both `b2` and `b3`
 are false, you can use:
+
+<!-- snippet: modelling/bool_and requires=modelling/bool_vars -->
 
 ```python
 model.add_bool_and(b1, b2.Not(), b3.Not())  # b1 and not b2 and not b3 must all be true
@@ -1110,6 +1154,8 @@ implications when applied to more than two variables:
 This characteristic of XOR can be somewhat complex but is crucial for modeling
 scenarios where the number of true conditions needs to be odd:
 
+<!-- snippet: modelling/bool_xor requires=modelling/bool_vars -->
+
 ```python
 model.add_bool_xor(b1, b2)  # Returns true if exactly one of b1 or b2 is true
 model.add_bool_xor(
@@ -1121,6 +1167,8 @@ model.add_bool_xor(
 
 To enforce that exactly one or at most one of the variables is true, use:
 
+<!-- snippet: modelling/exactly_one requires=modelling/bool_vars -->
+
 ```python
 model.add_exactly_one([b1, b2, b3])  # Exactly one of the variables must be true
 model.add_at_most_one([b1, b2, b3])  # No more than one of the variables should be true
@@ -1130,6 +1178,8 @@ These constraints are useful for scenarios where exclusive choices must be
 modeled.
 
 You could alternatively also use `add`.
+
+<!-- snippet: modelling/exactly_one_linear requires=modelling/bool_vars -->
 
 ```python
 model.add(b1 + b2 + b3 == 1)  # Exactly one of the variables must be true
@@ -1141,11 +1191,15 @@ model.add(b1 + b2 + b3 <= 1)  # No more than one of the variables should be true
 Logical implication, denoted as `->`, indicates that if the first condition is
 true, the second must also be true. This can be modeled as:
 
+<!-- snippet: modelling/implication requires=modelling/bool_vars -->
+
 ```python
 model.add_implication(b1, b2)  # If b1 is true, then b2 must also be true
 ```
 
 You could also use `add`.
+
+<!-- snippet: modelling/implication_linear requires=modelling/bool_vars -->
 
 ```python
 model.add(b2 >= b1)  # If b1 is true, then b2 must also be true
@@ -1282,6 +1336,10 @@ only typically more efficient than traditional methods like the
 [Big-M method](https://en.wikipedia.org/wiki/Big_M_method) but also simplifies
 the model by eliminating the need to determine an appropriate Big-M value.
 
+<!-- snippet: modelling/truck
+model = cp_model.CpModel()
+-->
+
 ```python
 # A value representing the load that needs to be transported
 load_value = model.new_int_var(0, 100, "load_value")
@@ -1315,6 +1373,14 @@ model.minimize(30 * truck_a + 40 * truck_b + 80 * truck_c)
 
 You can also use negations in the `only_enforce_if` method.
 
+<!-- snippet: modelling/enforce_negated
+model = cp_model.CpModel()
+x = model.new_int_var(-100, 100, "x")
+y = model.new_int_var(-100, 100, "y")
+b1 = model.new_bool_var("b1")
+b2 = model.new_bool_var("b2")
+-->
+
 ```python
 model.add(x + y == 10).only_enforce_if(~b1)
 ```
@@ -1322,6 +1388,8 @@ model.add(x + y == 10).only_enforce_if(~b1)
 You can also pass a list of Boolean variables to `only_enforce_if`, in which
 case the constraint is only enforced if all of the variables in the list are
 true.
+
+<!-- snippet: modelling/enforce_conjunction requires=modelling/enforce_negated -->
 
 ```python
 model.add(x + y == 10).only_enforce_if([b1, ~b2])  # only enforce if b1 AND NOT b2
@@ -1378,6 +1446,10 @@ predominantly based on empirical evidence and specific use-case scenarios. It is
 also worth noting that, surprisingly often, these constraints can be substituted
 with more efficient linear constraints. Here is an example for achieving maximum
 equality in a more efficient way:
+
+<!-- snippet: modelling/max_without_equality
+model = cp_model.CpModel()
+-->
 
 ```python
 x = model.new_int_var(0, 100, "x")
@@ -1511,6 +1583,8 @@ list take unique values. This constraint is particularly useful in solving
 puzzles like Sudoku or the
 [N-queens problem](https://developers.google.com/optimization/cp/queens).
 
+<!-- snippet: modelling/all_different -->
+
 ```python
 model = cp_model.CpModel()
 x = model.new_int_var(-100, 100, "x")
@@ -1573,6 +1647,8 @@ employees, and you have a table of feasible combinations for each shift:
 In CP-SAT, this can be modeled efficiently using the `add_allowed_assignments`
 method:
 
+<!-- snippet: modelling/allowed_assignments -->
+
 ```python
 model = cp_model.CpModel()
 x_employee_1 = model.new_bool_var("x_employee_1")
@@ -1596,6 +1672,14 @@ model.add_allowed_assignments(
 Alternatively, forbidden combinations can be specified using
 `add_forbidden_assignments`:
 
+<!-- snippet: modelling/forbidden_assignments
+model = cp_model.CpModel()
+x_employee_1 = model.new_bool_var("x_employee_1")
+x_employee_2 = model.new_bool_var("x_employee_2")
+x_employee_3 = model.new_bool_var("x_employee_3")
+x_employee_4 = model.new_bool_var("x_employee_4")
+-->
+
 ```python
 prohibit_assignments = [
     [1, 0, 1, 0],
@@ -1614,6 +1698,8 @@ all variables. If the table covered all variables, one could theoretically
 evaluate each row to identify the best solution without the need for
 sophisticated optimization techniques. However, consider this scenario where
 constraints are integrated across multiple shifts:
+
+<!-- snippet: modelling/allowed_assignments_shifts requires=modelling/allowed_assignments -->
 
 ```python
 NUM_SHIFTS = 7
@@ -1655,6 +1741,8 @@ A related method for managing linear expressions instead of direct assignments
 is `add_linear_expression_in_domain`. Suppose we know a certain linear
 expression, \(10x + 5y\), must equal 20, 50, or 100:
 
+<!-- snippet: modelling/linear_domain -->
+
 ```python
 model = cp_model.CpModel()
 x = model.new_int_var(-100, 100, "x")
@@ -1682,6 +1770,8 @@ as the index. Accessing a variable in an array with a constant index is
 straightforward; however, integrating a variable index into your model adds
 complexity. This constraint can also be used to ensure that a variable matches
 the value at a specific array position.
+
+<!-- snippet: modelling/element -->
 
 ```python
 model = cp_model.CpModel()
@@ -1713,6 +1803,8 @@ equally sized arrays of variables $v$ and $w$, each of size $|v|$, it imposes a
 bijective relationship: $v[i]=j \Leftrightarrow w[j]=i$ for all
 $i,j \in 0,\ldots,|v|-1$. This constraint limits the variables' values to
 $0,\ldots, |v|-1$.
+
+<!-- snippet: modelling/inverse -->
 
 ```python
 model = cp_model.CpModel()
@@ -1848,6 +1940,8 @@ skipped to avoid isolation and infeasibility in the circuit.
 Here is an example using the CP-SAT solver to address a directed Traveling
 Salesperson Problem (TSP):
 
+<!-- snippet: advanced_modelling/circuit mode=compile -->
+
 ```python
 from ortools.sat.python import cp_model
 
@@ -1886,6 +1980,8 @@ The `add_circuit` constraint can be creatively adapted to solve various related
 problems. While there are more efficient algorithms for solving the Shortest
 Path Problem, let us demonstrate how to adapt the `add_circuit` constraint for
 educational purposes.
+
+<!-- snippet: advanced_modelling/shortest_path mode=compile -->
 
 ```python
 from ortools.sat.python import cp_model
@@ -2140,6 +2236,8 @@ for modeling problems with multiple resources or optional tasks. Instead of a
 pure integer variable, all arguments also accept an affine expression, e.g.,
 `start=5*start_var+3`.
 
+<!-- snippet: advanced_modelling/intervals -->
+
 ```python
 model = cp_model.CpModel()
 
@@ -2194,9 +2292,12 @@ must not exceed the capacity of the resource.
 The `add_no_overlap` constraints takes a list of (optional) interval variables
 and ensures that no two present intervals overlap.
 
+<!-- snippet: advanced_modelling/no_overlap requires=advanced_modelling/intervals -->
+
 ```python
+# Changed in ortools 9.15: was add_no_overlap(interval_vars=[...])
 model.add_no_overlap(
-    interval_vars=[
+    intervals=[
         flexible_interval,
         fixed_interval,
         optional_interval,
@@ -2212,6 +2313,8 @@ or `y_intervals[i]` and `y_intervals[j]` do not overlap. Thus, both lists must
 have the same length as `x_intervals[i]` and `y_intervals[i]` are considered
 belonging together. If either `x_intervals[i]` or `y_intervals[i]` are optional,
 the whole object is optional.
+
+<!-- snippet: advanced_modelling/no_overlap_2d requires=advanced_modelling/intervals -->
 
 ```python
 model.add_no_overlap_2d(
@@ -2241,6 +2344,8 @@ a capacity variable. The list of demands must have the same length as the list
 of intervals, as the demands of the intervals are matched by index. As capacity
 and demands can be variables (or affine expressions), quite complex resource
 constraints can be modeled.
+
+<!-- snippet: advanced_modelling/cumulative requires=advanced_modelling/intervals -->
 
 ```python
 demand_vars = [model.new_int_var(1, 10, f"demand_{i}") for i in range(4)]
@@ -2285,7 +2390,12 @@ model the range of possible start times.
 To handle input data, let us define a `namedtuple` to store the meeting and two
 functions to convert between time and index.
 
+<!-- snippet: advanced_modelling/meeting_helpers -->
+
 ```python
+from collections import namedtuple
+
+
 # Convert time to index and back
 def t_to_idx(hour, minute):
     return (hour - 8) * 12 + minute // 5
@@ -2302,6 +2412,8 @@ MeetingInfo = namedtuple("MeetingInfo", ["start_times", "duration"])
 ```
 
 Then let us create a few meetings we want to schedule.
+
+<!-- snippet: advanced_modelling/meetings requires=advanced_modelling/meeting_helpers -->
 
 ```python
 # Meeting definitions
@@ -2337,6 +2449,8 @@ meetings = {
 
 Now we can create the CP-SAT model and add the intervals and constraints.
 
+<!-- snippet: advanced_modelling/meeting_model requires=advanced_modelling/meetings -->
+
 ```python
 # Create a new CP-SAT model
 model = cp_model.CpModel()
@@ -2365,6 +2479,8 @@ model.add_no_overlap(list(interval_vars.values()))
 ```
 
 And finally, we can solve the model and extract the solution.
+
+<!-- snippet: advanced_modelling/meeting_solution requires=advanced_modelling/meeting_model -->
 
 ```python
 # Solve the model
@@ -3309,6 +3425,10 @@ during model testing and giving the solver enough time to find a good solution.
 To set a time limit (in seconds) before running the solver, use the following
 command:
 
+<!-- snippet: parameters/time_limit
+solver = cp_model.CpSolver()
+-->
+
 ```python
 solver.parameters.max_time_in_seconds = 60  # 60s time limit
 ```
@@ -3316,6 +3436,11 @@ solver.parameters.max_time_in_seconds = 60  # 60s time limit
 After running the solver, it is important to check the status to determine
 whether an optimal solution, a feasible solution, or no solution at all has been
 found:
+
+<!-- snippet: parameters/status
+model = cp_model.CpModel()
+solver = cp_model.CpSolver()
+-->
 
 ```python
 status = solver.solve(model)
@@ -3359,6 +3484,13 @@ To add a solution callback, inherit from the base class
 `CpSolverSolutionCallback`. Documentation for this base class and its operations
 is available
 [here](https://or-tools.github.io/docs/pdoc/ortools/sat/python/cp_model.html#CpSolverSolutionCallback).
+
+<!-- snippet: parameters/solution_callback
+model = cp_model.CpModel()
+x = model.new_int_var(0, 100, "x")
+model.maximize(x)
+solver = cp_model.CpSolver()
+-->
 
 ```python
 class MySolutionCallback(cp_model.CpSolverSolutionCallback):
@@ -3409,6 +3541,8 @@ the bound is sufficiently good. The syntax for bound callbacks differs from that
 of solution callbacks, as they are implemented as free functions that directly
 access the solver object.
 
+<!-- snippet: parameters/bound_callback -->
+
 ```python
 solver = cp_model.CpSolver()
 
@@ -3425,6 +3559,8 @@ solver.best_bound_callback = bound_callback
 Instead of using a simple function, you can also use a callable object to store
 a reference to the solver object. This approach allows you to define the
 callback outside the local scope, providing greater flexibility.
+
+<!-- snippet: parameters/bound_callback_class -->
 
 ```python
 class BoundCallback:
@@ -3667,6 +3803,8 @@ load the model on a different machine and run the solver.
 > (`pip install cpsat-utils`) as `export_model` and `import_model`, tested
 > across multiple ortools versions.
 
+<!-- snippet: parameters/serialization -->
+
 ```python
 from ortools.sat.python import cp_model
 from ortools.sat import cp_model_pb2
@@ -3756,6 +3894,13 @@ their hinted values and check if the model becomes infeasible. This is also
 available as `assert_hint_feasible` in
 [`cpsat-utils`](https://github.com/d-krupke/cpsat-utils).
 
+<!-- snippet: parameters/check_hints
+model = cp_model.CpModel()
+x = model.new_int_var(0, 100, "x")
+model.add_hint(x, 42)
+solver = cp_model.CpSolver()
+-->
+
 ```python
 solver.parameters.fix_variables_to_their_hinted_value = True
 status = solver.solve(model)
@@ -3803,6 +3948,8 @@ below before solving the model. Adjust the time limit based on the difficulty of
 completing the hint. If the values can be determined through simple propagation,
 even large models can be processed quickly. This function is also available as
 `complete_hint` in [`cpsat-utils`](https://github.com/d-krupke/cpsat-utils).
+
+<!-- snippet: parameters/complete_hint -->
 
 ```python
 def complete_hint(
@@ -3896,6 +4043,10 @@ Another way to explore the impact of forcing certain variables to specific
 values is by means of assumptions, which is a common feature in many SAT
 solvers. Unlike fixing hinted values, assumptions are restricted to boolean
 literals in CP-SAT.
+
+<!-- snippet: parameters/assumptions
+model = cp_model.CpModel()
+-->
 
 ```python
 b1 = model.new_bool_var("b1")
@@ -4000,6 +4151,10 @@ presolve effort.
 
 For example, you can disable presolve entirely with:
 
+<!-- snippet: parameters/disable_presolve
+solver = cp_model.CpSolver()
+-->
+
 ```python
 solver.parameters.cp_model_presolve = False
 ```
@@ -4009,6 +4164,10 @@ rather than disabling it completely.
 
 To reduce the number of presolve iterations, you can use:
 
+<!-- snippet: parameters/presolve_iterations
+solver = cp_model.CpSolver()
+-->
+
 ```python
 solver.parameters.max_presolve_iterations = 3
 ```
@@ -4017,6 +4176,10 @@ You can also limit specific presolve techniques. For instance, you can constrain
 the time or intensity of probing, which is a technique that tries to fix
 variables and observe the outcome. Although probing can be powerful, it is also
 time-intensive.
+
+<!-- snippet: parameters/probing
+solver = cp_model.CpSolver()
+-->
 
 ```python
 solver.parameters.cp_model_probing_level = 1
@@ -5169,6 +5332,8 @@ class KnapsackSolution(BaseModel):
 
 The original code needs to be adapted to use these data classes.
 
+<!-- snippet: coding_patterns/solve_knapsack requires=coding_patterns/knapsack_data -->
+
 ```python
 from ortools.sat.python import cp_model
 
@@ -5202,6 +5367,8 @@ quickly generate test cases based on real data. While you cannot be certain that
 your code is correct with such tests, they will at least notify you if the logic
 changes unexpectedly. If you refactor your code, you will immediately see if its
 behavior changes accidentally.
+
+<!-- snippet: coding_patterns/regression_tests requires=coding_patterns/solve_knapsack -->
 
 ```python
 from datetime import datetime
@@ -5254,6 +5421,8 @@ def test_saved_test_cases():
 You can now easily generate test cases and validate them with the following
 code. Ideally, you should use real instances for this, potentially by
 automatically saving 1% of the instances used in production.
+
+<!-- snippet: coding_patterns/regression_usage mode=compile -->
 
 ```python
 # Define a knapsack instance
@@ -5593,6 +5762,14 @@ class MultiObjectiveKnapsackSolver:
 ```
 
 We can use the `MultiObjectiveKnapsackSolver` class as follows:
+
+<!-- snippet: coding_patterns/multi_objective_usage requires=coding_patterns/multi_objective_solver
+instance = KnapsackInstance(
+    weights=[23, 31, 29, 44, 53, 38, 63, 85, 89, 82],
+    values=[92, 57, 49, 68, 60, 43, 67, 84, 87, 72],
+    capacity=165,
+)
+-->
 
 ```python
 config = KnapsackSolverConfig(time_limit=15, opt_tol=0.01, log_search_progress=True)
@@ -11636,6 +11813,10 @@ binary, and integer variables. By default, continuous and integer variables are
 non-negative (i.e., they have a lower bound of 0). You can specify different
 bounds using the `lb` and `ub` parameters.
 
+<!-- snippet: mathopt/continuous_variables requires=mathopt/model
+import math
+-->
+
 ```python
 x = model.add_variable(lb=0.0, ub=10.0, name="x")  # Continuous variable in [0, 10]
 # Unlike CP-SAT, you do not have to name variables
@@ -11645,13 +11826,15 @@ x_unbounded = model.add_variable(lb=-math.inf, ub=math.inf, name="x_unbounded") 
 
 To create binary or integer variables, use the corresponding methods:
 
+<!-- snippet: mathopt/integer_variables requires=mathopt/continuous_variables -->
+
 ```python
 y = model.add_binary_variable(name="y")  # Binary variable in {0, 1}
 z = model.add_integer_variable(lb=0, ub=100, name="z")  # Integer variable in [0, 100]
 # Integer variable with no upper bound
 z_unbounded = model.add_integer_variable(name="z_unbounded")
-# or explicitly
-z_unbounded = model.add_integer_variable(lb=0, ub=math.inf, name="z_unbounded")
+# or explicitly (MathOpt requires unique names, unlike CP-SAT)
+z_unbounded_2 = model.add_integer_variable(lb=0, ub=math.inf, name="z_unbounded_2")
 ```
 
 > [!WARNING]
@@ -11666,6 +11849,8 @@ z_unbounded = model.add_integer_variable(lb=0, ub=math.inf, name="z_unbounded")
 You can add linear constraints to the model using the `add_linear_constraint`
 method. There are two ways to do this: the inequality/equality form and the
 boxed form.
+
+<!-- snippet: mathopt/constraints requires=mathopt/integer_variables -->
 
 ```python
 # Inequality/equality form using Python operators
@@ -11685,6 +11870,8 @@ model.add_linear_constraint(4 * x + y <= 20)
 If you want to sum over a list of terms, you can use standard Python sums as in
 CP-SAT. However, MathOpt provides a more efficient function, `mo.fast_sum`,
 which is optimized for performance.
+
+<!-- snippet: mathopt/fast_sum requires=mathopt/continuous_variables -->
 
 ```python
 terms = [i * x for i in range(1, 11)]  # Create a list of terms
@@ -11709,6 +11896,8 @@ model.add_linear_constraint(incoming_flow == outgoing_flow, name="flow_conservat
 You can define the model’s objective using the `set_objective` method and
 specify whether you want to maximize or minimize it.
 
+<!-- snippet: mathopt/objective requires=mathopt/integer_variables -->
+
 ```python
 model.set_objective(3 * x + 4 * y + 2 * z, is_maximize=True)  # Maximize
 model.set_objective(x + 2 * z, is_maximize=False)  # Minimize
@@ -11718,6 +11907,10 @@ model.set_objective(x + 2 * z, is_maximize=False)  # Minimize
 
 To solve the model, use the `mo.solve` function, which takes the model, the
 solver type, and optional solver parameters.
+
+<!-- snippet: mathopt/solve requires=mathopt/constraints,mathopt/objective
+from datetime import timedelta
+-->
 
 ```python
 params = mo.SolveParameters(
@@ -11740,6 +11933,8 @@ object returned by `mo.solve`.
 
 Check the termination reason:
 
+<!-- snippet: mathopt/termination requires=mathopt/solve -->
+
 ```python
 term = result.termination
 print(f"Termination: {term.reason.name}")
@@ -11748,6 +11943,8 @@ if term.detail:
 ```
 
 Check whether a primal feasible solution was found:
+
+<!-- snippet: mathopt/solution requires=mathopt/solve -->
 
 ```python
 if result.has_primal_feasible_solution():
@@ -11761,6 +11958,8 @@ else:
 The `variable_values()` method returns a mapping from variables to their values.
 You can also pass a list of variables to get their values in the same order,
 which can be convenient if you only need a subset.
+
+<!-- snippet: mathopt/solution_values requires=mathopt/solve -->
 
 ```python
 values = result.variable_values([x, y, z])

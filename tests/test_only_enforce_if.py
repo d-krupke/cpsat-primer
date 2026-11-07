@@ -1,44 +1,42 @@
+"""Check that the `only_enforce_if` snippets enforce what the text says."""
+
+from _snippets import run_snippet
 from ortools.sat.python import cp_model
 
 
-def test_truck_example():
-    model = cp_model.CpModel()
-    # A value representing the load that needs to be transported
-    load_value = model.new_int_var(0, 100, "load_value")
-
-    # ... some logic to determine the load value ...
-
-    # A variable to decide which truck to rent
-    truck_a = model.new_bool_var("truck_a")
-    truck_b = model.new_bool_var("truck_b")
-    truck_c = model.new_bool_var("truck_c")
-
-    # only rent one truck
-    model.add_at_most_one([truck_a, truck_b, truck_c])
-
-    # Depending on which truck is rented, the load value is limited
-    model.add(load_value <= 50).only_enforce_if(truck_a)
-    model.add(load_value <= 80).only_enforce_if(truck_b)
-    model.add(load_value <= 100).only_enforce_if(truck_c)
-
-    # Some additional logic
-    driver_has_big_truck_license = model.new_bool_var("driver_has_big_truck_license")
-    driver_has_special_license = model.new_bool_var("driver_has_special_license")
-    # Only drivers with a big truck license or a special license can rent truck c
-    model.add_bool_or(
-        driver_has_big_truck_license, driver_has_special_license
-    ).only_enforce_if(truck_c)
-
-    # Minimize the rent cost
-    model.minimize(30 * truck_a + 40 * truck_b + 80 * truck_c)
+def solve(model: cp_model.CpModel) -> tuple[cp_model.CpSolverStatus, cp_model.CpSolver]:
+    solver = cp_model.CpSolver()
+    solver.parameters.num_workers = 1
+    return solver.solve(model), solver
 
 
-def test_only_enforce_if_list_with_negation():
-    model = cp_model.CpModel()
-    x = model.new_int_var(0, 10, "x")
-    z = model.new_int_var(0, 10, "z")
+def test_truck_limits_the_load():
+    """Renting truck a caps the load at 50, so a load of 60 is infeasible."""
+    namespace = run_snippet("modelling/truck")
+    model = namespace["model"]
+    model.add(namespace["truck_a"] == 1)
+    model.add(namespace["load_value"] == 60)
+    assert solve(model)[0] == cp_model.INFEASIBLE
 
-    b2 = model.new_bool_var("b2")
-    b3 = model.new_bool_var("b3")
 
-    model.add(x + z == 10).only_enforce_if([b2, ~b3])  # only enforce if b2 AND NOT b3
+def test_truck_c_needs_a_license():
+    """Renting truck c forces one of the two licenses."""
+    namespace = run_snippet("modelling/truck")
+    model = namespace["model"]
+    model.add(namespace["truck_c"] == 1)
+    status, solver = solve(model)
+    assert status == cp_model.OPTIMAL
+    assert solver.value(namespace["driver_has_big_truck_license"]) or solver.value(
+        namespace["driver_has_special_license"]
+    )
+
+
+def test_conjunction_with_negation():
+    """With b1 and not b2, `x + y == 10` is enforced; otherwise it is not."""
+    for b2, expected in ((0, cp_model.INFEASIBLE), (1, cp_model.OPTIMAL)):
+        namespace = run_snippet("modelling/enforce_conjunction")
+        model = namespace["model"]
+        model.add(namespace["b1"] == 1)
+        model.add(namespace["b2"] == b2)
+        model.add(namespace["x"] + namespace["y"] == 9)
+        assert solve(model)[0] == expected

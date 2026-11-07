@@ -1,21 +1,20 @@
+"""Check the arithmetic snippet against the semantics the text describes."""
+
+import math
+
+from _snippets import run_snippet
 from ortools.sat.python import cp_model
 
 
-def test_arithmetic():
-    model = cp_model.CpModel()
-    x = model.new_int_var(-100, 100, "x")
-    y = model.new_int_var(-100, 100, "y")
-    z = model.new_int_var_from_domain(
-        cp_model.Domain.from_intervals([[-100, -1], [1, 100]]), "z"
-    )
-
-    xyz = model.new_int_var(-(100**3), 100**3, "x*y*z")
-    model.add_multiplication_equality(xyz, [x, y, z])  # xyz = x*y*z
-
-    model.add_modulo_equality(x, y, 3)  # remainder has the sign of y
-    model.add_division_equality(x, y, z)  # division truncates toward zero
-
+def test_arithmetic_relations_hold():
+    """The solution satisfies the product, a C-style modulo (sign of `y`) and a
+    division that truncates toward zero."""
+    namespace = run_snippet("modelling/arithmetic")
     solver = cp_model.CpSolver()
     solver.parameters.num_workers = 1
     solver.parameters.max_time_in_seconds = 3
-    assert solver.solve(model) == cp_model.OPTIMAL
+    assert solver.solve(namespace["model"]) == cp_model.OPTIMAL
+    x, y, z, xyz = (solver.value(namespace[n]) for n in ("x", "y", "z", "xyz"))
+    assert xyz == x * y * z
+    assert x == math.fmod(y, 3)
+    assert x == int(y / z)

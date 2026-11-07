@@ -1,8 +1,15 @@
-from datetime import timedelta
+"""MathOpt examples beyond the chapter's snippets.
+
+The chapter's own examples (tour, Stigler diet, set cover) are tested via
+their snippet markers in `test_documented_snippets.py`.
+"""
+
 import math
-from ortools.math_opt.python import mathopt as mo
-import networkx as nx
+from datetime import timedelta
+
 import matplotlib.pyplot as plt
+import networkx as nx
+from ortools.math_opt.python import mathopt as mo
 
 
 def test_mathopt():
@@ -75,107 +82,6 @@ def test_mathopt():
         print(f"  x: {x_val}, y: {y_val}, z: {z_val}")
     else:
         print("No primal feasible solution found.")
-
-
-def test_mathopt_stigler_diet():
-    """
-    Simplified Stigler Diet:
-    - Choose nonnegative servings of a few foods
-    - Minimize total cost
-    - Satisfy minimum requirements for Calories, Protein, Calcium
-    Units are illustrative only (don’t take the data as nutritional truth).
-    """
-    # --- Data -----------------------------------------------------------------
-    foods = ["Wheat Flour", "Milk", "Cabbage", "Beef"]
-    # Cost per serving (EUR)
-    cost = {
-        "Wheat Flour": 0.36,
-        "Milk": 0.23,
-        "Cabbage": 0.10,
-        "Beef": 1.20,
-    }
-
-    # Nutrients per serving (approximate / illustrative)
-    #               Calories  Protein(g)  Calcium(mg)
-    calories = {"Wheat Flour": 364.0, "Milk": 150.0, "Cabbage": 25.0, "Beef": 250.0}
-    protein = {"Wheat Flour": 10.0, "Milk": 8.0, "Cabbage": 1.3, "Beef": 26.0}
-    calcium = {"Wheat Flour": 15.0, "Milk": 285.0, "Cabbage": 40.0, "Beef": 20.0}
-
-    # Requirements (minimums)
-    req = {
-        "Calories": 2000.0,  # kcal
-        "Protein": 55.0,  # grams
-        "Calcium": 800.0,  # mg
-    }
-
-    # --- Model ----------------------------------------------------------------
-    model = mo.Model(name="stigler_diet")
-
-    # Decision: servings of each food (continuous, ≥ 0). You could switch to integers to show a MIP.
-    servings = {f: model.add_variable(lb=0.0, name=f"servings[{f}]") for f in foods}
-
-    # Optionally cap servings to keep things tidy (purely illustrative)
-    for f in foods:
-        model.add_linear_constraint(servings[f] <= 20.0, name=f"cap[{f}]")
-
-    # Nutrient constraints ------------------------------------------------------
-    # Calories
-    model.add_linear_constraint(
-        mo.fast_sum(calories[f] * servings[f] for f in foods) >= req["Calories"],
-        name="nutrients[Calories]",
-    )
-    # Protein
-    model.add_linear_constraint(
-        mo.fast_sum(protein[f] * servings[f] for f in foods) >= req["Protein"],
-        name="nutrients[Protein]",
-    )
-    # Calcium
-    model.add_linear_constraint(
-        mo.fast_sum(calcium[f] * servings[f] for f in foods) >= req["Calcium"],
-        name="nutrients[Calcium]",
-    )
-
-    # Objective: minimize total cost -------------------------------------------
-    model.set_objective(
-        mo.fast_sum(cost[f] * servings[f] for f in foods), is_maximize=False
-    )
-
-    # Solve parameters ----------------------------------------------------------
-    params = mo.SolveParameters(
-        time_limit=timedelta(seconds=10),
-        relative_gap_tolerance=1e-6,  # LP, so we can be tight
-        enable_output=False,
-    )
-
-    result = mo.solve(model, solver_type=mo.SolverType.HIGHS, params=params)
-
-    # --- Report ----------------------------------------------------------------
-    term = result.termination
-    print(f"Termination: {term.reason.name}")
-
-    if not result.has_primal_feasible_solution():
-        print("No feasible solution found.")
-        return
-
-    print(f"Min cost: €{result.objective_value():.2f}")
-
-    # Extract chosen servings (suppress near-zeros)
-    values = result.variable_values()
-    print("\nServings:")
-    for f in foods:
-        qty = values.get(servings[f], 0.0)
-        if abs(qty) > 1e-9:
-            print(f"  {f:12s}: {qty:8.3f}")
-
-    # Compute realized totals
-    tot_cal = sum(calories[f] * values.get(servings[f], 0.0) for f in foods)
-    tot_pro = sum(protein[f] * values.get(servings[f], 0.0) for f in foods)
-    tot_calcium = sum(calcium[f] * values.get(servings[f], 0.0) for f in foods)
-
-    print("\nNutrient totals (min required in parentheses):")
-    print(f"  Calories: {tot_cal:.1f}  ({req['Calories']})")
-    print(f"  Protein : {tot_pro:.1f}  ({req['Protein']})")
-    print(f"  Calcium : {tot_calcium:.1f}  ({req['Calcium']})")
 
 
 def solve_fixed_charge_flow():
@@ -319,62 +225,6 @@ def solve_fixed_charge_flow():
     plt.show()
 
 
-def solve_set_cover_cp_sat():
-    """
-    Integral Set Cover:
-      - Universe U of elements
-      - Family S of subsets with integer costs cost[S]
-    Vars:
-      - z[S] ∈ {0,1} select subset S
-    Constraints:
-      - For each element u ∈ U: sum_{S: u∈S} z[S] >= 1
-    Objective:
-      - minimize sum_S cost[S]*z[S]
-    """
-    U = {1, 2, 3, 4, 5, 6}
-    subsets = {
-        "S1": {1, 2, 3},
-        "S2": {2, 4},
-        "S3": {3, 5, 6},
-        "S4": {1, 4, 6},
-        "S5": {2, 5},
-        "S6": {4, 5, 6},
-    }
-    cost = {"S1": 4, "S2": 2, "S3": 3, "S4": 3, "S5": 2, "S6": 4}  # integers
-
-    model = mo.Model(name="set_cover_cp_sat")
-
-    # Decision vars
-    z = {s: model.add_binary_variable(name=f"pick[{s}]") for s in subsets}
-
-    # Cover constraints
-    for u in U:
-        model.add_linear_constraint(
-            mo.fast_sum(z[s] for s in subsets if u in subsets[s]) >= 1,
-            name=f"cover[{u}]",
-        )
-
-    # Objective
-    model.set_objective(mo.fast_sum(cost[s] * z[s] for s in subsets), is_maximize=False)
-
-    # Solve with CP-SAT
-    params = mo.SolveParameters(time_limit=timedelta(seconds=10), enable_output=True)
-    result = mo.solve(model, solver_type=mo.SolverType.CP_SAT, params=params)
-
-    print(f"[SetCover] Termination: {result.termination.reason.name}")
-    if not result.has_primal_feasible_solution():
-        print("[SetCover] No feasible solution.")
-        return
-
-    vals = result.variable_values()
-    chosen = [s for s in subsets if int(round(vals.get(z[s], 0.0)))]
-    total_cost = sum(cost[s] for s in chosen)
-    print(f"[SetCover] Min total cost: {total_cost}")
-    print("[SetCover] Chosen subsets:", ", ".join(chosen))
-
-
 if __name__ == "__main__":
     test_mathopt()
-    test_mathopt_stigler_diet()
     # solve_fixed_charge_flow()
-    solve_set_cover_cp_sat()

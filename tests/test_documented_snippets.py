@@ -6,6 +6,7 @@ here, which catches API changes in new OR-Tools releases; the remaining tests
 check that a snippet computes what the surrounding text claims.
 """
 
+import warnings
 from itertools import product
 
 import pytest
@@ -25,7 +26,9 @@ def test_snippet_runs(snippet_id):
     """Every marked snippet runs (or, with `mode=compile`, compiles) as printed."""
     snippet = documented_snippets()[snippet_id]
     if snippet.mode == "compile":
-        snippet.compile()
+        with warnings.catch_warnings():  # placeholders like `...(2, 3)` are expected
+            warnings.simplefilter("ignore", SyntaxWarning)
+            snippet.compile()
     else:
         run_snippet(snippet_id)
 
